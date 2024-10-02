@@ -1,0 +1,24 @@
+span.invalid-message {
+    color: red;
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.action-buttons .btn {
+    margin: 0;
+}
+
+.action-buttons .form {
+    margin: 0;
+}
+
+#imagePreview {
+    display: none;
+    margin-top: 10px;
+    max-width: 23%;
+    height: auto;
+}
