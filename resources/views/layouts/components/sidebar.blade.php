@@ -14,6 +14,12 @@
                         <span key="t-dashboards">Dashboard</span>
                     </a>
                 </li>
+                <li @class(['mm-active' => Request::is('security-guards')])>
+                    <a href="{{ route('security-guards.index')}}" class="waves-effect">
+                        <i class="bx bx-spreadsheet"></i>
+                        <span key="t-spreadsheet">Security Guard</span>
+                    </a>
+                </li>
                 <li>
                     <a href="#" class="waves-effect">
                         <i class="bx bx-spreadsheet"></i>

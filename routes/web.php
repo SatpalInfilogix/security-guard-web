@@ -6,7 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleAndPermissionController;
-
+use App\Http\Controllers\SecurityGuardController;
 
 Route::get('/', function (){
     return redirect()->route('dashboard.index');
@@ -22,5 +22,6 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         'profile'    => ProfileController::class,
         'users'      => UserController::class,
         'roles-and-permissions' => RoleAndPermissionController::class,
+        'security-guards' => SecurityGuardController::class,
     ]);
 });
