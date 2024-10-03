@@ -79,6 +79,9 @@ class UserController extends Controller
     {
         $user = User::where('id', $id)->delete();
 
-        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+        return response()->json([
+            'success' => true,
+            'message' => 'User deleted successfully.'
+        ]);
     }
 }

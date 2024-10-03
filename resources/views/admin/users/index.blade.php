@@ -48,11 +48,15 @@
                                     <td>{{ $user->phone_number }}</td>
                                     <td class="action-buttons">
                                         <a href="{{ route('users.edit', $user->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
-                                        <form action="{{ route('users.destroy', $user->id) }}" method="POST">
+                                        <button data-source="User" data-endpoint="{{ route('users.destroy', $user->id) }}"
+                                            class="delete-btn btn btn-outline-secondary btn-sm edit">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                        {{-- <form action="{{ route('users.destroy', $user->id) }}" method="POST">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"  class="btn btn-outline-secondary btn-sm"><i class="fas fa-trash-alt"></i></button>
-                                        </form>
+                                        </form> --}}
                                     </td>
                                 </tr>
                                 @endforeach
