@@ -12,10 +12,11 @@ use App\Models\ContactDetail;
 use App\Models\UsersBankDetail;
 use App\Models\UsersKinDetail;
 use App\Models\usersDocuments;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasRoles,HasFactory, Notifiable;
+    use HasRoles,HasFactory, Notifiable,HasApiTokens;
 
     /**
      * The attributes that are mass assignable.

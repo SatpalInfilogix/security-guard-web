@@ -68,6 +68,17 @@
                         <span key="t-bell">Reports</span>
                     </a>
                 </li>
+                <li @class([
+                    'active' => Request::is('settings', 'settings/general-setting'),
+                ])>
+                    <a href="javascript: void(0);" class="has-arrow waves-effect">
+                        <i class="bx bxs-user-detail"></i>
+                        <span key="t-dashboards">Settings</span>
+                    </a>
+                    <ul class="sub-menu" aria-expanded="false">
+                        <li><a href="{{ route('settings.index')}}" key="t-tui-calendar">Site Settings</a></li>
+                    </ul>
+                </li>
 
                 <li>
                     <a href="javascript: void(0);" class="has-arrow waves-effect">

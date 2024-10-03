@@ -1,5 +1,12 @@
 @php
 $user = auth()->user();
+$logo_url= DB::table('settings')->where('key','logo')->first();
+if($logo_url)
+{
+    $logo_url = $logo_url->value;}
+else{
+    $logo_url = '';
+}
 @endphp
 <header id="page-topbar">
     <div class="navbar-header">
@@ -8,19 +15,19 @@ $user = auth()->user();
             <div class="navbar-brand-box">
                 <a href="index-2.html" class="logo logo-dark">
                     <span class="logo-sm">
-                        <img src="{{ asset('assets/images/logo.svg') }}" alt="" height="22">
+                        <img src="{{ $logo_url ? asset($logo_url) : asset('assets/images/logo.svg') }}" alt="" height="22">
                     </span>
                     <span class="logo-lg">
-                        <img src="{{ asset('assets/images/logo-dark.png') }}" alt="" height="17">
+                        <img src="{{ $logo_url ? asset($logo_url) : asset('assets/images/logo-dark.png') }}" alt="" height="17">
                     </span>
                 </a>
 
                 <a href="index-2.html" class="logo logo-light">
                     <span class="logo-sm">
-                        <img src="{{ asset('assets/images/logo-light.svg') }}" alt="" height="22">
+                        <img src="{{ $logo_url ? asset($logo_url) : asset('assets/images/logo-light.svg') }}" alt="" height="22">
                     </span>
                     <span class="logo-lg">
-                        <img src="{{ asset('assets/images/logo-light.png') }}" alt="" height="19">
+                        <img src="{{ $logo_url ? asset($logo_url) : asset('assets/images/logo-light.png') }}" alt="" height="19">
                     </span>
                 </a>
             </div>
