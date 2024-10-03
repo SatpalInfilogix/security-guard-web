@@ -11,6 +11,7 @@ use App\Models\GuardAdditionalInformation;
 use App\Models\ContactDetail;
 use App\Models\UsersBankDetail;
 use App\Models\UsersKinDetail;
+use App\Models\usersDocuments;
 
 class User extends Authenticatable
 {
@@ -23,12 +24,16 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'first_name',
+        'middle_name',
+        'surname',
         'last_name',
         'email',
         'phone_number',
         'profile_picture',
         'date_of_birth',
         'password',
+        'status',
+        'user_code'
     ];
 
     /**
@@ -72,6 +77,11 @@ class User extends Authenticatable
     public function usersKinDetail()
     {
         return $this->hasOne(UsersKinDetail::class);
+    }
+
+    public function userDocuments()
+    {
+        return $this->hasone(usersDocuments::class);
     }
 
 }

@@ -9,6 +9,7 @@ use App\Models\GuardAdditionalInformation;
 use App\Models\ContactDetail;
 use App\Models\usersBankDetail;
 use App\Models\usersKinDetail;
+use App\Models\usersDocuments;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
@@ -25,7 +26,7 @@ class SecurityGuardController extends Controller
             $query->where('role_id', $userRole->id);
         })->latest()->get();
 
-        return view('security-guards.index', compact('securityGuards'));
+        return view('admin.security-guards.index', compact('securityGuards'));
     }
 
     /**
@@ -33,7 +34,7 @@ class SecurityGuardController extends Controller
      */
     public function create()
     {
-        return view('security-guards.create');
+        return view('admin.security-guards.create');
     }
 
     /**
@@ -43,9 +44,13 @@ class SecurityGuardController extends Controller
     {
         $request->validate([
             'first_name'    => 'required',
-            'email'         => 'nullable|email|unique:users,email',
-            'phone_number'  => 'nullable|numeric|unique:users,phone_number',
+            'email'         => 'nullable|email|unique:users,email|required_without:phone_number',
+            'phone_number'  => 'nullable|numeric|unique:users,phone_number|required_without:email',
             'password'      => 'required',
+            'trn_doc'       => 'required',
+            'nis_doc'       => 'required',
+            'psra_doc'      => 'required',
+            'birth_certificate' => 'required',
         ]);
 
         $user = User::create([
@@ -109,6 +114,14 @@ class SecurityGuardController extends Controller
                 'email'          => $request->kin_email,
                 'phone_number'   => $request->kin_phone_number,
             ]);
+
+            usersDocuments::create([
+                'user_id'   => $user->id,
+                'trn'       => $this->uploadFile($request->file('trn_doc')),
+                'nis'       => $this->uploadFile($request->file('nis_doc')),
+                'psra'      => $this->uploadFile($request->file('psra_doc')),
+                'birth_certificate' => $this->uploadFile($request->file('birth_certificate')),
+            ]);
         }
         return redirect()->route('security-guards.index')->with('success', 'Security Guard created successfully.');
     }
@@ -127,9 +140,9 @@ class SecurityGuardController extends Controller
      */
     public function edit(string $id)
     {
-        $user = User::with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail'])->where('id', $id)->first();
+        $user = User::with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail', 'userDocuments'])->where('id', $id)->first();
     
-        return view('security-guards.edit', compact('user'));
+        return view('admin.security-guards.edit', compact('user'));
     }
 
     /**
@@ -139,9 +152,13 @@ class SecurityGuardController extends Controller
     {
         $request->validate([
             'first_name'    => 'required',
-            'email'         => 'nullable|email|unique:users,email,' . $id,
-            'phone_number'  => 'nullable|numeric|unique:users,phone_number,' . $id,
+            'email'         => 'nullable|email|unique:users,email,' . $user->id . '|required_without:phone_number',
+            'phone_number'  => 'nullable|numeric|unique:users,phone_number,' . $user->id . '|required_without:email',
             'password'      => 'nullable',
+            'trn_doc'       => 'nullable',
+            'nis_doc'       => 'nullable',
+            'psra_doc'      => 'nullable',
+            'birth_certificate' => 'nullable',
         ]);
 
         $user = User::findOrFail($id);
@@ -167,7 +184,7 @@ class SecurityGuardController extends Controller
                 'date_of_joining'       => $request->date_of_joining,
                 'date_of_birth'         => $request->date_of_birth,
                 'employer_company_name' => $request->employer_company_name,
-                'guards_current_rate'   => $request->guards_current_rate,
+                'guards_current_rate'   => $request->current_rate,
                 'location_code'         => $request->location_code,
                 'location_name'         => $request->location_name,
                 'client_code'           => $request->client_code,
@@ -200,7 +217,6 @@ class SecurityGuardController extends Controller
         ]);
 
         $usersKinDetail = UsersKinDetail::where('user_id', $id)->first();
-
         $usersKinDetail->update([
             'surname'        => $request->kin_surname,
             'first_name'     => $request->kin_first_name,
@@ -215,6 +231,23 @@ class SecurityGuardController extends Controller
             'phone_number'   => $request->kin_phone_number,
         ]);
 
+        $usersDocuments = usersDocuments::where('user_id', $id)->first();
+        $documents = [];
+        if ($request->hasFile('trn_doc')) {
+            $documents['trn'] = $this->uploadFile($request->file('trn_doc'));
+        }
+        if ($request->hasFile('nis_doc')) {
+            $documents['nis'] = $this->uploadFile($request->file('nis_doc'));
+        }
+        if ($request->hasFile('psra_doc')) {
+            $documents['psra'] = $this->uploadFile($request->file('psra_doc'));
+        }
+        if ($request->hasFile('birth_certificate')) {
+            $documents['birth_certificate'] = $this->uploadFile($request->file('birth_certificate'));
+        }
+
+        $usersDocuments->update($documents);
+
         return redirect()->route('security-guards.index')->with('success', 'Security Guard updated successfully.');
     }
 
@@ -223,6 +256,19 @@ class SecurityGuardController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $user = User::where('id', $id)->delete();
+
+        return redirect()->route('security-guards.index')->with('success', 'Security Guard deleted successfully.');
+    }
+
+    private function uploadFile($file)
+    {   
+        if ($file) {
+            $filename = uniqid('', true) . '.' . $file->getClientOriginalExtension();
+            $finalPath = 'uploads/documents/' . $filename;
+            $file->move(public_path('uploads/documents/'), $filename);
+            return $finalPath; 
+        }
+        return null;
     }
 }

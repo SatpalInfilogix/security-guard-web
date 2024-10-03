@@ -9,14 +9,14 @@
                 <li class="menu-title" key="t-menu">Menu</li>
 
                 <li @class(['mm-active' => Request::is('dashboard')])>
-                    <a href="{{ route('dashboard.index') }}" class="waves-effect">
+                    <a href="{{ route('admin.dashboard.index') }}" class="waves-effect">
                         <i class="bx bx-home-circle"></i>
                         <span key="t-dashboards">Dashboard</span>
                     </a>
                 </li>
-                <li @class(['mm-active' => Request::is('security-guards')])>
+                <li class="{{ Request::segment(2) == 'security-guards' ? 'mm-active' : '' }}">
                     <a href="{{ route('security-guards.index')}}" class="waves-effect">
-                        <i class="bx bx-spreadsheet"></i>
+                        <i class="bx bxs-user-badge"></i>
                         <span key="t-spreadsheet">Security Guard</span>
                     </a>
                 </li>
@@ -32,7 +32,7 @@
                         <span key="t-calendar">Management</span>
                     </a>
                 </li>
-                <li>
+                <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}">
                     <a href="{{ route('users.index')}}" class="waves-effect">
                         <i class="bx bx-user"></i>
                         <span key="t-user">Users</span>
