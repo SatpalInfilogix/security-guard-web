@@ -49,11 +49,17 @@
                                     <td>{{ $securityGuard->phone_number }}</td>
                                     <td class="action-buttons">
                                         <a href="{{ route('security-guards.edit', $securityGuard->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
-                                        <form action="{{ route('security-guards.destroy', $securityGuard->id) }}" method="POST">
+                                        <button data-source="Security Guard" data-endpoint="{{ route('security-guards.destroy', $securityGuard->id) }}"
+                                            class="delete-btn btn btn-outline-secondary btn-sm edit">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                        {{-- <form id="delete-form-{{ $securityGuard->id }}" action="{{ route('security-guards.destroy', $securityGuard->id) }}" method="POST" style="display: inline;">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit"  class="btn btn-outline-secondary btn-sm"><i class="fas fa-trash-alt"></i></button>
-                                        </form>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="confirmDelete({{ $securityGuard->id }})">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form> --}}
                                     </td>
                                 </tr>
                                 @endforeach

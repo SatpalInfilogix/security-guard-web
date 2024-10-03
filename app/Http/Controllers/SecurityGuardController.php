@@ -44,8 +44,8 @@ class SecurityGuardController extends Controller
     {
         $request->validate([
             'first_name'    => 'required',
-            'email'         => 'nullable|email|unique:users,email|required_without:phone_number',
-            'phone_number'  => 'nullable|numeric|unique:users,phone_number|required_without:email',
+            'email'         => 'nullable|email|unique:users,email',
+            'phone_number'  => 'nullable|numeric|unique:users,phone_number',
             'password'      => 'required',
             'trn_doc'       => 'required',
             'nis_doc'       => 'required',
@@ -152,8 +152,8 @@ class SecurityGuardController extends Controller
     {
         $request->validate([
             'first_name'    => 'required',
-            'email'         => 'nullable|email|unique:users,email,' . $user->id . '|required_without:phone_number',
-            'phone_number'  => 'nullable|numeric|unique:users,phone_number,' . $user->id . '|required_without:email',
+            'email' => 'nullable|email|unique:users,email,' . $id,
+            'phone_number' => 'nullable|numeric|unique:users,phone_number,' . $id,
             'password'      => 'nullable',
             'trn_doc'       => 'nullable',
             'nis_doc'       => 'nullable',
@@ -258,17 +258,21 @@ class SecurityGuardController extends Controller
     {
         $user = User::where('id', $id)->delete();
 
-        return redirect()->route('security-guards.index')->with('success', 'Security Guard deleted successfully.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Security Guard deleted successfully.'
+        ]);
     }
 
     private function uploadFile($file)
     {   
         if ($file) {
-            $filename = uniqid('', true) . '.' . $file->getClientOriginalExtension();
-            $finalPath = 'uploads/documents/' . $filename;
-            $file->move(public_path('uploads/documents/'), $filename);
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+            $finalPath = 'uploads/user-documents/' . $filename;
+            $file->move(public_path('uploads/user-documents/'), $filename);
             return $finalPath; 
         }
+
         return null;
     }
 }

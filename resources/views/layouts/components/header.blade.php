@@ -127,7 +127,7 @@ $user = auth()->user();
                         <img class="rounded-circle header-profile-user" src="{{ asset($user->profile_picture)}}"
                     alt="Header Avatar">
                     @else
-                        <img class="rounded-circle header-profile-user" src="assets/images/users/default.jpg"
+                        <img class="rounded-circle header-profile-user" src="{{ asset('assets/images/user.jpg') }}"
                     alt="Header Avatar">
                     @endif    
                     <span class="d-none d-xl-inline-block ms-1" key="t-henry">{{ $user->first_name }}</span>

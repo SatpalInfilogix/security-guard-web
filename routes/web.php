@@ -17,8 +17,8 @@ Route::post('authenticate', [AuthController::class, 'authenticate'])->name('auth
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth', 'auth.session'])->group(function () {
-    Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard.index');
     Route::prefix('admin')->group(function () {
+        Route::get('dashboard', [DashboardController::class, 'index'])->name('admin.dashboard.index');
         Route::resources([
             'profile'    => ProfileController::class,
             'users'      => UserController::class,

@@ -50,11 +50,6 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <x-form-input type="date" name="date_of_birth" label="Date of birth" class="form-control" value="{{ $user->date_of_birth }}" placeholder="Enter your DOB"/>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
                                         <label>Image</label>
                                         <input type="file" class="form-control" name="profile_image" id="imageInput" accept="image/*">
                                         <img id="imagePreview" src="#" alt="Image Preview">

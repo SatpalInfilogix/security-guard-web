@@ -21,7 +21,6 @@ class ProfileController extends Controller
             'first_name'    => 'required',
             'last_name'     => 'required',
             'phone_no'      => 'required',
-            'date_of_birth' => 'required',
         ]);
 
         $user = User::where('id', Auth::id())->first();
@@ -40,7 +39,6 @@ class ProfileController extends Controller
         $user->update([
             'first_name'      => $request->first_name,
             'last_name'       => $request->last_name,
-            'date_of_birth'   => $request->date_of_birth,
             'phone_number'    => $request->phone_no,
             'profile_picture' => isset($filename) ? 'uploads/profile-pic/'. $filename : $oldProfile,
         ]);

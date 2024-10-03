@@ -7,7 +7,7 @@
 
     <div class="col-md-6">
         <div class="mb-3">
-            <x-form-input name="first_name" value="{{ old('first_name', $user->first_name ?? '') }}" label="First Name" placeholder="Enter your First Name"/>
+            <x-form-input name="first_name" value="{{ old('first_name', $user->first_name ?? '') }}" label="First Name" placeholder="Enter your First Name"  required="true" />
         </div>
     </div>
 
@@ -18,7 +18,7 @@
     </div>
     <div class="col-md-6">
         <div class="mb-3">
-            <x-form-input name="password" value="{{ old('password') }}" label="Password" placeholder="Enter your Password" type="password"/>
+            <x-form-input name="password" value="{{ old('password') }}" label="Password" placeholder="Enter your Password" type="password"  required="true" />
         </div>
     </div>
 </div>
@@ -176,7 +176,7 @@
         <legend>User Documents</legend>
         <div class="row mb-2">
             <div class="col-md-4 mb-3">
-                <x-form-input type="file" name="trn_doc" label="TRN Document" accept="application/pdf" onchange="showLink(this, 'trn_link', 'old_trn_link')" />
+                <x-form-input type="file" name="trn_doc" label="TRN Document" accept="application/pdf" onchange="showLink(this, 'trn_link', 'old_trn_link')"  required="true"/>
                 @if ($user->userDocuments->trn ?? '')
                     <div class="preview mt-2" id="old_trn_link">
                         <label>View TRN Document:</label>
@@ -190,7 +190,7 @@
             </div>
     
             <div class="col-md-4 mb-3">
-                <x-form-input type="file" name="nis_doc" label="NIS Document" accept="application/pdf" onchange="showLink(this, 'nis_link', 'old_nis_link')" />
+                <x-form-input type="file" name="nis_doc" label="NIS Document" accept="application/pdf" onchange="showLink(this, 'nis_link', 'old_nis_link')"  required="true" />
                 @if ($user->userDocuments->nis ?? '')
                     <div class="preview mt-2" id="old_nis_link">
                         <label>View NIS Document:</label>
@@ -204,7 +204,7 @@
             </div>
     
             <div class="col-md-4 mb-3">
-                <x-form-input type="file" name="psra_doc" label="PSRA Document" accept="application/pdf" onchange="showLink(this, 'psra_link', 'old_psra_doc')" />
+                <x-form-input type="file" name="psra_doc" label="PSRA Document" accept="application/pdf" onchange="showLink(this, 'psra_link', 'old_psra_doc')" required="true"/>
                 @if ($user->userDocuments->psra ?? '')
                     <div class="preview mt-2" id="old_psra_doc">
                         <label>View PSRA Document:</label>
@@ -218,7 +218,7 @@
             </div>
     
             <div class="col-md-4 mb-3">
-                <x-form-input type="file" name="birth_certificate" label="Birth Certificate" accept="application/pdf" onchange="showLink(this, 'birth_link', 'old_birth_certificate')" />
+                <x-form-input type="file" name="birth_certificate" label="Birth Certificate" accept="application/pdf" onchange="showLink(this, 'birth_link', 'old_birth_certificate')"  required="true" />
                 @if ($user->userDocuments->birth_certificate ?? '')
                     <div class="preview mt-2" id="old_birth_certificate">
                         <label>View Birth Certificate:</label>
@@ -240,24 +240,8 @@
         </div>
     </div>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <x-include-plugins :plugins="['datePicker']"></x-include-plugins>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        flatpickr('.date-picker', {
-            dateFormat: "Y-m-d",
-            allowInput: true
-        });
-        flatpickr('.date-of-birth', {
-            dateFormat: "Y-m-d",
-            allowInput: true
-        });
-        flatpickr('.date_of_separation', {
-            dateFormat: "Y-m-d",
-            allowInput: true
-        });
-    })
-
     function showLink(input, linkId, oldLinkId) {
         const linkDiv = document.getElementById(linkId);
         const oldLinkDiv = document.getElementById(oldLinkId);

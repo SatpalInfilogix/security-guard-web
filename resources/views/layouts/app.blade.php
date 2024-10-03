@@ -17,14 +17,14 @@
     <link rel="stylesheet"
         href="{{ asset('assets/libs/datatables.net-responsive-bs4/css/responsive.bootstrap4.min.css') }}"
         type="text/css" />
-
+    <link href="{{ asset('assets/css/sweetalert.css') }}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/icons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/app.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <script src="{{ asset('assets/libs/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/js/plugin.js') }}"></script>
-
+    @stack('styles')
 </head>
 
 <body data-sidebar="dark">
@@ -137,5 +137,51 @@
 
     <!-- Datatable init js -->
     <script src="{{ asset('assets/js/pages/datatables.init.js') }}"></script>
+
+    <script src="{{ asset('assets/libs/sweetalert2/sweetalert.min.js') }}"></script>
+
+    <!-- Sweet alert init js-->
+    <script src="assets/js/pages/sweet-alerts.init.js"></script>
+    @stack('scripts')
+    <script>
+        $(function() {            
+            $('.delete-btn').click(function() {
+                let source = $(this).data('source');
+                let deleteApiEndpoint = $(this).data('endpoint');
+    
+                swal({
+                    title: "Are you sure?",
+                    text: `You really want to remove this ${source}?`,
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                }, function(isConfirm) {
+                    if (isConfirm) {
+                        $.ajax({
+                            url: deleteApiEndpoint,
+                            method: 'DELETE',
+                            data: {
+                                '_token': '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if(response.success){
+                                    swal({
+                                        title: "Success!",
+                                        text: response.message,
+                                        type: "success",
+                                        showConfirmButton: false
+                                    }) 
+    
+                                    setTimeout(() => {
+                                        location.reload();
+                                    }, 2000);
+                                }
+                            }
+                        })
+                    }
+                });
+            })
+        })
+    </script>
 </body>
 </html>
