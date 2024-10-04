@@ -35,7 +35,7 @@ class LoginController extends Controller
         // Check if the password is correct
         if (Hash::check($request->password, $user->password)) {
             $token = $user->createToken('MyApp')->plainTextToken;
-    
+            $user->token = $token;
             return response()->json([
                 'success' => true,
                 'message' => 'User logged in successfully!',

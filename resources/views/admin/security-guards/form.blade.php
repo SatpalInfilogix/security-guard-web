@@ -1,12 +1,6 @@
 <div class="row mb-2">
     <div class="col-md-6">
         <div class="mb-3">
-            <x-form-input name="surname" value="{{ old('surname', $user->surname ?? '') }}" label="Surname" placeholder="Enter your Surname"/>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="mb-3">
             <x-form-input name="first_name" value="{{ old('first_name', $user->first_name ?? '') }}" label="First Name" placeholder="Enter your First Name"  required="true" />
         </div>
     </div>
@@ -16,6 +10,13 @@
             <x-form-input name="middle_name" value="{{ old('middle_name', $user->middle_name ?? '') }}" label="Middle Name" placeholder="Enter your Middle Name"/>
         </div>
     </div>
+
+    <div class="col-md-6">
+        <div class="mb-3">
+            <x-form-input name="surname" value="{{ old('surname', $user->surname ?? '') }}" label="Surname" placeholder="Enter your Surname"/>
+        </div>
+    </div>
+
     <div class="col-md-6">
         <div class="mb-3">
             <x-form-input name="password" value="{{ old('password') }}" label="Password" placeholder="Enter your Password" type="password"  required="true" />
@@ -240,26 +241,4 @@
         </div>
     </div>
 
-    <x-include-plugins :plugins="['datePicker']"></x-include-plugins>
-<script>
-    function showLink(input, linkId, oldLinkId) {
-        const linkDiv = document.getElementById(linkId);
-        const oldLinkDiv = document.getElementById(oldLinkId);
-
-        if (input.files.length > 0) {
-            const file = input.files[0];
-            const fileUrl = URL.createObjectURL(file); // Create a URL for the file
-            linkDiv.querySelector('a').href = fileUrl; // Set the href of the link to the file URL
-            linkDiv.style.display = 'block'; // Show the link
-
-            if (oldLinkDiv) {
-                oldLinkDiv.style.display = 'none'; // Hide the old document link
-            }
-        } else {
-            linkDiv.style.display = 'none'; // Hide the link if no file is selected
-            if (oldLinkDiv) {
-                oldLinkDiv.style.display = 'block'; // Show the old document link if no new file is selected
-            }
-        }
-    }
-</script>
+    <x-include-plugins :plugins="['datePicker', 'guardImage']"></x-include-plugins>

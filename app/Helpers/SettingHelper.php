@@ -13,5 +13,17 @@
             }
             return $value;
         }
+
+        static function uploadFile($file)
+        {   
+            if ($file) {
+                $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+                $finalPath = 'uploads/guard-image/' . $filename;
+                $file->move(public_path('uploads/guard-image/'), $filename);
+                return $finalPath; 
+            }
+
+            return null;
+        }
     }
 ?>
