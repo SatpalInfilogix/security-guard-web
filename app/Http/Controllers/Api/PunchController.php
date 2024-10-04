@@ -39,7 +39,7 @@ class PunchController extends Controller
                 'out_lat' => $request->out_lat,
                 'out_long' => $request->out_long,
                 'out_location' => $request->out_location,
-                'out_image' => SettingHelper::uploadFile($request->file('out_image')),
+                'out_image' => SettingHelper::uploadFile($request->out_image, 'punch_out'),
             ]);
 
             return $this->createResponse(true, 'Punch updated successfully.', $lastInPunch);
@@ -55,7 +55,7 @@ class PunchController extends Controller
                 'in_lat' => $request->in_lat,
                 'in_long' => $request->in_long,
                 'in_location' => $request->in_location,
-                'in_image' => SettingHelper::uploadFile($request->file('in_image')),
+                'in_image' => SettingHelper::uploadFile($request->in_image, 'punch_in'),
             ]);
 
             return $this->createResponse(true, 'Punch created successfully.', $punch);
@@ -69,12 +69,12 @@ class PunchController extends Controller
             $rules['in_lat'] = 'required';
             $rules['in_long'] = 'required';
             $rules['in_location'] = 'required';
-            $rules['in_image'] = 'required|file';
+            $rules['in_image'] = 'required';
         } elseif ($action === 'out') {
             $rules['out_lat'] = 'required';
             $rules['out_long'] = 'required';
             $rules['out_location'] = 'required';
-            $rules['out_image'] = 'required|file';
+            $rules['out_image'] = 'required';
         }
     }
 

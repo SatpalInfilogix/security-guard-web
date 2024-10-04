@@ -189,7 +189,7 @@
                     <a href="#" target="_blank">Preview TRN Document</a>
                 </div>
             </div>
-    
+
             <div class="col-md-4 mb-3">
                 <x-form-input type="file" name="nis_doc" label="NIS Document" accept="application/pdf" onchange="showLink(this, 'nis_link', 'old_nis_link')"  required="true" />
                 @if ($user->userDocuments->nis ?? '')
@@ -203,7 +203,7 @@
                     <a href="#" target="_blank">Preview NIS Document</a>
                 </div>
             </div>
-    
+
             <div class="col-md-4 mb-3">
                 <x-form-input type="file" name="psra_doc" label="PSRA Document" accept="application/pdf" onchange="showLink(this, 'psra_link', 'old_psra_doc')" required="true"/>
                 @if ($user->userDocuments->psra ?? '')
@@ -233,7 +233,6 @@
             </div>
         </div>
     </fieldset>
-    
 
     <div class="row mb-2">
         <div class="col-lg-6 mb-2">
