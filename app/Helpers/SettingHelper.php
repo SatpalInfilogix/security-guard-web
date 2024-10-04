@@ -30,17 +30,5 @@
             }
             return null;
         }
-
-        static function uploadDocument($file)
-        {   
-            if ($file) {
-                $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-                $finalPath = 'uploads/user-documents/' . $filename;
-                $file->move(public_path('uploads/user-documents/'), $filename);
-                return $finalPath; 
-            }
-
-            return null;
-        }
     }
 ?>
