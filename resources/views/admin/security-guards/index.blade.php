@@ -53,13 +53,6 @@
                                             class="delete-btn btn btn-outline-secondary btn-sm edit">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
-                                        {{-- <form id="delete-form-{{ $securityGuard->id }}" action="{{ route('security-guards.destroy', $securityGuard->id) }}" method="POST" style="display: inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="confirmDelete({{ $securityGuard->id }})">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </form> --}}
                                     </td>
                                 </tr>
                                 @endforeach
@@ -71,4 +64,5 @@
             </div> <!-- end row -->
         </div> <!-- container-fluid -->
     </div>
+    <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
 @endsection

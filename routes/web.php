@@ -9,6 +9,7 @@ use App\Http\Controllers\RoleAndPermissionController;
 use App\Http\Controllers\SecurityGuardController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\FaqController;
+use App\Http\Controllers\AttendanceController;
 
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');
@@ -24,10 +25,11 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::resources([
             'profile'    => ProfileController::class,
             'users'      => UserController::class,
+            'settings'   => SettingController::class,
+            'faq'        => FaqController::class,
+            'attendance' => AttendanceController::class,
+            'security-guards'       => SecurityGuardController::class,
             'roles-and-permissions' => RoleAndPermissionController::class,
-            'security-guards' => SecurityGuardController::class,
-            'settings'        => SettingController::class,
-            'faq'             => FaqController::class
         ]);
     });
 });

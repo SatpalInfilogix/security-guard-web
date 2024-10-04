@@ -8,12 +8,7 @@
             <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0 font-size-18">FAQ</h4>
-
-                        <div class="page-title-right">
-                            <a href="{{ route('faq.create') }}" class="btn btn-primary">Add New FAQ</a>
-                        </div>
-
+                        <h4 class="mb-sm-0 font-size-18">Attendance</h4>
                     </div>
                 </div>
             </div>
@@ -30,24 +25,30 @@
                                 <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Question</th>
-                                    <th>Answer</th>
+                                    <th>Firstname</th>
+                                    <th>Middlename</th>
+                                    <th>Surname</th>
+                                    <th>Punch In</th>
+                                    <th>Punch Out</th>
                                     <th>Action</th>
                                 </tr>
                                 </thead>
 
                                 <tbody>
-                                @foreach($faqs as $key => $faq)
+                                @foreach($attendances as $key => $attendance)
                                 <tr>
                                     <td>{{ ++$key }}</td>
-                                    <td>{{ $faq->question }}</td>
-                                    <td>{!! $faq->answer !!}</td>
+                                    <td>{{ $attendance->user->first_name }}</td>
+                                    <td>{{ $attendance->user->middle_name }}</td>
+                                    <td>{{ $attendance->user->surname}}</td>
+                                    <td>{{ $attendance->in_time }}</td>
+                                    <td>{{ $attendance->out_time }}</td>
                                     <td class="action-buttons">
-                                        <a href="{{ route('faq.edit', $faq->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
-                                        <button data-source="Faq" data-endpoint="{{ route('faq.destroy', $faq->id) }}"
+                                        {{-- <a href="{{ route('users.edit', $attendance->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                        <button data-source="User" data-endpoint="{{ route('users.destroy', $attendance->id) }}"
                                             class="delete-btn btn btn-outline-secondary btn-sm edit">
                                             <i class="fas fa-trash-alt"></i>
-                                        </button>
+                                        </button> --}}
                                     </td>
                                 </tr>
                                 @endforeach
@@ -57,6 +58,7 @@
                     </div>
                 </div> <!-- end col -->
             </div> <!-- end row -->
+
         </div> <!-- container-fluid -->
     </div>
     <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
