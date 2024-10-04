@@ -11,7 +11,7 @@ use App\Models\GuardAdditionalInformation;
 use App\Models\ContactDetail;
 use App\Models\UsersBankDetail;
 use App\Models\UsersKinDetail;
-use App\Models\usersDocuments;
+use App\Models\UsersDocuments;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -82,7 +82,7 @@ class User extends Authenticatable
 
     public function userDocuments()
     {
-        return $this->hasone(usersDocuments::class);
+        return $this->hasone(UsersDocuments::class);
     }
 
 }

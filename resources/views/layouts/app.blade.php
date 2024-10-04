@@ -1,9 +1,18 @@
+@php
+$site_name= DB::table('settings')->where('key','site_name')->first();
+if($site_name)
+{
+    $site_name = $site_name->value;}
+else{
+    $site_name = '';
+}
+@endphp
 <!doctype html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8" />
-    <title>Shield Time</title>
+    <title>{{ ucwords($site_name) }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="Themesbrand" name="author" />

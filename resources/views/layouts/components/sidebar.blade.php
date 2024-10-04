@@ -72,7 +72,7 @@
                     'active' => Request::is('settings', 'settings/general-setting'),
                 ])>
                     <a href="javascript: void(0);" class="has-arrow waves-effect">
-                        <i class="bx bxs-user-detail"></i>
+                        <i class="bx bxs-wrench"></i>
                         <span key="t-dashboards">Settings</span>
                     </a>
                     <ul class="sub-menu" aria-expanded="false">

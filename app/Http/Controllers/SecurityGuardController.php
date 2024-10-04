@@ -7,9 +7,9 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Models\GuardAdditionalInformation;
 use App\Models\ContactDetail;
-use App\Models\usersBankDetail;
-use App\Models\usersKinDetail;
-use App\Models\usersDocuments;
+use App\Models\UsersBankDetail;
+use App\Models\UsersKinDetail;
+use App\Models\UsersDocuments;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
