@@ -1,5 +1,12 @@
 @php
 $user = auth()->user();
+$logo_url= DB::table('settings')->where('key','logo')->first();
+if($logo_url)
+{
+    $logo_url = $logo_url->value;}
+else{
+    $logo_url = '';
+}
 @endphp
 <header id="page-topbar">
     <div class="navbar-header">
@@ -8,19 +15,19 @@ $user = auth()->user();
             <div class="navbar-brand-box">
                 <a href="index-2.html" class="logo logo-dark">
                     <span class="logo-sm">
-                        <img src="{{ asset('assets/images/logo.svg') }}" alt="" height="22">
+                        <img src="{{ $logo_url ? asset($logo_url) : asset('assets/images/logo.svg') }}" alt="" height="22">
                     </span>
                     <span class="logo-lg">
-                        <img src="{{ asset('assets/images/logo-dark.png') }}" alt="" height="17">
+                        <img src="{{ $logo_url ? asset($logo_url) : asset('assets/images/logo-dark.png') }}" alt="" height="17">
                     </span>
                 </a>
 
                 <a href="index-2.html" class="logo logo-light">
                     <span class="logo-sm">
-                        <img src="{{ asset('assets/images/logo-light.svg') }}" alt="" height="22">
+                        <img src="{{ $logo_url ? asset($logo_url) : asset('assets/images/logo-light.svg') }}" alt="" height="22">
                     </span>
                     <span class="logo-lg">
-                        <img src="{{ asset('assets/images/logo-light.png') }}" alt="" height="19">
+                        <img src="{{ $logo_url ? asset($logo_url) : asset('assets/images/logo-light.png') }}" alt="" height="19">
                     </span>
                 </a>
             </div>
@@ -127,7 +134,7 @@ $user = auth()->user();
                         <img class="rounded-circle header-profile-user" src="{{ asset($user->profile_picture)}}"
                     alt="Header Avatar">
                     @else
-                        <img class="rounded-circle header-profile-user" src="assets/images/users/default.jpg"
+                        <img class="rounded-circle header-profile-user" src="{{ asset('assets/images/user.jpg') }}"
                     alt="Header Avatar">
                     @endif    
                     <span class="d-none d-xl-inline-block ms-1" key="t-henry">{{ $user->first_name }}</span>
@@ -137,7 +144,7 @@ $user = auth()->user();
                     <!-- item-->
                     <a class="dropdown-item" href="{{ route('profile.index') }}"><i class="bx bx-user font-size-16 align-middle me-1"></i> <span key="t-profile">Profile</span></a>
                     {{--<a class="dropdown-item" href="#"><i class="bx bx-wallet font-size-16 align-middle me-1"></i> <span key="t-my-wallet">My Wallet</span></a>--}}
-                    <a class="dropdown-item d-block" href="#"><!--span class="badge bg-success float-end">11</span--><i class="bx bx-wrench font-size-16 align-middle me-1"></i> <span key="t-settings">Settings</span></a>
+                    {{-- <a class="dropdown-item d-block" href="#"><!--span class="badge bg-success float-end">11</span--><i class="bx bx-wrench font-size-16 align-middle me-1"></i> <span key="t-settings">Settings</span></a> --}}
                     {{--<a class="dropdown-item" href="#"><i class="bx bx-lock-open font-size-16 align-middle me-1"></i> <span key="t-lock-screen">Lock screen</span></a>--}}
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item text-danger" href="{{ route('logout') }}"><i class="bx bx-power-off font-size-16 align-middle me-1 text-danger"></i> <span key="t-logout">Logout</span></a>

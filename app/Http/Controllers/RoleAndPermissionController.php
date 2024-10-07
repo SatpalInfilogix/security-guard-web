@@ -22,7 +22,7 @@ class RoleAndPermissionController extends Controller
 
         $roles = Role::where('name', '!=', 'Admin')->get();
         $modules = Module::get();
-        return view('roles-and-permissions.index', compact('roles', 'modules'));
+        return view('admin.roles-and-permissions.index', compact('roles', 'modules'));
     }
 
     /**

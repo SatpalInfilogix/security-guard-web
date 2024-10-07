@@ -1,5 +1,5 @@
 <div class="form-group">
-    <label for="{{ $name }}">{{ $label }}</label>
+    <label for="{{ $name }}">{{ $label }} @if($required)<span class="text-danger">*</span>@endif</label>
     @if($type!=='password')
         <input
             type="{{ $type }}"

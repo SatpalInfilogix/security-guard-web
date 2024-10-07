@@ -9,12 +9,18 @@
                 <li class="menu-title" key="t-menu">Menu</li>
 
                 <li @class(['mm-active' => Request::is('dashboard')])>
-                    <a href="{{ route('dashboard.index') }}" class="waves-effect">
+                    <a href="{{ route('admin.dashboard.index') }}" class="waves-effect">
                         <i class="bx bx-home-circle"></i>
                         <span key="t-dashboards">Dashboard</span>
                     </a>
                 </li>
-                <li>
+                <li class="{{ Request::segment(2) == 'security-guards' ? 'mm-active' : '' }}">
+                    <a href="{{ route('security-guards.index')}}" class="waves-effect">
+                        <i class="bx bxs-user-badge"></i>
+                        <span key="t-spreadsheet">Security Guard</span>
+                    </a>
+                </li>
+                {{-- <li>
                     <a href="#" class="waves-effect">
                         <i class="bx bx-spreadsheet"></i>
                         <span key="t-spreadsheet">Attendance</span>
@@ -25,14 +31,14 @@
                         <i class="bx bx-calendar"></i>
                         <span key="t-calendar">Management</span>
                     </a>
-                </li>
-                <li>
+                </li> --}}
+                <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}">
                     <a href="{{ route('users.index')}}" class="waves-effect">
                         <i class="bx bx-user"></i>
                         <span key="t-user">Users</span>
                     </a>
                 </li>
-                <li>
+                {{-- <li>
                     <a href="#" class="waves-effect">
                         <i class="bx bx-receipt"></i>
                         <span key="t-receipt">Invoices</span>
@@ -61,6 +67,29 @@
                         <i class="bx bx-detail"></i>
                         <span key="t-bell">Reports</span>
                     </a>
+                </li> --}}
+                <li @class([
+                    'active' => Request::is('faq'),
+                ])>
+                    <a href="javascript: void(0);" class="has-arrow waves-effect">
+                        <i class="bx bx-list-ul"></i>
+                        <span key="t-dashboards">Manage Pages</span>
+                    </a>
+                    <ul class="sub-menu" aria-expanded="false">
+                        <li><a href="{{ route('faq.index')}}" key="t-tui-calendar">FAQ</a></li>
+                    </ul>
+                </li>
+
+                <li @class([
+                    'active' => Request::is('settings', 'settings/general-setting'),
+                ])>
+                    <a href="javascript: void(0);" class="has-arrow waves-effect">
+                        <i class="bx bxs-wrench"></i>
+                        <span key="t-dashboards">Settings</span>
+                    </a>
+                    <ul class="sub-menu" aria-expanded="false">
+                        <li><a href="{{ route('settings.index')}}" key="t-tui-calendar">Site Settings</a></li>
+                    </ul>
                 </li>
 
                 <li>

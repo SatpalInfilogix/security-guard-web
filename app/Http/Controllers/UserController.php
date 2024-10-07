@@ -5,19 +5,24 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 Use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
     public function index()
     {
-        $users = User::latest()->get();
+        $excludedRoles = Role::whereIn('name', ['Security Guard', 'Admin'])->pluck('id');
 
-        return view('users.index', compact('users'));
+        $users = User::whereDoesntHave('roles', function ($query) use ($excludedRoles) {
+            $query->whereIn('role_id', $excludedRoles);
+        })->latest()->get();
+
+        return view('admin.users.index', compact('users'));
     }
 
     public function create()
     {
-        return view('users.create');
+        return view('admin.users.create');
     }
 
     public function store(Request $request)
@@ -27,7 +32,6 @@ class UserController extends Controller
             'last_name'  => 'required',
             'email' => ['required', 'email', 'unique:users,email'],
             'phone_no' => 'required',
-            'date_of_birth' => 'required',
             'password' => 'required',
         ]);
 
@@ -36,7 +40,6 @@ class UserController extends Controller
             'last_name'     => $request->last_name,
             'email'         => $request->email,
             'phone_number'  => $request->phone_no,
-            'date_of_birth' => $request->date_of_birth,
             'password'      =>  Hash::make($request->password)
         ])->assignRole('client');
 
@@ -52,7 +55,7 @@ class UserController extends Controller
     {
         $user = User::where('id', $id)->first();
 
-        return view('users.edit', compact('user'));
+        return view('admin.users.edit', compact('user'));
     }
 
     public function update(Request $request, string $id)
@@ -61,14 +64,12 @@ class UserController extends Controller
             'first_name'    => 'required',
             'last_name'     => 'required',
             'phone_no'      => 'required',
-            'date_of_birth' => 'required',
         ]);
 
         $user = User::where('id', $id)->update([
             'first_name'    => $request->first_name,
             'last_name'     => $request->last_name,
             'phone_number'  => $request->phone_no,
-            'date_of_birth' => $request->date_of_birth,
         ]);
 
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
@@ -78,6 +79,9 @@ class UserController extends Controller
     {
         $user = User::where('id', $id)->delete();
 
-        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+        return response()->json([
+            'success' => true,
+            'message' => 'User deleted successfully.'
+        ]);
     }
 }
