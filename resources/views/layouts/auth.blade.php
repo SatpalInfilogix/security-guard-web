@@ -15,8 +15,7 @@
         <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css" />
         <!-- App Css-->
         <link href="{{ asset('assets/css/app.min.css') }}" id="app-style" rel="stylesheet" type="text/css" />
-        <!-- App js -->
-        <script src="{{ asset('assets/js/plugin.js') }}"></script>
+   
         <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet" type="text/css" />
     </head>
     <body>
@@ -25,11 +24,16 @@
         </div>
         <!-- JAVASCRIPT -->
         <script src="{{ asset('assets/libs/jquery/jquery.min.js') }}"></script>
+             <!-- App js -->
+        
         <script src="{{ asset('assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
         <script src="{{ asset('assets/libs/metismenu/metisMenu.min.js') }}"></script>
         <script src="{{ asset('assets/libs/simplebar/simplebar.min.js') }}"></script>
         <script src="{{ asset('assets/libs/node-waves/waves.min.js') }}"></script>
         <!-- App js -->
+        
         <script src="{{ asset('assets/js/app.js') }}"></script>
+        <script src="{{ asset('assets/js/plugin.js') }}"></script>
+
     </body>
 </html>
