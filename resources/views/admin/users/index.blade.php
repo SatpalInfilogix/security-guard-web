@@ -52,11 +52,6 @@
                                             class="delete-btn btn btn-outline-secondary btn-sm edit">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
-                                        {{-- <form action="{{ route('users.destroy', $user->id) }}" method="POST">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"  class="btn btn-outline-secondary btn-sm"><i class="fas fa-trash-alt"></i></button>
-                                        </form> --}}
                                     </td>
                                 </tr>
                                 @endforeach
@@ -69,4 +64,5 @@
 
         </div> <!-- container-fluid -->
     </div>
+    <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
 @endsection
