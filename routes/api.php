@@ -13,6 +13,6 @@ use App\Http\Controllers\Api\ProfileController;
 Route::post('login', [LoginController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/punch/{action}', [PunchController::class, 'logPunch']);
-
     Route::post('edit-profile', [ProfileController::class,'editProfile']);
+    Route::get('guard/profile',[ProfileController::class,'guardProfile']);
 });

@@ -16,9 +16,9 @@ class PunchController extends Controller
         $rules = [
             'time' => 'required|date_format:Y-m-d H:i:s',
         ];
-
+        
         $this->addActionRules($rules, $action);
-    
+        
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             return response()->json(['success' => false, 'message' => $validator->errors()], 400);
@@ -76,12 +76,12 @@ class PunchController extends Controller
             $rules['in_lat'] = 'required';
             $rules['in_long'] = 'required';
             $rules['in_location'] = 'required';
-            $rules['in_image'] = 'required';
+            $rules['in_image'] = 'required|file|image|mimes:jpg,jpeg,png,gif';
         } elseif ($action === 'out') {
             $rules['out_lat'] = 'required';
             $rules['out_long'] = 'required';
             $rules['out_location'] = 'required';
-            $rules['out_image'] = 'required';
+            $rules['out_image'] = 'required|file|image|mimes:jpg,jpeg,png,gif';
         }
     }
 
