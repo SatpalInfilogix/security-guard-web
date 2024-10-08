@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('middle_name', 50)->nullable();
             $table->string('last_name', 50)->nullable();
             $table->string('surname', 50)->nullable();
-            $table->string('email')->nullable();
-            $table->string('phone_number')->nullable();
+            $table->string('email')->nullable()->unique();
+            $table->string('phone_number')->nullable()->unique();
             $table->string('profile_picture')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->enum('status', ['Active', 'Inactive', 'Hold'])->default('Active');

@@ -24,7 +24,7 @@ else{
     <link rel="stylesheet" href="{{ asset('assets/css/app.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <script src="{{ asset('assets/libs/jquery/jquery.min.js') }}"></script>
-    <script src="{{ asset('assets/js/plugin.js') }}"></script>
+   
     @stack('styles')
 </head>
 
@@ -75,7 +75,7 @@ else{
 
             <div class="p-4">
                 <div class="mb-2">
-                    <img src="assets/images/layouts/layout-1.jpg" class="img-thumbnail" alt="layout images">
+                    <img src="{{ asset('assets/images/layouts/layout-1.jpg') }}" class="img-thumbnail" alt="layout images">
                 </div>
 
                 <div class="form-check form-switch mb-3">
@@ -84,7 +84,7 @@ else{
                 </div>
 
                 <div class="mb-2">
-                    <img src="assets/images/layouts/layout-2.jpg" class="img-thumbnail" alt="layout images">
+                    <img src="{{ asset('assets/images/layouts/layout-2.jpg') }}" class="img-thumbnail" alt="layout images">
                 </div>
                 <div class="form-check form-switch mb-3">
                     <input class="form-check-input theme-choice" type="checkbox" id="dark-mode-switch">
@@ -92,7 +92,7 @@ else{
                 </div>
 
                 <div class="mb-2">
-                    <img src="assets/images/layouts/layout-3.jpg" class="img-thumbnail" alt="layout images">
+                    <img src="{{ asset('assets/images/layouts/layout-3.jpg') }}" class="img-thumbnail" alt="layout images">
                 </div>
                 <div class="form-check form-switch mb-3">
                     <input class="form-check-input theme-choice" type="checkbox" id="rtl-mode-switch">
@@ -100,7 +100,7 @@ else{
                 </div>
 
                 <div class="mb-2">
-                    <img src="assets/images/layouts/layout-4.jpg" class="img-thumbnail" alt="layout images">
+                    <img src="{{ asset('assets/images/layouts/layout-4.jpg') }}" class="img-thumbnail" alt="layout images">
                 </div>
                 <div class="form-check form-switch mb-5">
                     <input class="form-check-input theme-choice" type="checkbox" id="dark-rtl-mode-switch">
@@ -129,7 +129,7 @@ else{
     <script src="{{ asset('assets/libs/sweetalert2/sweetalert.min.js') }}"></script>
 
     <!-- Sweet alert init js-->
-    <script src="assets/js/pages/sweet-alerts.init.js"></script>
+    <script src="{{ asset('assets/js/pages/sweet-alerts.init.js')}}"></script>
     @stack('scripts')
     <script>
         $(function() {            

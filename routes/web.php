@@ -31,5 +31,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'security-guards'       => SecurityGuardController::class,
             'roles-and-permissions' => RoleAndPermissionController::class,
         ]);
+        Route::get('export-guards', [SecurityGuardController::class, 'exportGuards'])->name('export.guards');
+        Route::post('import-guards', [SecurityGuardController::class, 'importGuards'])->name('import.guards');
     });
 });

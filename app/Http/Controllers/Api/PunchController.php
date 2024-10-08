@@ -34,12 +34,16 @@ class PunchController extends Controller
             if (!$lastInPunch) {
                 return response()->json(['success' => false, 'message' => 'Please punch In first.'], 400);
             }
+
+            $imageName = uniqid() . '_' . $request->file('out_image')->getClientOriginalExtension();
+            $request->file('out_image')->move(public_path('uploads/activity/punch_out/'), $imageName);
+    
             $lastInPunch->update([
                 'out_time' =>  $request->time,
                 'out_lat' => $request->out_lat,
                 'out_long' => $request->out_long,
                 'out_location' => $request->out_location,
-                'out_image' => SettingHelper::uploadFile($request->out_image, 'punch_out'),
+                'out_image' => $imageName,
             ]);
 
             return $this->createResponse(true, 'Punch updated successfully.', $lastInPunch);
@@ -48,6 +52,9 @@ class PunchController extends Controller
             if ($oldPunch) {
                 return response()->json(['success' => false, 'message' => 'You are already Punch In.'], 400);
             }
+
+            $imageName = uniqid() . '_' . $request->file('in_image')->getClientOriginalExtension();
+            $request->file('in_image')->move(public_path('uploads/activity/punch_in/'), $imageName);
     
             $punch = PunchTable::create([
                 'user_id' => Auth::id(),
@@ -55,7 +62,7 @@ class PunchController extends Controller
                 'in_lat' => $request->in_lat,
                 'in_long' => $request->in_long,
                 'in_location' => $request->in_location,
-                'in_image' => SettingHelper::uploadFile($request->in_image, 'punch_in'),
+                'in_image' => $imageName,
             ]);
 
             return $this->createResponse(true, 'Punch created successfully.', $punch);

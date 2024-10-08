@@ -11,11 +11,19 @@
                         <h4 class="mb-sm-0 font-size-18">Security Guards</h4>
 
                         <div class="page-title-right">
+                            <a href="{{ route('export.guards') }}" class="btn btn-primary"><i class="bx bx-export"></i> Export</a>
+                            <a class="btn btn-primary" onclick="document.getElementById('import_guard').click();">
+                                <i class="bx bx-import"></i> Import
+                            </a>
                             <a href="{{ route('security-guards.create') }}" class="btn btn-primary">Add New Security Guard</a>
                         </div>
                     </div>
                 </div>
             </div>
+            <form action="{{ route('import.guards') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <input type="file" name="import_guard" id="import_guard" required style="display: none;" onchange="this.form.submit();">
+            </form>
             <!-- end page title -->
 
             <div class="row">
