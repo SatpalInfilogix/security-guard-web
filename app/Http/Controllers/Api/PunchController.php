@@ -29,16 +29,15 @@ class PunchController extends Controller
         }
 
         if ($action === 'out') {
-            $lastInPunch = PunchTable::where('user_id', Auth::id())->whereNull('out_time')->orderBy('created_at', 'desc')->latest()->first();
+            $punchOut = PunchTable::where('user_id', Auth::id())->whereNull('out_time')->orderBy('created_at', 'desc')->latest()->first();
     
-            if (!$lastInPunch) {
+            if (!$punchOut) {
                 return response()->json(['success' => false, 'message' => 'Please punch In first.'], 400);
             }
 
-            $imageName = uniqid() . '_' . $request->file('out_image')->getClientOriginalExtension();
-            $request->file('out_image')->move(public_path('uploads/activity/punch_out/'), $imageName);
-    
-            $lastInPunch->update([
+            $imageName = SettingHelper::uploadFile($request->file('out_image'), 'uploads/activity/punch_out/');
+            
+            $punchOut->update([
                 'out_time' =>  $request->time,
                 'out_lat' => $request->out_lat,
                 'out_long' => $request->out_long,
@@ -46,17 +45,16 @@ class PunchController extends Controller
                 'out_image' => $imageName,
             ]);
 
-            return $this->createResponse(true, 'Punch updated successfully.', $lastInPunch);
+            return $this->createResponse(true, 'Punch updated successfully.', $punchOut);
         } else {
             $oldPunch = PunchTable::where('user_id', Auth::id())->whereNull('out_time')->orderBy('created_at', 'desc')->latest()->first();
             if ($oldPunch) {
                 return response()->json(['success' => false, 'message' => 'You are already Punch In.'], 400);
             }
 
-            $imageName = uniqid() . '_' . $request->file('in_image')->getClientOriginalExtension();
-            $request->file('in_image')->move(public_path('uploads/activity/punch_in/'), $imageName);
-    
-            $punch = PunchTable::create([
+            $imageName = SettingHelper::uploadFile($request->file('in_image'), 'uploads/activity/punch_in/');
+
+            $punchIn = PunchTable::create([
                 'user_id' => Auth::id(),
                 'in_time' => $request->time,
                 'in_lat' => $request->in_lat,
@@ -65,7 +63,7 @@ class PunchController extends Controller
                 'in_image' => $imageName,
             ]);
 
-            return $this->createResponse(true, 'Punch created successfully.', $punch);
+            return $this->createResponse(true, 'Punch created successfully.', $punchIn);
         }
     }
 

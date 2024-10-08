@@ -14,20 +14,16 @@
             return $value;
         }
 
-        static function uploadFile($file,  $type)
+        static function uploadFile($file,  $path)
         {   
             if ($file) {
-                $base64_str = substr($file, strpos($file, ",")+1);
-                $file = base64_decode($base64_str);
-                $filename = uniqid() . '.png';
-                $directory = public_path('uploads/activity/' . $type . '/');
-                $finalPath = 'uploads/activity/' . $type . '/' . $filename;
-                if (!file_exists($directory)) {
-                    mkdir($directory, 0777, true);
-                }
-                file_put_contents($directory . $filename, $file);
-                return $finalPath; 
+                $imageName = uniqid() . '.' . $file->getClientOriginalExtension();
+                $imagePath = $path . $imageName;
+                $file->move(public_path($path), $imageName);
+
+                return $imagePath;
             }
+
             return null;
         }
     }
