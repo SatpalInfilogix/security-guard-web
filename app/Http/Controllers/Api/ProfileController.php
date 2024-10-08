@@ -146,5 +146,25 @@ class ProfileController extends Controller
 
         return null;
     }
+    public function guardProfile(){
+        $guard = User::with([
+                'guardAdditionalInformation',
+                'contactDetail',
+                'usersBankDetail',
+                'usersKinDetail',
+                'userDocuments'
+            ])->where('id',Auth::id())->first();
+
+        if($guard){
+            return response()->json([
+                'success' => true,
+                'data' => $guard
+            ]); 
+        }else{
+            return response()->json([
+                'success' => false,
+            ]);
+        }
+    }
 
 }

@@ -20,13 +20,13 @@
                         <span key="t-spreadsheet">Security Guard</span>
                     </a>
                 </li>
-                {{-- <li>
-                    <a href="#" class="waves-effect">
+                <li class="{{ Request::segment(2) == 'attendance' ? 'mm-active' : '' }}">
+                    <a href="{{ route('attendance.index')}}" class="waves-effect">
                         <i class="bx bx-spreadsheet"></i>
                         <span key="t-spreadsheet">Attendance</span>
                     </a>
                 </li>
-                <li>
+                {{-- <li>
                     <a href="#" class="waves-effect">
                         <i class="bx bx-calendar"></i>
                         <span key="t-calendar">Management</span>

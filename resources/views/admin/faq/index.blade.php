@@ -57,7 +57,7 @@
                     </div>
                 </div> <!-- end col -->
             </div> <!-- end row -->
-
         </div> <!-- container-fluid -->
     </div>
+    <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
 @endsection
