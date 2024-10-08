@@ -29,5 +29,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'settings'        => SettingController::class,
             'faq'             => FaqController::class
         ]);
+        Route::get('export-guards', [SecurityGuardController::class, 'exportGuards'])->name('export.guards');
+        Route::post('import-guards', [SecurityGuardController::class, 'importGuards'])->name('import.guards');
     });
 });
