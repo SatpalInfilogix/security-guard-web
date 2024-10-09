@@ -44,11 +44,11 @@
                                     <td>{{ $attendance->in_time }}</td>
                                     <td>{{ $attendance->out_time }}</td>
                                     <td class="action-buttons">
-                                        {{-- <a href="{{ route('users.edit', $attendance->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
-                                        <button data-source="User" data-endpoint="{{ route('users.destroy', $attendance->id) }}"
+                                        <a href="{{ route('attendance.edit', $attendance->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                        <button data-source="Attendance" data-endpoint="{{ route('attendance.destroy', $attendance->id) }}"
                                             class="delete-btn btn btn-outline-secondary btn-sm edit">
                                             <i class="fas fa-trash-alt"></i>
-                                        </button> --}}
+                                        </button>
                                     </td>
                                 </tr>
                                 @endforeach
