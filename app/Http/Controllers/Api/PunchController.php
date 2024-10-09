@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\PunchTable;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
-use App\Helpers\SettingHelper;
 
 class PunchController extends Controller
 {
@@ -35,7 +34,7 @@ class PunchController extends Controller
                 return response()->json(['success' => false, 'message' => 'Please punch In first.'], 400);
             }
 
-            $imageName = SettingHelper::uploadFile($request->file('out_image'), 'uploads/activity/punch_out/');
+            $imageName = uploadFile($request->file('out_image'), 'uploads/activity/punch_out/');
             
             $punchOut->update([
                 'out_time' =>  $request->time,
@@ -52,7 +51,7 @@ class PunchController extends Controller
                 return response()->json(['success' => false, 'message' => 'You are already Punch In.'], 400);
             }
 
-            $imageName = SettingHelper::uploadFile($request->file('in_image'), 'uploads/activity/punch_in/');
+            $imageName = uploadFile($request->file('in_image'), 'uploads/activity/punch_in/');
 
             $punchIn = PunchTable::create([
                 'user_id' => Auth::id(),

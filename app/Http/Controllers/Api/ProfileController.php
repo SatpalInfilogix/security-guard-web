@@ -13,7 +13,6 @@ use App\Models\ContactDetail;
 use App\Models\UsersBankDetail;
 use App\Models\UsersKinDetail;
 use App\Models\UsersDocuments;
-use App\Helpers\SettingHelper;
 
 class ProfileController extends Controller
 {
@@ -112,16 +111,16 @@ class ProfileController extends Controller
 
         $documents = [];
         if ($request->hasFile('trn_doc')) {
-            $documents['trn'] = SettingHelper::uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/');
+            $documents['trn'] = uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/');
         }
         if ($request->hasFile('nis_doc')) {
-            $documents['nis'] = SettingHelper::uploadFile($request->file('nis_doc'), 'uploads/user-documents/nis/');
+            $documents['nis'] = uploadFile($request->file('nis_doc'), 'uploads/user-documents/nis/');
         }
         if ($request->hasFile('psra_doc')) {
-            $documents['psra'] = SettingHelper::uploadFile($request->file('psra_doc'), 'uploads/user-documents/psra/');
+            $documents['psra'] = uploadFile($request->file('psra_doc'), 'uploads/user-documents/psra/');
         }
         if ($request->hasFile('birth_certificate')) {
-            $documents['birth_certificate'] = SettingHelper::uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/');
+            $documents['birth_certificate'] = uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/');
         }
 
         usersDocuments::updateOrCreate(

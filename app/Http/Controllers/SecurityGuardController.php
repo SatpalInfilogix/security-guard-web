@@ -15,7 +15,6 @@ use Spatie\Permission\Models\Role;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\Response;
-use App\Helpers\SettingHelper;
 
 class SecurityGuardController extends Controller
 {
@@ -121,10 +120,10 @@ class SecurityGuardController extends Controller
 
             usersDocuments::create([
                 'user_id'   => $user->id,
-                'trn'       => SettingHelper::uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/'),
-                'nis'       => SettingHelper::uploadFile($request->file('nis_doc'), 'uploads/user-documents/nis/'),
-                'psra'      => SettingHelper::uploadFile($request->file('psra_doc'),'uploads/user-documents/psra/'),
-                'birth_certificate' => SettingHelper::uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/'),
+                'trn'       => uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/'),
+                'nis'       => uploadFile($request->file('nis_doc'), 'uploads/user-documents/nis/'),
+                'psra'      => uploadFile($request->file('psra_doc'),'uploads/user-documents/psra/'),
+                'birth_certificate' => uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/'),
             ]);
         }
         return redirect()->route('security-guards.index')->with('success', 'Security Guard created successfully.');
@@ -238,16 +237,16 @@ class SecurityGuardController extends Controller
         $usersDocuments = usersDocuments::where('user_id', $id)->first();
         $documents = [];
         if ($request->hasFile('trn_doc')) {
-            $documents['trn'] = SettingHelper::uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/');
+            $documents['trn'] = uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/');
         }
         if ($request->hasFile('nis_doc')) {
-            $documents['nis'] = SettingHelper::uploadFile($request->file('nis_doc'), 'uploads/user-documents/nis/');
+            $documents['nis'] = uploadFile($request->file('nis_doc'), 'uploads/user-documents/nis/');
         }
         if ($request->hasFile('psra_doc')) {
-            $documents['psra'] = SettingHelper::uploadFile($request->file('psra_doc'), 'uploads/user-documents/psra/');
+            $documents['psra'] = uploadFile($request->file('psra_doc'), 'uploads/user-documents/psra/');
         }
         if ($request->hasFile('birth_certificate')) {
-            $documents['birth_certificate'] = SettingHelper::uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/');
+            $documents['birth_certificate'] = uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/');
         }
 
         $usersDocuments->update($documents);
