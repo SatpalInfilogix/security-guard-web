@@ -10,13 +10,13 @@
 
                 <li @class(['mm-active' => Request::is('dashboard')])>
                     <a href="{{ route('admin.dashboard.index') }}" class="waves-effect">
-                        <i class="bx bx-home-circle"></i>
+                        <i class="bx bx-home-alt"></i>
                         <span key="t-dashboards">Dashboard</span>
                     </a>
                 </li>
                 <li class="{{ Request::segment(2) == 'security-guards' ? 'mm-active' : '' }}">
                     <a href="{{ route('security-guards.index')}}" class="waves-effect">
-                        <i class="bx bxs-user-badge"></i>
+                        <i class="fas fa-user-secret"></i>
                         <span key="t-spreadsheet">Security Guard</span>
                     </a>
                 </li>
@@ -26,12 +26,12 @@
                         <span key="t-spreadsheet">Attendance</span>
                     </a>
                 </li>
-                {{-- <li>
-                    <a href="#" class="waves-effect">
+                <li {{ Request::segment(2) == 'calendar-management' ? 'mm-active' : '' }}>
+                    <a href="{{ route('calendar.management') }}" class="waves-effect">
                         <i class="bx bx-calendar"></i>
-                        <span key="t-calendar">Management</span>
+                        <span key="t-calendar">Calendar Management</span>
                     </a>
-                </li> --}}
+                </li> 
                 <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}">
                     <a href="{{ route('users.index')}}" class="waves-effect">
                         <i class="bx bx-user"></i>
