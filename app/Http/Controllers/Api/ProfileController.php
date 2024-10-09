@@ -13,6 +13,7 @@ use App\Models\ContactDetail;
 use App\Models\UsersBankDetail;
 use App\Models\UsersKinDetail;
 use App\Models\UsersDocuments;
+use App\Helpers\SettingHelper;
 
 class ProfileController extends Controller
 {
@@ -111,16 +112,16 @@ class ProfileController extends Controller
 
         $documents = [];
         if ($request->hasFile('trn_doc')) {
-            $documents['trn'] = $this->uploadFile($request->file('trn_doc'));
+            $documents['trn'] = SettingHelper::uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/');
         }
         if ($request->hasFile('nis_doc')) {
-            $documents['nis'] = $this->uploadFile($request->file('nis_doc'));
+            $documents['nis'] = SettingHelper::uploadFile($request->file('nis_doc'), 'uploads/user-documents/nis/');
         }
         if ($request->hasFile('psra_doc')) {
-            $documents['psra'] = $this->uploadFile($request->file('psra_doc'));
+            $documents['psra'] = SettingHelper::uploadFile($request->file('psra_doc'), 'uploads/user-documents/psra/');
         }
         if ($request->hasFile('birth_certificate')) {
-            $documents['birth_certificate'] = $this->uploadFile($request->file('birth_certificate'));
+            $documents['birth_certificate'] = SettingHelper::uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/');
         }
 
         usersDocuments::updateOrCreate(
@@ -135,17 +136,6 @@ class ProfileController extends Controller
         ]);
     }
 
-    private function uploadFile($file)
-    {   
-        if ($file) {
-            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-            $finalPath = 'uploads/user-documents/' . $filename;
-            $file->move(public_path('uploads/user-documents/'), $filename);
-            return $finalPath; 
-        }
-
-        return null;
-    }
     public function guardProfile(){
         $guard = User::with([
                 'guardAdditionalInformation',

@@ -19,6 +19,20 @@
                 dateFormat: "Y-m-d",
                 allowInput: true
             });
+            flatpickr('.date-picker-punch-in', {
+                dateFormat: "Y-m-d H:i:S", // Include time in the format
+                allowInput: true,
+                enableTime: true,       // Enable time selection
+                time_24hr: true,       // Optional: use 24-hour format
+                minuteIncrement: 1      // Optional: set minute increment
+            });
+            flatpickr('.date-picker-punch-out', {
+                dateFormat: "Y-m-d H:i:S", // Include time in the format
+                allowInput: true,
+                enableTime: true,       // Enable time selection
+                time_24hr: true,       // Optional: use 24-hour format
+                minuteIncrement: 1      // Optional: set minute increment
+            });
         })
     </script>
     @endpush
