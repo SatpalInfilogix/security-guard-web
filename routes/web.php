@@ -10,6 +10,7 @@ use App\Http\Controllers\SecurityGuardController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\RateMasterController;
 
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');
@@ -30,6 +31,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'attendance' => AttendanceController::class,
             'security-guards'       => SecurityGuardController::class,
             'roles-and-permissions' => RoleAndPermissionController::class,
+            'rate-master' => RateMasterController::class
         ]);
         Route::get('export-guards', [SecurityGuardController::class, 'exportGuards'])->name('export.guards');
         Route::post('import-guards', [SecurityGuardController::class, 'importGuards'])->name('import.guards');

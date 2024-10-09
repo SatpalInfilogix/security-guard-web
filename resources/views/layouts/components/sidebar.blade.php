@@ -38,12 +38,13 @@
                         <span key="t-user">Users</span>
                     </a>
                 </li>
-                {{-- <li>
-                    <a href="#" class="waves-effect">
+                <li class="{{ Request::segment(2) == 'rate-master' ? 'mm-active' : '' }}">
+                    <a href="{{ route('rate-master.index')}}" class="waves-effect">
                         <i class="bx bx-receipt"></i>
-                        <span key="t-receipt">Invoices</span>
+                        <span key="t-receipt">Rate Master</span>
                     </a>
                 </li>
+                {{-- </li>
                 <li>
                     <a href="#" class="waves-effect">
                         <i class="bx bx-globe"></i>
