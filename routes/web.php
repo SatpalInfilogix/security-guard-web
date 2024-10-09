@@ -33,5 +33,6 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         ]);
         Route::get('export-guards', [SecurityGuardController::class, 'exportGuards'])->name('export.guards');
         Route::post('import-guards', [SecurityGuardController::class, 'importGuards'])->name('import.guards');
+        Route::view('calendar-management','admin.calendar-management.index')->name('calendar.management');
     });
 });
