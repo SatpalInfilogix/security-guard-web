@@ -33,8 +33,8 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'attendance' => AttendanceController::class,
             'security-guards'       => SecurityGuardController::class,
             'roles-and-permissions' => RoleAndPermissionController::class,
-            'rate-master' => RateMasterController::class,
-            'public-holiday' => PublicHolidayController::class
+            'rate-master'       => RateMasterController::class,
+            'public-holidays'   => PublicHolidayController::class
         ]);
         Route::get('roles-and-permissions/role-list', [RoleAndPermissionController::class,'show'])->name('roles-and-permissions.role-list');
         Route::post('roles-and-permissions/store-role', [RoleAndPermissionController::class,'storeRole'])->name('roles-and-permissions.store-role');
