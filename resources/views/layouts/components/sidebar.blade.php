@@ -44,6 +44,12 @@
                         <span key="t-receipt">Rate Master</span>
                     </a>
                 </li>
+                <li class="{{ Request::segment(2) == 'public-holidays' ? 'mm-active' : '' }}">
+                    <a href="{{ route('public-holidays.index')}}" class="waves-effect">
+                        <i class="bx bx-gift"></i>
+                        <span key="t-receipt">Public Holidays</span>
+                    </a>
+                </li>
                 {{-- </li>
                 <li>
                     <a href="#" class="waves-effect">
