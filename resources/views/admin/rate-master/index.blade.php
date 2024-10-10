@@ -11,7 +11,7 @@
                         <h4 class="mb-sm-0 font-size-18">Rate Master</h4>
 
                         <div class="page-title-right">
-                            <a href="{{ route('roles-and-permissions.create') }}" class="btn btn-primary">Add New Rate Master</a>
+                            <a href="{{ route('rate-master.create') }}" class="btn btn-primary">Add New Rate Master</a>
                         </div>
 
                     </div>

@@ -11,7 +11,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $excludedRoles = Role::whereIn('name', ['Security Guard', 'Admin'])->pluck('id');
+        $excludedRoles = Role::whereIn('name', ['Security Guard'])->pluck('id');
 
         $users = User::whereDoesntHave('roles', function ($query) use ($excludedRoles) {
             $query->whereIn('role_id', $excludedRoles);
@@ -22,7 +22,9 @@ class UserController extends Controller
 
     public function create()
     {
-        return view('admin.users.create');
+        $roles = Role::latest()->get();
+
+        return view('admin.users.create', compact('roles'));
     }
 
     public function store(Request $request)
@@ -33,6 +35,7 @@ class UserController extends Controller
             'email' => ['required', 'email', 'unique:users,email'],
             'phone_no' => 'required',
             'password' => 'required',
+            'role'     => 'required'
         ]);
 
         User::create([
@@ -41,7 +44,7 @@ class UserController extends Controller
             'email'         => $request->email,
             'phone_number'  => $request->phone_no,
             'password'      =>  Hash::make($request->password)
-        ])->assignRole('client');
+        ])->assignRole($request->role);
 
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
@@ -54,8 +57,9 @@ class UserController extends Controller
     public function edit(string $id)
     {
         $user = User::where('id', $id)->first();
+        $roles = Role::latest()->get();
 
-        return view('admin.users.edit', compact('user'));
+        return view('admin.users.edit', compact('user', 'roles'));
     }
 
     public function update(Request $request, string $id)

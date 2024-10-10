@@ -52,6 +52,15 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-6">
+                                    <label for="role">Role</label>
+                                    <select name="role" id="role" class="form-control">
+                                        <option value="" selected disabled>Select Role</option>
+                                        @foreach ($roles as $key => $role)
+                                            <option value="{{$role->name}}">{{ $role->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
                                     <div class="mb-3">
                                         <x-form-input name="password" type="password" label="Password" placeholder="Enter your password"/><br>
                                     </div>
