@@ -12,6 +12,7 @@ use App\Http\Controllers\FaqController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\RateMasterController;
 
+
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');
 });

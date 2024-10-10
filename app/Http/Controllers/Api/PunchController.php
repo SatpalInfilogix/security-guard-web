@@ -5,11 +5,21 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PunchTable;
+use App\Services\GeocodingService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 
 class PunchController extends Controller
 {
+    protected $geocodingService;
+    protected $officeLatitude = 30.7093774; // Your office latitude
+    protected $officeLongitude = 76.6921674; // Your office longitude
+
+    public function __construct(GeocodingService $geocodingService)
+    {
+        $this->geocodingService = $geocodingService;
+    }
+
     public function logPunch(Request $request, $action)
     {
         $rules = [
@@ -89,5 +99,41 @@ class PunchController extends Controller
             'message' => $message,
             'data' => $data,
         ]);
+    }
+    public function getAddress(Request $request)
+    {
+        $latitude = $request->input('latitude');
+        $longitude = $request->input('longitude');
+
+        $address = $this->geocodingService->getAddress($latitude, $longitude);
+        return response()->json(['address' => $address]);
+    }
+    public function checkDistanceFromOffice(Request $request)
+    {
+        $rules = [
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()], 400);
+        }
+
+        $inputLatitude = $request->input('latitude');
+        $inputLongitude = $request->input('longitude');
+
+        $distance = $this->geocodingService->haversineGreatCircleDistance(
+            $this->officeLatitude,
+            $this->officeLongitude,
+            $inputLatitude,
+            $inputLongitude
+        );
+
+        if ($distance <= 500) {
+            return response()->json(['success' => true, 'message' => 'You are within 500 meters of the office.', 'distance' => $distance]);
+        } else {
+            return response()->json(['success' => false, 'message' => 'You are more than 500 meters away from the office.', 'distance' => $distance]);
+        }
     }
 }
