@@ -8,12 +8,10 @@
             <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0 font-size-18">Rate Master</h4>
-
+                        <h4 class="mb-sm-0 font-size-18">Roles List</h4>
                         <div class="page-title-right">
-                            <a href="{{ route('roles-and-permissions.create') }}" class="btn btn-primary">Add New Rate Master</a>
+                            <a href="{{ route('roles-and-permissions.create') }}" class="btn btn-primary">Add New Role</a>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -30,27 +28,24 @@
                                 <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Type</th>
-                                    <th>Rate</th>
+                                    <th>Role</th>
                                     <th>Action</th>
                                 </tr>
                                 </thead>
-
                                 <tbody>
-                                @foreach($rateMasters as $key => $rateMaster)
-                                <tr>
-                                    <td>{{ ++$key }}</td>
-                                    <td>{{ $rateMaster->type }}</td>
-                                    <td>{{ $rateMaster->rate}}</td>
-                                    <td class="action-buttons">
-                                        <a href="{{ route('rate-master.edit', $rateMaster->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
-                                        <button data-source="Rate Master" data-endpoint="{{ route('rate-master.destroy', $rateMaster->id)}}"
-                                            class="delete-btn btn btn-outline-secondary btn-sm edit">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                @endforeach
+                                    @foreach ($roles as $key=> $role)
+                                    <tr>
+                                        <td>{{ ++$key }}</td>
+                                        <td>{{ ucwords($role->name) }}</td>
+                                        <td class="action-buttons">
+                                            <a href="{{ route('roles-and-permissions.edit', $role->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                            <button data-source="Role" data-endpoint="{{ route('roles-and-permissions.destroy', $role->id)}}"
+                                                class="delete-btn btn btn-outline-secondary btn-sm edit">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>  
+                                    @endforeach  
                                 </tbody>
                             </table>
                         </div>

@@ -29,7 +29,7 @@
                                             </button>
                                         </h2>
                                     </div>
-                                    <div class="col-md-6">
+                                    {{--<div class="col-md-6">
                                         <div class="checkbox-section ml-auto">
                                             <div class="row">
                                                 <div class="col-md-6"></div>
@@ -51,7 +51,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div>--}}
                                 </div>
     
     

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('rate_masters', function (Blueprint $table) {
             $table->id();
-            $table->string('level');
+            $table->string('type');
             $table->decimal('rate')->nullable();
             $table->timestamps();
         });

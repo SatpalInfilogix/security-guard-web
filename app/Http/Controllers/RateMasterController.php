@@ -30,12 +30,12 @@ class RateMasterController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'level'    => 'required',
+            'type'    => 'required',
             'rate'     => 'required',
         ]);
 
         $rateMaster = RateMaster::create([
-            'level' => $request->level,
+            'type' => $request->type,
             'rate'  => $request->rate,
         ]);
 
@@ -66,12 +66,12 @@ class RateMasterController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'level'    => 'required',
+            'type'    => 'required',
             'rate'     => 'required',
         ]);
 
         $rateMaster = RateMaster::where('id', $id)->update([
-            'level' => $request->level,
+            'type' => $request->type,
             'rate'  => $request->rate
         ]);
 

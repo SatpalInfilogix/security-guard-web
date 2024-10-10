@@ -1,7 +1,7 @@
 <div class="row mb-2">
     <div class="col-md-12">
         <div class="mb-3">
-            <x-form-input name="level" value="{{ old('level', $rateMaster->level ?? '') }}" label="Level" placeholder="Enter your Level"  required="true" />
+            <x-form-input name="type" value="{{ old('type', $rateMaster->type ?? '') }}" label="Type" placeholder="Enter your Type"  required="true" />
         </div>
     </div>
 
