@@ -13,6 +13,7 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\RateMasterController;
 use App\Http\Controllers\PublicHolidayController;
 
+
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');
 });
