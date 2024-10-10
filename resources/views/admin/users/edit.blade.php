@@ -51,6 +51,19 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Role</label>
+                                        <select name="role" id="role" class="form-control" disabled>
+                                            <option value="" selected disabled>Select Role</option>
+                                            @foreach($roles as $key => $role)
+                                                <option value="{{$role->id}}" @selected( $user->roles->pluck('name')[0] == $role->name)>{{ $role->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                             <div>
                                 <button type="submit" class="btn btn-primary w-md">Submit</button>
                             </div>

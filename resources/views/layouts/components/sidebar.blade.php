@@ -26,24 +26,25 @@
                         <span key="t-spreadsheet">Attendance</span>
                     </a>
                 </li>
-                <li {{ Request::segment(2) == 'calendar-management' ? 'mm-active' : '' }}>
+                {{--<li {{ Request::segment(2) == 'calendar-management' ? 'mm-active' : '' }}>
                     <a href="{{ route('calendar.management') }}" class="waves-effect">
                         <i class="bx bx-calendar"></i>
                         <span key="t-calendar">Calendar Management</span>
                     </a>
-                </li> 
+                </li> --}}
                 <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}">
                     <a href="{{ route('users.index')}}" class="waves-effect">
                         <i class="bx bx-user"></i>
                         <span key="t-user">Users</span>
                     </a>
                 </li>
-                {{-- <li>
-                    <a href="#" class="waves-effect">
+                <li class="{{ Request::segment(2) == 'rate-master' ? 'mm-active' : '' }}">
+                    <a href="{{ route('rate-master.index')}}" class="waves-effect">
                         <i class="bx bx-receipt"></i>
-                        <span key="t-receipt">Invoices</span>
+                        <span key="t-receipt">Rate Master</span>
                     </a>
                 </li>
+                {{-- </li>
                 <li>
                     <a href="#" class="waves-effect">
                         <i class="bx bx-globe"></i>
@@ -98,8 +99,8 @@
                         <span key="t-dashboards">Roles and Permissions</span>
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
-                        <li><a href="javascript:void(0);" key="t-tui-calendar">Manage Roles</a></li>
-                        <li><a href="javascript:void(0);" key="t-full-calendar">Manage Permissions</a></li>
+                        <li><a href="{{ route('roles-and-permissions.role-list') }}" key="t-tui-calendar">Manage Roles</a></li>
+                        <li><a href="{{ route('roles-and-permissions.index') }}" key="t-full-calendar">Manage Permissions</a></li>
                     </ul>
                 </li>
 
