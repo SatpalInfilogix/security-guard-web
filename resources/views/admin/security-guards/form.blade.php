@@ -23,6 +23,22 @@
         </div>
     </div>
 </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <?php
+                $statusOptions = ['Active', 'Inactive', 'Hold'];
+            ?>
+            <label for="status">Status</label>
+            <select name="user_status" id="user_status" class="form-control">
+                <option value="" selected disabled>Select Status</option>
+                @foreach ($statusOptions as $value)
+                    <option value="{{ $value }}" {{ (old('status', $user->status ?? '') === $value) ? 'selected' : '' }}>
+                        {{ $value }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    </div>
 
     <fieldset class="col-md-12 mb-3">
         <legend>Addtitional Detail</legend>
@@ -65,9 +81,20 @@
             <div class="col-md-4 mb-3">
                 <x-form-input name="client_name" value="{{ old('client_name', $user->guardAdditionalInformation->client_name ?? '') }}" label="Client Name" placeholder="Enter your Client Name"/>
             </div>
+            
             <div class="col-md-4 mb-3">
-                <x-form-input name="guard_type" value="{{ old('guard_type', $user->guardAdditionalInformation->guard_type ?? '') }}" label="Guard Type" placeholder="Enter your Guard Type"/>
-            </div>
+                <label for="guard_type">Guard Type</label>
+                <select name="guard_type_id" id="guard_type" class="form-control">
+                    <option value="" selected disabled>Select Guard Type</option>
+                  
+                    @foreach ($rateMasters as $rateMaster)
+                    <option value="{{ $rateMaster->id }}" 
+                        @selected((old('guard_type_id', $user->guardAdditionalInformation->guard_type_id ?? null) == $rateMaster->id))>
+                        {{ $rateMaster->guard_type }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>            
             <div class="col-md-4 mb-3">
                 <x-form-input name="employed_as" value="{{ old('employed_as', $user->guardAdditionalInformation->employed_as ?? '') }}" label="Employed As" placeholder="Enter your Employed As"/>
             </div>

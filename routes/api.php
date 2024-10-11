@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\PunchController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\GeocodeController;
+use App\Http\Controllers\Api\SecurityGuardController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -22,3 +23,4 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('faq', [FaqController::class, 'index']);
 Route::get('get-address',[PunchController::class,'getAddress']);
 Route::post('/check-distance', [PunchController::class, 'checkDistanceFromOffice']);
+Route::get('check-status', [SecurityGuardController::class, 'checkStatus']);
