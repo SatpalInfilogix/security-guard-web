@@ -13,8 +13,14 @@ return new class extends Migration
     {
         Schema::create('rate_masters', function (Blueprint $table) {
             $table->id();
-            $table->string('type');
-            $table->decimal('rate')->nullable();
+            $table->string('guard_type');
+            $table->decimal('regular_rate')->nullable();
+            $table->decimal('laundry_allowance')->nullable();
+            $table->decimal('canine_premium')->nullable();
+            $table->decimal('fire_arm_premium')->nullable();
+            $table->decimal('gross_hourly_rate')->nullable();
+            $table->decimal('overtime_rate')->nullable();
+            $table->decimal('holiday_rate')->nullable();
             $table->timestamps();
         });
     }

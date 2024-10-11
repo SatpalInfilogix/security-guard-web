@@ -1,0 +1,75 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\PublicHoliday;
+
+class PublicHolidayController extends Controller
+{
+    public function index()
+    {
+        $publicHolidays = PublicHoliday::latest()->get();
+
+        return view('admin.public-holidays.index', compact('publicHolidays'));
+    }
+
+    public function create()
+    {
+        return view('admin.public-holidays.create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'holiday_name'  => 'required',
+            'date'          => 'required',
+        ]);
+
+        $rateMaster = PublicHoliday::create([
+            'holiday_name'  => $request->holiday_name,
+            'date'          => $request->date,
+        ]);
+
+        return redirect()->route('public-holidays.index')->with('success', 'Public Holiday created successfully.');
+    }
+
+    public function show(string $id)
+    {
+        //
+    }
+
+    public function edit($id)
+    {
+        $publicHoliday = PublicHoliday::where('id', $id)->first();
+
+        return view('admin.public-holidays.edit', compact('publicHoliday'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'holiday_name'  => 'required',
+            'date'          => 'required',
+        ]);
+
+        $publicHoliday = PublicHoliday::where('id', $id)->first();
+
+        $publicHoliday->update([
+            'holiday_name'  => $request->holiday_name,
+            'date'          => $request->date
+        ]);
+
+        return redirect()->route('public-holidays.index')->with('success', 'Public Holiday updated successfully.');
+    }
+
+    public function destroy(string $id)
+    {
+        $user = PublicHoliday::where('id', $id)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Public Holiday deleted successfully.'
+        ]);
+    }
+}

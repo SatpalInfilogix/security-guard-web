@@ -33,6 +33,13 @@
                 time_24hr: true,       // Optional: use 24-hour format
                 minuteIncrement: 1      // Optional: set minute increment
             });
+
+            $('.datepicker').each(function() {
+                flatpickr(this, {
+                    dateFormat: "Y-m-d",
+                    minDate: "today"
+                });
+            });
         })
     </script>
     @endpush
@@ -93,8 +100,6 @@
     @endpush
 @endif
 
-
-
 @if($hasPlugin('dataTable'))
     @push('styles')
         <link rel="stylesheet" href="{{ asset('assets/libs/datatables.net-bs4/css/dataTables.bootstrap4.min.css') }}" type="text/css" />
@@ -118,38 +123,16 @@
 @endif
 
 @if($hasPlugin('jQueryValidate'))
-@push('scripts')
-<script src="{{ asset('assets/js/jquery.validate.min.js') }}"></script>
-@endpush
+    @push('scripts')
+        <script src="{{ asset('assets/js/jquery.validate.min.js') }}"></script>
+    @endpush
 @endif
 
 @if($hasPlugin('chosen'))
-@push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/chosen.min.css') }}" />
-@endpush
-@push('scripts')
-<script src="{{ asset('assets/js/chosen.jquery.min.js') }}"></script>
-@endpush
+    @push('styles')
+        <link rel="stylesheet" href="{{ asset('assets/css/chosen.min.css') }}" />
+    @endpush
+    @push('scripts')
+        <script src="{{ asset('assets/js/chosen.jquery.min.js') }}"></script>
+    @endpush
 @endif
-
-@if($hasPlugin('datePicker'))
-@push('styles')
-<link rel="stylesheet" href="{{ asset('assets/css/flatpickr/flatpickr.min.css') }}">
-@endpush
-
-@push('scripts')
-<script src="{{ asset('assets/js/flatpickr/flatpickr.min.js') }}"></script>
-<script>
-    function initializeDatepickers() {
-        $('.datepicker').each(function() {
-            flatpickr(this, {
-                dateFormat: "Y-m-d",
-                minDate: "today"
-            });
-        });
-    }
-</script>
-@endpush
-@endif
-
-
