@@ -207,12 +207,12 @@
                 <x-form-input type="file" name="trn_doc" label="TRN Document" accept="application/pdf" onchange="showLink(this, 'trn_link', 'old_trn_link')"  required="true"/>
                 @if ($user->userDocuments->trn ?? '')
                     <div class="preview mt-2" id="old_trn_link">
-                        <label>View TRN Document:</label>
-                        <a href="{{ asset($user->userDocuments->trn) }}" target="_blank">View Document</a>
+                        <label>TRN Document:</label>
+                        <a href="{{ asset($user->userDocuments->trn) }}" target="_blank">View TRN Document</a>
                     </div>
                 @endif
                 <div id="trn_link" class="mt-2" style="display:none;">
-                    <label>Preview TRN Document:</label>
+                    <label>TRN Document:</label>
                     <a href="#" target="_blank">Preview TRN Document</a>
                 </div>
             </div>
@@ -221,12 +221,12 @@
                 <x-form-input type="file" name="nis_doc" label="NIS Document" accept="application/pdf" onchange="showLink(this, 'nis_link', 'old_nis_link')"  required="true" />
                 @if ($user->userDocuments->nis ?? '')
                     <div class="preview mt-2" id="old_nis_link">
-                        <label>View NIS Document:</label>
-                        <a href="{{ asset($user->userDocuments->nis) }}" target="_blank">View Document</a>
+                        <label>NIS Document:</label>
+                        <a href="{{ asset($user->userDocuments->nis) }}" target="_blank">View NIS Document</a>
                     </div>
                 @endif
                 <div id="nis_link" class="mt-2" style="display:none;">
-                    <label>Preview NIS Document:</label>
+                    <label>NIS Document:</label>
                     <a href="#" target="_blank">Preview NIS Document</a>
                 </div>
             </div>
@@ -235,12 +235,12 @@
                 <x-form-input type="file" name="psra_doc" label="PSRA Document" accept="application/pdf" onchange="showLink(this, 'psra_link', 'old_psra_doc')" required="true"/>
                 @if ($user->userDocuments->psra ?? '')
                     <div class="preview mt-2" id="old_psra_doc">
-                        <label>View PSRA Document:</label>
-                        <a href="{{ asset($user->userDocuments->psra) }}" target="_blank">View Document</a>
+                        <label>PSRA Document:</label>
+                        <a href="{{ asset($user->userDocuments->psra) }}" target="_blank">View PSRA Document</a>
                     </div>
                 @endif
                 <div id="psra_link" class="mt-2" style="display:none;">
-                    <label>Preview PSRA Document:</label>
+                    <label>PSRA Document:</label>
                     <a href="#" target="_blank">Preview PSRA Document</a>
                 </div>
             </div>
@@ -249,12 +249,12 @@
                 <x-form-input type="file" name="birth_certificate" label="Birth Certificate" accept="application/pdf" onchange="showLink(this, 'birth_link', 'old_birth_certificate')"  required="true" />
                 @if ($user->userDocuments->birth_certificate ?? '')
                     <div class="preview mt-2" id="old_birth_certificate">
-                        <label>View Birth Certificate:</label>
-                        <a href="{{ asset($user->userDocuments->birth_certificate) }}" target="_blank">View Document</a>
+                        <label>Birth Certificate:</label>
+                        <a href="{{ asset($user->userDocuments->birth_certificate) }}" target="_blank">View Birth Certificate</a>
                     </div>
                 @endif
                 <div id="birth_link" class="mt-2" style="display:none;">
-                    <label>Preview Birth Certificatet:</label>
+                    <label>Birth Certificatet:</label>
                     <a href="#" target="_blank">Preview Birth Certificate</a>
                 </div>
             </div>
