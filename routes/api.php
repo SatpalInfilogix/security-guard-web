@@ -18,9 +18,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/punch/{action}', [PunchController::class, 'logPunch']);
     Route::post('edit-profile', [ProfileController::class,'editProfile']);
     Route::get('guard/profile',[ProfileController::class,'guardProfile']);
+    Route::get('check-status', [SecurityGuardController::class, 'checkStatus']);
+    Route::get('/overtime/{userId}', [PunchController::class, 'calculateOvertime']);
     
 });
 Route::get('faq', [FaqController::class, 'index']);
 Route::get('get-address',[PunchController::class,'getAddress']);
 Route::post('/check-distance', [PunchController::class, 'checkDistanceFromOffice']);
-Route::get('check-status', [SecurityGuardController::class, 'checkStatus']);
