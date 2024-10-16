@@ -19,16 +19,16 @@ class AttendanceController extends Controller
         if ($request->month) {
             $month = $request->month;
         }
-    
+
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::createFromFormat('m-Y', $month)->startOfMonth();
         $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::createFromFormat('m-Y', $month)->endOfMonth();
-    
+
         if ($startDate->greaterThan($endDate)) {
             return response()->json(['error' => 'Start date must be before end date'], 400);
         }
-    
+
         $publicHolidays = $this->getPublicHolidays($startDate, $endDate);
-    
+
         $attendanceData = [];
         for ($date = $startDate; $date->lessThanOrEqualTo($endDate); $date->addDay()) {
             $punchRecord = PunchTable::where('user_id', Auth::id())->whereDate('created_at', $date)->whereNotNull('in_time')->whereNotNull('out_time')->first();
@@ -49,13 +49,13 @@ class AttendanceController extends Controller
                     $workedHours = $inTime->diffInHours($outTime);
                     $loggedHours = $workedHours;
                     $regularHours = 8;
-    
+
                     if ($workedHours > $regularHours) {
                         $overtimeHours = $workedHours - $regularHours;
                         $workedHours = $regularHours; // Cap to normal hours
                     }
                 }
-    
+
                 $guardAdditionalInformation = GuardAdditionalInformation::where('user_id', Auth::id())->first();
                 $rateMater = RateMaster::where('id', $guardAdditionalInformation->id)->first();
     
