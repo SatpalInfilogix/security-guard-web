@@ -88,7 +88,7 @@
                 </li>
 
                 <li @class([
-                    'active' => Request::is('settings', 'settings/general-setting'),
+                    'active' => Request::is('settings', 'settings/general-setting', 'settings/payment-setting'),
                 ])>
                     <a href="javascript: void(0);" class="has-arrow waves-effect">
                         <i class="bx bxs-wrench"></i>
@@ -96,6 +96,7 @@
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
                         <li><a href="{{ route('settings.index')}}" key="t-tui-calendar">Site Settings</a></li>
+                        <li><a href="{{ route('settings.payment-setting')}}" key="t-tui-calendar">Payment Settings</a></li>
                     </ul>
                 </li>
 
