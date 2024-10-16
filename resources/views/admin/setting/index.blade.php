@@ -35,7 +35,7 @@
                                         <input type="file" name="logo" id="add-logo" class="form-control">
                                         @if (setting('logo'))
                                             <img src="{{ asset(setting('logo')) }}" id="preview-Img"
-                                                class="img-preview" style="width:50px;">
+                                                class="img-preview" style="width:200px;">
                                         @else
                                             <img src="" id="preview-Img" style="width:50px;" name="image" hidden>
                                         @endif

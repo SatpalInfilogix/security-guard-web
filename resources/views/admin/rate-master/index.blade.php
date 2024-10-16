@@ -30,8 +30,11 @@
                                 <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Type</th>
-                                    <th>Rate</th>
+                                    <th>Guard Type</th>
+                                    <th>Gross Hourly Rate</th>
+                                    <th>Normal Rate</th>
+                                    <th>Overtime Rate</th>
+                                    <th>Holiday Rate</th>
                                     <th>Action</th>
                                 </tr>
                                 </thead>
@@ -40,8 +43,11 @@
                                 @foreach($rateMasters as $key => $rateMaster)
                                 <tr>
                                     <td>{{ ++$key }}</td>
-                                    <td>{{ $rateMaster->type }}</td>
-                                    <td>{{ $rateMaster->rate}}</td>
+                                    <td>{{ $rateMaster->guard_type }}</td>
+                                    <td>${{ $rateMaster->gross_hourly_rate}}</td>
+                                    <td>${{ $rateMaster->gross_hourly_rate}}</td>
+                                    <td>${{ $rateMaster->overtime_rate}}</td>
+                                    <td>${{ $rateMaster->holiday_rate}}</td>
                                     <td class="action-buttons">
                                         <a href="{{ route('rate-master.edit', $rateMaster->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
                                         <button data-source="Rate Master" data-endpoint="{{ route('rate-master.destroy', $rateMaster->id)}}"

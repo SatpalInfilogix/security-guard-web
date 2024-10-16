@@ -53,6 +53,18 @@
                                         <x-form-input type="text" class="date-picker-punch-out" name="punch_out" label="Punch Out" value="{{ old('punch_out', $attendance->out_time) }}" placeholder="Enter your Punch Out" />
                                     </div>
                                 </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="punchInImage" class="form-label">Punch In Image</label>
+                                        <img id="punchInImage" src="{{ asset($attendance->in_image) }}" height="500" width="150" alt="Punch In Image" class="img-thumbnail">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="punchOutImage" class="form-label">Punch Out Image</label>
+                                        <img id="punchOutImage" src="{{ asset($attendance->out_image) }}" height="500" width="150" alt="Punch Out Image" class="img-thumbnail">
+                                    </div>
+                                </div>
                             </div>
 
                             <div>

@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('location_name')->nullable();
             $table->string('client_code')->nullable();
             $table->string('client_name')->nullable();
-            $table->string('guard_type')->nullable();
+            $table->string('guard_type_id')->nullable()->constrained()->nullOnDelete();
             $table->string('employed_as')->nullable();
             $table->date('date_of_seperation')->nullable();
 

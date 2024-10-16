@@ -22,18 +22,15 @@ class SettingController extends Controller
         $oldLogo = $logo ? $logo->value : NULL;
         if ($request->hasFile('logo'))
         {
-            $fileLogo = $request->file('logo');
-            $filenameLogo = time().'.'.$fileLogo->getClientOriginalExtension();
-            $fileLogo->move(public_path('uploads/logo/'), $filenameLogo);
+            $filenameLogo = uploadFile($request->file('logo'), 'uploads/logo/');
 
-            $image_path = public_path($oldLogo);
-
-            if ($oldLogo && File::exists($image_path)) {
-                File::delete($image_path);
+            if ($oldLogo && File::exists(public_path($oldLogo))) {
+                File::delete(public_path($oldLogo));
             }
+        }else {
+            $filenameLogo = $oldLogo;
         }
-        $skippedArray['logo'] = isset($filenameLogo) ? 'uploads/logo/'.$filenameLogo : $oldLogo;
-
+        $skippedArray['logo'] = $filenameLogo;
 
         foreach ($skippedArray as $key => $value)
         {

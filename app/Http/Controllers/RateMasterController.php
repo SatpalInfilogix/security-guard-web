@@ -30,13 +30,20 @@ class RateMasterController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'type'    => 'required',
-            'rate'     => 'required',
+            'guard_type'        => 'required|unique:rate_masters,guard_type',
+            'regular_rate'      => 'required',
+            'laundry_allowance' => 'required',
         ]);
 
         $rateMaster = RateMaster::create([
-            'type' => $request->type,
-            'rate'  => $request->rate,
+            'guard_type'        => $request->guard_type,
+            'regular_rate'      => $request->regular_rate,
+            'laundry_allowance' => $request->laundry_allowance,
+            'canine_premium'    => $request->canine_premium,
+            'fire_arm_premium'  => $request->fire_arm_premium,
+            'gross_hourly_rate' => $request->gross_hourly_rate,
+            'overtime_rate'     => $request->overtime_rate,
+            'holiday_rate'      => $request->holiday_rate
         ]);
 
         return redirect()->route('rate-master.index')->with('success', 'Rate Master created successfully.');
@@ -66,13 +73,20 @@ class RateMasterController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'type'    => 'required',
-            'rate'     => 'required',
+            'guard_type'        => 'required|unique:rate_masters,guard_type,' . $id,
+            'regular_rate'      => 'required',
+            'laundry_allowance' => 'required',
         ]);
 
         $rateMaster = RateMaster::where('id', $id)->update([
-            'type' => $request->type,
-            'rate'  => $request->rate
+            'guard_type'        => $request->guard_type,
+            'regular_rate'      => $request->regular_rate,
+            'laundry_allowance' => $request->laundry_allowance,
+            'canine_premium'    => $request->canine_premium,
+            'fire_arm_premium'  => $request->fire_arm_premium,
+            'gross_hourly_rate' => $request->gross_hourly_rate,
+            'overtime_rate'     => $request->overtime_rate,
+            'holiday_rate'      => $request->holiday_rate
         ]);
 
         return redirect()->route('rate-master.index')->with('success', 'Rate Master updated successfully.');
