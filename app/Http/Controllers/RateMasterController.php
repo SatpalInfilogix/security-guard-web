@@ -30,7 +30,7 @@ class RateMasterController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'guard_type'        => 'required',
+            'guard_type'        => 'required|unique:rate_masters,guard_type',
             'regular_rate'      => 'required',
             'laundry_allowance' => 'required',
         ]);
@@ -73,7 +73,7 @@ class RateMasterController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'guard_type'        => 'required',
+            'guard_type'        => 'required|unique:rate_masters,guard_type,' . $id,
             'regular_rate'      => 'required',
             'laundry_allowance' => 'required',
         ]);

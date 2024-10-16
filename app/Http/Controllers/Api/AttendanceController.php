@@ -31,7 +31,7 @@ class AttendanceController extends Controller
 
         $attendanceData = [];
         for ($date = $startDate; $date->lessThanOrEqualTo($endDate); $date->addDay()) {
-            $punchRecord = PunchTable::where('user_id', Auth::id())->whereDate('created_at', $date)->whereNotNull('in_time')->whereNotNull('out_time')->first();
+            $punchRecord = PunchTable::where('user_id', Auth::id())->whereDate('in_time', $date)->whereNotNull('in_time')->whereNotNull('out_time')->first();
 
             $workedHours = 0;
             $loggedHours = 0;
@@ -57,13 +57,14 @@ class AttendanceController extends Controller
                 }
 
                 $guardAdditionalInformation = GuardAdditionalInformation::where('user_id', Auth::id())->first();
-                $rateMater = RateMaster::where('id', $guardAdditionalInformation->id)->first();
-    
-                if ($publicHolidays->contains($date->toDateString())) {
-                    $publicHolidayEarning = $workedHours * $rateMater->holiday_rate; // Use public holiday rate
-                } else {
-                    $regularHoursEarning = $workedHours * $rateMater->gross_hourly_rate;
-                    $overtimeEarning = $overtimeHours * $rateMater->overtime_rate;
+                $rateMater = RateMaster::where('id', $guardAdditionalInformation->guard_type_id)->first();
+                if($rateMater) {
+                    if ($publicHolidays->contains($date->toDateString())) {
+                        $publicHolidayEarning = $workedHours * $rateMater->holiday_rate; // Use public holiday rate
+                    } else {
+                        $regularHoursEarning = $workedHours * $rateMater->gross_hourly_rate;
+                        $overtimeEarning = $overtimeHours * $rateMater->overtime_rate;
+                    }
                 }
             }
     
@@ -76,11 +77,15 @@ class AttendanceController extends Controller
                 'regularHoursEarning' => $regularHoursEarning,
                 'overtimeHours'    => $overtimeHours,
                 'overtimeEarning'  => $overtimeEarning,
-                'publicHolidayEarning' => $publicHolidayEarning
+                'publicHolidayEarning' => $publicHolidayEarning,
             ];
         }
-    
-        return response()->json($attendanceData);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Attendance',
+            'data'    => $attendanceData,
+        ]);
     }
     
 
