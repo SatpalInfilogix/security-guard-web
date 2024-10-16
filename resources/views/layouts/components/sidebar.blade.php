@@ -76,7 +76,7 @@
                     </a>
                 </li> --}}
                 <li @class([
-                    'active' => Request::is('faq'),
+                    'active' => Request::is('faq', 'help_requests'),
                 ])>
                     <a href="javascript: void(0);" class="has-arrow waves-effect">
                         <i class="bx bx-list-ul"></i>
@@ -84,6 +84,7 @@
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
                         <li><a href="{{ route('faq.index')}}" key="t-tui-calendar">FAQ</a></li>
+                        <li><a href="{{ route('help_requests.index')}}" key="t-tui-calendar">Help Request</a></li>
                     </ul>
                 </li>
 

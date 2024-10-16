@@ -12,7 +12,7 @@ use App\Http\Controllers\FaqController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\RateMasterController;
 use App\Http\Controllers\PublicHolidayController;
-
+use App\Http\Controllers\HelpRequestController;
 
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');
@@ -26,15 +26,16 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::prefix('admin')->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('admin.dashboard.index');
         Route::resources([
-            'profile'    => ProfileController::class,
-            'users'      => UserController::class,
-            'settings'   => SettingController::class,
-            'faq'        => FaqController::class,
-            'attendance' => AttendanceController::class,
+            'profile'               => ProfileController::class,
+            'users'                 => UserController::class,
+            'settings'              => SettingController::class,
+            'faq'                   => FaqController::class,
+            'attendance'            => AttendanceController::class,
             'security-guards'       => SecurityGuardController::class,
             'roles-and-permissions' => RoleAndPermissionController::class,
-            'rate-master'       => RateMasterController::class,
-            'public-holidays'   => PublicHolidayController::class
+            'rate-master'           => RateMasterController::class,
+            'public-holidays'       => PublicHolidayController::class,
+            'help_requests'         => HelpRequestController::class
         ]);
 
         Route::get('payemnt-setting', [SettingController::class, 'paymentSetting'])->name('settings.payment-setting');
