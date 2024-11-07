@@ -1,3 +1,41 @@
+@if($hasPlugin('rateCalculate'))
+    @push('scripts')
+    <script>
+        $(document).ready(function(){
+            function calculateRates() {
+                let regularRate = parseFloat($('input[name="regular_rate"]').val()) || 0;
+                let laundryAllowance = parseFloat($('input[name="laundry_allowance"]').val()) || 0;
+                const caninePremium = parseFloat(document.getElementById('canine_premium').value) || 0;
+                const fireArmPremium = parseFloat(document.getElementById('fire_arm_premium').value) || 0;
+
+                let total = regularRate + laundryAllowance + caninePremium + fireArmPremium;
+
+                if (regularRate === 0 && laundryAllowance === 0 && caninePremium === 0 && fireArmPremium === 0) {
+                    $('#gross_hourly_display').text('');
+                    $('#normal_rate_display').text('');
+                    $('#overtime_rate_display').text('');
+                    $('#holiday_rate_display').text('');
+                } else {
+                    $('#gross_hourly_rate, #normal_rate').val(total.toFixed(2));
+                    $('#gross_hourly_display, #normal_rate_display').text(`(${regularRate} + ${laundryAllowance} + ${caninePremium} + ${fireArmPremium}) = ${total.toFixed(2)}`);
+
+                    let overtimeRate = ((regularRate + caninePremium) * 1.5) + laundryAllowance;
+                    $('#overtime_rate').val(overtimeRate.toFixed(2));
+                    $('#overtime_rate_display').text(`(${regularRate} + ${caninePremium} * 1.5) + ${laundryAllowance} = ${overtimeRate.toFixed(2)}`);
+
+                    let holidayRate = ((regularRate + caninePremium) * 2) + laundryAllowance;
+                    $('#holiday_rate').val(holidayRate.toFixed(2));
+                    $('#holiday_rate_display').text(`(${regularRate} + ${caninePremium} * 2) + ${laundryAllowance} = ${holidayRate.toFixed(2)}`);
+                }
+            }
+
+            $('.rate-calculate').on('input', calculateRates);
+            calculateRates()
+        });
+    </script>
+    @endpush
+@endif
+
 @if($hasPlugin('datePicker'))
     @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">

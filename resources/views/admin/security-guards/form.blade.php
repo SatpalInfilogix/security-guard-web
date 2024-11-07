@@ -23,6 +23,22 @@
         </div>
     </div>
 </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <?php
+                $statusOptions = ['Active', 'Inactive', 'Hold'];
+            ?>
+            <label for="status">Status</label>
+            <select name="user_status" id="user_status" class="form-control">
+                <option value="" selected disabled>Select Status</option>
+                @foreach ($statusOptions as $value)
+                    <option value="{{ $value }}" {{ (old('status', $user->status ?? '') === $value) ? 'selected' : '' }}>
+                        {{ $value }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    </div>
 
     <fieldset class="col-md-12 mb-3">
         <legend>Addtitional Detail</legend>
@@ -65,9 +81,20 @@
             <div class="col-md-4 mb-3">
                 <x-form-input name="client_name" value="{{ old('client_name', $user->guardAdditionalInformation->client_name ?? '') }}" label="Client Name" placeholder="Enter your Client Name"/>
             </div>
+            
             <div class="col-md-4 mb-3">
-                <x-form-input name="guard_type" value="{{ old('guard_type', $user->guardAdditionalInformation->guard_type ?? '') }}" label="Guard Type" placeholder="Enter your Guard Type"/>
-            </div>
+                <label for="guard_type">Guard Type</label>
+                <select name="guard_type_id" id="guard_type" class="form-control">
+                    <option value="" selected disabled>Select Guard Type</option>
+                  
+                    @foreach ($rateMasters as $rateMaster)
+                    <option value="{{ $rateMaster->id }}" 
+                        @selected((old('guard_type_id', $user->guardAdditionalInformation->guard_type_id ?? null) == $rateMaster->id))>
+                        {{ $rateMaster->guard_type }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>            
             <div class="col-md-4 mb-3">
                 <x-form-input name="employed_as" value="{{ old('employed_as', $user->guardAdditionalInformation->employed_as ?? '') }}" label="Employed As" placeholder="Enter your Employed As"/>
             </div>
@@ -180,12 +207,12 @@
                 <x-form-input type="file" name="trn_doc" label="TRN Document" accept="application/pdf" onchange="showLink(this, 'trn_link', 'old_trn_link')"  required="true"/>
                 @if ($user->userDocuments->trn ?? '')
                     <div class="preview mt-2" id="old_trn_link">
-                        <label>View TRN Document:</label>
-                        <a href="{{ asset($user->userDocuments->trn) }}" target="_blank">View Document</a>
+                        <label>TRN Document:</label>
+                        <a href="{{ asset($user->userDocuments->trn) }}" target="_blank">View TRN Document</a>
                     </div>
                 @endif
                 <div id="trn_link" class="mt-2" style="display:none;">
-                    <label>Preview TRN Document:</label>
+                    <label>TRN Document:</label>
                     <a href="#" target="_blank">Preview TRN Document</a>
                 </div>
             </div>
@@ -194,12 +221,12 @@
                 <x-form-input type="file" name="nis_doc" label="NIS Document" accept="application/pdf" onchange="showLink(this, 'nis_link', 'old_nis_link')"  required="true" />
                 @if ($user->userDocuments->nis ?? '')
                     <div class="preview mt-2" id="old_nis_link">
-                        <label>View NIS Document:</label>
-                        <a href="{{ asset($user->userDocuments->nis) }}" target="_blank">View Document</a>
+                        <label>NIS Document:</label>
+                        <a href="{{ asset($user->userDocuments->nis) }}" target="_blank">View NIS Document</a>
                     </div>
                 @endif
                 <div id="nis_link" class="mt-2" style="display:none;">
-                    <label>Preview NIS Document:</label>
+                    <label>NIS Document:</label>
                     <a href="#" target="_blank">Preview NIS Document</a>
                 </div>
             </div>
@@ -208,12 +235,12 @@
                 <x-form-input type="file" name="psra_doc" label="PSRA Document" accept="application/pdf" onchange="showLink(this, 'psra_link', 'old_psra_doc')" required="true"/>
                 @if ($user->userDocuments->psra ?? '')
                     <div class="preview mt-2" id="old_psra_doc">
-                        <label>View PSRA Document:</label>
-                        <a href="{{ asset($user->userDocuments->psra) }}" target="_blank">View Document</a>
+                        <label>PSRA Document:</label>
+                        <a href="{{ asset($user->userDocuments->psra) }}" target="_blank">View PSRA Document</a>
                     </div>
                 @endif
                 <div id="psra_link" class="mt-2" style="display:none;">
-                    <label>Preview PSRA Document:</label>
+                    <label>PSRA Document:</label>
                     <a href="#" target="_blank">Preview PSRA Document</a>
                 </div>
             </div>
@@ -222,12 +249,12 @@
                 <x-form-input type="file" name="birth_certificate" label="Birth Certificate" accept="application/pdf" onchange="showLink(this, 'birth_link', 'old_birth_certificate')"  required="true" />
                 @if ($user->userDocuments->birth_certificate ?? '')
                     <div class="preview mt-2" id="old_birth_certificate">
-                        <label>View Birth Certificate:</label>
-                        <a href="{{ asset($user->userDocuments->birth_certificate) }}" target="_blank">View Document</a>
+                        <label>Birth Certificate:</label>
+                        <a href="{{ asset($user->userDocuments->birth_certificate) }}" target="_blank">View Birth Certificate</a>
                     </div>
                 @endif
                 <div id="birth_link" class="mt-2" style="display:none;">
-                    <label>Preview Birth Certificatet:</label>
+                    <label>Birth Certificatet:</label>
                     <a href="#" target="_blank">Preview Birth Certificate</a>
                 </div>
             </div>
