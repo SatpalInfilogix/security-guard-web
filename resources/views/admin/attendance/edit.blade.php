@@ -38,13 +38,23 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <x-form-input name="last_name" value="{{ $attendance->user->surname }}" label="Surename" placeholder="Enter your Surename" readonly/>
+                                        <x-form-input name="surname" value="{{ $attendance->user->surname }}" label="Surename" placeholder="Enter your Surename" readonly/>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <x-form-input type="text" class="date-picker-punch-in" name="punch_in" label="Punch In" value="{{ old('punch_in', $attendance->in_time) }}" placeholder="Enter your Punch In" />
                                     </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="in_location" class="form-label">In Location</label>
+                                    <textarea name="in_loaction" class="form-control" rows="4" cols="50" readonly>{{$attendance->in_location}}</textarea>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="in_location" class="form-label">Out Location</label>
+                                    <textarea name="out_loaction" class="form-control" rows="4" cols="50" readonly>{{$attendance->out_location}}</textarea>
                                 </div>
                             </div>
                             <div class="row">

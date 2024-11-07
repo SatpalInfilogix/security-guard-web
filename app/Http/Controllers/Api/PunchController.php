@@ -8,6 +8,7 @@ use App\Models\PunchTable;
 use App\Services\GeocodingService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 
 class PunchController extends Controller
@@ -55,12 +56,13 @@ class PunchController extends Controller
             }
 
             $imageName = uploadFile($request->file('out_image'), 'uploads/activity/punch_out/');
-            
+            $out_location = $this->getLocationFromLatLng($request->out_lat, $request->out_long);
+    
             $punchOut->update([
-                'out_time'      =>  $request->time,
+                'out_time'      => $request->time,
                 'out_lat'       => $request->out_lat,
                 'out_long'      => $request->out_long,
-                'out_location'  => $request->out_location,
+                'out_location'  => json_encode($out_location) ?? '',
                 'out_image'     => $imageName,
             ]);
 
@@ -75,13 +77,14 @@ class PunchController extends Controller
             }
 
             $imageName = uploadFile($request->file('in_image'), 'uploads/activity/punch_in/');
+            $in_location = $this->getLocationFromLatLng($request->in_lat, $request->in_long);
 
             $punchIn = PunchTable::create([
                 'user_id'     => Auth::id(),
                 'in_time'     => $request->time,
                 'in_lat'      => $request->in_lat,
                 'in_long'     => $request->in_long,
-                'in_location' => $request->in_location,
+                'in_location' => json_encode($in_location) ?? '',
                 'in_image'    => $imageName,
             ]);
 
@@ -95,12 +98,12 @@ class PunchController extends Controller
         if ($action === 'in') {
             $rules['in_lat']      = 'required';
             $rules['in_long']     = 'required';
-            $rules['in_location'] = 'required';
+            // $rules['in_location'] = 'required';
             $rules['in_image']    = 'required|file|image|mimes:jpg,jpeg,png,gif';
         } elseif ($action === 'out') {
             $rules['out_lat']      = 'required';
             $rules['out_long']     = 'required';
-            $rules['out_location'] = 'required';
+            // $rules['out_location'] = 'required';
             $rules['out_image']    = 'required|file|image|mimes:jpg,jpeg,png,gif';
         }
     }
@@ -112,6 +115,20 @@ class PunchController extends Controller
             'message' => $message,
             'data'    => $data,
         ]);
+    }
+
+    private function getLocationFromLatLng($lat, $lng)
+    {
+        $apiKey = env('GOOGLE_API_KEY');
+        $url = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$lat},{$lng}&key={$apiKey}";
+        $response = Http::get($url);
+
+        if ($response->successful()) {
+            $data = $response->json();
+            return $data['results'][0] ?? null;
+        }
+
+        return null;
     }
 
     public function getAddress(Request $request)

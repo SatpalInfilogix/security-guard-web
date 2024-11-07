@@ -18,7 +18,11 @@ class AttendanceController extends Controller
     public function edit($id)
     {
         $attendance = PunchTable::with('user')->where('id', $id)->first();
-        
+        $in_location = json_decode($attendance->in_location);
+        $attendance['in_location'] = $in_location->formatted_address ?? '';
+        $out_location = json_decode($attendance->out_location);
+        $attendance['out_location'] = $out_location->formatted_address ?? '';
+
         return view('admin.attendance.edit', compact('attendance'));
     }
 

@@ -46,7 +46,7 @@
                 </li>
                 <li class="{{ Request::segment(2) == 'client-sites' ? 'mm-active' : '' }}">
                     <a href="{{ route('client-sites.index')}}" class="waves-effect">
-                        <i class="bx bxs-group"></i>
+                        <i class="bx bx-buildings"></i>
                         <span key="t-user">Client sites</span>
                     </a>
                 </li>
