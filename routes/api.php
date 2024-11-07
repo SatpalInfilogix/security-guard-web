@@ -21,7 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('guard/profile',[ProfileController::class,'guardProfile']);
     Route::get('check-status', [SecurityGuardController::class, 'checkStatus']);
     Route::get('/overtime/{userId}', [PunchController::class, 'calculateOvertime']);
-    Route::post('get-attendance', [AttendanceController::Class, 'getAttendance']);
+    Route::post('get-attendance', [AttendanceController::class, 'getAttendance']);
     
 });
 Route::get('faq', [FaqController::class, 'index']);
