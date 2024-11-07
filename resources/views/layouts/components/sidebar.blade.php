@@ -38,6 +38,18 @@
                         <span key="t-user">Users</span>
                     </a>
                 </li>
+                <li class="{{ Request::segment(2) == 'clients' ? 'mm-active' : '' }}">
+                    <a href="{{ route('clients.index')}}" class="waves-effect">
+                        <i class="bx bxs-group"></i>
+                        <span key="t-user">Clients</span>
+                    </a>
+                </li>
+                <li class="{{ Request::segment(2) == 'client-sites' ? 'mm-active' : '' }}">
+                    <a href="{{ route('client-sites.index')}}" class="waves-effect">
+                        <i class="bx bxs-group"></i>
+                        <span key="t-user">Client sites</span>
+                    </a>
+                </li>
                 <li class="{{ Request::segment(2) == 'rate-master' ? 'mm-active' : '' }}">
                     <a href="{{ route('rate-master.index')}}" class="waves-effect">
                         <i class="bx bx-receipt"></i>
