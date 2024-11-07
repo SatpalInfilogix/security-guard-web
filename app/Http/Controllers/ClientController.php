@@ -76,7 +76,13 @@ class ClientController extends Controller
         $clientCode = $this->generateCode($clientName);
 
         $baseCode = substr($clientCode, 0, -3);
-        $existingClient = Client::where('client_code', $clientCode)->first();
+        $clientId = $request->input('client_id');
+        if ($clientId) {
+            $existingClient = Client::where('client_code', $clientCode)->where('id', '!=', $clientId)->first();
+        } else {
+            $existingClient = Client::where('client_code', $clientCode)->first();
+        }
+
         if ($existingClient) {
             $counter = 2;
             
