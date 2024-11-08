@@ -54,7 +54,9 @@
         <x-form-input name="date" id="date" value="{{ old('date', $guardRoaster->date ?? '') }}" label="Date" placeholder="Enter your Date" class="date-picker-guard" type="text"/>
     </div>
     <div class="col-md-4 mb-3">
-        <x-form-input name="time" value="{{ old('time', $guardRoaster->time ?? '') }}" label="Time" placeholder="Enter your Time" class="time-picker-guard" type="text"/>
+        <div class="show-input">
+            <x-form-input type="text" name="time" value="{{ old('time', $guardRoaster->start_time ?? '') }}" label="Time" placeholder="Enter your Time" class="time-picker-guard" type="text"/>
+        </div>
     </div>
 </div>
 
@@ -63,10 +65,8 @@
         <button type="submit" class="btn btn-primary w-md">Submit</button>
     </div>
 </div>
-<x-include-plugins :plugins="['chosen', 'datePicker']"></x-include-plugins>
-
+<x-include-plugins :plugins="['chosen', 'datePicker', 'time']"></x-include-plugins>
 <script>
-
      $(function(){
         $('#guard_id').chosen({
             width: '100%',
@@ -75,14 +75,6 @@
         $('#client_id').chosen({
             width: '100%',
             placeholder_text_multiple: 'Select Client'
-        });
-
-        $('.time-picker-guard').flatpickr({
-            enableTime: true,             // Enable time selection
-            noCalendar: true,             // Disable date selection
-            dateFormat: "H:i",            // Set time format (24-hour format)
-            time_24hr: true,              // Use 24-hour format
-            minuteIncrement: 1,           // Allow minute selection in increments of 1
         });
      });
 

@@ -36,6 +36,26 @@
     @endpush
 @endif
 
+@if($hasPlugin('time'))
+    @push('styles')
+        <link rel="stylesheet" href="https://weareoutman.github.io/clockpicker/dist/jquery-clockpicker.min.css">
+    @endpush
+    @push('scripts')
+    <script src="https://weareoutman.github.io/clockpicker/dist/jquery-clockpicker.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("input[name=time]").clockpicker({       
+                placement: 'bottom',
+                align: 'left',
+                autoclose: true,
+                default: 'now',
+                donetext: "Select",
+            });
+        });
+    </script>
+    @endpush
+@endif
+
 @if($hasPlugin('datePicker'))
     @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
