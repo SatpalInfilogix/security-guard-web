@@ -42,7 +42,9 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'client-sites'          => ClientSiteController::class,
         ]);
 
-        Route::get('payemnt-setting', [SettingController::class, 'paymentSetting'])->name('settings.payment-setting');
+        Route::get('payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
+        Route::get('gerenal-settings', [SettingController::class, 'generalSettings'])->name('settings.gerenal-settings');
+
         Route::get('roles-and-permissions/role-list', [RoleAndPermissionController::class,'show'])->name('roles-and-permissions.role-list');
         Route::post('roles-and-permissions/store-role', [RoleAndPermissionController::class,'storeRole'])->name('roles-and-permissions.store-role');
         Route::get('export-guards', [SecurityGuardController::class, 'exportGuards'])->name('export.guards');
