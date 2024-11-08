@@ -109,7 +109,8 @@
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
                         <li><a href="{{ route('settings.index')}}" key="t-tui-calendar">Site Settings</a></li>
-                        <li><a href="{{ route('settings.payment-setting')}}" key="t-tui-calendar">Payment Settings</a></li>
+                        <li><a href="{{ route('settings.gerenal-settings')}}" key="t-tui-calendar">Gerenal Settings</a></li>
+                        <li><a href="{{ route('settings.payment-settings')}}" key="t-tui-calendar">Payment Settings</a></li>
                     </ul>
                 </li>
 

@@ -45,8 +45,12 @@ class ClientSiteController extends Controller
             'number'            => $request->number,
             'number_2'          => $request->number_2,
             'account_payable_contact_email' => $request->account_payable_contact_email,
+            'email_3'           => $request->email_3,
             'telephone_number_2'=> $request->telephone_number_2,
             'status'            => $request->status,
+            'latitude'          => $request->latitude,
+            'longitude'         => $request->longitude,
+            'radius'            => $request->radius
         ]);
 
         return redirect()->route('client-sites.index')->with('success', 'Client Site created successfully.');
@@ -87,8 +91,12 @@ class ClientSiteController extends Controller
             'number'            => $request->number,
             'number_2'          => $request->number_2,
             'account_payable_contact_email' => $request->account_payable_contact_email,
+            'email_3'          => $request->email_3,
             'telephone_number_2'=> $request->telephone_number_2,
             'status'            => $request->status,
+            'latitude'          => $request->latitude,
+            'longitude'         => $request->longitude,
+            'radius'            => $request->radius
         ]);
 
         return redirect()->route('client-sites.index')->with('success', 'Client Site updated successfully.');

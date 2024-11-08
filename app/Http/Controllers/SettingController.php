@@ -11,12 +11,12 @@ class SettingController extends Controller
 {
     public function index()
     {
-        return view('admin.setting.index');
+        return view('admin.settings.index');
     }
 
     public function paymentSetting()
     {
-        return view('admin.setting.payment-setting');
+        return view('admin.settings.payment-setting');
     }
 
     public function store(Request $request)
@@ -56,10 +56,16 @@ class SettingController extends Controller
         }
 
         if($request->stripe_api_key && $request->stripe_secret_key) {
-            return redirect()->route('settings.payment-setting')->with('success', 'Payment Setting updated successfully');
+            return redirect()->route('settings.payment-settings')->with('success', 'Payment Setting updated successfully');
+        } else if($request->duty_time) {
+            return redirect()->route('settings.gerenal-settings')->with('success', 'Gerenal Setting updated successfully');
         } else {
             return redirect()->route('settings.index')->with('success', 'Site Setting updated successfully');
         }
+    }
 
+    public function generalSettings()
+    {
+        return view('admin.settings.general-settings');
     }
 }

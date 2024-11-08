@@ -28,7 +28,11 @@ return new class extends Migration
             $table->string('number')->nullable();
             $table->string('number_2')->nullable();
             $table->string('account_payable_contact_email')->nullable();
+            $table->string('email_3')->nullable();
             $table->string('telephone_number_2')->nullable();
+            $table->string('latitude', 100)->nullable();
+            $table->string('longitude', 100)->nullable();
+            $table->string('radius', 75)->nullable();
             $table->enum('status', ['Active', 'Inactive'])->default('Active');
             $table->timestamps();
         });
