@@ -22,3 +22,31 @@ span.invalid-message {
     max-width: 23%;
     height: auto;
 }
+
+.chosen-container-single .chosen-single, .chosen-container-multi{
+    background: #f9f9f6 !important;
+    padding: 7px 7px !important;
+    height: 38px!important;
+    /* font-size: calc(14px + (16 - 14) * ((100vw - 320px) / (1920 - 320)))!important; */
+    border: 1px solid #ced4da !important;
+}
+
+.chosen-container-multi{
+    padding: 0!important;
+}
+
+.chosen-container-multi .chosen-choices{
+    background: #f9f9f6 !important;
+    padding: 10px 10px !important;
+    height: 38px!important;
+    border: 1px solid #ced4da !important;
+}
+
+.chosen-container-single .chosen-single div b{
+    margin-top: 10px!important;
+}
+.disabled-date {
+    background-color: #f0f0f0; /* Grayed-out background */
+    color: #ccc; /* Light gray text */
+    pointer-events: none; /* Prevent clicking */
+}

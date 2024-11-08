@@ -20,6 +20,12 @@
                         <span key="t-spreadsheet">Security Guard</span>
                     </a>
                 </li>
+                <li class="{{ Request::segment(2) == 'guard-roasters' ? 'mm-active' : '' }}">
+                    <a href="{{ route('guard-roasters.index')}}" class="waves-effect">
+                        <i class="bx bx-hive"></i>
+                        <span key="t-spreadsheet">Guard Roaster</span>
+                    </a>
+                </li>
                 <li class="{{ Request::segment(2) == 'attendance' ? 'mm-active' : '' }}">
                     <a href="{{ route('attendance.index')}}" class="waves-effect">
                         <i class="bx bx-spreadsheet"></i>

@@ -14,6 +14,7 @@ use App\Http\Controllers\RateMasterController;
 use App\Http\Controllers\PublicHolidayController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientSiteController;
+use App\Http\Controllers\GuardRoasterController;
 use App\Http\Controllers\HelpRequestController;
 
 Route::get('/', function (){
@@ -40,6 +41,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'help_requests'         => HelpRequestController::class,
             'clients'               => ClientController::class,
             'client-sites'          => ClientSiteController::class,
+            'guard-roasters'        => GuardRoasterController::class
         ]);
 
         Route::get('payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
@@ -53,4 +55,6 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
        
         Route::post('/generate-client-code', [ClientController::class, 'generateClientCode'])->name('generate.client.code');
     });
+    Route::get('/get-client-sites/{clientId}', [GuardRoasterController::class, 'getClientSites']);
+    Route::get('/get-assigned-dates/{guardId}', [GuardRoasterController::class, 'getAssignedDate']);
 });
