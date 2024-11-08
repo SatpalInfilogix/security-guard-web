@@ -41,8 +41,8 @@
                                 @foreach($guardRoasters as $key => $guardRoaster)
                                 <tr>
                                     <td>{{ ++$key }}</td>
-                                    <td>{{ $guardRoaster->guard_id }}</td>
-                                    <td>{{ $guardRoaster->client_id }}</td>
+                                    <td>{{ optional($guardRoaster->user)->first_name .' '. optional($guardRoaster->user)->surname }}</td>
+                                    <td>{{ optional($guardRoaster->client)->client_name }}</td>
                                     <td>{{ $guardRoaster->date }}</td>
                                     <td>{{ $guardRoaster->start_time }}</td>
                                     <td class="action-buttons">

@@ -14,7 +14,7 @@ class GuardRoasterController extends Controller
 {
     public function index()
     {
-        $guardRoasters = GuardRoaster::latest()->get();
+        $guardRoasters = GuardRoaster::with('user', 'client')->latest()->get();
 
         return view('admin.guard-roaster.index', compact('guardRoasters'));
     }
