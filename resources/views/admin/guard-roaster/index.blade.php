@@ -32,7 +32,8 @@
                                     <th>Guard Name</th>
                                     <th>Client Name</th>
                                     <th>Date</th>
-                                    <th>Time</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
                                     <th>Action</th>
                                 </tr>
                                 </thead>
@@ -45,6 +46,7 @@
                                     <td>{{ optional($guardRoaster->client)->client_name }}</td>
                                     <td>{{ $guardRoaster->date }}</td>
                                     <td>{{ $guardRoaster->start_time }}</td>
+                                    <td>{{ $guardRoaster->end_time }}</td>
                                     <td class="action-buttons">
                                         <a href="{{ route('guard-roasters.edit', $guardRoaster->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
                                         <button data-source="Guard Roaster" data-endpoint="{{ route('guard-roasters.destroy', $guardRoaster->id) }}"

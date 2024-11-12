@@ -56,7 +56,13 @@
     </div>
     <div class="col-md-4 mb-3">
         <div class="show-input">
-            <x-form-input type="text" name="time" value="{{ old('time', $guardRoaster->start_time ?? '') }}" label="Time" placeholder="Enter your Time" class="time-picker-guard" type="text"/>
+            <x-form-input type="text" id="start_time" name="start_time" value="{{ old('start_time', $guardRoaster->start_time ?? '') }}" label="Start Time" placeholder="Enter Start Time" class="time-picker-guard" type="text"/>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="show-input">
+            <x-form-input type="text" id="end_time" name="end_time" value="{{ old('end_time', $guardRoaster->end_time ?? '') }}" label="End Time" placeholder="Enter End Time" class="time-picker-guard" type="text"/>
         </div>
     </div>
 </div>
@@ -181,10 +187,10 @@
         }
 
         function initDatePicker(assignedDates, holidayDates) {
-            const disabledDates = assignedDates.filter(date => date !== selectedDate);
+            // const disabledDates = assignedDates.filter(date => date !== selectedDate);
             $('.date-picker-guard').flatpickr().destroy();
             $('.date-picker-guard').flatpickr({
-                disable: disabledDates,  // Disable the assigned dates
+                // disable: disabledDates,  // Disable the assigned dates
                 dateFormat: "Y-m-d",     // Set date format
                 minDate: "today",        // Optionally disable past dates
                 defaultDate: selectedDate ? selectedDate : null,  // Set default date if editing
@@ -194,12 +200,12 @@
                     const holiday = holidayDates.find(holiday => holiday.date === formattedDate);
                    
                     if (holiday) {
-                        dayElem.setAttribute('title', holiday.name);
+                        dayElem.setAttribute('title', 'H');
                         dayElem.classList.add('holiday');  // Add a custom class to the holiday element
                         
                         const holidayLabel = document.createElement('div');
                         holidayLabel.classList.add('holiday-label');
-                        holidayLabel.textContent = holiday.name;  // Display the holiday name
+                        holidayLabel.textContent = 'H';  // Display the holiday name
                         dayElem.appendChild(holidayLabel);
                     }
                 }
@@ -218,8 +224,6 @@
                 }
             });
         }
-
-        // initDatePicker(assignedDates);
     });
     </script>
 

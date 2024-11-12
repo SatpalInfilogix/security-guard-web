@@ -44,7 +44,15 @@
     <script src="https://weareoutman.github.io/clockpicker/dist/jquery-clockpicker.min.js"></script>
     <script>
         $(document).ready(function() {
-            $("input[name=time]").clockpicker({       
+            $("input[name=start_time]").clockpicker({       
+                placement: 'bottom',
+                align: 'left',
+                autoclose: true,
+                default: 'now',
+                donetext: "Select",
+            });
+
+            $("input[name=end_time]").clockpicker({       
                 placement: 'bottom',
                 align: 'left',
                 autoclose: true,
