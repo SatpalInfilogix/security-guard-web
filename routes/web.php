@@ -57,4 +57,5 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     });
     Route::get('/get-client-sites/{clientId}', [GuardRoasterController::class, 'getClientSites']);
     Route::get('/get-assigned-dates/{guardId}', [GuardRoasterController::class, 'getAssignedDate']);
+    Route::get('/get-public-holidays', [GuardRoasterController::class, 'getPublicHolidays']);
 });

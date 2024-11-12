@@ -52,6 +52,7 @@
     </div>
     <div class="col-md-4 mb-3">
         <x-form-input name="date" id="date" value="{{ old('date', $guardRoaster->date ?? '') }}" label="Date" placeholder="Enter your Date" class="date-picker-guard" type="text"/>
+        <div id="holiday-name" class="mt-2 text-danger" style="display:none;"></div>
     </div>
     <div class="col-md-4 mb-3">
         <div class="show-input">
@@ -80,12 +81,15 @@
 
     $(document).ready(function() {
         var assignedDates = [];
+        var holidayDates = [];
         var selectedDate = "{{ old('date', $guardRoaster->date ?? '') }}";
         var selectedGuardId = "{{ old('guard_id', $guardRoaster->guard_id ?? '') }}";
 
         if (selectedGuardId) {
             fetchAssignedDates(selectedGuardId);
         }
+
+        fetchPublicHolidays();
 
         $('#client_id').change(function() {
             const clientId = $(this).val();
@@ -134,7 +138,7 @@
                 fetchAssignedDates(guardId);
             } else {
                 assignedDates = [];  // Reset assigned dates
-                initDatePicker(assignedDates); // Reset date picker with no disabled dates
+                initDatePicker(assignedDates, holidayDates); // Reset date picker with no disabled dates
             }
         });
 
@@ -147,7 +151,7 @@
                     if (Array.isArray(data) && data.length) {
                         assignedDates = data;
                     }
-                    initDatePicker(assignedDates); // Initialize date picker with assigned dates
+                    initDatePicker(assignedDates, holidayDates); // Initialize date picker with assigned dates
                 },
                 error: function(xhr, status, error) {
                     console.error('Error fetching assigned dates:', error);
@@ -155,7 +159,28 @@
             });
         }
 
-        function initDatePicker(assignedDates) {
+         // Fetch public holidays
+         function fetchPublicHolidays() {
+            $.ajax({
+                url: '/get-public-holidays',
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (Array.isArray(data) && data.length) {
+                        holidayDates = data.map(holiday => ({
+                            date: moment(holiday.date).format('YYYY-MM-DD'),
+                            name: holiday.holiday_name
+                        }));
+                    }
+                    initDatePicker(assignedDates, holidayDates);
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching public holidays:', error);
+                }
+            });
+        }
+
+        function initDatePicker(assignedDates, holidayDates) {
             const disabledDates = assignedDates.filter(date => date !== selectedDate);
             $('.date-picker-guard').flatpickr().destroy();
             $('.date-picker-guard').flatpickr({
@@ -163,10 +188,38 @@
                 dateFormat: "Y-m-d",     // Set date format
                 minDate: "today",        // Optionally disable past dates
                 defaultDate: selectedDate ? selectedDate : null,  // Set default date if editing
+                onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    const dayDate = new Date(dayElem.getAttribute('aria-label'));
+                    const formattedDate = moment(dayDate).format('YYYY-MM-DD');
+                    const holiday = holidayDates.find(holiday => holiday.date === formattedDate);
+                   
+                    if (holiday) {
+                        dayElem.setAttribute('title', holiday.name);
+                        dayElem.classList.add('holiday');  // Add a custom class to the holiday element
+                        
+                        const holidayLabel = document.createElement('div');
+                        holidayLabel.classList.add('holiday-label');
+                        holidayLabel.textContent = holiday.name;  // Display the holiday name
+                        dayElem.appendChild(holidayLabel);
+                    }
+                }
+            });
+
+            $('#date').change(function() {
+                const selectedDate = $(this).val().trim();  // Get and trim the value from the date input field
+                $('#holiday-name').hide();
+                const formattedSelectedDate = moment(selectedDate).format('YYYY-MM-DD');  // Using moment.js to format
+                const holiday = holidayDates.find(holiday => {
+                    return holiday.date === formattedSelectedDate;
+                });
+
+                if (holiday) {
+                    $('#holiday-name').text(`Public Holiday: ${holiday.name}`).show();
+                }
             });
         }
 
-        initDatePicker(assignedDates);
+        // initDatePicker(assignedDates);
     });
     </script>
 

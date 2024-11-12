@@ -7,6 +7,7 @@ use App\Models\GuardRoaster;
 use App\Models\User;
 use App\Models\Client;
 use App\Models\ClientSite;
+use App\Models\PublicHoliday;
 use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
 
@@ -104,5 +105,11 @@ class GuardRoasterController extends Controller
             ->toArray();
 
         return response()->json($assignedDates);
+    }
+
+    public function getPublicHolidays()
+    {
+        $publicHolidays = PublicHoliday::latest()->get();
+        return response()->json($publicHolidays);
     }
 }
