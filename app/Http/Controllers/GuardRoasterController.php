@@ -210,16 +210,16 @@ class GuardRoasterController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Guards');
 
-        $headers = ['ID', 'First Name', 'Last Name', 'Email', 'Phone Number'];
+        $headers = ['ID', 'First Name', 'Last Name', 'Email', 'Phone Number', 'TRN', 'NIS', 'PSRA', 'Date Of Joining', 'Date Of Birth', 'Employer Company Name', 'Guard Current Rate', 'Location Code', 'Location Name', 'Client Code', 'Client Name', 'Guard Type Id', 'Employed As', 'Date of Seperation', 'Bank Name', 'Bank Branch Address', 'Account no', 'Account Type', 'Routing Number', 'Surname', 'First Name', 'Middle Name', 'Appartment No', 'Building Name', 'Street Name', 'Parish', 'City', 'Postal Code', 'Email', 'Phone Number', 'Trn Doc', 'NIS Doc', 'PSRA Doc', 'Birth Certificate Doc', 'Appratment No', 'Building Name', 'Street Name', 'Parish', 'City', 'Postal Code'];
         $sheet->fromArray($headers, NULL, 'A1');
 
         $users = User::whereHas('roles', function ($query) {
             $query->where('name', 'Security Guard');
-        })->get();
+        })->with('guardAdditionalInformation', 'usersBankDetail', 'usersKinDetail', 'userDocuments', 'contactDetail')->get();
 
         foreach ($users as $key => $user) {
             $sheet->fromArray(
-                [$user->id, $user->first_name, $user->last_name, $user->email, $user->phone_number],
+                [$user->id, $user->first_name, $user->last_name, $user->email, $user->phone_number, $user->guardAdditionalInformation->trn, $user->guardAdditionalInformation->nis, $user->guardAdditionalInformation->psra, $user->guardAdditionalInformation->date_of_joining, $user->guardAdditionalInformation->date_of_birth, $user->guardAdditionalInformation->employer_company_name, $user->guardAdditionalInformation->guards_Current_rate, $user->guardAdditionalInformation->location_code, $user->guardAdditionalInformation->location_name, $user->guardAdditionalInformation->client_code, $user->guardAdditionalInformation->client_name, $user->guardAdditionalInformation->guard_type_id, $user->guardAdditionalInformation->employed_as, $user->guardAdditionalInformation->date_of_seperation, $user->usersBankDetail->bank_name, $user->usersBankDetail->bank_branch_address, $user->usersBankDetail->account_no, $user->usersBankDetail->account_type, $user->usersBankDetail->routing_number, $user->usersKinDetail->surname, $user->usersKinDetail->first_name, $user->usersKinDetail->middle_name, $user->usersKinDetail->apartment_no, $user->usersKinDetail->building_name, $user->usersKinDetail->street_name, $user->usersKinDetail->parish, $user->usersKinDetail->city, $user->usersKinDetail->postal_code, $user->usersKinDetail->email, $user->usersKinDetail->phone_number,  url($user->userDocuments->trn), url($user->userDocuments->nis), url($user->userDocuments->psra), url($user->userDocuments->birth_certificate), $user->contactDetail->apartment_no, $user->contactDetail->building_name, $user->contactDetail->street_name, $user->contactDetail->parish, $user->contactDetail->city, $user->contactDetail->postal_code],
                 NULL,
                 'A' . ($key + 2)
             );
@@ -254,14 +254,14 @@ class GuardRoasterController extends Controller
         $sheet = $spreadsheet->getSheet(2);
         $sheet->setTitle('Client-Sites');
 
-        $headers = ['ID', 'Client Id', 'Client Location', 'Parish', 'Billing Address', 'vanguard Manager', 'Contact Operation', 'Telephone Number', 'Email', 'Invoice Recipient Main', 'Invoice Recipient Copy'];
+        $headers = ['ID', 'Client Id', 'Client Name', 'Client Location', 'Parish', 'Billing Address', 'vanguard Manager', 'Contact Operation', 'Telephone Number', 'Email', 'Invoice Recipient Main', 'Invoice Recipient Copy', 'Account Payable Contact Name', 'Email', 'Number', 'Number 2', 'Account Payable Contact Email', 'Email', 'Telephone Number', 'Latitude', 'longitude', 'radius', 'status'];
         $sheet->fromArray($headers, NULL, 'A1');
 
-        $clientSites = ClientSite::all();
+        $clientSites = ClientSite::with('client')->get();
 
         foreach ($clientSites as $key => $clientSite) {
             $sheet->fromArray(
-                [$clientSite->id, $clientSite->client_id, $clientSite->location_code, $clientSite->parish, $clientSite->billing_address, $clientSite->vanguard_manager, $clientSite->contact_operation, $clientSite->telephone_number, $clientSite->email, $clientSite->invoice_recipient_main, $clientSite->invoice_recipient_copy],
+                [$clientSite->id, $clientSite->client_id, $clientSite->client->client_name, $clientSite->location_code, $clientSite->parish, $clientSite->billing_address, $clientSite->vanguard_manager, $clientSite->contact_operation, $clientSite->telephone_number, $clientSite->email, $clientSite->invoice_recipient_main, $clientSite->invoice_recipient_copy, $clientSite->account_payable_contact_name, $clientSite->email_2, $clientSite->number, $clientSite->number_2, $clientSite->account_payable_contact_email, $clientSite->email_3, $clientSite->telephone_number_2, $clientSite->latitude, $clientSite->longitude, $clientSite->radius, $clientSite->status],
                 NULL,
                 'A' . ($key + 2)
             );

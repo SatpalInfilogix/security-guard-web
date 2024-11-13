@@ -11,6 +11,18 @@
                         <h4 class="mb-sm-0 font-size-18">Guard Roaster</h4>
 
                         <div class="page-title-right">
+                            <a href="{{ route('export.csv') }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard Roaster Configuration File</a>
+                            <a href="{{ url('download-guard-roaster-sample') }}"
+                                class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard Roaster Sample File</a>
+                            <div class="d-inline-block me-1">
+                                <form id="importForm" action="{{ route('import.guard-roaster') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <label for="fileInput" class="btn btn-primary primary-btn btn-md mb-0">
+                                        <i class="bx bx-cloud-download"></i> Import Guard Roaster
+                                        <input type="file" id="fileInput" name="file" accept=".csv, .xlsx" style="display:none;">
+                                    </label>
+                                </form>
+                            </div>
                             <a href="{{ route('guard-roasters.create') }}" class="btn btn-primary">Add New Guard Roaster</a>
                         </div>
                     </div>
@@ -22,7 +34,15 @@
                 <div class="col-12">
                     <x-error-message :message="$errors->first('message')" />
                     <x-success-message :message="session('success')" />
-
+                    @if (session('import_errors'))
+                        <div class="alert alert-danger">
+                            <ul>
+                                @foreach (session('import_errors') as $error)
+                                    <li>{{ $error['message'] }}</li> <!-- Assuming each error has a 'message' key -->
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <div class="card">
                         <div class="card-body">
                             <table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
@@ -66,4 +86,23 @@
         </div> <!-- container-fluid -->
     </div>
     <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
+    <script>
+        $(document).ready(function() {
+            $('#importButton').on('click', function() {
+                $('#fileInput').click();
+            });
+
+            $('#fileInput').on('change', function(event) {
+                var file = $(this).prop('files')[0];
+                if (file) {
+                    var fileType = file.type;
+                    if (fileType === 'text/csv' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+                        $('#importForm').submit();
+                    } else {
+                        alert('Please select a valid CSV or XLSX file.');
+                    }
+                }
+            });
+        });
+    </script>
 @endsection
