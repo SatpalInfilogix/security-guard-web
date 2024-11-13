@@ -59,4 +59,16 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('/get-assigned-dates/{guardId}', [GuardRoasterController::class, 'getAssignedDate']);
     Route::get('/get-public-holidays', [GuardRoasterController::class, 'getPublicHolidays']);
     Route::get('/get-guard-roster-details', [GuardRoasterController::class, 'getGuardRoasterDetails'])->name('get.guard.roster.details');
+
+    //************************Import Csv Route********************/
+    Route::post('import-guard-roaster', [GuardRoasterController::class, 'importGuardRoaster'])->name('import.guard-roaster');
+
+
+    Route::get('download-guard-roaster-sample', function() {
+        $file = public_path('assets/sample-guard-roaster/guard-roaster.csv');
+        return Response::download($file);
+    });
+
+    Route::get('/export/csv', [GuardRoasterController::class, 'downloadExcel'])->name('export.csv');
+
 });

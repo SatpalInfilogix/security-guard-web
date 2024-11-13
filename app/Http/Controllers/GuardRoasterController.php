@@ -10,6 +10,11 @@ use App\Models\ClientSite;
 use App\Models\PublicHoliday;
 use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
+use App\Imports\GuardRoasterImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Session;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class GuardRoasterController extends Controller
 {
@@ -166,5 +171,100 @@ class GuardRoasterController extends Controller
             'start_time' => $guardRoaster->start_time,
             'end_time' => $guardRoaster->end_time,
         ]);
+    }
+
+    public function importGuardRoaster(Request $request)
+    {
+        $import = new GuardRoasterImport;
+        Excel::import($import, $request->file('file'));
+
+        $errors = $import->getErrors();
+        if (!empty($errors)) {
+            session()->flash('import_errors', $errors);
+        }
+
+        return redirect()->route('guard-roasters.index')->with('success', 'Guard roaster imported successfully.');
+    }
+
+    public function downloadExcel()
+    {
+        $spreadsheet = new Spreadsheet();
+    
+        $this->addGuardsSheet($spreadsheet);
+        $this->addClientsSheet($spreadsheet);
+        $this->addClientSitesSheet($spreadsheet);
+    
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'Guard_Roaster_configuration' . '.xlsx';
+    
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $fileName . '"');
+        header('Cache-Control: max-age=0');
+    
+        $writer->save('php://output');
+        exit;
+    }
+
+    protected function addGuardsSheet($spreadsheet)
+    {
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Guards');
+
+        $headers = ['ID', 'First Name', 'Last Name', 'Email', 'Phone Number'];
+        $sheet->fromArray($headers, NULL, 'A1');
+
+        $users = User::whereHas('roles', function ($query) {
+            $query->where('name', 'Security Guard');
+        })->get();
+
+        foreach ($users as $key => $user) {
+            $sheet->fromArray(
+                [$user->id, $user->first_name, $user->last_name, $user->email, $user->phone_number],
+                NULL,
+                'A' . ($key + 2)
+            );
+        }
+
+        $spreadsheet->createSheet();
+    }
+
+    protected function addClientsSheet($spreadsheet)
+    {
+        $sheet = $spreadsheet->getSheet(1);
+        $sheet->setTitle('Clients');
+
+        $headers = ['ID', 'Client Code', 'Client Name'];
+        $sheet->fromArray($headers, NULL, 'A1');
+
+        $clients = Client::all();
+
+        foreach ($clients as $key => $client) {
+            $sheet->fromArray(
+                [$client->id, $client->client_code, $client->client_name],
+                NULL,
+                'A' . ($key + 2)
+            );
+        }
+
+        $spreadsheet->createSheet();
+    }
+
+    protected function addClientSitesSheet($spreadsheet)
+    {
+        $sheet = $spreadsheet->getSheet(2);
+        $sheet->setTitle('Client-Sites');
+
+        $headers = ['ID', 'Client Id', 'Client Location', 'Parish', 'Billing Address', 'vanguard Manager', 'Contact Operation', 'Telephone Number', 'Email', 'Invoice Recipient Main', 'Invoice Recipient Copy'];
+        $sheet->fromArray($headers, NULL, 'A1');
+
+        $clientSites = ClientSite::all();
+
+        foreach ($clientSites as $key => $clientSite) {
+            $sheet->fromArray(
+                [$clientSite->id, $clientSite->client_id, $clientSite->location_code, $clientSite->parish, $clientSite->billing_address, $clientSite->vanguard_manager, $clientSite->contact_operation, $clientSite->telephone_number, $clientSite->email, $clientSite->invoice_recipient_main, $clientSite->invoice_recipient_copy],
+                NULL,
+                'A' . ($key + 2)
+            );
+        }
     }
 }
