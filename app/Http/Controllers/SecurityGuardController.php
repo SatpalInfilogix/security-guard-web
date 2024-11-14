@@ -11,10 +11,10 @@ use App\Models\UsersBankDetail;
 use App\Models\UsersKinDetail;
 use App\Models\UsersDocuments;
 use App\Models\RateMaster;
-use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Collection;
+use App\Imports\SecurityGuardImport;
+use App\Exports\GuardImportExport;
 use Symfony\Component\HttpFoundation\Response;
 
 class SecurityGuardController extends Controller
@@ -22,13 +22,39 @@ class SecurityGuardController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $userRole = Role::where('name', 'Security Guard')->first();
 
-        $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
+        $query = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
-        })->latest()->get();
+        });
+
+        if ($request->has('search_name') && $request->search_name) {
+            $query->where(function ($query) use ($request) {
+                $query->where('first_name', 'like', '%' . $request->search_name . '%');
+            });
+        }
+
+        if ($request->has('search_email') && $request->search_email) {
+            $query->where('email', 'like', '%' . $request->search_email . '%');
+        }
+
+        if ($request->has('search_phone') && $request->search_phone) {
+            $query->where('phone_number', 'like', '%' . $request->search_phone . '%');
+        }
+
+        if ($request->has('status') && $request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $securityGuards = $query->latest()->get();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'view' => view('admin.security-guards.filter-table', compact('securityGuards'))->render()
+            ]);
+        }
 
         return view('admin.security-guards.index', compact('securityGuards'));
     }
@@ -133,7 +159,6 @@ class SecurityGuardController extends Controller
 
         return redirect()->route('security-guards.index')->with('success', 'Security Guard created successfully.');
     }
-
 
     /**
      * Display the specified resource.
@@ -282,70 +307,68 @@ class SecurityGuardController extends Controller
             $query->where('role_id', $userRole->id);
         })->with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail','userDocuments'])->latest()->get();
 
-        // Map the users' data into a CSV-friendly format
-        $guardArray = $guards->map(function ($guards) {
+        $guardArray = $guards->map(function ($guard) {
             return [
-                "First Name"          => $guards->first_name,
-                "Middle Name"         => $guards->last_name,
-                "Surname"             => $guards->surname,
-                //Addtitional Detail
-                "Guard's TRN"           => $guards->guardAdditionalInformation->trn ?? '',
-                "NIS/NHT Number"        => $guards->guardAdditionalInformation->nis ?? '',
-                "PSRA Registration No"  => $guards->guardAdditionalInformation->psra ?? '',
-                "Guard's Date of Joining" => $guards->guardAdditionalInformation->date_of_joining ?? '',
-                "Date of Birth"         => $guards->guardAdditionalInformation->date_of_birth ?? '',
-                "Employer Company Name" => $guards->guardAdditionalInformation->employer_company_name ?? '',
-                "Guard's Current Rate"  => $guards->guardAdditionalInformation->guards_current_rate ?? '',
-                "Location Code"         => $guards->guardAdditionalInformation->location_code ?? '',
-                "Location Name"         => $guards->guardAdditionalInformation->location_name ?? '',
-                "Client Code"           => $guards->guardAdditionalInformation->client_code ?? '',
-                "Client Name"           => $guards->guardAdditionalInformation->client_name ?? '',
-                "Guard Type"            => $guards->guardAdditionalInformation->guard_type_id ?? '',
-                "Employed As"           => $guards->guardAdditionalInformation->employed_as ?? '',
-                "Date of Separation"    => $guards->guardAdditionalInformation->date_of_seperation ?? '',
-                //Contact details
-                "Apartment No"          => $guards->contactDetail->apartment_no ?? '',
-                "Building Name"         => $guards->contactDetail->building_name ?? '',
-                "Street Name"           => $guards->contactDetail->street_name ?? '',
-                "Parish"                => $guards->contactDetail->parish ?? '',
-                "City"                  => $guards->contactDetail->city ?? '',
-                "Postal Code"           => $guards->contactDetail->postal_code ?? '',
-                "Email"                 => $guards->email ?? '',
-                "Phone Number"          => $guards->phone_number ?? '',
-                //Bank details
-                "Bank Name"             => $guards->usersBankDetail->bank_name ?? '',
-                "Bank Branch Address"   => $guards->usersBankDetail->bank_branch_address ?? '',
-                "Account Number"        => $guards->usersBankDetail->account_no ?? '',
-                "Account Type"          => $guards->usersBankDetail->account_type ?? '',
-                "Routing Number"        => $guards->usersBankDetail->routing_number ?? '',
-                //Next of Kin details
-                "Kin Surname"           => $guards->usersKinDetail->surname ?? '',
-                "Kin First Name"        => $guards->usersKinDetail->first_name ?? '',
-                "Kwin Middle Name"      => $guards->usersKinDetail->middle_name ?? '',
-                "Kin Apartment No"      => $guards->usersKinDetail->apartment_no ?? '',
-                "Kin Building Name"     => $guards->usersKinDetail->building_name ?? '',
-                "Kin Street Name"       => $guards->usersKinDetail->street_name ?? '',
-                "Kin Parish"            => $guards->usersKinDetail->parish ?? '',
-                "KinCity"               => $guards->usersKinDetail->city ?? '',
-                "Kin Postal Code"       => $guards->usersKinDetail->postal_code ?? '',
-                "Kin Email"             => $guards->usersKinDetail->email ?? '',
-                "Kin Phone Number"      => $guards->usersKinDetail->phone_number ?? '',
-                //User Documents
-                "TRN Document"          => $guards->userDocuments->trn ?? '',
-                "NIS Document"          => $guards->userDocuments->nis ?? '',
-                "PSRA Document"         => $guards->userDocuments->psra ?? '',
-                "Birth Certificate"     => $guards->userDocuments->birth_certificate ?? '',
+                "First Name"            => $guard->first_name,
+                "Middle Name"           => $guard->middle_name,
+                "Surname"               => $guard->surname,
+                // Additional Detail
+                "Guard's TRN"           => $guard->guardAdditionalInformation->trn ?? '',
+                "NIS/NHT Number"        => $guard->guardAdditionalInformation->nis ?? '',
+                "PSRA Registration No"  => $guard->guardAdditionalInformation->psra ?? '',
+                "Guard's Date of Joining" => $guard->guardAdditionalInformation->date_of_joining ?? '',
+                "Date of Birth"         => $guard->guardAdditionalInformation->date_of_birth ?? '',
+                "Employer Company Name" => $guard->guardAdditionalInformation->employer_company_name ?? '',
+                "Guard's Current Rate"  => $guard->guardAdditionalInformation->guards_current_rate ?? '',
+                "Location Code"         => $guard->guardAdditionalInformation->location_code ?? '',
+                "Location Name"         => $guard->guardAdditionalInformation->location_name ?? '',
+                "Client Code"           => $guard->guardAdditionalInformation->client_code ?? '',
+                "Client Name"           => $guard->guardAdditionalInformation->client_name ?? '',
+                "Guard Type"            => $guard->guardAdditionalInformation->guard_type_id ?? '',
+                "Employed As"           => $guard->guardAdditionalInformation->employed_as ?? '',
+                "Date of Separation"    => $guard->guardAdditionalInformation->date_of_seperation ?? '',
+                // Contact details
+                "Apartment No"          => $guard->contactDetail->apartment_no ?? '',
+                "Building Name"         => $guard->contactDetail->building_name ?? '',
+                "Street Name"           => $guard->contactDetail->street_name ?? '',
+                "Parish"                => $guard->contactDetail->parish ?? '',
+                "City"                  => $guard->contactDetail->city ?? '',
+                "Postal Code"           => $guard->contactDetail->postal_code ?? '',
+                "Email"                 => $guard->email ?? '',
+                "Phone Number"          => $guard->phone_number ?? '',
+                // Bank details
+                "Bank Name"             => $guard->usersBankDetail->bank_name ?? '',
+                "Bank Branch Address"   => $guard->usersBankDetail->bank_branch_address ?? '',
+                "Account Number"        => $guard->usersBankDetail->account_no ?? '',
+                "Account Type"          => $guard->usersBankDetail->account_type ?? '',
+                "Routing Number"        => $guard->usersBankDetail->routing_number ?? '',
+                // Next of Kin details
+                "Kin Surname"           => $guard->usersKinDetail->surname ?? '',
+                "Kin First Name"        => $guard->usersKinDetail->first_name ?? '',
+                "Kin Middle Name"       => $guard->usersKinDetail->middle_name ?? '',
+                "Kin Apartment No"      => $guard->usersKinDetail->apartment_no ?? '',
+                "Kin Building Name"     => $guard->usersKinDetail->building_name ?? '',
+                "Kin Street Name"       => $guard->usersKinDetail->street_name ?? '',
+                "Kin Parish"            => $guard->usersKinDetail->parish ?? '',
+                "Kin City"              => $guard->usersKinDetail->city ?? '',
+                "Kin Postal Code"       => $guard->usersKinDetail->postal_code ?? '',
+                "Kin Email"             => $guard->usersKinDetail->email ?? '',
+                "Kin Phone Number"      => $guard->usersKinDetail->phone_number ?? '',
+                // User Documents
+                "TRN Document"          => url($guard->userDocuments->trn ?? ''),
+                "NIS Document"          => url($guard->userDocuments->nis ?? ''),
+                "PSRA Document"         => url($guard->userDocuments->psra ?? ''),
+                "Birth Certificate"     => url($guard->userDocuments->birth_certificate ?? ''),
             ];
         })->toArray();
 
-        // Define CSV column headers
         $headers = [
-            "First Name","Middle Name","Surname","Guard's TRN","NIS/NHT Number","PSRA Registration No","Guard's Date of Joining","Date of Birth",
-            "Employer Company Name","Guard's Current Rate","Location Code","Location Name","Client Code","Client Name","Guard Type","Employed As","Date of Separation",
-            "Apartment No","Building Name","Street Name","Parish","City","Postal Code","Email","Phone Number",
-            "Bank Name","Bank Branch Address","Account Number","Account Type","Routing Number","Kin Surname","kin First Name","kin Middle Name","Kin Apartment No",
-            "Kin Building Name","Kin Street Name","Kin Parish","KinCity","Kin Postal Code","Kin Email","Kin Phone Number",
-            "TRN Document","NIS Document","PSRA Document","Birth Certificate",
+            "first_name","middle_name","surname","trn","nis","psra","date_of_joining","date_of_birth",
+            "employer_company_name","current_rate","location_code","location_name","client_code","client_name","guard_type","employed_as","date_of_separation",
+            "apartment_no","building_name","street_name","parish","city","postal_code","email","phone_number",
+            "bank_name","bank_branch_address","account_number","account_type","routing_number","kin_surname","kin_first_name","kin_middle_name","kin_apartment_no",
+            "kin_building_Name","kin_street_name","kin_parish","kin_city","kin_postal_code","kin_email","kin_phone_number",
+            "trn_document","nis_document","psra_document","birth_certificate",
         ];
 
         // Add headers at the top of the array
@@ -360,115 +383,20 @@ class SecurityGuardController extends Controller
             fclose($file);
         };
 
-        // Return CSV as a response
+        // Return CSV as a response with appropriate headers
         return response()->stream($callback, Response::HTTP_OK, [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="guards.csv"',
         ]);
     }
 
-    public function importGuards(Request $request) {
-        $request->validate([
-            'import_guard' => 'required|file|mimes:csv,txt',
-        ]);
-    
-        $file = $request->file('import_guard');
-        $fileData = array_map('str_getcsv', file($file->getRealPath()));
-        $headers = array_shift($fileData);
-    
-        foreach ($fileData as $row) {
-            $rowData = array_combine($headers, $row);
-    
-            $user = User::where(function ($query) use ($rowData) {
-                $query->where('email', $rowData["Email"])
-                      ->orWhere(function ($subQuery) use ($rowData) {
-                          $subQuery->where('phone_number', $rowData["Phone Number"])
-                                    ->whereNull('phone_number');
-                      });
-            })->first();
+    public function importSecurityGuard(Request $request)
+    {
+        $import = new SecurityGuardImport;
+        Excel::import($import, $request->file('file'));
+        $importedData = $import->getErrors(); // Assume this method returns the imported records
 
-            if (!$user) {
-                // Create a new user if not found
-                $user = User::create([
-                    'user_code'    => null,
-                    'first_name'   => $rowData["First Name"],
-                    'middle_name'  => !empty($rowData["Middle Name"]) ? $rowData["Middle Name"] : null,
-                    'last_name'    => !empty($rowData["Last Name"]) ? $rowData["Last Name"] : null,
-                    'surname'      => !empty($rowData["Surname"]) ? $rowData["Surname"] : null,
-                    'email'        => $rowData["Email"],
-                    'phone_number' => !empty($rowData["Phone Number"]) ? $rowData["Phone Number"] : null,
-                    'password'     => Hash::make('Guard@12345'),
-                ]);
-                $user->assignRole('Security Guard');
-            }
-
-            // Update or create related data
-            $user->guardAdditionalInformation()->updateOrCreate([], [
-                'trn'                 => $rowData["Guard's TRN"] ?? NULL,
-                'nis'                 => $rowData["NIS/NHT Number"] ?? NULL,
-                'psra'                => $rowData["PSRA Registration No"] ?? NULL,
-                'date_of_joining'     => !empty($rowData["Guard's Date of Joining"]) ? $rowData["Guard's Date of Joining"] : null,
-                'date_of_birth'       => !empty($rowData["Date of Birth"]) ? $rowData["Date of Birth"] : null,
-                'employer_company_name' => $rowData["Employer Company Name"] ?? null,
-                'guards_current_rate' => $rowData["Guard's Current Rate"] ?? null,
-                'location_code'       => $rowData["Location Code"] ?? null,
-                'location_name'       => $rowData["Location Name"] ?? null,
-                'client_code'         => $rowData["Client Code"] ?? null,
-                'client_name'         => $rowData["Client Name"] ?? null,
-                'guard_type_id'       => $rowData["Guard Type"] ?? null,
-                'employed_as'         => $rowData["Employed As"] ?? null,
-                'date_of_seperation'  => !empty($rowData["Date of Separation"]) ? $rowData["Date of Separation"] : null,
-            ]);
-
-            // Update contact details
-            $user->contactDetail()->updateOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'apartment_no'  => $rowData["Apartment No"] ?? null,
-                    'building_name' => $rowData["Building Name"] ?? null,
-                    'street_name'   => $rowData["Street Name"] ?? null,
-                    'parish'        => $rowData["Parish"] ?? null,
-                    'city'          => $rowData["City"] ?? null,
-                    'postal_code'   => $rowData["Postal Code"] ?? null,
-                ]
-            );
-
-            // Update bank details
-            $user->usersBankDetail()->updateOrCreate([], [
-                'user_id'             => $user->id,
-                'bank_name'           => $rowData["Bank Name"] ?? null,
-                'bank_branch_address' => $rowData["Bank Branch Address"] ?? null,
-                'account_no'          => $rowData["Account Number"] ?? null,
-                'account_type'        => $rowData["Account Type"] ?? null,
-                'routing_number'      => $rowData["Routing Number"] ?? null,
-            ]);
-
-            // Update next of kin details
-            $user->usersKinDetail()->updateOrCreate([], [
-                'user_id'       => $user->id,
-                'surname'       => $rowData["Kin Surname"] ?? null,
-                'first_name'    => $rowData["Kin First Name"] ?? null,
-                'middle_name'   => $rowData["Kin Middle Name"] ?? null,
-                'apartment_no'  => $rowData["Kin Apartment No"] ?? null,
-                'building_name' => $rowData["Kin Building Name"] ?? null,
-                'street_name'   => $rowData["Kin Street Name"] ?? null,
-                'parish'        => $rowData["Kin Parish"] ?? null,
-                'city'          => $rowData["Kin City"] ?? null,
-                'postal_code'   => $rowData["Kin Postal Code"] ?? null,
-                'email'         => $rowData["Kin Email"] ?? null,
-                'phone_number'  => $rowData["Kin Phone Number"] ?? null,
-            ]);
-
-            // Update user documents
-            $user->userDocuments()->updateOrCreate([], [
-                'user_id' => $user->id,
-                'trn'     => $rowData["TRN Document"] ?? null,
-                'nis'     => $rowData["NIS Document"] ?? null,
-                'psra'    => $rowData["PSRA Document"] ?? null,
-                'birth_certificate' => $rowData["Birth Certificate"] ?? null,
-            ]);
-        }
-
-        return redirect()->back()->with('success', 'Guards imported successfully!');
+        return Excel::download(new GuardImportExport($importedData), 'guard_import_results.csv');
+        return redirect()->route('security-guards.index')->with('success', 'Security Guard imported successfully.');
     }
 }

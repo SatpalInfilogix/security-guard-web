@@ -13,7 +13,7 @@ else{
         <div class="d-flex">
             <!-- LOGO -->
             <div class="navbar-brand-box">
-                <a href="index-2.html" class="logo logo-dark">
+                <a href="#" class="logo logo-dark">
                     <span class="logo-sm">
                         <img src="{{ $logo_url ? asset($logo_url) : asset('assets/images/logo.svg') }}" alt="" height="22">
                     </span>
@@ -22,7 +22,7 @@ else{
                     </span>
                 </a>
 
-                <a href="index-2.html" class="logo logo-light">
+                <a href="#" class="logo logo-light">
                     <span class="logo-sm">
                         <img src="{{ $logo_url ? asset($logo_url) : asset('assets/images/logo-light.svg') }}" alt="" height="22">
                     </span>

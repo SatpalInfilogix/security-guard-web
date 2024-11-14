@@ -202,3 +202,27 @@
         <script src="{{ asset('assets/js/chosen.jquery.min.js') }}"></script>
     @endpush
 @endif
+
+@if($hasPlugin('import'))
+    @push('scripts')
+        <script>
+            $(document).ready(function() {
+                $('#importButton').on('click', function() {
+                    $('#fileInput').click();
+                });
+
+                $('#fileInput').on('change', function(event) {
+                    var file = $(this).prop('files')[0];
+                    if (file) {
+                        var fileType = file.type;
+                        if (fileType === 'text/csv' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+                            $('#importForm').submit();
+                        } else {
+                            alert('Please select a valid CSV or XLSX file.');
+                        }
+                    }
+                });
+            });
+        </script>
+    @endpush
+@endif

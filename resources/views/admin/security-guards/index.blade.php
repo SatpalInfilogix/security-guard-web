@@ -3,7 +3,6 @@
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
-
             <!-- start page title -->
             <div class="row">
                 <div class="col-12">
@@ -11,20 +10,54 @@
                         <h4 class="mb-sm-0 font-size-18">Security Guards</h4>
 
                         <div class="page-title-right">
-                            <a href="{{ route('export.guards') }}" class="btn btn-primary"><i class="bx bx-export"></i> Export</a>
-                            <a class="btn btn-primary" onclick="document.getElementById('import_guard').click();">
-                                <i class="bx bx-import"></i> Import
-                            </a>
+                            <a href="{{ route('export.guards') }}" class="btn btn-primary"><i class="bx bx-export"></i> Security Guard Bulk Export</a>
+                            <div class="d-inline-block me-1">
+                                <form id="importForm" action="{{ route('import.security-guard') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <label for="fileInput" class="btn btn-primary primary-btn btn-md mb-0">
+                                        <i class="bx bx-cloud-download"></i> Import Security Guard
+                                        <input type="file" id="fileInput" name="file" accept=".csv, .xlsx" style="display:none;">
+                                    </label>
+                                </form>
+                            </div>
                             <a href="{{ route('security-guards.create') }}" class="btn btn-primary">Add New Security Guard</a>
                         </div>
                     </div>
                 </div>
             </div>
-            <form action="{{ route('import.guards') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <input type="file" name="import_guard" id="import_guard" required style="display: none;" onchange="this.form.submit();">
-            </form>
             <!-- end page title -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <form id="filterForm" method="GET">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <input type="text" name="search_name" class="form-control" placeholder="Search by Name" value="{{ request('search_name') }}" id="search_name">
+                                {{-- <select name="search_name" class="form-control" id="search_name">
+                                    <option value="">Select Guard</option>
+                                    @foreach($securityGuards as $guard)
+                                        <option value="{{ $guard->first_name }}" {{ request('search_name') == $guard->first_name ? 'selected' : '' }}>
+                                            {{ $guard->first_name }}
+                                        </option>
+                                    @endforeach
+                                </select> --}}
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" name="search_email" class="form-control" placeholder="Search by Email" value="{{ request('search_email') }}" id="search_email">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" name="search_phone" class="form-control" placeholder="Search by Phone" value="{{ request('search_phone') }}" id="search_phone">
+                            </div>
+                            <div class="col-md-3">
+                                <select name="status" class="form-control" id="is_status">
+                                    <option value="">All Status</option>
+                                    <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
+                                    <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             <div class="row">
                 <div class="col-12">
@@ -46,7 +79,7 @@
                                 </tr>
                                 </thead>
 
-                                <tbody>
+                                <tbody id="guardTableBody">
                                 @foreach($securityGuards as $key => $securityGuard)
                                 <tr>
                                     <td>{{ ++$key }}</td>
@@ -68,9 +101,36 @@
                             </table>
                         </div>
                     </div>
-                </div> <!-- end col -->
-            </div> <!-- end row -->
-        </div> <!-- container-fluid -->
+                </div>
+            </div>
+        </div>
     </div>
-    <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
+    <x-include-plugins :plugins="['dataTable', 'import']"></x-include-plugins>
+    <script>
+        $(document).ready(function() {
+            function fetchFilteredData() {
+                var formData = $('#filterForm').serialize();
+
+                $.ajax({
+                    url: "{{ route('security-guards.index') }}",
+                    method: "GET",
+                    data: formData, 
+                    success: function(response) {
+                        $('#guardTableBody').html(response.view);
+                    },
+                    error: function() {
+                        alert('Error fetching data');
+                    }
+                });
+            }
+
+            $('#search_name, #search_email, #search_phone').on('keyup', function() {
+                fetchFilteredData();
+            });
+
+            $('#is_status').on('change', function() {
+                fetchFilteredData();
+            });
+        });
+    </script>
 @endsection
