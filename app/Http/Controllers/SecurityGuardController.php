@@ -16,6 +16,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\SecurityGuardImport;
 use App\Exports\GuardImportExport;
 use Symfony\Component\HttpFoundation\Response;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Gate;
 
 class SecurityGuardController extends Controller
 {
@@ -24,6 +26,10 @@ class SecurityGuardController extends Controller
      */
     public function index(Request $request)
     {
+        if(!Gate::allows('view security guards')) {
+            abort(403);
+        }
+
         $userRole = Role::where('name', 'Security Guard')->first();
 
         $query = User::whereHas('roles', function ($query) use ($userRole) {
@@ -64,6 +70,10 @@ class SecurityGuardController extends Controller
      */
     public function create()
     {
+        if(!Gate::allows('create security guards')) {
+            abort(403);
+        }
+
         $rateMasters = RateMaster::latest()->get();
 
         return view('admin.security-guards.create', compact('rateMasters'));
@@ -74,6 +84,10 @@ class SecurityGuardController extends Controller
      */
     public function store(Request $request)
     {
+        if(!Gate::allows('create security guards')) {
+            abort(403);
+        }
+
         $request->validate([
             'first_name'    => 'required',
             'email'         => 'nullable|email|unique:users,email',
@@ -92,6 +106,7 @@ class SecurityGuardController extends Controller
             'email'        => $request->email,
             'phone_number' => $request->phone_number,
             'status'       => $request->input('status') ?? 'Active',
+            'is_saturatory'=> $request->is_saturatory,
             'password'     => Hash::make($request->password),
         ])->assignRole('Security Guard');
 
@@ -173,6 +188,10 @@ class SecurityGuardController extends Controller
      */
     public function edit(string $id)
     {
+        if(!Gate::allows('edit security guards')) {
+            abort(403);
+        }
+
         $rateMasters = RateMaster::latest()->get();
         $user = User::with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail', 'userDocuments'])->where('id', $id)->first();
 
@@ -184,6 +203,10 @@ class SecurityGuardController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        if(!Gate::allows('edit security guards')) {
+            abort(403);
+        }
+
         $request->validate([
             'first_name'    => 'required',
             'email' => 'nullable|email|unique:users,email,' . $id,
@@ -202,6 +225,7 @@ class SecurityGuardController extends Controller
         $user->email        = $request->email;
         $user->phone_number = $request->phone_number;
         $user->status       = $request->user_status ?? 'Active';
+        $user->is_saturatory= $request->is_saturatory;
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
@@ -291,6 +315,10 @@ class SecurityGuardController extends Controller
      */
     public function destroy(string $id)
     {
+        if(!Gate::allows('delete security guards')) {
+            abort(403);
+        }
+
         $user = User::where('id', $id)->delete();
 
         return response()->json([
@@ -398,5 +426,18 @@ class SecurityGuardController extends Controller
 
         return Excel::download(new GuardImportExport($importedData), 'guard_import_results.csv');
         return redirect()->route('security-guards.index')->with('success', 'Security Guard imported successfully.');
+    }
+
+    public function downloadPDF()
+    {
+        $userRole = Role::where('name', 'Security Guard')->first();
+
+        $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
+            $query->where('role_id', $userRole->id);
+        })->with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail','userDocuments'])->latest()->get();
+
+        $pdf = PDF::loadView('admin.security-guards.pdf.security-guard-pdf', compact('securityGuards'));
+        
+        return $pdf->download('security_guard_list.pdf');
     }
 }

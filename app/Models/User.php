@@ -34,7 +34,8 @@ class User extends Authenticatable
         'date_of_birth',
         'password',
         'status',
-        'user_code'
+        'user_code',
+        'is_saturatory'
     ];
 
     /**

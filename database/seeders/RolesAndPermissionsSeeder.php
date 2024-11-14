@@ -19,6 +19,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $permissions = [
             'view users', 'create users', 'edit users', 'delete users',
             'view roles & permissions', 'create roles & permissions', 'edit roles & permissions', 'delete roles & permissions',
+            'view security guards', 'create security guards', 'edit security guards', 'delete security guards'
         ];
 
         foreach ($permissions as $permission) {

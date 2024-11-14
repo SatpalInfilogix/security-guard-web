@@ -21,5 +21,9 @@ class ModuleSeeder extends Seeder
             'name' => 'Roles & Permissions',
             'slug' => 'roles & permissions'
         ]);
+        Module::create([
+            'name' => 'Security Guards',
+            'slug' => 'security guards'
+        ]);
     }
 }

@@ -10,6 +10,7 @@
                         <h4 class="mb-sm-0 font-size-18">Security Guards</h4>
 
                         <div class="page-title-right">
+                            <a href="{{ route('security-guards.pdf') }}" class="btn btn-primary"><i class="bx bx-download"></i> Download PDF</a>
                             <a href="{{ route('export.guards') }}" class="btn btn-primary"><i class="bx bx-export"></i> Security Guard Bulk Export</a>
                             <div class="d-inline-block me-1">
                                 <form id="importForm" action="{{ route('import.security-guard') }}" method="POST" enctype="multipart/form-data">
@@ -20,7 +21,9 @@
                                     </label>
                                 </form>
                             </div>
-                            <a href="{{ route('security-guards.create') }}" class="btn btn-primary">Add New Security Guard</a>
+                            @if(Auth::user()->can('create security guards'))
+                                <a href="{{ route('security-guards.create') }}" class="btn btn-primary">Add New Security Guard</a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -89,11 +92,15 @@
                                     <td>{{ $securityGuard->email }}</td>
                                     <td>{{ $securityGuard->phone_number }}</td>
                                     <td class="action-buttons">
-                                        <a href="{{ route('security-guards.edit', $securityGuard->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
-                                        <button data-source="Security Guard" data-endpoint="{{ route('security-guards.destroy', $securityGuard->id) }}"
-                                            class="delete-btn btn btn-outline-secondary btn-sm edit">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
+                                        @if(Auth::user()->can('edit security guards'))
+                                            <a href="{{ route('security-guards.edit', $securityGuard->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                        @endif
+                                        @if(Auth::user()->can('delete security guards'))
+                                            <button data-source="Security Guard" data-endpoint="{{ route('security-guards.destroy', $securityGuard->id) }}"
+                                                class="delete-btn btn btn-outline-secondary btn-sm edit">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        @endif
                                     </td>
                                 </tr>
                                 @endforeach

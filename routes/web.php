@@ -71,4 +71,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('/export/csv', [GuardRoasterController::class, 'downloadExcel'])->name('export.csv');
     Route::get('export-guards', [SecurityGuardController::class, 'exportGuards'])->name('export.guards');
     Route::get('/security-guards/filter', [SecurityGuardController::class, 'filter'])->name('security-guards.filter');
+
+    Route::get('security-guards/pdf', [SecurityGuardController::class, 'downloadPDF'])->name('security-guards.pdf');
+
 });

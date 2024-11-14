@@ -40,6 +40,19 @@
         </div>
     </div>
 
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label class="form-check-label" for="SwitchCheckSizelg">Saturatory/Non-Saturatory</label>
+            <div class="form-check form-switch form-switch-lg mb-3" dir="ltr">
+                <input class="form-check-input" type="checkbox" id="SwitchCheckSizelg" name="is_Saturatory"
+                       data-on="Saturatory" data-off="Non-Saturatory" value="0"  
+                       {{ isset($user) && $user->is_saturatory == 0 ? 'checked' : '' }}
+                       {{ !isset($user) ? 'checked' : '' }}> <!-- For create page, default to checked -->
+            </div>
+            <input type="hidden" id="is_saturatory" name="is_saturatory" value="{{ isset($user) ? $user->is_saturatory : 0 }}">
+        </div>
+    </div>
+
     <fieldset class="col-md-12 mb-3">
         <legend>Addtitional Detail</legend>
         <div class="row mb-2">
@@ -268,3 +281,45 @@
     </div>
 
     <x-include-plugins :plugins="['datePicker', 'guardImage']"></x-include-plugins>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            function formatInput(input) {
+                let value = input.value.replace(/\D/g, '');
+                let formattedValue = value.replace(/(\d{3})(?=\d)/g, '$1-');
+                input.value = formattedValue;
+            }
+
+            const trnInput = document.querySelector('input[name="trn"]');
+            const nisInput = document.querySelector('input[name="nis"]');
+
+            trnInput.addEventListener('input', function() {
+                formatInput(trnInput);
+            });
+
+            nisInput.addEventListener('input', function() {
+                formatInput(nisInput);
+            });
+        });
+
+        $(document).ready(function() {
+            if ($('#SwitchCheckSizelg').prop('checked')) {
+                $('#is_saturatory').val('0'); // checked -> 0
+                $('#SwitchCheckSizelg').val('0');
+            } else {
+                $('#is_saturatory').val('1'); // unchecked -> 1
+                $('#SwitchCheckSizelg').val('1');
+
+            }
+
+            $('#SwitchCheckSizelg').change(function() {
+                if ($(this).prop('checked')) {
+                    $('#is_saturatory').val('0'); // checked -> 0
+                    $('#SwitchCheckSizelg').val('0');
+                } else {
+                    $('#is_saturatory').val('1'); // unchecked -> 1
+                    $('#SwitchCheckSizelg').val('1');
+                }
+            });
+        });
+
+    </script>
