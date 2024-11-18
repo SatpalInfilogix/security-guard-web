@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('client_code')->nullable();
             $table->string('client_name');
-
+            $table->string('nis')->nullable();
             $table->timestamps();
         });
     }

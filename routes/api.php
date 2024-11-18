@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\FaqController;
 use App\Http\Controllers\Api\GeocodeController;
 use App\Http\Controllers\Api\SecurityGuardController;
 use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\LeaveController;
 
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
@@ -22,8 +23,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('check-status', [SecurityGuardController::class, 'checkStatus']);
     Route::get('/overtime/{userId}', [PunchController::class, 'calculateOvertime']);
     Route::post('get-attendance', [AttendanceController::class, 'getAttendance']);
-    
+    Route::post('/leave', [LeaveController::class, 'leave']);
+    Route::get('/get-leave', [LeaveController::class, 'getLeave']);   
 });
 Route::get('faq', [FaqController::class, 'index']);
+Route::get('help-request', [FaqController::class, 'getHelpRequest']);
 Route::get('get-address',[PunchController::class,'getAddress']);
 Route::post('/check-distance', [PunchController::class, 'checkDistanceFromOffice']);
