@@ -211,6 +211,7 @@
 
         function initDatePicker(assignedDates, holidayDates, leaveDates) {
             $('.date-picker-guard').flatpickr().destroy();
+
             $('.date-picker-guard').flatpickr({
                 dateFormat: "Y-m-d",         // Set date format
                 minDate: "today",            // Optionally disable past dates
