@@ -6,11 +6,15 @@ use Illuminate\Http\Request;
 Use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Gate;
 
 class UserController extends Controller
 {
     public function index()
     {
+        if(!Gate::allows('view user')) {
+            abort(403);
+        }
         $excludedRoles = Role::whereIn('name', ['Security Guard'])->pluck('id');
 
         $users = User::whereDoesntHave('roles', function ($query) use ($excludedRoles) {
@@ -22,6 +26,9 @@ class UserController extends Controller
 
     public function create()
     {
+        if(!Gate::allows('create user')) {
+            abort(403);
+        }
         $roles = Role::latest()->get();
 
         return view('admin.users.create', compact('roles'));
@@ -29,6 +36,9 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        if(!Gate::allows('create user')) {
+            abort(403);
+        }
         $request->validate([
             'first_name' => 'required',
             'last_name'  => 'required',
@@ -56,6 +66,9 @@ class UserController extends Controller
 
     public function edit(string $id)
     {
+        if(!Gate::allows('edit user')) {
+            abort(403);
+        }
         $user = User::where('id', $id)->first();
         $roles = Role::latest()->get();
 
@@ -64,6 +77,9 @@ class UserController extends Controller
 
     public function update(Request $request, string $id)
     {
+        if(!Gate::allows('edit user')) {
+            abort(403);
+        }
         $request->validate([
             'first_name'    => 'required',
             'last_name'     => 'required',
@@ -81,6 +97,9 @@ class UserController extends Controller
 
     public function destroy(string $id)
     {
+        if(!Gate::allows('delete user')) {
+            abort(403);
+        }
         $user = User::where('id', $id)->delete();
 
         return response()->json([

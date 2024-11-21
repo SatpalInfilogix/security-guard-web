@@ -11,7 +11,9 @@
                         <h4 class="mb-sm-0 font-size-18">Client Sites</h4>
 
                         <div class="page-title-right">
+                            @if(Auth::user()->can('create client site'))
                             <a href="{{ route('client-sites.create') }}" class="btn btn-primary">Add New Client Site</a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -33,7 +35,9 @@
                                     <th>Location Code</th>
                                     <th>Parish</th>
                                     <th>Email</th>
+                                    @canany(['edit client site', 'delete client site'])
                                     <th>Action</th>
+                                    @endcanany
                                 </tr>
                                 </thead>
 
@@ -45,13 +49,19 @@
                                     <td>{{ $clientSite->location_code }}</td>
                                     <td>{{ $clientSite->parish }}</td>
                                     <td>{{ $clientSite->email }}</td>
+                                    @canany(['edit client site', 'delete client site'])
                                     <td class="action-buttons">
+                                        @if(Auth::user()->can('edit client site'))
                                         <a href="{{ route('client-sites.edit', $clientSite->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                        @endif
+                                        @if(Auth::user()->can('delete client site'))
                                         <button data-source="Client Site" data-endpoint="{{ route('client-sites.destroy', $clientSite->id) }}"
                                             class="delete-btn btn btn-outline-secondary btn-sm edit">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
+                                        @endif
                                     </td>
+                                    @endcanany
                                 </tr>
                                 @endforeach
                                 </tbody>

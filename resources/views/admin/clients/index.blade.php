@@ -11,7 +11,9 @@
                         <h4 class="mb-sm-0 font-size-18">Clients</h4>
 
                         <div class="page-title-right">
+                            @if(Auth::user()->can('create client'))
                             <a href="{{ route('clients.create') }}" class="btn btn-primary">Add New Client</a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -31,7 +33,9 @@
                                     <th>#</th>
                                     <th>Client Code</th>
                                     <th>Client Name</th>
+                                    @canany(['edit client', 'delete client'])
                                     <th>Action</th>
+                                    @endcanany
                                 </tr>
                                 </thead>
 
@@ -41,13 +45,19 @@
                                     <td>{{ ++$key }}</td>
                                     <td>{{ $client->client_code }}</td>
                                     <td>{{ $client->client_name }}</td>
+                                    @canany(['edit client', 'delete client'])
                                     <td class="action-buttons">
+                                        @if(Auth::user()->can('delete client'))
                                         <a href="{{ route('clients.edit', $client->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                        @endif
+                                        @if(Auth::user()->can('delete client'))
                                         <button data-source="Client" data-endpoint="{{ route('clients.destroy', $client->id) }}"
                                             class="delete-btn btn btn-outline-secondary btn-sm edit">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
+                                        @endif
                                     </td>
+                                    @endcanany
                                 </tr>
                                 @endforeach
                                 </tbody>

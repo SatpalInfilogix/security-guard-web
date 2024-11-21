@@ -3,16 +3,20 @@
 namespace App\Imports;
 
 use App\Models\GuardRoaster;
-use App\Models\Client;
 use Maatwebsite\Excel\Concerns\ToModel;
-use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Carbon\Carbon;
+use App\Models\Client;
+use App\Models\User;
+use App\Models\Leave;
+use App\Models\ClientSite;
+use Spatie\Permission\Models\Role;
 
 class GuardRoasterImport implements ToModel, WithHeadingRow
 {
     protected $errors = [];
-    protected $rowIndex = 0;
+    protected $importResults = [];
+    protected $rowNumber = 1;
 
     /**
      * Handle the import of a single row.
@@ -22,71 +26,139 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
      */
     public function model(array $row)
     {
-        $this->rowIndex++;
+        if ($this->rowNumber == 1) {
+            if (empty($row['guard_id']) || empty($row['client_site_id'])) {
+                return null;
+            }
+        }
 
-        $validator = Validator::make($row, [
-            'guard_id'        => 'required',
-            'client_id'       => 'required',
-            'client_site_id'  => 'required',
-            'date'            => 'required|date_format:d-m-Y|after_or_equal:' . Carbon::today()->format('d-m-Y'),
-        ]);
+        foreach ($row as $column => $value) {
+            if (empty($row['guard_id'])) {
+                $this->addImportResult('Guard id is required.');
+                return null;
+            }
+            
+            if (empty($row['client_site_id'])) {
+                $this->addImportResult('Client Site id is required.');
+                return null;
+            }
 
-        if ($validator->fails()) {
-            foreach ($validator->errors()->toArray() as $field => $messages) {
-                foreach ($messages as $message) {
-                    $this->errors[] = [
-                        'message' => "Row ". $this->rowIndex .": " . $message,
-                        'row'     => $row,
+            if (in_array($column, ['guard_id', 'client_site_id'])) {
+                continue;
+            }
+
+            $userRole = Role::where('name', 'Security Guard')->first();
+
+            $guard = User::whereHas('roles', function ($query) use ($userRole) {
+                $query->where('role_id', $userRole->id);
+            })->where('status', 'Active')->find($row['guard_id']);
+
+            if (!$guard) {
+                $this->addImportResult('Guard ID ' . $row['guard_id'] . ' does not exist.');
+                return null;
+            }
+
+            $clientSite = ClientSite::where('id', $row['client_site_id'])->where('status', 'Active')->first();
+            if (!$clientSite) {
+                $this->addImportResult('Client site ID ' . $row['client_site_id'] . ' does not exist.');
+                return null;
+            }
+
+            if (preg_match('/^[a-z]{3}_\d{1,2}_[a-z]{3}_\d{4}$/', $column)) {
+                $dateStr = preg_replace('/^[a-z]{3}_/', '', $column);
+                $dateStr = str_replace('_', '-', $dateStr);
+
+                try {
+                    $formattedDate = Carbon::createFromFormat('d-M-Y', $dateStr)->format('Y-m-d');
+                } catch (\Exception $e) {
+                    $this->importResults[] = [
+                        'Row' => $this->rowNumber,
+                        'Status' => 'Failed',
+                        'Failure Reason' => 'Invalid date format for ' . $column,
+                    ];
+                    continue;
+                }
+
+                if (Carbon::parse($formattedDate)->isBefore(Carbon::today())) {
+                    $this->importResults[] = [
+                        'Row' => $this->rowNumber,
+                        'Status' => 'Failed',
+                        'Failure Reason' => 'Date ' . $formattedDate . ' cannot be in the past.',
+                    ];
+                    continue;
+                }
+
+                $time_in = $row[$column];
+                $time_out = $row[array_keys($row)[array_search($column, array_keys($row)) + 1]] ?? null;
+
+                if (empty($time_in) || empty($time_out)) {
+                    $this->importResults[] = [
+                        'Row' => $this->rowNumber,
+                        'Status' => 'Failed',
+                        'Failure Reason' => 'Time in and/or Time out are missing for ' . $column,
+                    ];
+                    continue;
+                }
+
+                if (is_numeric($time_in)) {
+                    $time_in = Carbon::createFromTimestamp($time_in * 86400)->format('H:i');
+                }
+
+                if (is_numeric($time_out)) {
+                    $time_out = Carbon::createFromTimestamp($time_out * 86400)->format('H:i');
+                }
+
+                
+                $leave = Leave::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->where('status', 'Approved')->first();
+                $existingAssignment = GuardRoaster::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->first();
+
+                if ($existingAssignment) {
+                    $this->importResults[] = [
+                        'Row' => $this->rowNumber,
+                        'Status' => 'Failed',
+                        'Failure Reason' => 'Guard ' . $row['guard_id'] . ' id is already assigned for this date (' . $formattedDate . ') and time (' . $time_in . ' to ' . $time_out . ')',
+                    ];
+                } else if($leave) {
+                    $this->importResults[] = [
+                        'Row' => $this->rowNumber,
+                        'Status' => 'Failed',
+                        'Failure Reason' => 'Guard ' . $row['guard_id'] . ' id is in leave for this date (' . $formattedDate . ')',
+                    ];
+                } else {
+                    GuardRoaster::create([
+                        'guard_id'       => $row['guard_id'],
+                        'client_id'      => $clientSite->client_id,
+                        'client_site_id' => $row['client_site_id'],
+                        'date'           => $formattedDate,
+                        'start_time'     => $time_in,
+                        'end_time'       => $time_out,
+                    ]);
+
+                    $this->importResults[] = [
+                        'Row' => $this->rowNumber,
+                        'Status' => 'Success',
+                        'Failure Reason' => 'Created sucessfully for date'. $formattedDate,
                     ];
                 }
             }
-            return null;
         }
 
-        $formattedDate = Carbon::createFromFormat('d-m-Y', $row['date'])->format('Y-m-d');
-
-        $client = Client::find($row['client_id']);
-        if ($client && !$client->clientSites->contains('id', $row['client_site_id'])) {
-            $this->errors[] = [
-                'message' => "Row {$this->rowIndex} : Client ID '{$row['client_id']}' does not have Client Site ID '{$row['client_site_id']}'.",
-                'row'     => $row,
-            ];
-            return null;
-        }
-
-        $guardRoaster = GuardRoaster::where('guard_id', $row['guard_id'])->where('date', $formattedDate)->first();
-
-        if ($guardRoaster) {
-            $this->errors[] = [
-                'message' => "Row {$this->rowIndex} : A GuardRoaster record with Guard ID '{$row['guard_id']}' and Date '{$formattedDate}' already exists in Guard Roaster.",
-                'row'     => $row,
-            ];
-            return null;
-        }
-
-        GuardRoaster::updateOrCreate(
-            [
-                'guard_id' =>  $row['guard_id'],
-                'date'     =>  $formattedDate,
-            ],
-            [
-                'client_id'      => $row['client_id'],
-                'client_site_id' => $row['client_site_id'],
-                'start_time'     => $row['start_time'] ?? null,
-                'end_time'       => $row['end_time'] ?? null  
-            ]
-        );
-
+        $this->rowNumber++;
         return null;
     }
 
-    /**
-     * Get all errors encountered during the import process.
-     *
-     * @return array
-     */
-    public function getErrors()
+    public function getImportResults()
     {
-        return $this->errors;
+        return collect($this->importResults);
+    }
+
+    private function addImportResult($reason)
+    {
+        $this->importResults[] = [
+            'Row' => $this->rowNumber,
+            'Status' => 'Failed',
+            'Failure Reason' => $reason,
+        ];
+        $this->rowNumber++;
     }
 }

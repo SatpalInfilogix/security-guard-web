@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\RateMaster;
+use Illuminate\Support\Facades\Gate;
+
 class RateMasterController extends Controller
 {
     /**
@@ -11,6 +13,9 @@ class RateMasterController extends Controller
      */
     public function index()
     {
+        if(!Gate::allows('view rate master')) {
+            abort(403);
+        }
         $rateMasters = RateMaster::latest()->get();
 
         return view('admin.rate-master.index', compact('rateMasters'));
@@ -21,6 +26,9 @@ class RateMasterController extends Controller
      */
     public function create()
     {
+        if(!Gate::allows('create rate master')) {
+            abort(403);
+        }
         return view('admin.rate-master.create');
     }
 
@@ -29,6 +37,9 @@ class RateMasterController extends Controller
      */
     public function store(Request $request)
     {
+        if(!Gate::allows('create rate master')) {
+            abort(403);
+        }
         $request->validate([
             'guard_type'        => 'required|unique:rate_masters,guard_type',
             'regular_rate'      => 'required',

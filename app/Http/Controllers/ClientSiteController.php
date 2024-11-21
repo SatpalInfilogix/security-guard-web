@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ClientSite;
 use App\Models\Client;
+use Illuminate\Support\Facades\Gate;
 
 class ClientSiteController extends Controller
 {
     public function index()
     {
+        if(!Gate::allows('view client site')) {
+            abort(403);
+        }
         $clientSites = ClientSite::with('client')->latest()->get();
 
         return view('admin.client-sites.index', compact('clientSites'));
@@ -17,6 +21,9 @@ class ClientSiteController extends Controller
 
     public function create()
     {
+        if(!Gate::allows('create client site')) {
+            abort(403);
+        }
         $clients = Client::latest()->get();
 
         return view('admin.client-sites.create', compact('clients'));
@@ -24,6 +31,9 @@ class ClientSiteController extends Controller
 
     public function store(Request $request)
     {
+        if(!Gate::allows('create client site')) {
+            abort(403);
+        }
         $request->validate([
             'client_id'  => 'required',
             'location_code' => 'required|unique:client_sites,location_code',
@@ -63,6 +73,9 @@ class ClientSiteController extends Controller
 
     public function edit(ClientSite $clientSite)
     {
+        if(!Gate::allows('edit client site')) {
+            abort(403);
+        }
         $clients = Client::latest()->get();
 
         return view('admin.client-sites.edit', compact('clients', 'clientSite'));
@@ -70,6 +83,9 @@ class ClientSiteController extends Controller
 
     public function update(Request $request, ClientSite $clientSite)
     {
+        if(!Gate::allows('edit client site')) {
+            abort(403);
+        }
         $request->validate([
             'client_id'  => 'required',
             'location_code' => 'required|unique:client_sites,location_code,' . $clientSite->id,
@@ -104,6 +120,9 @@ class ClientSiteController extends Controller
 
     public function destroy(ClientSite $clientSite)
     {
+        if(!Gate::allows('delete client site')) {
+            abort(403);
+        }
         $clientSite->delete();
 
         return response()->json([

@@ -14,60 +14,84 @@
                         <span key="t-dashboards">Dashboard</span>
                     </a>
                 </li>
+                @can('view security guards')
                 <li class="{{ Request::segment(2) == 'security-guards' ? 'mm-active' : '' }}">
                     <a href="{{ route('security-guards.index')}}" class="waves-effect">
                         <i class="fas fa-user-secret"></i>
                         <span key="t-spreadsheet">Security Guard</span>
                     </a>
                 </li>
+                @endcanany
+                @can('view guard roaster')
                 <li class="{{ Request::segment(2) == 'guard-roasters' ? 'mm-active' : '' }}">
                     <a href="{{ route('guard-roasters.index')}}" class="waves-effect">
                         <i class="bx bx-hive"></i>
                         <span key="t-spreadsheet">Guard Roaster</span>
                     </a>
                 </li>
+                @endcanany
+                @can('view attendance')
                 <li class="{{ Request::segment(2) == 'attendance' ? 'mm-active' : '' }}">
                     <a href="{{ route('attendance.index')}}" class="waves-effect">
                         <i class="bx bx-spreadsheet"></i>
                         <span key="t-spreadsheet">Attendance</span>
                     </a>
                 </li>
+                @endcanany
+                @can('view leaves')
+                <li class="{{ Request::segment(2) == 'leaves' ? 'mm-active' : '' }}">
+                    <a href="{{ route('leaves.index')}}" class="waves-effect">
+                        <i class="bx bx-tone"></i>
+                        <span key="t-spreadsheet">Leaves</span>
+                    </a>
+                </li>
+                @endcanany
                 {{--<li {{ Request::segment(2) == 'calendar-management' ? 'mm-active' : '' }}>
                     <a href="{{ route('calendar.management') }}" class="waves-effect">
                         <i class="bx bx-calendar"></i>
                         <span key="t-calendar">Calendar Management</span>
                     </a>
                 </li> --}}
+                @canany('view user')
                 <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}">
                     <a href="{{ route('users.index')}}" class="waves-effect">
                         <i class="bx bx-user"></i>
                         <span key="t-user">Users</span>
                     </a>
                 </li>
+                @endcanany
+                @can('view client')
                 <li class="{{ Request::segment(2) == 'clients' ? 'mm-active' : '' }}">
                     <a href="{{ route('clients.index')}}" class="waves-effect">
                         <i class="bx bxs-group"></i>
                         <span key="t-user">Clients</span>
                     </a>
                 </li>
+                @endcanany
+                @can('view client site')
                 <li class="{{ Request::segment(2) == 'client-sites' ? 'mm-active' : '' }}">
                     <a href="{{ route('client-sites.index')}}" class="waves-effect">
                         <i class="bx bx-buildings"></i>
                         <span key="t-user">Client sites</span>
                     </a>
                 </li>
+                @endcanany
+                @can('view rate master')
                 <li class="{{ Request::segment(2) == 'rate-master' ? 'mm-active' : '' }}">
                     <a href="{{ route('rate-master.index')}}" class="waves-effect">
                         <i class="bx bx-receipt"></i>
                         <span key="t-receipt">Rate Master</span>
                     </a>
                 </li>
+                @endcanany
+                @can('view public holiday')
                 <li class="{{ Request::segment(2) == 'public-holidays' ? 'mm-active' : '' }}">
                     <a href="{{ route('public-holidays.index')}}" class="waves-effect">
                         <i class="bx bx-gift"></i>
                         <span key="t-receipt">Public Holidays</span>
                     </a>
                 </li>
+                @endcanany
                 {{-- </li>
                 <li>
                     <a href="#" class="waves-effect">
@@ -120,6 +144,7 @@
                     </ul>
                 </li>
 
+                @can('view roles & permissions')
                 <li>
                     <a href="javascript: void(0);" class="has-arrow waves-effect">
                         <i class="bx bxs-user-detail"></i>
@@ -130,6 +155,7 @@
                         <li><a href="{{ route('roles-and-permissions.index') }}" key="t-full-calendar">Manage Permissions</a></li>
                     </ul>
                 </li>
+                @endcanany
 
                 {{--<li>
                     <a href="javascript: void(0);" class="waves-effect has-arrow">

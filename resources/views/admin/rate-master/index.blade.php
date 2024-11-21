@@ -11,7 +11,9 @@
                         <h4 class="mb-sm-0 font-size-18">Rate Master</h4>
 
                         <div class="page-title-right">
+                            @if(Auth::user()->can('create rate master'))
                             <a href="{{ route('rate-master.create') }}" class="btn btn-primary">Add New Rate Master</a>
+                            @endif
                         </div>
 
                     </div>
@@ -35,7 +37,9 @@
                                     <th>Normal Rate</th>
                                     <th>Overtime Rate</th>
                                     <th>Holiday Rate</th>
+                                    @canany(['edit rate master', 'delete rate master'])
                                     <th>Action</th>
+                                    @endcanany
                                 </tr>
                                 </thead>
 
@@ -48,13 +52,19 @@
                                     <td>${{ $rateMaster->gross_hourly_rate}}</td>
                                     <td>${{ $rateMaster->overtime_rate}}</td>
                                     <td>${{ $rateMaster->holiday_rate}}</td>
+                                    @canany(['edit rate master', 'delete rate master'])
                                     <td class="action-buttons">
+                                        @if(Auth::user()->can('edit rate master'))
                                         <a href="{{ route('rate-master.edit', $rateMaster->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                        @endif
+                                        @if(Auth::user()->can('delete rate master'))
                                         <button data-source="Rate Master" data-endpoint="{{ route('rate-master.destroy', $rateMaster->id)}}"
                                             class="delete-btn btn btn-outline-secondary btn-sm edit">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
+                                        @endif
                                     </td>
+                                    @endcanany
                                 </tr>
                                 @endforeach
                                 </tbody>

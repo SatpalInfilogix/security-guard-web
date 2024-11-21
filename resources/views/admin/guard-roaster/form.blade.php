@@ -88,6 +88,7 @@
     $(document).ready(function() {
         var assignedDates = [];
         var holidayDates = [];
+        var leaveDates = [];
         var selectedDate = "{{ old('date', $guardRoaster->date ?? '') }}";
         var selectedGuardId = "{{ old('guard_id', $guardRoaster->guard_id ?? '') }}";
 
@@ -96,6 +97,7 @@
         }
 
         fetchPublicHolidays();
+        fetchLeaves();
 
         $('#client_id').change(function() {
             const clientId = $(this).val();
@@ -142,9 +144,9 @@
             if (guardId) {
                 $('#date').val('');  // Clear the date field when a new guard is selected
                 fetchAssignedDates(guardId);
+                fetchLeaves(guardId);
             } else {
-                assignedDates = [];  // Reset assigned dates
-                initDatePicker(assignedDates, holidayDates); // Reset date picker with no disabled dates
+                initDatePicker(assignedDates, holidayDates, leaveDates); // Reset date picker with no disabled dates
             }
         });
 
@@ -157,16 +159,13 @@
                     if (Array.isArray(data) && data.length) {
                         assignedDates = data;
                     }
-                    initDatePicker(assignedDates, holidayDates); // Initialize date picker with assigned dates
+                    initDatePicker(assignedDates, holidayDates, leaveDates); // Initialize date picker with assigned dates
                 },
-                error: function(xhr, status, error) {
-                    console.error('Error fetching assigned dates:', error);
-                }
             });
         }
 
          // Fetch public holidays
-         function fetchPublicHolidays() {
+        function fetchPublicHolidays() {
             $.ajax({
                 url: '/get-public-holidays',
                 method: 'GET',
@@ -178,7 +177,7 @@
                             name: holiday.holiday_name
                         }));
                     }
-                    initDatePicker(assignedDates, holidayDates);
+                    initDatePicker(assignedDates, holidayDates, leaveDates);
                 },
                 error: function(xhr, status, error) {
                     console.error('Error fetching public holidays:', error);
@@ -186,44 +185,76 @@
             });
         }
 
-        function initDatePicker(assignedDates, holidayDates) {
-            // const disabledDates = assignedDates.filter(date => date !== selectedDate);
-            $('.date-picker-guard').flatpickr().destroy();
-            $('.date-picker-guard').flatpickr({
-                // disable: disabledDates,  // Disable the assigned dates
-                dateFormat: "Y-m-d",     // Set date format
-                minDate: "today",        // Optionally disable past dates
-                defaultDate: selectedDate ? selectedDate : null,  // Set default date if editing
-                onDayCreate: function(dObj, dStr, fp, dayElem) {
-                    const dayDate = new Date(dayElem.getAttribute('aria-label'));
-                    const formattedDate = moment(dayDate).format('YYYY-MM-DD');
-                    const holiday = holidayDates.find(holiday => holiday.date === formattedDate);
-                   
-                    if (holiday) {
-                        dayElem.setAttribute('title', 'H');
-                        dayElem.classList.add('holiday');  // Add a custom class to the holiday element
-                        
-                        const holidayLabel = document.createElement('div');
-                        holidayLabel.classList.add('holiday-label');
-                        holidayLabel.textContent = 'H';  // Display the holiday name
-                        dayElem.appendChild(holidayLabel);
+       // Fetch leaves for a specific guard
+        function fetchLeaves(guardId) {
+            $.ajax({
+                url: '/get-leaves/' + guardId,  // Ensure this URL matches your backend route
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (Array.isArray(data) && data.length) {
+                        leaveDates = data.map(leave => ({
+                            date: moment(leave.date).format('YYYY-MM-DD'),  // Format date as YYYY-MM-DD
+                            status: leave.status
+                        }));
+                    } else {
+                        leaveDates = [];
                     }
-                }
-            });
 
-            $('#date').change(function() {
-                const selectedDate = $(this).val().trim();  // Get and trim the value from the date input field
-                $('#holiday-name').hide();
-                const formattedSelectedDate = moment(selectedDate).format('YYYY-MM-DD');  // Using moment.js to format
-                const holiday = holidayDates.find(holiday => {
-                    return holiday.date === formattedSelectedDate;
-                });
-
-                if (holiday) {
-                    $('#holiday-name').text(`Public Holiday: ${holiday.name}`).show();
+                    initDatePicker(assignedDates, holidayDates, leaveDates);
+                },
+                error: function(xhr, status, error) {
+                    alert('There was an error fetching leave data. Please try again later.');
                 }
             });
         }
+
+        function initDatePicker(assignedDates, holidayDates, leaveDates) {
+            $('.date-picker-guard').flatpickr().destroy();
+            $('.date-picker-guard').flatpickr({
+                dateFormat: "Y-m-d",         // Set date format
+                minDate: "today",            // Optionally disable past dates
+                defaultDate: selectedDate ? selectedDate : null,  // Set default date if editing
+                onDayCreate: function(dObj, dStr, fp, dayElem) {
+                    const dayDate = new Date($(dayElem).attr('aria-label'));
+                    const formattedDate = moment(dayDate).format('YYYY-MM-DD');
+                    const holiday = holidayDates.find(holiday => holiday.date === formattedDate);
+                    if (holiday) {
+                        $(dayElem).attr('title', 'H').addClass('holiday');  // Add custom 'holiday' class
+                        const holidayLabel = $('<div></div>', { class: 'holiday-label', text: 'H' });
+                        $(dayElem).append(holidayLabel);
+                    }
+
+                    const leave = leaveDates.find(leave => leave.date === formattedDate);
+                    if (leave) {
+                        const leaveTitle = leave.status === 'Approved' ? 'Approved Leave' : 'Pending Leave';
+                        $(dayElem).attr('title', leaveTitle);
+                        const leaveLabel = $('<div></div>', { class: 'leave-label', text: 'L' });
+
+                        if (leave.status === 'Approved') {
+                            leaveLabel.css('color', 'red');
+                        } else if (leave.status === 'Pending') {
+                            leaveLabel.css('color', '#f39c12');
+                        }
+
+                        $(dayElem).append(leaveLabel);
+                    }
+                }
+            });
+        }
+
+        $('#date').change(function() {
+            const selectedDate = $(this).val().trim();  // Get and trim the value from the date input field
+            $('#holiday-name').hide();
+            const formattedSelectedDate = moment(selectedDate).format('YYYY-MM-DD');  // Using moment.js to format
+            const holiday = holidayDates.find(holiday => {
+                return holiday.date === formattedSelectedDate;
+            });
+
+            if (holiday) {
+                $('#holiday-name').text(`Public Holiday: ${holiday.name}`).show();
+            }
+        });
     });
     </script>
 

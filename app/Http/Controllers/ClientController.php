@@ -4,11 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Client;
+use Illuminate\Support\Facades\Gate;
 
 class ClientController extends Controller
 {
     public function index()
     {
+        if(!Gate::allows('view client')) {
+            abort(403);
+        }
+
         $clients = Client::latest()->get();
 
         return view('admin.clients.index', compact('clients'));
@@ -16,11 +21,19 @@ class ClientController extends Controller
 
     public function create()
     {
+        if(!Gate::allows('create client')) {
+            abort(403);
+        }
+
         return view('admin.clients.create');
     }
 
     public function store(Request $request)
     {
+        if(!Gate::allows('create client')) {
+            abort(403);
+        }
+
         $request->validate([
             'client_name'  => 'required',
             'client_code' => 'required|unique:clients,client_code',
@@ -42,11 +55,19 @@ class ClientController extends Controller
 
     public function edit(Client $client)
     {
+        if(!Gate::allows('edit client')) {
+            abort(403);
+        }
+
         return view('admin.clients.edit', compact('client'));
     }
 
     public function update(Request $request, Client $client)
     {
+        if(!Gate::allows('edit client')) {
+            abort(403);
+        }
+
         $request->validate([
             'client_name'  => 'required',
             'client_code' => 'required|unique:clients,client_code,' . $client->id,
@@ -63,6 +84,10 @@ class ClientController extends Controller
 
     public function destroy(Client $client)
     {
+        if(!Gate::allows('delete client')) {
+            abort(403);
+        }
+
         $client->delete();
 
         return response()->json([

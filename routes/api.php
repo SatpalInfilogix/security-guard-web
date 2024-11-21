@@ -24,7 +24,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/overtime/{userId}', [PunchController::class, 'calculateOvertime']);
     Route::post('get-attendance', [AttendanceController::class, 'getAttendance']);
     Route::post('/leave', [LeaveController::class, 'leave']);
-    Route::get('/get-leave', [LeaveController::class, 'getLeave']);   
+    Route::get('/get-leave', [LeaveController::class, 'getLeave']);
+    Route::post('/leaves/{id}/cancel', [LeaveController::class, 'cancelLeave']);
 });
 Route::get('faq', [FaqController::class, 'index']);
 Route::get('help-request', [FaqController::class, 'getHelpRequest']);

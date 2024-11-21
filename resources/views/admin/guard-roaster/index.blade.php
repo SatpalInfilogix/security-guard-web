@@ -14,16 +14,19 @@
                             <a href="{{ route('export.csv') }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard Roaster Configuration File</a>
                             <a href="{{ url('download-guard-roaster-sample') }}"
                                 class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard Roaster Sample File</a>
-                            <div class="d-inline-block me-1">
-                                <form id="importForm" action="{{ route('import.guard-roaster') }}" method="POST" enctype="multipart/form-data">
-                                    @csrf
-                                    <label for="fileInput" class="btn btn-primary primary-btn btn-md mb-0">
-                                        <i class="bx bx-cloud-download"></i> Import Guard Roaster
-                                        <input type="file" id="fileInput" name="file" accept=".csv, .xlsx" style="display:none;">
-                                    </label>
-                                </form>
-                            </div>
-                            <a href="{{ route('guard-roasters.create') }}" class="btn btn-primary">Add New Guard Roaster</a>
+                                
+                            @canany(['create security guards'])
+                                <div class="d-inline-block me-1">
+                                    <form id="importForm" action="{{ route('import.guard-roaster') }}" method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        <label for="fileInput" class="btn btn-primary primary-btn btn-md mb-0">
+                                            <i class="bx bx-cloud-download"></i> Import Guard Roaster
+                                            <input type="file" id="fileInput" name="file" accept=".csv, .xlsx" style="display:none;">
+                                        </label>
+                                    </form>
+                                </div>
+                                <a href="{{ route('guard-roasters.create') }}" class="btn btn-primary">Add New Guard Roaster</a>
+                            @endcanany
                         </div>
                     </div>
                 </div>
@@ -34,14 +37,13 @@
                 <div class="col-12">
                     <x-error-message :message="$errors->first('message')" />
                     <x-success-message :message="session('success')" />
-                    @if (session('import_errors'))
-                        <div class="alert alert-danger">
-                            <ul>
-                                @foreach (session('import_errors') as $error)
-                                    <li>{{ $error['message'] }}</li> <!-- Assuming each error has a 'message' key -->
-                                @endforeach
-                            </ul>
-                        </div>
+
+                    @if (session('downloadUrl'))
+                        <script>
+                            window.onload = function() {
+                                window.location.href = "{{ session('downloadUrl') }}";
+                            };
+                        </script>
                     @endif
                     <div class="card">
                         <div class="card-body">
@@ -54,7 +56,9 @@
                                     <th>Date</th>
                                     <th>Start Time</th>
                                     <th>End Time</th>
+                                    @canany(['edit security guards', 'delete security guards'])
                                     <th>Action</th>
+                                    @endcanany
                                 </tr>
                                 </thead>
 
@@ -67,13 +71,19 @@
                                     <td>{{ $guardRoaster->date }}</td>
                                     <td>{{ $guardRoaster->start_time }}</td>
                                     <td>{{ $guardRoaster->end_time }}</td>
+                                    @canany(['edit security guards', 'delete security guards'])
                                     <td class="action-buttons">
-                                        <a href="{{ route('guard-roasters.edit', $guardRoaster->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
-                                        <button data-source="Guard Roaster" data-endpoint="{{ route('guard-roasters.destroy', $guardRoaster->id) }}"
-                                            class="delete-btn btn btn-outline-secondary btn-sm edit">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
+                                        @if(Auth::user()->can('edit security guards'))
+                                            <a href="{{ route('guard-roasters.edit', $guardRoaster->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                        @endif
+                                        @if(Auth::user()->can('delete security guards'))
+                                            <button data-source="Guard Roaster" data-endpoint="{{ route('guard-roasters.destroy', $guardRoaster->id) }}"
+                                                class="delete-btn btn btn-outline-secondary btn-sm edit">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        @endif
                                     </td>
+                                    @endcanany
                                 </tr>
                                 @endforeach
                                 </tbody>

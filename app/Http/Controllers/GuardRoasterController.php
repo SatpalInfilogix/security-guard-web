@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\GuardRoaster;
 use App\Models\User;
+use App\Models\Leave;
 use App\Models\Client;
 use App\Models\ClientSite;
 use App\Models\PublicHoliday;
@@ -12,14 +13,19 @@ use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
 use App\Imports\GuardRoasterImport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\GuardRoasterExport;
 use Illuminate\Support\Facades\Session;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Illuminate\Support\Facades\Gate;
 
 class GuardRoasterController extends Controller
 {
     public function index()
     {
+        if(!Gate::allows('view guard roaster')) {
+            abort(403);
+        }
         $guardRoasters = GuardRoaster::with('user', 'client')->latest()->get();
 
         return view('admin.guard-roaster.index', compact('guardRoasters'));
@@ -27,11 +33,15 @@ class GuardRoasterController extends Controller
 
     public function create()
     {
+        if(!Gate::allows('create guard roaster')) {
+            abort(403);
+        }
+
         $userRole = Role::where('name', 'Security Guard')->first();
 
         $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
-        })->latest()->get();
+        })->where('status', 'Active')->latest()->get();
 
         $clients = Client::latest()->get();
 
@@ -40,13 +50,17 @@ class GuardRoasterController extends Controller
 
     public function store(Request $request)
     {
+        if(!Gate::allows('create guard roaster')) {
+            abort(403);
+        }
+
         $request->validate([
             'guard_id'       => 'required',
             'client_id'      => 'required',
             'client_site_id' => 'required',
-            // 'date'           => 'required|date',
-            // 'start_time'     => 'required|date_format:H:i',
-            // 'end_time'       => 'required|date_format:H:i',
+            'date'           => 'required|date',
+            'start_time'     => 'required|date_format:H:i',
+            'end_time'       => 'required|date_format:H:i',
         ]);
 
         $guardRoaster = GuardRoaster::updateOrCreate(
@@ -71,20 +85,26 @@ class GuardRoasterController extends Controller
 
     public function edit(GuardRoaster $guardRoaster) 
     {
+        if(!Gate::allows('edit guard roaster')) {
+            abort(403);
+        }
         $userRole = Role::where('name', 'Security Guard')->first();
 
         $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
-        })->latest()->get();
+        })->where('status', 'Active')->latest()->get();
 
         $clients = Client::latest()->get();
-        $clientSites = ClientSite::latest()->get();
+        $clientSites = ClientSite::where('status', 'Active')->latest()->get();
 
         return view('admin.guard-roaster.edit', compact('securityGuards', 'clients', 'guardRoaster', 'clientSites'));
     }
 
     public function update(Request $request, GuardRoaster $guardRoaster)
     {
+        if(!Gate::allows('edit guard roaster')) {
+            abort(403);
+        }
         $request->validate([
             'guard_id'    => 'required',
             'client_id'    => 'required',
@@ -112,7 +132,7 @@ class GuardRoasterController extends Controller
 
     public function getClientSites($clientId)
     {
-        $clientSites = ClientSite::where('client_id', $clientId)->get();
+        $clientSites = ClientSite::where('client_id', $clientId)->where('status', 'Active')->get();
 
         return response()->json($clientSites);
     }
@@ -136,6 +156,9 @@ class GuardRoasterController extends Controller
 
     public function destroy(GuardRoaster $guardRoaster)
     {
+        if(!Gate::allows('delete guard roaster')) {
+            abort(403);
+        }
         $guardRoaster->delete();
 
         return response()->json([
@@ -178,12 +201,18 @@ class GuardRoasterController extends Controller
         $import = new GuardRoasterImport;
         Excel::import($import, $request->file('file'));
 
-        $errors = $import->getErrors();
-        if (!empty($errors)) {
-            session()->flash('import_errors', $errors);
-        }
+        session(['importData' => $import]);
+        session()->flash('success', 'Guard roaster imported successfully.');
+        $downloadUrl = route('guard-roasters.download');
 
-        return redirect()->route('guard-roasters.index')->with('success', 'Guard roaster imported successfully.');
+        return redirect()->route('guard-roasters.index')->with('downloadUrl', $downloadUrl); 
+    }
+
+    public function download()
+    {
+        $import = session('importData'); 
+        $export = new GuardRoasterExport($import);
+        return Excel::download($export, 'guard_import_results.csv');
     }
 
     public function downloadExcel()
@@ -266,5 +295,12 @@ class GuardRoasterController extends Controller
                 'A' . ($key + 2)
             );
         }
+    }
+
+    public function getLeaves($guardId)
+    {
+        $leaves = Leave::where('guard_id', $guardId)->whereIn('status', ['Approved', 'Pending'])->latest()->get();
+
+        return response()->json($leaves);
     }
 }

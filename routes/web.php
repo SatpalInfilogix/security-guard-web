@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Response;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientSiteController;
 use App\Http\Controllers\GuardRoasterController;
 use App\Http\Controllers\HelpRequestController;
+use App\Http\Controllers\LeaveController;
 
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');
@@ -41,7 +43,8 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'help_requests'         => HelpRequestController::class,
             'clients'               => ClientController::class,
             'client-sites'          => ClientSiteController::class,
-            'guard-roasters'        => GuardRoasterController::class
+            'guard-roasters'        => GuardRoasterController::class,
+            'leaves'                => LeaveController::class
         ]);
 
         Route::get('payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
@@ -57,6 +60,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('/get-client-sites/{clientId}', [GuardRoasterController::class, 'getClientSites']);
     Route::get('/get-assigned-dates/{guardId}', [GuardRoasterController::class, 'getAssignedDate']);
     Route::get('/get-public-holidays', [GuardRoasterController::class, 'getPublicHolidays']);
+    Route::get('/get-leaves/{guardId}', [GuardRoasterController::class, 'getLeaves']);
     Route::get('/get-guard-roster-details', [GuardRoasterController::class, 'getGuardRoasterDetails'])->name('get.guard.roster.details');
 
     //************************Import Csv Route********************/
@@ -64,7 +68,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('import-security-guard', [SecurityGuardController::class, 'importSecurityGuard'])->name('import.security-guard');
 
     Route::get('download-guard-roaster-sample', function() {
-        $file = public_path('assets/sample-guard-roaster/guard-roaster.csv');
+        $file = public_path('assets/sample-guard-roaster/guard-roaster.xlsx');
         return Response::download($file);
     });
 
@@ -74,4 +78,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
 
     Route::get('security-guards/pdf', [SecurityGuardController::class, 'downloadPDF'])->name('security-guards.pdf');
 
+    Route::post('/leaves/{leaveId}/update-status', [LeaveController::class, 'updateStatus'])->name('leaves.updateStatus');
+
+    Route::get('/guard-roasters/download', [GuardRoasterController::class, 'download'])->name('guard-roasters.download');
 });

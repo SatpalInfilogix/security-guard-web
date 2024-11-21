@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('guard_id')->index();
             $table->date('date');
-            $table->string('reason')->nulable();
+            $table->string('reason')->nullable();
             $table->text('description')->nullable();
             $table->string('status')->default('Pending');
+            $table->text('rejection_reason')->nullable();
             $table->timestamps();
 
             $table->foreign('guard_id')->references('id')->on('users')->onDelete('cascade');

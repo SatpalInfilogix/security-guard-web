@@ -78,7 +78,9 @@
                                     <th>Middlename</th>
                                     <th>Email</th>
                                     <th>Phone number</th>
+                                    @canany(['edit security guards', 'delete security guards'])
                                     <th>Action</th>
+                                    @endcanany
                                 </tr>
                                 </thead>
 
@@ -91,6 +93,7 @@
                                     <td>{{ $securityGuard->middle_name }}</td>
                                     <td>{{ $securityGuard->email }}</td>
                                     <td>{{ $securityGuard->phone_number }}</td>
+                                    @canany(['edit security guards', 'delete security guards'])
                                     <td class="action-buttons">
                                         @if(Auth::user()->can('edit security guards'))
                                             <a href="{{ route('security-guards.edit', $securityGuard->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
@@ -102,6 +105,7 @@
                                             </button>
                                         @endif
                                     </td>
+                                    @endcanany
                                 </tr>
                                 @endforeach
                                 </tbody>

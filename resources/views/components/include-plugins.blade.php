@@ -44,21 +44,15 @@
     <script src="https://weareoutman.github.io/clockpicker/dist/jquery-clockpicker.min.js"></script>
     <script>
         $(document).ready(function() {
-            $("input[name=start_time]").clockpicker({       
+            const clockpickerOptions = {
                 placement: 'bottom',
                 align: 'left',
                 autoclose: true,
                 default: 'now',
-                donetext: "Select",
-            });
+                donetext: "Select"
+            };
 
-            $("input[name=end_time]").clockpicker({       
-                placement: 'bottom',
-                align: 'left',
-                autoclose: true,
-                default: 'now',
-                donetext: "Select",
-            });
+            $("input[name=start_time], input[name=end_time]").clockpicker(clockpickerOptions);
         });
     </script>
     @endpush
@@ -73,40 +67,33 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            flatpickr('.date-picker', {
+            const datePickerOptions = {
                 dateFormat: "Y-m-d",
                 allowInput: true
-            });
-            flatpickr('.date-of-birth', {
-                dateFormat: "Y-m-d",
-                allowInput: true
-            });
-            flatpickr('.date_of_separation', {
-                dateFormat: "Y-m-d",
-                allowInput: true
-            });
-            flatpickr('.date-picker-punch-in', {
-                dateFormat: "Y-m-d H:i:S", // Include time in the format
+            };
+    
+            const dateTimePickerOptions = {
+                dateFormat: "Y-m-d H:i:S",
                 allowInput: true,
-                enableTime: true,       // Enable time selection
-                time_24hr: true,       // Optional: use 24-hour format
-                minuteIncrement: 1      // Optional: set minute increment
-            });
-            flatpickr('.date-picker-punch-out', {
-                dateFormat: "Y-m-d H:i:S", // Include time in the format
-                allowInput: true,
-                enableTime: true,       // Enable time selection
-                time_24hr: true,       // Optional: use 24-hour format
-                minuteIncrement: 1      // Optional: set minute increment
-            });
-
+                enableTime: true,
+                time_24hr: true,
+                minuteIncrement: 1
+            };
+    
+            flatpickr('.date-picker', datePickerOptions);
+            flatpickr('.date-of-birth', datePickerOptions);
+            flatpickr('.date_of_separation', datePickerOptions);
+            
+            flatpickr('.date-picker-punch-in', dateTimePickerOptions);
+            flatpickr('.date-picker-punch-out', dateTimePickerOptions);
+    
             $('.datepicker').each(function() {
                 flatpickr(this, {
                     dateFormat: "Y-m-d",
                     minDate: "today"
                 });
             });
-        })
+        });
     </script>
     @endpush
 @endif
