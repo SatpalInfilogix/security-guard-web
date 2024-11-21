@@ -73,6 +73,9 @@ class RateMasterController extends Controller
      */
     public function edit($id)
     {
+        if(!Gate::allows('edit rate master')) {
+            abort(403);
+        }
         $rateMaster = RateMaster::where('id', $id)->first();
 
         return view('admin.rate-master.edit', compact('rateMaster'));
@@ -83,6 +86,9 @@ class RateMasterController extends Controller
      */
     public function update(Request $request, $id)
     {
+        if(!Gate::allows('edit rate master')) {
+            abort(403);
+        }
         $request->validate([
             'guard_type'        => 'required|unique:rate_masters,guard_type,' . $id,
             'regular_rate'      => 'required',
@@ -108,6 +114,9 @@ class RateMasterController extends Controller
      */
     public function destroy(string $id)
     {
+        if(!Gate::allows('delete rate master')) {
+            abort(403);
+        }
         $rateMaster = RateMaster::where('id', $id)->delete();
 
         return response()->json([
