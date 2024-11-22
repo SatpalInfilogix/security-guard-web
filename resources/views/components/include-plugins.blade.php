@@ -49,7 +49,8 @@
                 align: 'left',
                 autoclose: true,
                 default: 'now',
-                donetext: "Select"
+                donetext: "Select",
+                twelvehour: true 
             };
 
             $("input[name=start_time], input[name=end_time]").clockpicker(clockpickerOptions);

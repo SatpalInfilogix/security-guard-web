@@ -14,9 +14,8 @@
                             <a href="{{ route('export.csv') }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard Roaster Configuration File</a>
                             <a href="{{ url('download-guard-roaster-sample') }}"
                                 class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard Roaster Sample File</a>
-                                
                             @canany(['create security guards'])
-                                <div class="d-inline-block me-1">
+                                <div class="d-inline-block ">
                                     <form id="importForm" action="{{ route('import.guard-roaster') }}" method="POST" enctype="multipart/form-data">
                                         @csrf
                                         <label for="fileInput" class="btn btn-primary primary-btn btn-md mb-0">
@@ -69,8 +68,8 @@
                                     <td>{{ optional($guardRoaster->user)->first_name .' '. optional($guardRoaster->user)->surname }}</td>
                                     <td>{{ optional($guardRoaster->client)->client_name }}</td>
                                     <td>{{ $guardRoaster->date }}</td>
-                                    <td>{{ $guardRoaster->start_time }}</td>
-                                    <td>{{ $guardRoaster->end_time }}</td>
+                                    <td>{{ \Carbon\Carbon::createFromFormat('H:i:s', $guardRoaster->start_time)->format('h:iA') }}</td>
+                                    <td>{{ \Carbon\Carbon::createFromFormat('H:i:s', $guardRoaster->end_time)->format('h:iA') }}</td>
                                     @canany(['edit security guards', 'delete security guards'])
                                     <td class="action-buttons">
                                         @if(Auth::user()->can('edit security guards'))

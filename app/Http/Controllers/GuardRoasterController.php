@@ -59,10 +59,15 @@ class GuardRoasterController extends Controller
             'client_id'      => 'required',
             'client_site_id' => 'required',
             'date'           => 'required|date',
-            'start_time'     => 'required|date_format:H:i',
-            'end_time'       => 'required|date_format:H:i',
+            'start_time'     => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
+            'end_time'       => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
         ]);
-
+        $start_time = trim($request->start_time);
+        $end_time = trim($request->end_time);
+        
+        $start_time = Carbon::createFromFormat('h:iA', $start_time)->format('H:i');
+        $end_time = Carbon::createFromFormat('h:iA', $end_time)->format('H:i');
+        
         $guardRoaster = GuardRoaster::updateOrCreate(
             [
                 'guard_id' => $request->guard_id,
@@ -71,8 +76,8 @@ class GuardRoasterController extends Controller
             [
                 'client_id'      => $request->client_id,
                 'client_site_id' => $request->client_site_id,
-                'start_time'     => $request->start_time,
-                'end_time'       => $request->end_time
+                'start_time'     => $start_time,
+                'end_time'       => $end_time
             ]
         );
 
@@ -96,6 +101,12 @@ class GuardRoasterController extends Controller
 
         $clients = Client::latest()->get();
         $clientSites = ClientSite::where('status', 'Active')->latest()->get();
+        
+        $start_time = Carbon::createFromFormat('H:i:s', $guardRoaster->start_time)->format('h:iA');
+        $end_time = Carbon::createFromFormat('H:i:s', $guardRoaster->end_time)->format('h:iA');
+
+        $guardRoaster['start_time'] = $start_time;
+        $guardRoaster['end_time']   = $end_time;
 
         return view('admin.guard-roaster.edit', compact('securityGuards', 'clients', 'guardRoaster', 'clientSites'));
     }
@@ -108,7 +119,9 @@ class GuardRoasterController extends Controller
         $request->validate([
             'guard_id'    => 'required',
             'client_id'    => 'required',
-            'client_site_id' => 'required'
+            'client_site_id' => 'required',
+            'start_time'     => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
+            'end_time'       => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
         ]);
 
         $existingGuardRoaster = GuardRoaster::where('guard_id', $request->guard_id)->where('date', $request->date)
@@ -118,13 +131,19 @@ class GuardRoasterController extends Controller
             return redirect()->back()->withErrors(['date' => 'Date already assigned to this guard.'])->withInput();
         }
 
+        $start_time = trim($request->start_time);
+        $end_time = trim($request->end_time);
+        
+        $start_time = Carbon::createFromFormat('h:iA', $start_time)->format('H:i');
+        $end_time = Carbon::createFromFormat('h:iA', $end_time)->format('H:i');
+
         $guardRoaster->update([
             'guard_id'       => $request->guard_id,
             'client_id'      => $request->client_id,
             'client_site_id' => $request->client_site_id,
             'date'           => $request->date,
-            'start_time'     => $request->start_time,
-            'end_time'       => $request->end_time
+            'start_time'     => $start_time,
+            'end_time'       => $end_time
         ]);
 
         return redirect()->route('guard-roasters.index')->with('success', 'Guard Roaster updated successfully.');

@@ -100,15 +100,14 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                     continue;
                 }
 
-                if (is_numeric($time_in)) {
-                    $time_in = Carbon::createFromTimestamp($time_in * 86400)->format('H:i');
+                if (!is_numeric($time_in)) {
+                    $time_in = Carbon::createFromFormat('h:iA', $time_in)->format('H:i');
                 }
 
-                if (is_numeric($time_out)) {
-                    $time_out = Carbon::createFromTimestamp($time_out * 86400)->format('H:i');
+                if (!is_numeric($time_out)) {
+                    $time_out = Carbon::createFromFormat('h:iA',$time_out)->format('H:i');
                 }
 
-                
                 $leave = Leave::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->where('status', 'Approved')->first();
                 $existingAssignment = GuardRoaster::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->first();
 
@@ -130,8 +129,8 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                         'client_id'      => $clientSite->client_id,
                         'client_site_id' => $row['client_site_id'],
                         'date'           => $formattedDate,
-                        'start_time'     => $time_in,
-                        'end_time'       => $time_out,
+                        'start_time'     => $time_in ?? '',
+                        'end_time'       => $time_out ?? '',
                     ]);
 
                     $this->importResults[] = [
