@@ -66,7 +66,13 @@
                 <div class="col-12">
                     <x-error-message :message="$errors->first('message')" />
                     <x-success-message :message="session('success')" />
-
+                    @if (session('downloadUrl'))
+                        <script>
+                            window.onload = function() {
+                                window.location.href = "{{ session('downloadUrl') }}";
+                            };
+                        </script>
+                    @endif
                     <div class="card">
                         <div class="card-body">
                             <table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">

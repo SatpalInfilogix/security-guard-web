@@ -4,6 +4,7 @@ namespace App\Exports;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use App\Imports\SecurityGuardImport;
 
 class GuardImportExport implements FromCollection, WithHeadings, WithTitle
 {

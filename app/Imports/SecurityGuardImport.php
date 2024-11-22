@@ -18,12 +18,13 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
     */
     public function model(array $row)
     {
+
         $this->rowIndex++;
 
         $validator = Validator::make($row, [
             'first_name'        => 'required',
             'email'             => 'required|email|unique:users,email',
-            'phone_number'      => 'required|numeric',
+            // 'phone_number'      => 'required|numeric',
             'date_of_joining'   => 'nullable|date_format:Y-m-d',
             'date_of_birth'     => 'nullable|date_format:Y-m-d',
             'date_of_separation'=> 'nullable|date_format:Y-m-d',
@@ -44,14 +45,7 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             return null; // Skip processing if validation fails
         }
 
-        $user = User::where(function ($query) use ($row) {
-            $query->where('email', $row["email"])
-                  ->orWhere(function ($subQuery) use ($row) {
-                      $subQuery->where('phone_number', $row["phone_number"])
-                                ->whereNull('phone_number');
-                  });
-        })->first();
-
+        $user = User::where('email', $row['email'])->first();
         if (!$user) {
             // Create a new user if not found
             $user = User::create([

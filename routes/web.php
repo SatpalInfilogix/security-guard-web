@@ -80,4 +80,5 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('/leaves/{leaveId}/update-status', [LeaveController::class, 'updateStatus'])->name('leaves.updateStatus');
 
     Route::get('/guard-roasters/download', [GuardRoasterController::class, 'download'])->name('guard-roasters.download');
+    Route::get('/security-guard/download', [SecurityGuardController::class, 'exportResultCsv'])->name('security-guard.download');
 });

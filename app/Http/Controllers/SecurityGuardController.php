@@ -422,10 +422,22 @@ class SecurityGuardController extends Controller
     {
         $import = new SecurityGuardImport;
         Excel::import($import, $request->file('file'));
-        $importedData = $import->getErrors(); // Assume this method returns the imported records
 
-        return Excel::download(new GuardImportExport($importedData), 'guard_import_results.csv');
-        return redirect()->route('security-guards.index')->with('success', 'Security Guard imported successfully.');
+        $importedData = $import->getErrors();
+
+        session()->put('imported_data', $importedData);
+
+        session()->flash('success', 'Security Guard imported successfully.');
+        $downloadUrl = route('security-guard.download');
+
+        return redirect()->route('security-guards.index')->with('downloadUrl', $downloadUrl); 
+    }
+
+    public function exportResultCsv()
+    {
+        $importedData = session()->get('imported_data', []);
+        $export = new GuardImportExport($importedData);
+        return Excel::download($export, 'guard_import_results.csv');
     }
 
     public function downloadPDF()
