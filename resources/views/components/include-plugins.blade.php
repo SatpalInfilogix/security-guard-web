@@ -1,3 +1,64 @@
+@if($hasPlugin('rateCalculate'))
+    @push('scripts')
+    <script>
+        $(document).ready(function(){
+            function calculateRates() {
+                let regularRate = parseFloat($('input[name="regular_rate"]').val()) || 0;
+                let laundryAllowance = parseFloat($('input[name="laundry_allowance"]').val()) || 0;
+                const caninePremium = parseFloat(document.getElementById('canine_premium').value) || 0;
+                const fireArmPremium = parseFloat(document.getElementById('fire_arm_premium').value) || 0;
+
+                let total = regularRate + laundryAllowance + caninePremium + fireArmPremium;
+
+                if (regularRate === 0 && laundryAllowance === 0 && caninePremium === 0 && fireArmPremium === 0) {
+                    $('#gross_hourly_display').text('');
+                    $('#normal_rate_display').text('');
+                    $('#overtime_rate_display').text('');
+                    $('#holiday_rate_display').text('');
+                } else {
+                    $('#gross_hourly_rate, #normal_rate').val(total.toFixed(2));
+                    $('#gross_hourly_display, #normal_rate_display').text(`(${regularRate} + ${laundryAllowance} + ${caninePremium} + ${fireArmPremium}) = ${total.toFixed(2)}`);
+
+                    let overtimeRate = ((regularRate + caninePremium) * 1.5) + laundryAllowance;
+                    $('#overtime_rate').val(overtimeRate.toFixed(2));
+                    $('#overtime_rate_display').text(`(${regularRate} + ${caninePremium} * 1.5) + ${laundryAllowance} = ${overtimeRate.toFixed(2)}`);
+
+                    let holidayRate = ((regularRate + caninePremium) * 2) + laundryAllowance;
+                    $('#holiday_rate').val(holidayRate.toFixed(2));
+                    $('#holiday_rate_display').text(`(${regularRate} + ${caninePremium} * 2) + ${laundryAllowance} = ${holidayRate.toFixed(2)}`);
+                }
+            }
+
+            $('.rate-calculate').on('input', calculateRates);
+            calculateRates()
+        });
+    </script>
+    @endpush
+@endif
+
+@if($hasPlugin('time'))
+    @push('styles')
+        <link rel="stylesheet" href="https://weareoutman.github.io/clockpicker/dist/jquery-clockpicker.min.css">
+    @endpush
+    @push('scripts')
+    <script src="https://weareoutman.github.io/clockpicker/dist/jquery-clockpicker.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const clockpickerOptions = {
+                placement: 'bottom',
+                align: 'left',
+                autoclose: true,
+                default: 'now',
+                donetext: "Select",
+                twelvehour: true 
+            };
+
+            $("input[name=start_time], input[name=end_time]").clockpicker(clockpickerOptions);
+        });
+    </script>
+    @endpush
+@endif
+
 @if($hasPlugin('datePicker'))
     @push('styles')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -7,40 +68,33 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            flatpickr('.date-picker', {
+            const datePickerOptions = {
                 dateFormat: "Y-m-d",
                 allowInput: true
-            });
-            flatpickr('.date-of-birth', {
-                dateFormat: "Y-m-d",
-                allowInput: true
-            });
-            flatpickr('.date_of_separation', {
-                dateFormat: "Y-m-d",
-                allowInput: true
-            });
-            flatpickr('.date-picker-punch-in', {
-                dateFormat: "Y-m-d H:i:S", // Include time in the format
+            };
+    
+            const dateTimePickerOptions = {
+                dateFormat: "Y-m-d H:i:S",
                 allowInput: true,
-                enableTime: true,       // Enable time selection
-                time_24hr: true,       // Optional: use 24-hour format
-                minuteIncrement: 1      // Optional: set minute increment
-            });
-            flatpickr('.date-picker-punch-out', {
-                dateFormat: "Y-m-d H:i:S", // Include time in the format
-                allowInput: true,
-                enableTime: true,       // Enable time selection
-                time_24hr: true,       // Optional: use 24-hour format
-                minuteIncrement: 1      // Optional: set minute increment
-            });
-
+                enableTime: true,
+                time_24hr: true,
+                minuteIncrement: 1
+            };
+    
+            flatpickr('.date-picker', datePickerOptions);
+            flatpickr('.date-of-birth', datePickerOptions);
+            flatpickr('.date_of_separation', datePickerOptions);
+            
+            flatpickr('.date-picker-punch-in', dateTimePickerOptions);
+            flatpickr('.date-picker-punch-out', dateTimePickerOptions);
+    
             $('.datepicker').each(function() {
                 flatpickr(this, {
                     dateFormat: "Y-m-d",
                     minDate: "today"
                 });
             });
-        })
+        });
     </script>
     @endpush
 @endif
@@ -134,5 +188,29 @@
     @endpush
     @push('scripts')
         <script src="{{ asset('assets/js/chosen.jquery.min.js') }}"></script>
+    @endpush
+@endif
+
+@if($hasPlugin('import'))
+    @push('scripts')
+        <script>
+            $(document).ready(function() {
+                $('#importButton').on('click', function() {
+                    $('#fileInput').click();
+                });
+
+                $('#fileInput').on('change', function(event) {
+                    var file = $(this).prop('files')[0];
+                    if (file) {
+                        var fileType = file.type;
+                        if (fileType === 'text/csv' || fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
+                            $('#importForm').submit();
+                        } else {
+                            alert('Please select a valid CSV or XLSX file.');
+                        }
+                    }
+                });
+            });
+        </script>
     @endpush
 @endif

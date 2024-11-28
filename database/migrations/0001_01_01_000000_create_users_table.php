@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('profile_picture')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->enum('status', ['Active', 'Inactive', 'Hold'])->default('Active');
+            $table->boolean('is_saturatory')->default(0);
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();

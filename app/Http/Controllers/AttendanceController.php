@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\PunchTable;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Gate;
 
 class AttendanceController extends Controller
 {
     public function index()
     {
+        if(!Gate::allows('view attendance')) {
+            abort(403);
+        }
         $attendances = PunchTable::with('user')->latest()->get();
 
         return view('admin.attendance.index', compact('attendances'));
@@ -17,13 +21,23 @@ class AttendanceController extends Controller
 
     public function edit($id)
     {
+        if(!Gate::allows('edit attendance')) {
+            abort(403);
+        }
         $attendance = PunchTable::with('user')->where('id', $id)->first();
-        
+        $in_location = json_decode($attendance->in_location);
+        $attendance['in_location'] = $in_location->formatted_address ?? '';
+        $out_location = json_decode($attendance->out_location);
+        $attendance['out_location'] = $out_location->formatted_address ?? '';
+
         return view('admin.attendance.edit', compact('attendance'));
     }
 
     public function update(Request $request, $id)
     {
+        if(!Gate::allows('edit attendance')) {
+            abort(403);
+        }
         $request->validate([
             'punch_in'    => 'required',
             'punch_out'   => 'required'
@@ -40,6 +54,9 @@ class AttendanceController extends Controller
 
     public function destroy(string $id)
     {
+        if(!Gate::allows('delete attendance')) {
+            abort(403);
+        }
         $attendance = PunchTable::where('id', $id)->first();
 
         $images = [

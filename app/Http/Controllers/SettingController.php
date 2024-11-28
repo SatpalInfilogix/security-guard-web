@@ -5,12 +5,18 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Setting;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Crypt; 
 
 class SettingController extends Controller
 {
     public function index()
     {
-        return view('admin.setting.index');
+        return view('admin.settings.index');
+    }
+
+    public function paymentSetting()
+    {
+        return view('admin.settings.payment-setting');
     }
 
     public function store(Request $request)
@@ -22,18 +28,23 @@ class SettingController extends Controller
         $oldLogo = $logo ? $logo->value : NULL;
         if ($request->hasFile('logo'))
         {
-            $fileLogo = $request->file('logo');
-            $filenameLogo = time().'.'.$fileLogo->getClientOriginalExtension();
-            $fileLogo->move(public_path('uploads/logo/'), $filenameLogo);
+            $filenameLogo = uploadFile($request->file('logo'), 'uploads/logo/');
 
-            $image_path = public_path($oldLogo);
-
-            if ($oldLogo && File::exists($image_path)) {
-                File::delete($image_path);
+            if ($oldLogo && File::exists(public_path($oldLogo))) {
+                File::delete(public_path($oldLogo));
             }
+        }else {
+            $filenameLogo = $oldLogo;
         }
-        $skippedArray['logo'] = isset($filenameLogo) ? 'uploads/logo/'.$filenameLogo : $oldLogo;
+        $skippedArray['logo'] = $filenameLogo;
 
+        if ($request->stripe_api_key) {
+            $skippedArray['stripe_api_key'] = Crypt::encryptString($request->stripe_api_key);
+        }
+        
+        if ($request->stripe_secret_key) {
+            $skippedArray['stripe_secret_key'] = Crypt::encryptString($request->stripe_secret_key);
+        }
 
         foreach ($skippedArray as $key => $value)
         {
@@ -44,6 +55,17 @@ class SettingController extends Controller
             ]);
         }
 
-        return redirect()->route('settings.index')->with('success', 'Setting updated successfully');
+        if($request->stripe_api_key && $request->stripe_secret_key) {
+            return redirect()->route('settings.payment-settings')->with('success', 'Payment Setting updated successfully');
+        } else if($request->duty_time) {
+            return redirect()->route('settings.gerenal-settings')->with('success', 'Gerenal Setting updated successfully');
+        } else {
+            return redirect()->route('settings.index')->with('success', 'Site Setting updated successfully');
+        }
+    }
+
+    public function generalSettings()
+    {
+        return view('admin.settings.general-settings');
     }
 }

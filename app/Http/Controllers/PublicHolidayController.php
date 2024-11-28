@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\PublicHoliday;
+use Illuminate\Support\Facades\Gate;
 
 class PublicHolidayController extends Controller
 {
     public function index()
     {
+        if(!Gate::allows('view public holiday')) {
+            abort(403);
+        }
         $publicHolidays = PublicHoliday::latest()->get();
 
         return view('admin.public-holidays.index', compact('publicHolidays'));
@@ -16,11 +20,17 @@ class PublicHolidayController extends Controller
 
     public function create()
     {
+        if(!Gate::allows('create public holiday')) {
+            abort(403);
+        }
         return view('admin.public-holidays.create');
     }
 
     public function store(Request $request)
     {
+        if(!Gate::allows('create public holiday')) {
+            abort(403);
+        }
         $request->validate([
             'holiday_name'  => 'required',
             'date'          => 'required',
@@ -41,6 +51,9 @@ class PublicHolidayController extends Controller
 
     public function edit($id)
     {
+        if(!Gate::allows('edit public holiday')) {
+            abort(403);
+        }
         $publicHoliday = PublicHoliday::where('id', $id)->first();
 
         return view('admin.public-holidays.edit', compact('publicHoliday'));
@@ -48,6 +61,9 @@ class PublicHolidayController extends Controller
 
     public function update(Request $request, $id)
     {
+        if(!Gate::allows('edit public holiday')) {
+            abort(403);
+        }
         $request->validate([
             'holiday_name'  => 'required',
             'date'          => 'required',
@@ -65,6 +81,9 @@ class PublicHolidayController extends Controller
 
     public function destroy(string $id)
     {
+        if(!Gate::allows('delete public holiday')) {
+            abort(403);
+        }
         $user = PublicHoliday::where('id', $id)->delete();
 
         return response()->json([

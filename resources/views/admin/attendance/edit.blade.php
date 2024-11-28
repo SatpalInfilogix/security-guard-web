@@ -38,7 +38,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <x-form-input name="last_name" value="{{ $attendance->user->surname }}" label="Surename" placeholder="Enter your Surename" readonly/>
+                                        <x-form-input name="surname" value="{{ $attendance->user->surname }}" label="Surename" placeholder="Enter your Surename" readonly/>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -48,9 +48,31 @@
                                 </div>
                             </div>
                             <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="in_location" class="form-label">In Location</label>
+                                    <textarea name="in_loaction" class="form-control" rows="4" cols="50" readonly>{{$attendance->in_location}}</textarea>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="in_location" class="form-label">Out Location</label>
+                                    <textarea name="out_loaction" class="form-control" rows="4" cols="50" readonly>{{$attendance->out_location}}</textarea>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <x-form-input type="text" class="date-picker-punch-out" name="punch_out" label="Punch Out" value="{{ old('punch_out', $attendance->out_time) }}" placeholder="Enter your Punch Out" />
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="punchInImage" class="form-label">Punch In Image</label>
+                                        <img id="punchInImage" src="{{ asset($attendance->in_image) }}" height="500" width="150" alt="Punch In Image" class="img-thumbnail">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label for="punchOutImage" class="form-label">Punch Out Image</label>
+                                        <img id="punchOutImage" src="{{ asset($attendance->out_image) }}" height="500" width="150" alt="Punch Out Image" class="img-thumbnail">
                                     </div>
                                 </div>
                             </div>
