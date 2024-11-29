@@ -24,7 +24,7 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
         $validator = Validator::make($row, [
             'first_name'        => 'required',
             'email'             => 'required|email|unique:users,email',
-            // 'phone_number'      => 'required|numeric',
+            'phone_number'      => 'nullable|unique:users,phone_number',
             'date_of_joining'   => 'nullable|date_format:Y-m-d',
             'date_of_birth'     => 'nullable|date_format:Y-m-d',
             'date_of_separation'=> 'nullable|date_format:Y-m-d',

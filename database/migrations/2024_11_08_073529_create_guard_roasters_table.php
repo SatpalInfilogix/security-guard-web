@@ -19,6 +19,7 @@ return new class extends Migration
             $table->date('date')->nullable()->index();
             $table->time('start_time')->nullable()->index();
             $table->time('end_time')->nullable()->index();
+            $table->date('end_date')->nullable()->index();
 
             $table->timestamps();
 

@@ -99,6 +99,16 @@
     @endpush
 @endif
 
+@if($hasPlugin('dateRange'))
+    @push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    @endpush
+
+    @push('scripts')
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    @endpush
+@endif
+
 @if($hasPlugin('guardImage'))
     @push('scripts')
     <script>
@@ -212,5 +222,18 @@
                 });
             });
         </script>
+    @endpush
+@endif
+
+@if($hasPlugin('sweetAlert'))
+    @push('styles')
+    <link href="{{ asset('assets/css/sweetalert.css') }}" rel="stylesheet" type="text/css" />
+
+    @endpush
+    @push('scripts')
+    <script src="{{ asset('assets/libs/sweetalert2/sweetalert.min.js') }}"></script>
+
+    <!-- Sweet alert init js-->
+    <script src="{{ asset('assets/js/pages/sweet-alerts.init.js')}}"></script>
     @endpush
 @endif

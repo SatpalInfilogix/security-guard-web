@@ -32,7 +32,19 @@
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="vanguard_manager" value="{{ old('vanguard_manager', $clientSite->vanguard_manager ?? '') }}" label="Vanguard Manager" placeholder="Enter your Vanguard Manager"/>
+            <label for="manager_id">Vanguard Manager</label>
+            <select name="manager_id" id="manager_id" class="form-control{{ $errors->has('manager_id') ? ' is-invalid' : '' }}">
+                <option value="" selected disabled>Select Manager</option>
+                @foreach($users as $user)
+                    <option value="{{ $user->id }}" @selected(isset($clientSite->manager_id) && $clientSite->manager_id == $user->id)>
+                        {{ $user->first_name . ' '.$user->last_name }}
+                    </option>
+                @endforeach
+            </select>
+            @error('client_id')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+            {{-- <x-form-input name="vanguard_manager" value="{{ old('vanguard_manager', $clientSite->vanguard_manager ?? '') }}" label="Vanguard Manager" placeholder="Enter your Vanguard Manager"/> --}}
         </div>
     </div>
     <div class="col-md-4">
@@ -106,17 +118,17 @@
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="latitude" value="{{ old('latitude', $clientSite->latitude ?? '') }}" label="Latitude" placeholder="Enter your Latitude"  type="number"  step="any" />
+            <x-form-input name="latitude" value="{{ old('latitude', $clientSite->latitude ?? '') }}" label="Latitude" placeholder="Enter your Latitude"  type="number"  step="any" required="true"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="longitude" value="{{ old('longitude', $clientSite->longitude ?? '') }}" label="Longitude" placeholder="Enter your Longitude"   type="number"  step="any" />
+            <x-form-input name="longitude" value="{{ old('longitude', $clientSite->longitude ?? '') }}" label="Longitude" placeholder="Enter your Longitude"   type="number"  step="any" required="true"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input type="number" name="radius" value="{{ old('radius', $clientSite->radius ?? '') }}" label="Radius" placeholder="Enter your Radius" min=0 step="any"/>
+            <x-form-input type="number" name="radius" value="{{ old('radius', $clientSite->radius ?? '') }}" label="Radius (in meters)" placeholder="Enter your Radius" min=0 step="any" required="true"/>
         </div>
     </div>
 </div>

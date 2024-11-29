@@ -29,6 +29,10 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::prefix('admin')->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('admin.dashboard.index');
+        Route::get('/guard-roasters/list', [GuardRoasterController::class, 'list'])->name('guard-roasters.list');
+        Route::post('/get-guard-roaster', [GuardRoasterController::class, 'getGuardRoasters'])->name('get-guard-roaster');
+        Route::post('/get-guard-roaster-list', [GuardRoasterController::class, 'getGuardRoasterList'])->name('get-guard-roaster-list');
+        
         Route::resources([
             'profile'               => ProfileController::class,
             'users'                 => UserController::class,
@@ -81,4 +85,5 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
 
     Route::get('/guard-roasters/download', [GuardRoasterController::class, 'download'])->name('guard-roasters.download');
     Route::get('/security-guard/download', [SecurityGuardController::class, 'exportResultCsv'])->name('security-guard.download');
+    Route::get('/attendance-list/download', [AttendanceController::class, 'exportAttendance'])->name('attendance-list.download');
 });

@@ -86,4 +86,9 @@ class User extends Authenticatable
         return $this->hasone(UsersDocuments::class);
     }
 
+    public function guardRoasters()
+    {
+        return $this->hasMany(GuardRoaster::class, 'guard_id'); // Assuming 'guard_id' is the foreign key
+    }
+
 }

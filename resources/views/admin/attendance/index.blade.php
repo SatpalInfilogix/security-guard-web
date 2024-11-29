@@ -9,6 +9,17 @@
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                         <h4 class="mb-sm-0 font-size-18">Attendance</h4>
+                        <div class="page-title-right">
+                            <div class="d-inline-block ">
+                                <form method="GET" action="{{ route('attendance.index') }}" id="attendance-form">
+                                    <input type="text" name="date_range" class="form-control" id="date-range-picker" 
+                                           value="{{ request('date_range', isset($fortnight) ? \Carbon\Carbon::parse($fortnight->start_date)->format('Y-m-d') . ' - ' . \Carbon\Carbon::parse($fortnight->end_date)->format('Y-m-d') : '') }}">
+                                </form>
+                                {{-- <input type="text" name="date_range" class="form-control" id="date-range-picker"  value="{{ request('date_range', isset($fortnight) ? \Carbon\Carbon::parse($fortnight->start_date)->format('Y-m-d') . ' - ' . \Carbon\Carbon::parse($fortnight->end_date)->format('Y-m-d') : '') }}"> --}}
+                            </div>
+                            
+                            <a href="{{ route('attendance-list.download') }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Attendance Download</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -64,10 +75,34 @@
                             </table>
                         </div>
                     </div>
-                </div> <!-- end col -->
-            </div> <!-- end row -->
+                </div>
+            </div>
 
-        </div> <!-- container-fluid -->
+        </div>
     </div>
-    <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
+    <x-include-plugins :plugins="['dataTable', 'dateRange']"></x-include-plugins>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var dateRange = $('#date-range-picker').val(); 
+            $('#date-range-picker').daterangepicker({
+                autoUpdateInput: true,
+                locale: {
+                    format: 'YYYY-MM-DD'
+                },
+                singleDatePicker: false,
+                showDropdowns: true,
+                autoApply: true,
+                alwaysShowCalendars: true,
+            });
+
+            $('#date-range-picker').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
+                $('#attendance-form').submit();
+            });
+
+            $('#date-range-picker').on('change', function() {
+                $('#attendance-form').submit();
+            });
+        });
+    </script>
 @endsection

@@ -6,17 +6,41 @@ use Illuminate\Http\Request;
 use App\Models\PunchTable;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
+use App\Exports\AttendanceExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
+use App\Models\FortnightDates;
 
 class AttendanceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if(!Gate::allows('view attendance')) {
             abort(403);
         }
-        $attendances = PunchTable::with('user')->latest()->get();
+        $today = Carbon::now();
+        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first(); 
+        if (!$fortnight) {
+            $fortnight = null;
+        }
+        $dateRange = $request->input('date_range');
+        $attendances = PunchTable::with('user')->latest();
 
-        return view('admin.attendance.index', compact('attendances'));
+        if ($dateRange) {
+            list($startDate, $endDate) = explode(' - ', $dateRange);
+            $startDate = Carbon::parse($startDate)->startOfDay();
+            $endDate = Carbon::parse($endDate)->endOfDay();
+            $attendances = $attendances->whereBetween('in_time', [$startDate, $endDate]);
+        } else {
+            $startDate = Carbon::parse($fortnight->start_date)->startOfDay();
+            $endDate = Carbon::parse($fortnight->end_date)->endOfDay();
+           
+            $attendances = $attendances->whereBetween('in_time', [$startDate, $endDate]);
+        }
+
+        $attendances = $attendances->get();
+
+        return view('admin.attendance.index', compact('attendances', 'fortnight'));
     }
 
     public function edit($id)
@@ -76,5 +100,10 @@ class AttendanceController extends Controller
             'success' => true,
             'message' => 'Attendance deleted successfully.'
         ]);
+    }
+
+    public function exportAttendance(Request $request)
+    {
+        return Excel::download(new AttendanceExport, 'attendance-list.csv');
     }
 }

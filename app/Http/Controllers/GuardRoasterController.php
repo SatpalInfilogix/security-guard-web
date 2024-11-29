@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\GuardRoaster;
+use App\Models\FortnightDates;
 use App\Models\User;
 use App\Models\Leave;
 use App\Models\Client;
@@ -26,9 +27,55 @@ class GuardRoasterController extends Controller
         if(!Gate::allows('view guard roaster')) {
             abort(403);
         }
-        $guardRoasters = GuardRoaster::with('user', 'client')->latest()->get();
 
-        return view('admin.guard-roaster.index', compact('guardRoasters'));
+        $today = Carbon::now();
+        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first(); 
+        if (!$fortnight) {
+            $fortnight = null;
+        }
+
+        return view('admin.guard-roaster.index', compact('fortnight'));
+    }
+
+    public function getGuardRoasterList(Request $request)
+    {
+        $guardRoasterData = GuardRoaster::with('user', 'client');
+        
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+    
+            $guardRoasterData->where(function($query) use ($searchValue) {
+                $query->whereHas('user', function($q) use ($searchValue) {
+                    $q->where('first_name', 'like', '%' . $searchValue . '%')
+                      ->orWhere('surname', 'like', '%' . $searchValue . '%');
+                })
+                ->orWhereHas('client', function($q) use ($searchValue) {
+                    $q->where('client_name', 'like', '%' . $searchValue . '%');
+                })
+                ->orWhere('date', 'like', '%' . $searchValue . '%');
+            });
+        }
+    
+        $totalRecords = GuardRoaster::count();
+        
+        $length = $request->input('length', 10);
+        $start = $request->input('start', 0);
+    
+        $guardRoasters = $guardRoasterData->orderBy('id', 'desc')
+                                          ->skip($start)  // Start offset
+                                          ->take($length) // Limit records
+                                          ->get();  // Get the records as an array (not paginated yet)
+        
+        // Prepare the response
+        $data = [
+            'draw' => $request->input('draw'),
+            'recordsTotal' => $totalRecords, // Total records without filtering
+            'recordsFiltered' => $guardRoasterData->count(), // Filtered records count
+            'data' => $guardRoasters, // The actual data (items on the current page)
+        ];
+    
+        // Return the response as JSON
+        return response()->json($data);
     }
 
     public function create()
@@ -77,7 +124,8 @@ class GuardRoasterController extends Controller
                 'client_id'      => $request->client_id,
                 'client_site_id' => $request->client_site_id,
                 'start_time'     => $start_time,
-                'end_time'       => $end_time
+                'end_time'       => $end_time,
+                'end_date'       => $request->end_date
             ]
         );
 
@@ -143,7 +191,8 @@ class GuardRoasterController extends Controller
             'client_site_id' => $request->client_site_id,
             'date'           => $request->date,
             'start_time'     => $start_time,
-            'end_time'       => $end_time
+            'end_time'       => $end_time,
+            'end_date'       => $request->end_date
         ]);
 
         return redirect()->route('guard-roasters.index')->with('success', 'Guard Roaster updated successfully.');
@@ -321,5 +370,73 @@ class GuardRoasterController extends Controller
         $leaves = Leave::where('guard_id', $guardId)->whereIn('status', ['Approved', 'Pending'])->latest()->get();
 
         return response()->json($leaves);
+    }
+
+    public function getGuardRoasters(Request $request)
+    {
+        $today = Carbon::now();
+        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+
+        if (!$fortnight) {
+            return response()->json([
+                'data' => [],
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0
+            ]);
+        }
+
+        $query = GuardRoaster::with('user', 'client', 'clientSite')
+            ->whereBetween('date', [$fortnight->start_date, $fortnight->end_date]);
+
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $query->where(function($query) use ($searchValue) {
+                $query->whereHas('user', function($query) use ($searchValue) {
+                    $query->where('first_name', 'like', '%' . $searchValue . '%');
+                })
+                ->orWhereHas('client', function($query) use ($searchValue) {
+                    $query->where('client_name', 'like', '%' . $searchValue . '%');
+                })
+                ->orWhereHas('clientSite', function($query) use ($searchValue) {
+                    $query->where('location_Code', 'like', '%' . $searchValue . '%');
+                });
+            });
+        }
+
+        $totalRecords = $query->count();
+
+        $perPage = $request->input('length', 10);
+        $currentPage = (int)($request->input('start', 0) / $perPage);
+        $guardRoasters = $query->skip($currentPage * $perPage)->take($perPage)->get()
+            ->groupBy(function($item) {
+                return $item->user->first_name .'-'. $item->client_site_id;
+            });
+
+        $formattedGuardRoasters = $guardRoasters->map(function ($items) {
+            $firstItem = $items->first();
+            $dates = $items->pluck('date')->implode(', ');
+            
+            $time_in_out = $items->map(function ($item) {
+                return [
+                    'date' => $item->date,
+                    'time_in' => \Carbon\Carbon::parse($item->start_time)->format('h:iA'),  // 12-hour AM/PM format
+                    'time_out' => \Carbon\Carbon::parse($item->end_time)->format('h:iA')   // 12-hour AM/PM format
+                ];
+            });
+
+            return [
+                'guard_name' => $firstItem->user->first_name . ' ' . optional($firstItem->user)->surname,
+                'location_code' => $firstItem->clientSite->location_code,
+                'client_name' => $firstItem->client->client_name,
+                'time_in_out' => $time_in_out,  // Added time_in and time_out
+            ];
+        });
+
+        return response()->json([
+            'draw' => intval($request->input('draw')),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $totalRecords,  // Adjust filtered count if needed
+            'data' => $formattedGuardRoasters
+        ]);
     }
 }

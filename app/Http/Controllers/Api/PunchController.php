@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PunchTable;
+use App\Models\GuardRoaster;
 use App\Services\GeocodingService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
@@ -22,18 +23,68 @@ class PunchController extends Controller
         $this->geocodingService = $geocodingService;
     }
 
+    protected function checkIfUserExistingInSite($userLat, $userLong, $clientLat, $clientLong, $clientRadius = 100){
+        if ($userLat && $userLong) {
+            $userDistance = $this->geocodingService->trackUserDistanceFromSite(
+                $clientLat,
+                $clientLong,
+                $userLat,
+                $userLong
+            );
+           
+            if(!isset($userDistance['distance']['value'])){
+                return [
+                    'success' => false,
+                    'status' => 'COMPANY_NOT_ALOCATED',
+                    'message' => 'Unable to calculate distance from Google Maps API.'
+                ];
+            }
+
+            $distanceInMeters = $userDistance['distance']['value'];
+        
+            $distanceInKm = $distanceInMeters / 1000;
+            if ($distanceInMeters > $clientRadius) {
+                return [
+                    'success' => false,
+                    'status' => 'OUT_OF_SITE_RADIUS',
+                    'distance' => $userDistance['distance'],
+                    'duration' => $userDistance['duration'],
+                    'message' => 'You are too far from the assigned site. The distance is ' . round($distanceInKm, 2) . ' km.'
+                ];
+            }
+
+            return null;
+        }
+    }
+
     public function logPunch(Request $request, $action)
     {
         $rules = [
             'time' => 'required|date_format:Y-m-d H:i:s',
         ];
+
+        $today = Carbon::today();
+        $todaysDuty = GuardRoaster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', $today)->first();
         
+        if (!$todaysDuty) {
+            return response()->json([
+                'success' => false,
+                'status' => 'DUTY_NOT_ASSIGNED',
+                'message' => 'You do not have duty scheduled for today.'
+            ], 400);
+        }
+       
+        $clientLat = $todaysDuty->clientSite->latitude;
+        $clientLong = $todaysDuty->clientSite->longitude;
+        $clientRadius = $todaysDuty->clientSite->radius;
+
         $this->addActionRules($rules, $action);
         
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
+                'status' => 'VALIDATION_ERROR',
                 'message' => $validator->errors()
             ], 400);
         }
@@ -41,6 +92,7 @@ class PunchController extends Controller
         if (!in_array($action, ['in', 'out'])) {
             return response()->json([
                 'success' => false,
+                'status' => 'INVALID_ACTION',
                 'message' => 'Invalid action value.'
             ], 400);
         }
@@ -51,13 +103,25 @@ class PunchController extends Controller
             if (!$punchOut) {
                 return response()->json([
                     'success' => false,
+                    'status' => 'NOT_PUNCHED_IN',
                     'message' => 'Please punch In first.'
                 ], 400);
             }
 
+            $userLat = $request->input('out_lat');
+            $userLong = $request->input('out_long');
+
+            if ($userLat && $userLong) {
+                $outsideDistance = $this->checkIfUserExistingInSite($userLat, $userLong, $clientLat, $clientLong, $clientRadius);
+                if($outsideDistance){
+                    return response()->json($outsideDistance);
+                }
+            }
+
+
             $imageName = uploadFile($request->file('out_image'), 'uploads/activity/punch_out/');
-            $out_location = $this->getLocationFromLatLng($request->out_lat, $request->out_long);
-    
+            $out_location = $this->geocodingService->getAddress($request->out_lat, $request->out_long);
+
             $punchOut->update([
                 'out_time'      => $request->time,
                 'out_lat'       => $request->out_lat,
@@ -72,12 +136,23 @@ class PunchController extends Controller
             if ($oldPunch) {
                 return response()->json([
                     'success' => false,
+                    'status' => 'ALREADY_PUNCHED_IN',
                     'message' => 'You are already Punch In.'
                 ], 400);
             }
 
+            $userLat = $request->input('in_lat');
+            $userLong = $request->input('in_long');
+
+            if ($userLat && $userLong) {
+                $outsideDistance = $this->checkIfUserExistingInSite($userLat, $userLong, $clientLat, $clientLong, $clientRadius);
+                if($outsideDistance){
+                    return response()->json($outsideDistance);
+                }
+            }
+
             $imageName = uploadFile($request->file('in_image'), 'uploads/activity/punch_in/');
-            $in_location = $this->getLocationFromLatLng($request->in_lat, $request->in_long);
+            $in_location = $this->geocodingService->getAddress($request->in_lat, $request->in_long);
 
             $punchIn = PunchTable::create([
                 'user_id'     => Auth::id(),
@@ -115,65 +190,6 @@ class PunchController extends Controller
             'message' => $message,
             'data'    => $data,
         ]);
-    }
-
-    private function getLocationFromLatLng($lat, $lng)
-    {
-        $apiKey = env('GOOGLE_API_KEY');
-        $url = "https://maps.googleapis.com/maps/api/geocode/json?latlng={$lat},{$lng}&key={$apiKey}";
-        $response = Http::get($url);
-
-        if ($response->successful()) {
-            $data = $response->json();
-            return $data['results'][0] ?? null;
-        }
-
-        return null;
-    }
-
-    public function getAddress(Request $request)
-    {
-        $latitude = $request->input('latitude');
-        $longitude = $request->input('longitude');
-
-        $address = $this->geocodingService->getAddress($latitude, $longitude);
-        return response()->json(['address' => $address]);
-    }
-
-    public function checkDistanceFromOffice(Request $request)
-    {
-        $rules = [
-            'latitude'  => 'required|numeric',
-            'longitude' => 'required|numeric',
-        ];
-
-        $validator = Validator::make($request->all(), $rules);
-        if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => $validator->errors()], 400);
-        }
-
-        $inputLatitude  = $request->input('latitude');
-        $inputLongitude = $request->input('longitude');
-
-        $distance = $this->geocodingService->haversineGreatCircleDistance(
-            $this->officeLatitude,
-            $this->officeLongitude,
-            $inputLatitude,
-            $inputLongitude
-        );
-
-        if ($distance <= 500) {
-            return response()->json([
-                'success'  => true,
-                'message'  => 'You are within 500 meters of the office.',
-                'distance' => $distance]);
-        } else {
-            return response()->json([
-                'success'  => false,
-                'message'  => 'You are more than 500 meters away from the office.',
-                'distance' => $distance
-            ]);
-        }
     }
 
     public function calculateOvertime($userId)

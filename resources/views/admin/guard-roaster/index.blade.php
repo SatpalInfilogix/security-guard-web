@@ -4,13 +4,19 @@
     <div class="page-content">
         <div class="container-fluid">
 
-            <!-- start page title -->
             <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                         <h4 class="mb-sm-0 font-size-18">Guard Roaster</h4>
 
                         <div class="page-title-right">
+                            <button id="toggleGridView" class="btn btn-primary primary-btn btn-md me-1 d-none">
+                                <i class="bx bx-grid"></i> Grid View
+                            </button>
+                            <button id="toggleListView" class="btn btn-primary primary-btn btn-md me-1">
+                                <i class="bx bx-list-ul"></i> List View
+                            </button>
+
                             <a href="{{ route('export.csv') }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard Roaster Configuration File</a>
                             <a href="{{ url('download-guard-roaster-sample') }}"
                                 class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard Roaster Sample File</a>
@@ -46,53 +52,38 @@
                     @endif
                     <div class="card">
                         <div class="card-body">
-                            <table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
-                                <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Guard Name</th>
-                                    <th>Client Name</th>
-                                    <th>Date</th>
-                                    <th>Start Time</th>
-                                    <th>End Time</th>
-                                    @canany(['edit security guards', 'delete security guards'])
-                                    <th>Action</th>
-                                    @endcanany
-                                </tr>
-                                </thead>
+                            <div class="grid-view">
+                                @include('admin.guard-roaster.grid-view')
+                            </div>
 
-                                <tbody>
-                                @foreach($guardRoasters as $key => $guardRoaster)
-                                <tr>
-                                    <td>{{ ++$key }}</td>
-                                    <td>{{ optional($guardRoaster->user)->first_name .' '. optional($guardRoaster->user)->surname }}</td>
-                                    <td>{{ optional($guardRoaster->client)->client_name }}</td>
-                                    <td>{{ $guardRoaster->date }}</td>
-                                    <td>{{ \Carbon\Carbon::createFromFormat('H:i:s', $guardRoaster->start_time)->format('h:iA') }}</td>
-                                    <td>{{ \Carbon\Carbon::createFromFormat('H:i:s', $guardRoaster->end_time)->format('h:iA') }}</td>
-                                    @canany(['edit security guards', 'delete security guards'])
-                                    <td class="action-buttons">
-                                        @if(Auth::user()->can('edit security guards'))
-                                            <a href="{{ route('guard-roasters.edit', $guardRoaster->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
-                                        @endif
-                                        @if(Auth::user()->can('delete security guards'))
-                                            <button data-source="Guard Roaster" data-endpoint="{{ route('guard-roasters.destroy', $guardRoaster->id) }}"
-                                                class="delete-btn btn btn-outline-secondary btn-sm edit">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        @endif
-                                    </td>
-                                    @endcanany
-                                </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
+                            <div class="list-view d-none">
+                                @include('admin.guard-roaster.list-view')
+                            </div>
                         </div>
                     </div>
-                </div> <!-- end col -->
-            </div> <!-- end row -->
-
-        </div> <!-- container-fluid -->
+                </div> 
+            </div>
+        </div>
     </div>
+
     <x-include-plugins :plugins="['dataTable', 'import']"></x-include-plugins>
+    <script>
+        $(document).ready(function() {
+            $('#toggleListView').click(function() {
+                $('.list-view').removeClass('d-none');
+                $('.grid-view').addClass('d-none');
+
+                $('#toggleListView').addClass('d-none');
+                $('#toggleGridView').removeClass('d-none');
+            });
+
+            $('#toggleGridView').click(function() {
+                $('.grid-view').removeClass('d-none');
+                $('.list-view').addClass('d-none');
+
+                $('#toggleGridView').addClass('d-none');
+                $('#toggleListView').removeClass('d-none');
+            });
+        });
+    </script>
 @endsection
