@@ -67,13 +67,13 @@
                         var actions = '<div class="action-buttons">';
                         
                         @can('edit security guards')
-                        actions += `<a class="btn btn-outline-secondary btn-sm edit" href="{{ url('admin/guard-roasters') }}/${row.id}/edit">`;
+                        actions += `<a class="btn btn-outline-secondary btn-sm edit" href="{{ url('admin/guard-rosters') }}/${row.id}/edit">`;
                         actions += '<i class="fas fa-pencil-alt"></i>';
                         actions += '</a>';
                         @endcan
 
                         @can('delete security guards')
-                            actions += `<a data-source="Guard Roaster" class="guard-delete-btn btn btn-outline-secondary btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
+                            actions += `<a data-source="Guard Roster" class="guard-delete-btn btn btn-outline-secondary btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
                         @endcan
 
                         actions += '</div>';
@@ -90,7 +90,7 @@
         $('#list-view').on('click', '.guard-delete-btn', function() {
             let source = $(this).data('source');
             let guardId = $(this).data('id');
-            var deleteApiEndpoint = "{{ route('guard-roasters.destroy', '') }}/" + guardId;
+            var deleteApiEndpoint = "{{ route('guard-rosters.destroy', '') }}/" + guardId;
 
             swal({
                 title: "Are you sure?",

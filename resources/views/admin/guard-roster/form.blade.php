@@ -363,7 +363,7 @@
                         const leaveTitle = leave.status === 'Approved' ? 'Approved Leave' : 'Pending Leave';
                         $(dayElem).attr('title', leaveTitle);
                         const leaveLabel = $('<div></div>', { class: 'leave-label', text: 'L' });
-console.log(leaveLabel);
+
                         if (leave.status === 'Approved') {
                             leaveLabel.css('color', 'red');
                         } else if (leave.status === 'Pending') {

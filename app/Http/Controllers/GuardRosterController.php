@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\GuardRoaster;
+use App\Models\GuardRoster;
 use App\Models\FortnightDates;
 use App\Models\User;
 use App\Models\Leave;
@@ -20,7 +20,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Support\Facades\Gate;
 
-class GuardRoasterController extends Controller
+class GuardRosterController extends Controller
 {
     public function index()
     {
@@ -34,12 +34,12 @@ class GuardRoasterController extends Controller
             $fortnight = null;
         }
 
-        return view('admin.guard-roaster.index', compact('fortnight'));
+        return view('admin.guard-roster.index', compact('fortnight'));
     }
 
     public function getGuardRoasterList(Request $request)
     {
-        $guardRoasterData = GuardRoaster::with('user', 'client');
+        $guardRoasterData = GuardRoster::with('user', 'client');
         
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
@@ -56,7 +56,7 @@ class GuardRoasterController extends Controller
             });
         }
     
-        $totalRecords = GuardRoaster::count();
+        $totalRecords = GuardRoster::count();
         
         $length = $request->input('length', 10);
         $start = $request->input('start', 0);
@@ -92,7 +92,7 @@ class GuardRoasterController extends Controller
 
         $clients = Client::latest()->get();
 
-        return view('admin.guard-roaster.create', compact('securityGuards', 'clients'));
+        return view('admin.guard-roster.create', compact('securityGuards', 'clients'));
     }
 
     public function store(Request $request)
@@ -115,7 +115,7 @@ class GuardRoasterController extends Controller
         $start_time = Carbon::createFromFormat('h:iA', $start_time)->format('H:i');
         $end_time = Carbon::createFromFormat('h:iA', $end_time)->format('H:i');
         
-        $guardRoaster = GuardRoaster::updateOrCreate(
+        $guardRoaster = GuardRoster::updateOrCreate(
             [
                 'guard_id' => $request->guard_id,
                 'date'     => $request->date,  // We use these two attributes to search for the existing record
@@ -129,20 +129,20 @@ class GuardRoasterController extends Controller
             ]
         );
 
-        return redirect()->route('guard-roasters.index')->with('success', 'Guard Roaster created successfully.');
+        return redirect()->route('guard-rosters.index')->with('success', 'Guard Roster created successfully.');
     }
 
     public function show($id) {
         //
     }
 
-    public function edit(GuardRoaster $guardRoaster) 
+    public function edit($id) 
     {
         if(!Gate::allows('edit guard roaster')) {
             abort(403);
         }
+        $guardRoaster = GuardRoster::where('id', $id)->first();
         $userRole = Role::where('name', 'Security Guard')->first();
-
         $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         })->where('status', 'Active')->latest()->get();
@@ -156,10 +156,10 @@ class GuardRoasterController extends Controller
         $guardRoaster['start_time'] = $start_time;
         $guardRoaster['end_time']   = $end_time;
 
-        return view('admin.guard-roaster.edit', compact('securityGuards', 'clients', 'guardRoaster', 'clientSites'));
+        return view('admin.guard-roster.edit', compact('securityGuards', 'clients', 'guardRoaster', 'clientSites'));
     }
 
-    public function update(Request $request, GuardRoaster $guardRoaster)
+    public function update(Request $request, $id)
     {
         if(!Gate::allows('edit guard roaster')) {
             abort(403);
@@ -172,7 +172,9 @@ class GuardRoasterController extends Controller
             'end_time'       => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
         ]);
 
-        $existingGuardRoaster = GuardRoaster::where('guard_id', $request->guard_id)->where('date', $request->date)
+        $guardRoaster = GuardRoster::where('id', $id)->first();
+
+        $existingGuardRoaster = GuardRoster::where('guard_id', $request->guard_id)->where('date', $request->date)
                                             ->where('id', '!=', $guardRoaster->id)->first();
 
         if ($existingGuardRoaster) {
@@ -195,7 +197,7 @@ class GuardRoasterController extends Controller
             'end_date'       => $request->end_date
         ]);
 
-        return redirect()->route('guard-roasters.index')->with('success', 'Guard Roaster updated successfully.');
+        return redirect()->route('guard-rosters.index')->with('success', 'Guard Roster updated successfully.');
     }
 
     public function getClientSites($clientId)
@@ -207,7 +209,7 @@ class GuardRoasterController extends Controller
 
     public function getAssignedDate($guardId)
     {
-        $assignedDates = GuardRoaster::where('guard_id', $guardId)->pluck('date')
+        $assignedDates = GuardRoster::where('guard_id', $guardId)->pluck('date')
             ->map(function ($date) {
                 return Carbon::parse($date)->format('Y-m-d');
             })
@@ -222,16 +224,16 @@ class GuardRoasterController extends Controller
         return response()->json($publicHolidays);
     }
 
-    public function destroy(GuardRoaster $guardRoaster)
+    public function destroy($id)
     {
         if(!Gate::allows('delete guard roaster')) {
             abort(403);
         }
-        $guardRoaster->delete();
+        GuardRoster::where('id', $id)->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'Guard Roaster deleted successfully.'
+            'message' => 'Guard Roster deleted successfully.'
         ]);
     }
 
@@ -244,12 +246,12 @@ class GuardRoasterController extends Controller
             return response()->json(['error' => 'Date and Guard ID are required'], 400);
         }
 
-        $guardRoaster = GuardRoaster::where('guard_id', $guardId)
+        $guardRoaster = GuardRoster::where('guard_id', $guardId)
                                     ->where('date', $date)
                                     ->first();
 
         if (!$guardRoaster) {
-            return response()->json(['error' => 'No roaster found for this guard and date'], 404);
+            return response()->json(['error' => 'No roster found for this guard and date'], 404);
         }
 
         $client = $guardRoaster->client_id;
@@ -270,10 +272,10 @@ class GuardRoasterController extends Controller
         Excel::import($import, $request->file('file'));
 
         session(['importData' => $import]);
-        session()->flash('success', 'Guard roaster imported successfully.');
+        session()->flash('success', 'Guard roster imported successfully.');
         $downloadUrl = route('guard-roasters.download');
 
-        return redirect()->route('guard-roasters.index')->with('downloadUrl', $downloadUrl); 
+        return redirect()->route('guard-rosters.index')->with('downloadUrl', $downloadUrl); 
     }
 
     public function download()
@@ -286,18 +288,18 @@ class GuardRoasterController extends Controller
     public function downloadExcel()
     {
         $spreadsheet = new Spreadsheet();
-    
+
         $this->addGuardsSheet($spreadsheet);
         $this->addClientsSheet($spreadsheet);
         $this->addClientSitesSheet($spreadsheet);
-    
+
         $writer = new Xlsx($spreadsheet);
-        $fileName = 'Guard_Roaster_configuration' . '.xlsx';
-    
+        $fileName = 'Guard_Roster_configuration.xlsx';
+
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $fileName . '"');
         header('Cache-Control: max-age=0');
-    
+
         $writer->save('php://output');
         exit;
     }
@@ -327,7 +329,7 @@ class GuardRoasterController extends Controller
 
     protected function addClientsSheet($spreadsheet)
     {
-        $sheet = $spreadsheet->getSheet(1);
+        $sheet = $spreadsheet->getSheet(1);  // Get the second sheet (index 1)
         $sheet->setTitle('Clients');
 
         $headers = ['ID', 'Client Code', 'Client Name'];
@@ -343,25 +345,47 @@ class GuardRoasterController extends Controller
             );
         }
 
-        $spreadsheet->createSheet();
+        $spreadsheet->createSheet();  // Move to next sheet
     }
 
     protected function addClientSitesSheet($spreadsheet)
     {
-        $sheet = $spreadsheet->getSheet(2);
+        $sheet = $spreadsheet->getSheet(2);  // Get the third sheet (index 2)
         $sheet->setTitle('Client-Sites');
 
-        $headers = ['ID', 'Client Id', 'Client Name', 'Client Location', 'Parish', 'Billing Address', 'vanguard Manager', 'Contact Operation', 'Telephone Number', 'Email', 'Invoice Recipient Main', 'Invoice Recipient Copy', 'Account Payable Contact Name', 'Email', 'Number', 'Number 2', 'Account Payable Contact Email', 'Email', 'Telephone Number', 'Latitude', 'longitude', 'radius', 'status'];
+        $headers = [
+            'ID', 'Client Id', 'Client Name', 'Client Location', 'Parish', 'Billing Address', 'Vanguard Manager', 'Contact Operation', 
+            'Telephone Number', 'Email', 'Invoice Recipient Main', 'Invoice Recipient Copy', 'Account Payable Contact Name', 
+            'Account Payable Contact Email', 'Telephone Number', 'Latitude', 'Longitude', 'Radius', 'Status'
+        ];
         $sheet->fromArray($headers, NULL, 'A1');
 
         $clientSites = ClientSite::with('client')->get();
 
         foreach ($clientSites as $key => $clientSite) {
-            $sheet->fromArray(
-                [$clientSite->id, $clientSite->client_id, $clientSite->client->client_name, $clientSite->location_code, $clientSite->parish, $clientSite->billing_address, $clientSite->vanguard_manager, $clientSite->contact_operation, $clientSite->telephone_number, $clientSite->email, $clientSite->invoice_recipient_main, $clientSite->invoice_recipient_copy, $clientSite->account_payable_contact_name, $clientSite->email_2, $clientSite->number, $clientSite->number_2, $clientSite->account_payable_contact_email, $clientSite->email_3, $clientSite->telephone_number_2, $clientSite->latitude, $clientSite->longitude, $clientSite->radius, $clientSite->status],
-                NULL,
-                'A' . ($key + 2)
-            );
+            $data = [
+                $clientSite->id,
+                $clientSite->client_id,
+                $clientSite->client->client_name ?? '',
+                $clientSite->location_code ?? '',
+                $clientSite->parish ?? '',
+                $clientSite->billing_address ?? '',
+                $clientSite->vanguard_manager ?? '',
+                $clientSite->contact_operation ?? '',
+                $clientSite->telephone_number ?? '',
+                $clientSite->email ?? '',
+                $clientSite->invoice_recipient_main ?? '',
+                $clientSite->invoice_recipient_copy ?? '',
+                $clientSite->account_payable_contact_name ?? '',
+                $clientSite->account_payable_contact_email ?? '',
+                $clientSite->telephone_number ?? '',
+                $clientSite->latitude ?? '',
+                $clientSite->longitude ?? '',
+                $clientSite->radius ?? '',
+                $clientSite->status ?? ''
+            ];
+
+            $sheet->fromArray($data, NULL, 'A' . ($key + 2));
         }
     }
 
@@ -385,7 +409,7 @@ class GuardRoasterController extends Controller
             ]);
         }
 
-        $query = GuardRoaster::with('user', 'client', 'clientSite')
+        $query = GuardRoster::with('user', 'client', 'clientSite')
             ->whereBetween('date', [$fortnight->start_date, $fortnight->end_date]);
 
         if ($request->has('search') && !empty($request->search['value'])) {

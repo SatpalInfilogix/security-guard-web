@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Models\GuardRoaster;
+use App\Models\GuardRoster;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Carbon\Carbon;
@@ -109,7 +109,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                 }
 
                 $leave = Leave::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->where('status', 'Approved')->first();
-                $existingAssignment = GuardRoaster::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->first();
+                $existingAssignment = GuardRoster::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->first();
 
                 if ($existingAssignment) {
                     $this->importResults[] = [
@@ -124,7 +124,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                         'Failure Reason' => 'Guard ' . $row['guard_id'] . ' id is in leave for this date (' . $formattedDate . ')',
                     ];
                 } else {
-                    GuardRoaster::create([
+                    GuardRoster::create([
                         'guard_id'       => $row['guard_id'],
                         'client_id'      => $clientSite->client_id,
                         'client_site_id' => $row['client_site_id'],

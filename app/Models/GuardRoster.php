@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Models\Client;
 use App\Models\ClientSite;
 
-class GuardRoaster extends Model
+class GuardRoster extends Model
 {
     use HasFactory;
     protected $guarded = [];

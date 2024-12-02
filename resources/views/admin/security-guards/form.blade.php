@@ -42,14 +42,14 @@
 
     <div class="col-md-6">
         <div class="mb-3">
-            <label class="form-check-label" for="SwitchCheckSizelg">Saturatory/Non-Saturatory</label>
+            <label class="form-check-label" for="SwitchCheckSizelg">Statutory/Non-statutory</label>
             <div class="form-check form-switch form-switch-lg mb-3" dir="ltr">
-                <input class="form-check-input" type="checkbox" id="SwitchCheckSizelg" name="is_Saturatory"
-                       data-on="Saturatory" data-off="Non-Saturatory" value="0"  
-                       {{ isset($user) && $user->is_saturatory == 0 ? 'checked' : '' }}
+                <input class="form-check-input" type="checkbox" id="SwitchCheckSizelg" name="is_statutory"
+                       data-on="Statutory" data-off="Non-Statutory" value="0"  
+                       {{ isset($user) && $user->is_statutory == 0 ? 'checked' : '' }}
                        {{ !isset($user) ? 'checked' : '' }}> <!-- For create page, default to checked -->
             </div>
-            <input type="hidden" id="is_saturatory" name="is_saturatory" value="{{ isset($user) ? $user->is_saturatory : 0 }}">
+            <input type="hidden" id="is_statutory" name="is_statutory" value="{{ isset($user) ? $user->is_statutory : 0 }}">
         </div>
     </div>
 
@@ -57,15 +57,15 @@
         <legend>Addtitional Detail</legend>
         <div class="row mb-2">
             <div class="col-md-4 mb-3">
-                <x-form-input name="trn" value="{{ old('trn', $user->guardAdditionalInformation->trn ?? '') }}" label="Guard's TRN" placeholder="Enter your Guard's TRN"/>
+                <x-form-input name="trn" value="{{ old('trn', $user->guardAdditionalInformation->trn ?? '') }}" label="Guard's TRN" placeholder="Enter your Guard's TRN" oninput="formatInput(this, 'trn')" maxlength="11"/>
             </div>
 
             <div class="col-md-4 mb-3">
-                <x-form-input name="nis" value="{{ old('nis', $user->guardAdditionalInformation->nis ?? '') }}" label="NIS/NHT Number" placeholder="Enter your NIS/NHT Number"/>
+                <x-form-input name="nis" value="{{ old('nis', $user->guardAdditionalInformation->nis ?? '') }}" label="NIS/NHT Number" placeholder="Enter your NIS/NHT Number" oninput="formatInput(this, 'nisnht')" maxlength="7" />
             </div>
 
             <div class="col-md-4 mb-3">
-                <x-form-input name="psra" value="{{ old('psra', $user->guardAdditionalInformation->psra ?? '') }}" label="PSRA Registration No" placeholder="Enter your PSRA Registration No"/>
+                <x-form-input name="psra" value="{{ old('psra', $user->guardAdditionalInformation->psra ?? '') }}" label="PSRA Registration No" placeholder="Enter your PSRA Registration No" oninput="formatInput(this, 'psra')" maxlength="9" />
             </div>
 
             <div class="col-md-4 mb-3">
@@ -282,41 +282,63 @@
 
     <x-include-plugins :plugins="['datePicker', 'guardImage']"></x-include-plugins>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            function formatInput(input) {
-                let value = input.value.replace(/\D/g, '');
-                let formattedValue = value.replace(/(\d{3})(?=\d)/g, '$1-');
-                input.value = formattedValue;
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     function formatInput(input) {
+        //         let value = input.value.replace(/\D/g, '');
+        //         let formattedValue = value.replace(/(\d{3})(?=\d)/g, '$1-');
+        //         input.value = formattedValue;
+        //     }
+
+        //     const trnInput = document.querySelector('input[name="trn"]');
+        //     const nisInput = document.querySelector('input[name="nis"]');
+
+        //     trnInput.addEventListener('input', function() {
+        //         formatInput(trnInput);
+        //     });
+
+        //     nisInput.addEventListener('input', function() {
+        //         formatInput(nisInput);
+        //     });
+        // });
+        function formatInput(input, type) {
+            let value = input.value.replace(/\D/g, ''); // Remove non-digit characters
+
+            if (type === 'trn') {
+                // TRN: Format as XXX-XXX-XXX (9 digits)
+                if (value.length > 3 && value.length <= 6) {
+                    value = value.replace(/(\d{3})(\d{0,3})/, '$1-$2');
+                } else if (value.length > 6) {
+                    value = value.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1-$2-$3');
+                }
+            } else if (type === 'nisnht') {
+                // NIS / NHT: Format as XXX-XXX (6 digits)
+                if (value.length > 3) {
+                    value = value.replace(/(\d{3})(\d{0,3})/, '$1-$2');
+                }
+            } else if (type === 'psra') {
+                // PSRA: No special formatting, just remove non-digits
+                value = value.slice(0, 9); // Limit to 9 digits
             }
 
-            const trnInput = document.querySelector('input[name="trn"]');
-            const nisInput = document.querySelector('input[name="nis"]');
-
-            trnInput.addEventListener('input', function() {
-                formatInput(trnInput);
-            });
-
-            nisInput.addEventListener('input', function() {
-                formatInput(nisInput);
-            });
-        });
+            input.value = value;
+        }
 
         $(document).ready(function() {
             if ($('#SwitchCheckSizelg').prop('checked')) {
-                $('#is_saturatory').val('0'); // checked -> 0
+                $('#is_statutory').val('0'); // checked -> 0
                 $('#SwitchCheckSizelg').val('0');
             } else {
-                $('#is_saturatory').val('1'); // unchecked -> 1
+                $('#is_statutory').val('1'); // unchecked -> 1
                 $('#SwitchCheckSizelg').val('1');
 
             }
 
             $('#SwitchCheckSizelg').change(function() {
                 if ($(this).prop('checked')) {
-                    $('#is_saturatory').val('0'); // checked -> 0
+                    $('#is_statutory').val('0'); // checked -> 0
                     $('#SwitchCheckSizelg').val('0');
                 } else {
-                    $('#is_saturatory').val('1'); // unchecked -> 1
+                    $('#is_statutory').val('1'); // unchecked -> 1
                     $('#SwitchCheckSizelg').val('1');
                 }
             });

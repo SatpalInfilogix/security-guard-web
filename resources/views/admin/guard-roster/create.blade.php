@@ -8,10 +8,10 @@
             <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0 font-size-18">Create a new guard roaster</h4>
+                        <h4 class="mb-sm-0 font-size-18">Create a new guard roster</h4>
 
                         <div class="page-title-right">
-                            <a href="{{ route('guard-roasters.index') }}" class="btn btn-primary"><i class="bx bx-arrow-back"></i> Back to Guard Roasters</a>
+                            <a href="{{ route('guard-rosters.index') }}" class="btn btn-primary"><i class="bx bx-arrow-back"></i> Back to Guard Rosters</a>
                         </div>
 
                     </div>
@@ -26,9 +26,9 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <form action="{{ route('guard-roasters.store') }}" method="post" enctype="multipart/form-data">
+                            <form action="{{ route('guard-rosters.store') }}" method="post" enctype="multipart/form-data">
                                 @csrf
-                                @include('admin.guard-roaster.form')
+                                @include('admin.guard-roster.form')
                             </form>    
                         </div>    
                     </div>

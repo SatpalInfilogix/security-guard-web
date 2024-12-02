@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Punch;
-use App\Models\GuardRoaster;
+use App\Models\GuardRoster;
 use App\Services\GeocodingService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
@@ -64,7 +64,7 @@ class PunchController extends Controller
         ];
 
         $today = Carbon::today();
-        $todaysDuty = GuardRoaster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', $today)->first();
+        $todaysDuty = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', $today)->first();
         
         if (!$todaysDuty) {
             return response()->json([

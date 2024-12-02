@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\GuardRoaster;
+use App\Models\GuardRoster;
 use App\Models\PublicHoliday;
 use App\Models\Punch;
 use App\Models\Leave;
@@ -16,8 +16,8 @@ class HomeController extends Controller
     public function stats()
     {
         $today = Carbon::today();
-        $todaysDuties = GuardRoaster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', $today)->first();
-        $upcomingDuties = GuardRoaster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', '>', $today)->take(2)->get();
+        $todaysDuties = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', $today)->first();
+        $upcomingDuties = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', '>', $today)->take(2)->get();
         $upcommingHolidays = PublicHoliday::whereDate('date', '>', $today)->take(2)->get();
         $leaves = Leave::where('guard_id', Auth::id())->whereMonth('date', now()->month)->whereYear('date', now()->year)->get();
         $approvedLeaves = $leaves->where('status', 'Approved')->count();
@@ -41,7 +41,7 @@ class HomeController extends Controller
             }
         }
 
-        $assignedDuties = GuardRoaster::where('guard_id', Auth::id())->whereMonth('date', now()->month)->whereYear('date', now()->year)->get();
+        $assignedDuties = GuardRoster::where('guard_id', Auth::id())->whereMonth('date', now()->month)->whereYear('date', now()->year)->get();
         foreach ($assignedDuties as $duty) {
             $dutyDate = Carbon::parse($duty->date);
             $attendanceForDuty = $attendances->filter(function ($attendance) use ($dutyDate) {
