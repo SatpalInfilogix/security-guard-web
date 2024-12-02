@@ -9,12 +9,20 @@ use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
 
 class AttendanceExport implements FromCollection, WithHeadings, WithCustomCsvSettings
 {
+    protected $startDate;
+    protected $endDate;
     /**
     * @return \Illuminate\Support\Collection
     */
+    public function __construct($startDate, $endDate)
+    {
+        $this->startDate = $startDate;
+        $this->endDate = $endDate;
+    }
+
     public function collection()
     {
-        $attendances = PunchTable::with('user')->latest()->get()
+        $attendances = PunchTable::with('user')->latest()->whereBetween('in_time', [ $this->startDate, $this->endDate])->get()
             ->map(function ($attendance) {
                 return [
                     'first_name' => $attendance->user->first_name ?? 'N/A',

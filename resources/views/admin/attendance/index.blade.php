@@ -15,10 +15,9 @@
                                     <input type="text" name="date_range" class="form-control" id="date-range-picker" 
                                            value="{{ request('date_range', isset($fortnight) ? \Carbon\Carbon::parse($fortnight->start_date)->format('Y-m-d') . ' - ' . \Carbon\Carbon::parse($fortnight->end_date)->format('Y-m-d') : '') }}">
                                 </form>
-                                {{-- <input type="text" name="date_range" class="form-control" id="date-range-picker"  value="{{ request('date_range', isset($fortnight) ? \Carbon\Carbon::parse($fortnight->start_date)->format('Y-m-d') . ' - ' . \Carbon\Carbon::parse($fortnight->end_date)->format('Y-m-d') : '') }}"> --}}
                             </div>
                             
-                            <a href="{{ route('attendance-list.download') }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Attendance Download</a>
+                            <a href="{{ route('attendance-list.download', ['date_range' => request('date_range')]) }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Attendance Download</a>
                         </div>
                     </div>
                 </div>
@@ -90,7 +89,7 @@
                     format: 'YYYY-MM-DD'
                 },
                 singleDatePicker: false,
-                showDropdowns: true,
+                showDropdowns: false,
                 autoApply: true,
                 alwaysShowCalendars: true,
             });

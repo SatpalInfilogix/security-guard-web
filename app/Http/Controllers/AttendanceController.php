@@ -34,7 +34,6 @@ class AttendanceController extends Controller
         } else {
             $startDate = Carbon::parse($fortnight->start_date)->startOfDay();
             $endDate = Carbon::parse($fortnight->end_date)->endOfDay();
-           
             $attendances = $attendances->whereBetween('in_time', [$startDate, $endDate]);
         }
 
@@ -104,6 +103,23 @@ class AttendanceController extends Controller
 
     public function exportAttendance(Request $request)
     {
-        return Excel::download(new AttendanceExport, 'attendance-list.csv');
+        $today = Carbon::now();
+        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first(); 
+        if (!$fortnight) {
+            $fortnight = null;
+        }
+
+        $dateRange = $request->input('date_range');
+
+        if ($dateRange) {
+            list($startDate, $endDate) = explode(' - ', $dateRange);
+            $startDate = Carbon::parse($startDate)->startOfDay();
+            $endDate = Carbon::parse($endDate)->endOfDay();
+        } else {
+            $startDate = Carbon::parse($fortnight->start_date)->startOfDay();
+            $endDate = Carbon::parse($fortnight->end_date)->endOfDay();
+        }
+
+        return Excel::download(new AttendanceExport($startDate, $endDate), 'attendance-list.csv');
     }
 }
