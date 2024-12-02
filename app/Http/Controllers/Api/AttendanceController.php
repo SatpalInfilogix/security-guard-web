@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
-use App\Models\PunchTable;
+use App\Models\Punch;
 use App\Models\PublicHoliday;
 use App\Models\RateMaster;
 use App\Models\GuardAdditionalInformation;
@@ -31,7 +31,7 @@ class AttendanceController extends Controller
 
         $attendanceData = [];
         for ($date = $startDate; $date->lessThanOrEqualTo($endDate); $date->addDay()) {
-            $punchRecord = PunchTable::where('user_id', Auth::id())->whereDate('in_time', $date)->whereNotNull('in_time')->whereNotNull('out_time')->first();
+            $punchRecord = Punch::where('user_id', Auth::id())->whereDate('in_time', $date)->whereNotNull('in_time')->whereNotNull('out_time')->first();
 
             $workedHours = 0;
             $loggedHours = 0;

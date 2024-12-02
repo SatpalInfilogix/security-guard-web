@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\PunchTable;
+use App\Models\Punch;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
@@ -36,7 +36,7 @@ class LoginController extends Controller
             $token = $user->createToken('MyApp')->plainTextToken;
             $user->token = $token;
 
-            $punchStatus = PunchTable::where('user_id', $user->id)->whereNull('out_time')->orderBy('created_at', 'desc')->latest()->first();
+            $punchStatus = Punch::where('user_id', $user->id)->whereNull('out_time')->orderBy('created_at', 'desc')->latest()->first();
             $user['is_punched_in'] = $punchStatus ? true : false;
 
             return response()->json([

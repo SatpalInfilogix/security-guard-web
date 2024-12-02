@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\PunchTable;
+use App\Models\Punch;
 use App\Models\GuardRoaster;
 use App\Services\GeocodingService;
 use Illuminate\Support\Facades\Validator;
@@ -98,7 +98,7 @@ class PunchController extends Controller
         }
 
         if ($action === 'out') {
-            $punchOut = PunchTable::where('user_id', Auth::id())->whereNull('out_time')->orderBy('created_at', 'desc')->latest()->first();
+            $punchOut = Punch::where('user_id', Auth::id())->whereNull('out_time')->orderBy('created_at', 'desc')->latest()->first();
     
             if (!$punchOut) {
                 return response()->json([
@@ -132,7 +132,7 @@ class PunchController extends Controller
 
             return $this->createResponse(true, 'Punch updated successfully.', $punchOut);
         } else {
-            $oldPunch = PunchTable::where('user_id', Auth::id())->whereNull('out_time')->orderBy('created_at', 'desc')->latest()->first();
+            $oldPunch = Punch::where('user_id', Auth::id())->whereNull('out_time')->orderBy('created_at', 'desc')->latest()->first();
             if ($oldPunch) {
                 return response()->json([
                     'success' => false,
@@ -154,7 +154,7 @@ class PunchController extends Controller
             $imageName = uploadFile($request->file('in_image'), 'uploads/activity/punch_in/');
             $in_location = $this->geocodingService->getAddress($request->in_lat, $request->in_long);
 
-            $punchIn = PunchTable::create([
+            $punchIn = Punch::create([
                 'user_id'     => Auth::id(),
                 'in_time'     => $request->time,
                 'in_lat'      => $request->in_lat,
@@ -194,7 +194,7 @@ class PunchController extends Controller
 
     public function calculateOvertime($userId)
     {
-        $punchRecords = PunchTable::where('user_id', $userId)->get();
+        $punchRecords = Punch::where('user_id', $userId)->get();
         $overtimeHours = 0;
 
         foreach ($punchRecords as $record) {

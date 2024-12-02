@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\PunchTable;
+use App\Models\Punch;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use App\Exports\AttendanceExport;
@@ -24,7 +24,7 @@ class AttendanceController extends Controller
             $fortnight = null;
         }
         $dateRange = $request->input('date_range');
-        $attendances = PunchTable::with('user')->latest();
+        $attendances = Punch::with('user')->latest();
 
         if ($dateRange) {
             list($startDate, $endDate) = explode(' - ', $dateRange);
@@ -47,7 +47,7 @@ class AttendanceController extends Controller
         if(!Gate::allows('edit attendance')) {
             abort(403);
         }
-        $attendance = PunchTable::with('user')->where('id', $id)->first();
+        $attendance = Punch::with('user')->where('id', $id)->first();
         $in_location = json_decode($attendance->in_location);
         $attendance['in_location'] = $in_location->formatted_address ?? '';
         $out_location = json_decode($attendance->out_location);
@@ -66,7 +66,7 @@ class AttendanceController extends Controller
             'punch_out'   => 'required'
         ]);
 
-        $attendance = PunchTable::where('id', $id)->first();
+        $attendance = Punch::where('id', $id)->first();
         $attendance->update([
             'in_time'   => $request->punch_in,
             'out_time'  => $request->punch_out
@@ -80,7 +80,7 @@ class AttendanceController extends Controller
         if(!Gate::allows('delete attendance')) {
             abort(403);
         }
-        $attendance = PunchTable::where('id', $id)->first();
+        $attendance = Punch::where('id', $id)->first();
 
         $images = [
             public_path($attendance->in_image),
