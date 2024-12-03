@@ -36,7 +36,22 @@ class GuardRosterController extends Controller
             $fortnight = null;
         }
 
-        return view('admin.guard-roster.index', compact('fortnight'));
+        $userRole = Role::where('name', 'Security Guard')->first();
+
+        $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
+            $query->where('role_id', $userRole->id);
+        })->where('status', 'Active')->latest()->get();
+
+        $clients = Client::latest()->get();
+        $query = ClientSite::where('status', 'Active')->latest();
+        if (Auth::check() && Auth::user()->hasRole('Manager Operations')) {
+            $userId = Auth::id();
+            $query->where('manager_id', $userId);
+        }
+        
+        $clientSites = $query->get();
+
+        return view('admin.guard-roster.index', compact('fortnight', 'securityGuards', 'clients', 'clientSites'));
     }
 
     public function getGuardRoasterList(Request $request)
@@ -48,6 +63,18 @@ class GuardRosterController extends Controller
             $guardRoasterData->whereHas('clientSite', function($query) use ($userId) {
                 $query->where('manager_id', $userId);
             });
+        }
+
+        if ($request->has('guard_id') && !empty($request->guard_id)) {
+            $guardRoasterData->where('guard_id', $request->guard_id);
+        }
+
+        if ($request->has('client_id') && !empty($request->client_id)) {
+            $guardRoasterData->where('client_id', $request->client_id);
+        }
+
+        if ($request->has('client_site_id') && !empty($request->client_site_id)) {
+            $guardRoasterData->where('client_site_id', $request->client_site_id);
         }
 
         if ($request->has('search') && !empty($request->search['value'])) {

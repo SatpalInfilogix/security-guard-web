@@ -50,16 +50,13 @@
                             };
                         </script>
                     @endif
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="grid-view">
-                                @include('admin.guard-roster.grid-view')
-                            </div>
+                    
+                    <div class="grid-view">
+                        @include('admin.guard-roster.grid-view')
+                    </div>
 
-                            <div class="list-view d-none">
-                                @include('admin.guard-roster.list-view')
-                            </div>
-                        </div>
+                    <div class="list-view d-none">
+                        @include('admin.guard-roster.list-view')
                     </div>
                 </div> 
             </div>

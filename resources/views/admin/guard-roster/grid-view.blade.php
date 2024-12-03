@@ -1,35 +1,39 @@
-<div style="overflow-x: auto;">
-    <table id="grid-view" class="table table-bordered dt-responsive nowrap w-100 guard-roaster">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Guard Name</th>
-                <th>Client Name</th>
-                <th>Location Code</th>
-                @php
-                    $startOfFortnight = \Carbon\Carbon::parse($fortnight->start_date); 
-                @endphp
+<div class="card">
+    <div class="card-body">
+        <div style="overflow-x: auto;">
+            <table id="grid-view" class="table table-bordered dt-responsive nowrap w-100 guard-roaster">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Guard Name</th>
+                        <th>Client Name</th>
+                        <th>Location Code</th>
+                        @php
+                            $startOfFortnight = \Carbon\Carbon::parse($fortnight->start_date); 
+                        @endphp
 
-                @foreach(range(0, 13) as $dayOffset)
-                    @php
-                        $date = $startOfFortnight->copy()->addDays($dayOffset);
-                    @endphp
-                    <th colspan="2">{{ $date->format('D, d-M-Y') }}</th>
-                @endforeach
-            </tr>
+                        @foreach(range(0, 13) as $dayOffset)
+                            @php
+                                $date = $startOfFortnight->copy()->addDays($dayOffset);
+                            @endphp
+                            <th colspan="2">{{ $date->format('D, d-M-Y') }}</th>
+                        @endforeach
+                    </tr>
 
-            <tr>
-                <th colspan="4"></th>
-                @foreach(range(0, 13) as $dayOffset)
-                    <th>Time In</th>
-                    <th>Time Out</th>
-                @endforeach
-            </tr>
-        </thead>
+                    <tr>
+                        <th colspan="4"></th>
+                        @foreach(range(0, 13) as $dayOffset)
+                            <th>Time In</th>
+                            <th>Time Out</th>
+                        @endforeach
+                    </tr>
+                </thead>
 
-        <tbody>
-        </tbody>
-    </table>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
