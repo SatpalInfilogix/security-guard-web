@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\GuardRoster;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\Client;
 use App\Models\User;
@@ -58,7 +59,14 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                 return null;
             }
 
-            $clientSite = ClientSite::where('id', $row['client_site_id'])->where('status', 'Active')->first();
+            $query = ClientSite::where('id', $row['client_site_id'])->where('status', 'Active');
+            if (Auth::check() && Auth::user()->hasRole('Manager Operations')) {
+                $userId = Auth::id();
+                $query->where('manager_id', $userId);
+            }
+            
+            $clientSite = $query->first();
+
             if (!$clientSite) {
                 $this->addImportResult('Client site ID ' . $row['client_site_id'] . ' does not exist.');
                 return null;
@@ -126,7 +134,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                 } else {
                     GuardRoster::create([
                         'guard_id'       => $row['guard_id'],
-                        'client_id'      => $clientSite->client_id,
+                        'client_id'      => $clientSite->client_id ?? Null,
                         'client_site_id' => $row['client_site_id'],
                         'date'           => $formattedDate,
                         'start_time'     => $time_in ?? '',

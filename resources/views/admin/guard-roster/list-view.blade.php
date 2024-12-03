@@ -7,7 +7,7 @@
             <th>Date</th>
             <th>Start Time</th>
             <th>End Time</th>
-            @canany(['edit security guards', 'delete security guards'])
+            @canany(['edit guard roaster', 'delete guard roaster'])
             <th>Action</th>
             @endcanany
         </tr>
@@ -19,7 +19,7 @@
 <x-include-plugins :plugins="['sweetAlert']"></x-include-plugins>
 
 <script>
-    $(function() {
+    $(document).ready(function() {
         let guardRoasterTable = $('#list-view').DataTable({
             processing: true,
             serverSide: true,
@@ -66,13 +66,13 @@
                     render: function(data, type, row) {
                         var actions = '<div class="action-buttons">';
                         
-                        @can('edit security guards')
+                        @can('edit guard roaster')
                         actions += `<a class="btn btn-outline-secondary btn-sm edit" href="{{ url('admin/guard-rosters') }}/${row.id}/edit">`;
                         actions += '<i class="fas fa-pencil-alt"></i>';
                         actions += '</a>';
                         @endcan
 
-                        @can('delete security guards')
+                        @can('delete guard roaster')
                             actions += `<a data-source="Guard Roster" class="guard-delete-btn btn btn-outline-secondary btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
                         @endcan
 

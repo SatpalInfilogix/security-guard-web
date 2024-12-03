@@ -16,6 +16,8 @@ use App\Imports\GuardRoasterImport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\GuardRoasterExport;
 use Illuminate\Support\Facades\Session;
+use Illuminate\SUpport\Facades\Auth;
+use Spatie\Permission\Traits\HasRoles;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Support\Facades\Gate;
@@ -39,8 +41,15 @@ class GuardRosterController extends Controller
 
     public function getGuardRoasterList(Request $request)
     {
-        $guardRoasterData = GuardRoster::with('user', 'client');
+        $guardRoasterData = GuardRoster::with('user', 'client', 'clientSite');
         
+        $userId = Auth::id();
+        if (Auth::user()->hasRole('Manager Operations')) {
+            $guardRoasterData->whereHas('clientSite', function($query) use ($userId) {
+                $query->where('manager_id', $userId);
+            });
+        }
+
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
     
@@ -65,7 +74,6 @@ class GuardRosterController extends Controller
                                           ->skip($start)  // Start offset
                                           ->take($length) // Limit records
                                           ->get();  // Get the records as an array (not paginated yet)
-        
         // Prepare the response
         $data = [
             'draw' => $request->input('draw'),
@@ -148,8 +156,14 @@ class GuardRosterController extends Controller
         })->where('status', 'Active')->latest()->get();
 
         $clients = Client::latest()->get();
-        $clientSites = ClientSite::where('status', 'Active')->latest()->get();
+        $query = ClientSite::where('status', 'Active')->latest();
+        if (Auth::check() && Auth::user()->hasRole('Manager Operations')) {
+            $userId = Auth::id();
+            $query->where('manager_id', $userId);
+        }
         
+        $clientSites = $query->get();
+
         $start_time = Carbon::createFromFormat('H:i:s', $guardRoaster->start_time)->format('h:iA');
         $end_time = Carbon::createFromFormat('H:i:s', $guardRoaster->end_time)->format('h:iA');
 
@@ -202,7 +216,14 @@ class GuardRosterController extends Controller
 
     public function getClientSites($clientId)
     {
-        $clientSites = ClientSite::where('client_id', $clientId)->where('status', 'Active')->get();
+        $query = ClientSite::where('client_id', $clientId)->where('status', 'Active');
+    
+        if (Auth::check() && Auth::user()->hasRole('Manager Operations')) {
+            $userId = Auth::id();
+            $query->where('manager_id', $userId);
+        }
+        
+        $clientSites = $query->get();
 
         return response()->json($clientSites);
     }
@@ -411,6 +432,13 @@ class GuardRosterController extends Controller
 
         $query = GuardRoster::with('user', 'client', 'clientSite')
             ->whereBetween('date', [$fortnight->start_date, $fortnight->end_date]);
+
+        $userId = Auth::id();
+        if (Auth::user()->hasRole('Manager Operations')) {
+            $query->whereHas('clientSite', function ($query) use ($userId) {
+                $query->where('manager_id', $userId);
+            });
+        }
 
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
