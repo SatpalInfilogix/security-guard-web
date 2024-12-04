@@ -94,10 +94,10 @@ class SecurityGuardController extends Controller
             'phone_number'  => 'required|numeric|unique:users,phone_number',
             'password'      => 'required',
             'recipient_id'  => 'nullable|string|max:15',
-            'trn_doc'       => 'required',
+            /* 'trn_doc'       => 'required',
             'nis_doc'       => 'required',
             'psra_doc'      => 'required',
-            'birth_certificate' => 'required',
+            'birth_certificate' => 'required', */
         ]);
 
         $user = User::create([
@@ -215,10 +215,10 @@ class SecurityGuardController extends Controller
             'phone_number'  => 'required|numeric|unique:users,phone_number,' . $id,
             'password'      => 'nullable',
             'recipient_id'  => 'nullable|string|max:15',
-            'trn_doc'       => 'nullable',
+            /* 'trn_doc'       => 'nullable',
             'nis_doc'       => 'nullable',
             'psra_doc'      => 'nullable',
-            'birth_certificate' => 'nullable',
+            'birth_certificate' => 'nullable', */
         ]);
 
         $user = User::findOrFail($id);
