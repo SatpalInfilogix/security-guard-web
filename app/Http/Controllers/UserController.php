@@ -43,7 +43,7 @@ class UserController extends Controller
             'first_name' => 'required',
             'last_name'  => 'required',
             'email'      => ['required', 'email', 'unique:users,email'],
-            'phone_no'   => 'required',
+            'phone_no'   => 'required|unique:users,phone_number',
             'password'   => 'required',
             'role'       => 'required'
         ]);
@@ -83,7 +83,7 @@ class UserController extends Controller
         $request->validate([
             'first_name'    => 'required',
             'last_name'     => 'required',
-            'phone_no'      => 'required',
+            'phone_no'      => 'required|unique:users,phone_no,' . $id, 
         ]);
 
         $user = User::where('id', $id)->update([

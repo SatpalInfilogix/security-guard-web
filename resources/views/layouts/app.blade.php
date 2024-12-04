@@ -126,9 +126,9 @@ else{
     <script src="{{ asset('assets/libs/moment/min/moment.min.js') }}"></script>
     <script src="{{ asset('assets/libs/jquery-ui-dist/jquery-ui.min.js') }}"></script>
 
-    <script src="{{ asset('assets/libs/fullcalendar/index.global.min.js') }}"></script>
+    {{-- <script src="{{ asset('assets/libs/fullcalendar/index.global.min.js') }}"></script> --}}
 
-    <script src="{{ asset('assets/js/pages/calendars-full.init.js') }}"></script>
+    {{-- <script src="{{ asset('assets/js/pages/calendars-full.init.js') }}"></script> --}}
 
     <script src="{{ asset('assets/libs/bootstrap-datepicker/js/bootstrap-datepicker.min.js') }}"></script>
     <script src="{{ asset('assets/js/app.js') }}"></script>

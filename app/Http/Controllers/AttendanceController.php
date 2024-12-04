@@ -3,20 +3,43 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\PunchTable;
+use App\Models\Punch;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
+use App\Exports\AttendanceExport;
+use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
+use App\Models\FortnightDates;
 
 class AttendanceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if(!Gate::allows('view attendance')) {
             abort(403);
         }
-        $attendances = PunchTable::with('user')->latest()->get();
+        $today = Carbon::now();
+        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first(); 
+        if (!$fortnight) {
+            $fortnight = null;
+        }
+        $dateRange = $request->input('date_range');
+        $attendances = Punch::with('user')->latest();
 
-        return view('admin.attendance.index', compact('attendances'));
+        if ($dateRange) {
+            list($startDate, $endDate) = explode(' - ', $dateRange);
+            $startDate = Carbon::parse($startDate)->startOfDay();
+            $endDate = Carbon::parse($endDate)->endOfDay();
+            $attendances = $attendances->whereBetween('in_time', [$startDate, $endDate]);
+        } else {
+            $startDate = Carbon::parse($fortnight->start_date)->startOfDay();
+            $endDate = Carbon::parse($fortnight->end_date)->endOfDay();
+            $attendances = $attendances->whereBetween('in_time', [$startDate, $endDate]);
+        }
+
+        $attendances = $attendances->get();
+
+        return view('admin.attendance.index', compact('attendances', 'fortnight'));
     }
 
     public function edit($id)
@@ -24,7 +47,7 @@ class AttendanceController extends Controller
         if(!Gate::allows('edit attendance')) {
             abort(403);
         }
-        $attendance = PunchTable::with('user')->where('id', $id)->first();
+        $attendance = Punch::with('user')->where('id', $id)->first();
         $in_location = json_decode($attendance->in_location);
         $attendance['in_location'] = $in_location->formatted_address ?? '';
         $out_location = json_decode($attendance->out_location);
@@ -43,7 +66,7 @@ class AttendanceController extends Controller
             'punch_out'   => 'required'
         ]);
 
-        $attendance = PunchTable::where('id', $id)->first();
+        $attendance = Punch::where('id', $id)->first();
         $attendance->update([
             'in_time'   => $request->punch_in,
             'out_time'  => $request->punch_out
@@ -57,7 +80,7 @@ class AttendanceController extends Controller
         if(!Gate::allows('delete attendance')) {
             abort(403);
         }
-        $attendance = PunchTable::where('id', $id)->first();
+        $attendance = Punch::where('id', $id)->first();
 
         $images = [
             public_path($attendance->in_image),
@@ -76,5 +99,27 @@ class AttendanceController extends Controller
             'success' => true,
             'message' => 'Attendance deleted successfully.'
         ]);
+    }
+
+    public function exportAttendance(Request $request)
+    {
+        $today = Carbon::now();
+        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first(); 
+        if (!$fortnight) {
+            $fortnight = null;
+        }
+
+        $dateRange = $request->input('date_range');
+
+        if ($dateRange) {
+            list($startDate, $endDate) = explode(' - ', $dateRange);
+            $startDate = Carbon::parse($startDate)->startOfDay();
+            $endDate = Carbon::parse($endDate)->endOfDay();
+        } else {
+            $startDate = Carbon::parse($fortnight->start_date)->startOfDay();
+            $endDate = Carbon::parse($fortnight->end_date)->endOfDay();
+        }
+
+        return Excel::download(new AttendanceExport($startDate, $endDate), 'attendance-list.csv');
     }
 }

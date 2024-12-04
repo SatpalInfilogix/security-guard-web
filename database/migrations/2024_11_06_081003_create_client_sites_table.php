@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('location_code')->nullable();
             $table->string('parish')->nullable();
             $table->string('billing_address')->nullable();
-            $table->string('vanguard_manager')->nullable();
+            $table->unsignedBigInteger('manager_id')->nullable();
             $table->string('contact_operation')->nullable();
             $table->string('telephone_number')->nullable();
             $table->string('email')->nullable();
@@ -35,6 +35,8 @@ return new class extends Migration
             $table->string('radius', 75)->nullable();
             $table->enum('status', ['Active', 'Inactive'])->default('Active');
             $table->timestamps();
+            
+            $table->foreign('manager_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 

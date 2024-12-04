@@ -12,7 +12,7 @@ class GeocodingService
     public function __construct()
     {
         $this->client = new Client();
-        $this->apiKey = env('GOOGLE_MAPS_API_KEY'); // Store your API key in .env
+        $this->apiKey = env('GOOGLE_MAPS_API_KEY');
     }
 
     public function getAddress($latitude, $longitude)
@@ -27,29 +27,28 @@ class GeocodingService
         $data = json_decode($response->getBody(), true);
         
         if ($data['status'] == 'OK') {
-            return $data['results'][0]['formatted_address'] ?? null;
+            return $data['results'][0] ?? null;
         }
 
         return null;
     }
 
-    public function haversineGreatCircleDistance($latitudeFrom, $longitudeFrom, $latitudeTo, $longitudeTo)
-    {
-        $earthRadius = 6371000; // Earth radius in meters
+    public function trackUserDistanceFromSite($clientLat, $clientLong, $userLat, $userLong)
+    {        
+        $response = $this->client->get('https://maps.googleapis.com/maps/api/distancematrix/json', [
+            'query' => [
+                'origins' => "{$userLat},{$userLong}",
+                'destinations' => "{$clientLat},{$clientLong}",
+                'key' => $this->apiKey,
+            ],
+        ]);
 
-        $latFrom = deg2rad($latitudeFrom);
-        $lonFrom = deg2rad($longitudeFrom);
-        $latTo = deg2rad($latitudeTo);
-        $lonTo = deg2rad($longitudeTo);
+        $data = json_decode($response->getBody(), true);
 
-        $latDelta = $latTo - $latFrom;
-        $lonDelta = $lonTo - $lonFrom;
+        if (isset($data['rows'][0]['elements'][0])) {
+            return $data['rows'][0]['elements'][0];
+        }
 
-        $a = sin($latDelta / 2) * sin($latDelta / 2) +
-             cos($latFrom) * cos($latTo) *
-             sin($lonDelta / 2) * sin($lonDelta / 2);
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-        return $earthRadius * $c; // Distance in meters
+        return null;
     }
 }

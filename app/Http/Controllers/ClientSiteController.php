@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\ClientSite;
 use App\Models\Client;
 use Illuminate\Support\Facades\Gate;
+use Spatie\Permission\Models\Role;
+use App\Models\User;
 
 class ClientSiteController extends Controller
 {
@@ -25,8 +27,12 @@ class ClientSiteController extends Controller
             abort(403);
         }
         $clients = Client::latest()->get();
+        $userRole = Role::where('name', 'Manager Operations')->first();
+        $users = User::whereHas('roles', function ($query) use ($userRole) {
+            $query->where('role_id', $userRole->id);
+        })->latest()->get();
 
-        return view('admin.client-sites.create', compact('clients'));
+        return view('admin.client-sites.create', compact('clients', 'users'));
     }
 
     public function store(Request $request)
@@ -37,6 +43,9 @@ class ClientSiteController extends Controller
         $request->validate([
             'client_id'  => 'required',
             'location_code' => 'required|unique:client_sites,location_code',
+            'latitude'      => 'required',
+            'longitude'     => 'required',
+            'radius'        => 'required',
         ]);
 
         ClientSite::create([
@@ -44,7 +53,7 @@ class ClientSiteController extends Controller
             'location_code'     => $request->location_code,
             'parish'            => $request->parish,
             'billing_address'   => $request->billing_address,
-            'vanguard_manager'  => $request->vanguard_manager,
+            'manager_id'        => $request->manager_id,
             'contact_operation' => $request->contact_operation,
             'telephone_number'  => $request->telephone_number,
             'email'             => $request->email,
@@ -77,8 +86,12 @@ class ClientSiteController extends Controller
             abort(403);
         }
         $clients = Client::latest()->get();
+        $userRole = Role::where('name', 'Manager Operations')->first();
+        $users = User::whereHas('roles', function ($query) use ($userRole) {
+            $query->where('role_id', $userRole->id);
+        })->latest()->get();
 
-        return view('admin.client-sites.edit', compact('clients', 'clientSite'));
+        return view('admin.client-sites.edit', compact('clients', 'clientSite', 'users'));
     }
 
     public function update(Request $request, ClientSite $clientSite)
@@ -89,6 +102,9 @@ class ClientSiteController extends Controller
         $request->validate([
             'client_id'  => 'required',
             'location_code' => 'required|unique:client_sites,location_code,' . $clientSite->id,
+            'latitude'      => 'required',
+            'longitude'     => 'required',
+            'radius'        => 'required',
         ]);
 
         $clientSite->update([
@@ -96,7 +112,7 @@ class ClientSiteController extends Controller
             'location_code'     => $request->location_code,
             'parish'            => $request->parish,
             'billing_address'   => $request->billing_address,
-            'vanguard_manager'  => $request->vanguard_manager,
+            'manager_id'        => $request->manager_id,
             'contact_operation' => $request->contact_operation,
             'telephone_number'  => $request->telephone_number,
             'email'             => $request->email,

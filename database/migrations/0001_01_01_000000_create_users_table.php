@@ -22,8 +22,8 @@ return new class extends Migration
             $table->string('phone_number')->nullable()->unique();
             $table->string('profile_picture')->nullable();
             $table->timestamp('email_verified_at')->nullable();
-            $table->enum('status', ['Active', 'Inactive', 'Hold'])->default('Active');
-            $table->boolean('is_saturatory')->default(0);
+            $table->enum('status', ['Active', 'Inactive', 'Hold'])->default('Inactive');
+            $table->boolean('is_statutory')->default(0);
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();

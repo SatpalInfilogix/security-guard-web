@@ -18,15 +18,15 @@
                 <li class="{{ Request::segment(2) == 'security-guards' ? 'mm-active' : '' }}">
                     <a href="{{ route('security-guards.index')}}" class="waves-effect">
                         <i class="fas fa-user-secret"></i>
-                        <span key="t-spreadsheet">Security Guard</span>
+                        <span key="t-spreadsheet">Onboard Guard</span>
                     </a>
                 </li>
                 @endcanany
                 @can('view guard roaster')
-                <li class="{{ Request::segment(2) == 'guard-roasters' ? 'mm-active' : '' }}">
-                    <a href="{{ route('guard-roasters.index')}}" class="waves-effect">
+                <li class="{{ Request::segment(2) == 'guard-rosters' ? 'mm-active' : '' }}">
+                    <a href="{{ route('guard-rosters.index')}}" class="waves-effect">
                         <i class="bx bx-hive"></i>
-                        <span key="t-spreadsheet">Guard Roaster</span>
+                        <span key="t-spreadsheet">Guard Roster</span>
                     </a>
                 </li>
                 @endcanany
@@ -35,6 +35,14 @@
                     <a href="{{ route('attendance.index')}}" class="waves-effect">
                         <i class="bx bx-spreadsheet"></i>
                         <span key="t-spreadsheet">Attendance</span>
+                    </a>
+                </li>
+                @endcanany
+                @canany('view user')
+                <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}">
+                    <a href="{{ route('users.index')}}" class="waves-effect">
+                        <i class="bx bx-user"></i>
+                        <span key="t-user">Onboard Admin</span>
                     </a>
                 </li>
                 @endcanany
@@ -52,19 +60,12 @@
                         <span key="t-calendar">Calendar Management</span>
                     </a>
                 </li> --}}
-                @canany('view user')
-                <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}">
-                    <a href="{{ route('users.index')}}" class="waves-effect">
-                        <i class="bx bx-user"></i>
-                        <span key="t-user">Users</span>
-                    </a>
-                </li>
-                @endcanany
+               
                 @can('view client')
                 <li class="{{ Request::segment(2) == 'clients' ? 'mm-active' : '' }}">
                     <a href="{{ route('clients.index')}}" class="waves-effect">
                         <i class="bx bxs-group"></i>
-                        <span key="t-user">Clients</span>
+                        <span key="t-user">Client listing</span>
                     </a>
                 </li>
                 @endcanany

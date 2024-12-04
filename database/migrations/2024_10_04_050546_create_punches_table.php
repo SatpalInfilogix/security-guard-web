@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('punch_tables', function (Blueprint $table) {
+        Schema::create('punches', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade')->index();
             $table->timestamp('in_time')->nullable();
@@ -36,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('punch_tables');
+        Schema::dropIfExists('punches');
     }
 };

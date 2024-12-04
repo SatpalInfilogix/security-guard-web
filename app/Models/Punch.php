@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 
-class PunchTable extends Model
+class Punch extends Model
 {
     use HasFactory;
     protected $guarded = [];

@@ -35,7 +35,7 @@ class User extends Authenticatable
         'password',
         'status',
         'user_code',
-        'is_saturatory'
+        'is_statutory'
     ];
 
     /**
@@ -84,6 +84,11 @@ class User extends Authenticatable
     public function userDocuments()
     {
         return $this->hasone(UsersDocuments::class);
+    }
+
+    public function guardRoasters()
+    {
+        return $this->hasMany(GuardRoster::class, 'guard_id'); // Assuming 'guard_id' is the foreign key
     }
 
 }

@@ -105,8 +105,8 @@ class SecurityGuardController extends Controller
             'middle_name'  => $request->middle_name,
             'email'        => $request->email,
             'phone_number' => $request->phone_number,
-            'status'       => $request->input('status') ?? 'Active',
-            'is_saturatory'=> $request->is_saturatory,
+            'status'       => $request->input('status') ?? 'Inactive',
+            'is_statutory' => $request->is_statutory,
             'password'     => Hash::make($request->password),
         ])->assignRole('Security Guard');
 
@@ -224,8 +224,8 @@ class SecurityGuardController extends Controller
         $user->middle_name  = $request->middle_name;
         $user->email        = $request->email;
         $user->phone_number = $request->phone_number;
-        $user->status       = $request->user_status ?? 'Active';
-        $user->is_saturatory= $request->is_saturatory;
+        $user->status       = $request->user_status ?? 'Inactive';
+        $user->is_statutory = $request->is_statutory;
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
