@@ -23,20 +23,49 @@
         </div>
     </div>
 </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <?php
+                $statusOptions = ['Active', 'Inactive', 'Hold'];
+            ?>
+            <label for="status">Status</label>
+            <select name="user_status" id="user_status" class="form-control">
+                <option value="" selected disabled>Select Status</option>
+                @foreach ($statusOptions as $value)
+                    <option value="{{ $value }}" {{ (old('status', $user->status ?? '') === $value) ? 'selected' : '' }}>
+                        {{ $value }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label class="form-check-label" for="SwitchCheckSizelg">Statutory/Non-statutory</label>
+            <div class="form-check form-switch form-switch-lg mb-3" dir="ltr">
+                <input class="form-check-input" type="checkbox" id="SwitchCheckSizelg" name="is_statutory"
+                       data-on="Statutory" data-off="Non-Statutory" value="0"  
+                       {{ isset($user) && $user->is_statutory == 0 ? 'checked' : '' }}
+                       {{ !isset($user) ? 'checked' : '' }}> <!-- For create page, default to checked -->
+            </div>
+            <input type="hidden" id="is_statutory" name="is_statutory" value="{{ isset($user) ? $user->is_statutory : 0 }}">
+        </div>
+    </div>
 
     <fieldset class="col-md-12 mb-3">
         <legend>Addtitional Detail</legend>
         <div class="row mb-2">
             <div class="col-md-4 mb-3">
-                <x-form-input name="trn" value="{{ old('trn', $user->guardAdditionalInformation->trn ?? '') }}" label="Guard's TRN" placeholder="Enter your Guard's TRN"/>
+                <x-form-input name="trn" value="{{ old('trn', $user->guardAdditionalInformation->trn ?? '') }}" label="Guard's TRN" placeholder="Enter your Guard's TRN" oninput="formatInput(this, 'trn')" maxlength="11"/>
             </div>
 
             <div class="col-md-4 mb-3">
-                <x-form-input name="nis" value="{{ old('nis', $user->guardAdditionalInformation->nis ?? '') }}" label="NIS/NHT Number" placeholder="Enter your NIS/NHT Number"/>
+                <x-form-input name="nis" value="{{ old('nis', $user->guardAdditionalInformation->nis ?? '') }}" label="NIS/NHT Number" placeholder="Enter your NIS/NHT Number" oninput="formatInput(this, 'nisnht')" maxlength="7" />
             </div>
 
             <div class="col-md-4 mb-3">
-                <x-form-input name="psra" value="{{ old('psra', $user->guardAdditionalInformation->psra ?? '') }}" label="PSRA Registration No" placeholder="Enter your PSRA Registration No"/>
+                <x-form-input name="psra" value="{{ old('psra', $user->guardAdditionalInformation->psra ?? '') }}" label="PSRA Registration No" placeholder="Enter your PSRA Registration No" oninput="formatInput(this, 'psra')" maxlength="9" />
             </div>
 
             <div class="col-md-4 mb-3">
@@ -65,9 +94,20 @@
             <div class="col-md-4 mb-3">
                 <x-form-input name="client_name" value="{{ old('client_name', $user->guardAdditionalInformation->client_name ?? '') }}" label="Client Name" placeholder="Enter your Client Name"/>
             </div>
+            
             <div class="col-md-4 mb-3">
-                <x-form-input name="guard_type" value="{{ old('guard_type', $user->guardAdditionalInformation->guard_type ?? '') }}" label="Guard Type" placeholder="Enter your Guard Type"/>
-            </div>
+                <label for="guard_type">Guard Type</label>
+                <select name="guard_type_id" id="guard_type" class="form-control">
+                    <option value="" selected disabled>Select Guard Type</option>
+                  
+                    @foreach ($rateMasters as $rateMaster)
+                    <option value="{{ $rateMaster->id }}" 
+                        @selected((old('guard_type_id', $user->guardAdditionalInformation->guard_type_id ?? null) == $rateMaster->id))>
+                        {{ $rateMaster->guard_type }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>            
             <div class="col-md-4 mb-3">
                 <x-form-input name="employed_as" value="{{ old('employed_as', $user->guardAdditionalInformation->employed_as ?? '') }}" label="Employed As" placeholder="Enter your Employed As"/>
             </div>
@@ -180,12 +220,12 @@
                 <x-form-input type="file" name="trn_doc" label="TRN Document" accept="application/pdf" onchange="showLink(this, 'trn_link', 'old_trn_link')"  required="true"/>
                 @if ($user->userDocuments->trn ?? '')
                     <div class="preview mt-2" id="old_trn_link">
-                        <label>View TRN Document:</label>
-                        <a href="{{ asset($user->userDocuments->trn) }}" target="_blank">View Document</a>
+                        <label>TRN Document:</label>
+                        <a href="{{ asset($user->userDocuments->trn) }}" target="_blank">View TRN Document</a>
                     </div>
                 @endif
                 <div id="trn_link" class="mt-2" style="display:none;">
-                    <label>Preview TRN Document:</label>
+                    <label>TRN Document:</label>
                     <a href="#" target="_blank">Preview TRN Document</a>
                 </div>
             </div>
@@ -194,12 +234,12 @@
                 <x-form-input type="file" name="nis_doc" label="NIS Document" accept="application/pdf" onchange="showLink(this, 'nis_link', 'old_nis_link')"  required="true" />
                 @if ($user->userDocuments->nis ?? '')
                     <div class="preview mt-2" id="old_nis_link">
-                        <label>View NIS Document:</label>
-                        <a href="{{ asset($user->userDocuments->nis) }}" target="_blank">View Document</a>
+                        <label>NIS Document:</label>
+                        <a href="{{ asset($user->userDocuments->nis) }}" target="_blank">View NIS Document</a>
                     </div>
                 @endif
                 <div id="nis_link" class="mt-2" style="display:none;">
-                    <label>Preview NIS Document:</label>
+                    <label>NIS Document:</label>
                     <a href="#" target="_blank">Preview NIS Document</a>
                 </div>
             </div>
@@ -208,12 +248,12 @@
                 <x-form-input type="file" name="psra_doc" label="PSRA Document" accept="application/pdf" onchange="showLink(this, 'psra_link', 'old_psra_doc')" required="true"/>
                 @if ($user->userDocuments->psra ?? '')
                     <div class="preview mt-2" id="old_psra_doc">
-                        <label>View PSRA Document:</label>
-                        <a href="{{ asset($user->userDocuments->psra) }}" target="_blank">View Document</a>
+                        <label>PSRA Document:</label>
+                        <a href="{{ asset($user->userDocuments->psra) }}" target="_blank">View PSRA Document</a>
                     </div>
                 @endif
                 <div id="psra_link" class="mt-2" style="display:none;">
-                    <label>Preview PSRA Document:</label>
+                    <label>PSRA Document:</label>
                     <a href="#" target="_blank">Preview PSRA Document</a>
                 </div>
             </div>
@@ -222,12 +262,12 @@
                 <x-form-input type="file" name="birth_certificate" label="Birth Certificate" accept="application/pdf" onchange="showLink(this, 'birth_link', 'old_birth_certificate')"  required="true" />
                 @if ($user->userDocuments->birth_certificate ?? '')
                     <div class="preview mt-2" id="old_birth_certificate">
-                        <label>View Birth Certificate:</label>
-                        <a href="{{ asset($user->userDocuments->birth_certificate) }}" target="_blank">View Document</a>
+                        <label>Birth Certificate:</label>
+                        <a href="{{ asset($user->userDocuments->birth_certificate) }}" target="_blank">View Birth Certificate</a>
                     </div>
                 @endif
                 <div id="birth_link" class="mt-2" style="display:none;">
-                    <label>Preview Birth Certificatet:</label>
+                    <label>Birth Certificatet:</label>
                     <a href="#" target="_blank">Preview Birth Certificate</a>
                 </div>
             </div>
@@ -241,3 +281,67 @@
     </div>
 
     <x-include-plugins :plugins="['datePicker', 'guardImage']"></x-include-plugins>
+    <script>
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     function formatInput(input) {
+        //         let value = input.value.replace(/\D/g, '');
+        //         let formattedValue = value.replace(/(\d{3})(?=\d)/g, '$1-');
+        //         input.value = formattedValue;
+        //     }
+
+        //     const trnInput = document.querySelector('input[name="trn"]');
+        //     const nisInput = document.querySelector('input[name="nis"]');
+
+        //     trnInput.addEventListener('input', function() {
+        //         formatInput(trnInput);
+        //     });
+
+        //     nisInput.addEventListener('input', function() {
+        //         formatInput(nisInput);
+        //     });
+        // });
+        function formatInput(input, type) {
+            let value = input.value.replace(/\D/g, ''); // Remove non-digit characters
+
+            if (type === 'trn') {
+                // TRN: Format as XXX-XXX-XXX (9 digits)
+                if (value.length > 3 && value.length <= 6) {
+                    value = value.replace(/(\d{3})(\d{0,3})/, '$1-$2');
+                } else if (value.length > 6) {
+                    value = value.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1-$2-$3');
+                }
+            } else if (type === 'nisnht') {
+                // NIS / NHT: Format as XXX-XXX (6 digits)
+                if (value.length > 3) {
+                    value = value.replace(/(\d{3})(\d{0,3})/, '$1-$2');
+                }
+            } else if (type === 'psra') {
+                // PSRA: No special formatting, just remove non-digits
+                value = value.slice(0, 9); // Limit to 9 digits
+            }
+
+            input.value = value;
+        }
+
+        $(document).ready(function() {
+            if ($('#SwitchCheckSizelg').prop('checked')) {
+                $('#is_statutory').val('0'); // checked -> 0
+                $('#SwitchCheckSizelg').val('0');
+            } else {
+                $('#is_statutory').val('1'); // unchecked -> 1
+                $('#SwitchCheckSizelg').val('1');
+
+            }
+
+            $('#SwitchCheckSizelg').change(function() {
+                if ($(this).prop('checked')) {
+                    $('#is_statutory').val('0'); // checked -> 0
+                    $('#SwitchCheckSizelg').val('0');
+                } else {
+                    $('#is_statutory').val('1'); // unchecked -> 1
+                    $('#SwitchCheckSizelg').val('1');
+                }
+            });
+        });
+
+    </script>

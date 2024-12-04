@@ -13,7 +13,7 @@ else{
         <div class="d-flex">
             <!-- LOGO -->
             <div class="navbar-brand-box">
-                <a href="index-2.html" class="logo logo-dark">
+                <a href="#" class="logo logo-dark">
                     <span class="logo-sm">
                         <img src="{{ $logo_url ? asset($logo_url) : asset('assets/images/logo.svg') }}" alt="" height="22">
                     </span>
@@ -22,7 +22,7 @@ else{
                     </span>
                 </a>
 
-                <a href="index-2.html" class="logo logo-light">
+                <a href="#" class="logo logo-light">
                     <span class="logo-sm">
                         <img src="{{ $logo_url ? asset($logo_url) : asset('assets/images/logo-light.svg') }}" alt="" height="22">
                     </span>
@@ -77,7 +77,7 @@ else{
                         </a>
                         <a href="javascript: void(0);" class="text-reset notification-item">
                             <div class="d-flex">
-                                <img src="assets/images/users/avatar-3.jpg"
+                                <img src="{{ asset('assets/images/users/avatar-3.jpg') }}"
                                     class="me-3 rounded-circle avatar-xs" alt="user-pic">
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1">James Lemire</h6>
@@ -107,7 +107,7 @@ else{
 
                         <a href="javascript: void(0);" class="text-reset notification-item">
                             <div class="d-flex">
-                                <img src="assets/images/users/avatar-4.jpg"
+                                <img src="{{ asset('assets/images/users/avatar-4.jpg') }}"
                                     class="me-3 rounded-circle avatar-xs" alt="user-pic">
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1">Salena Layfield</h6>

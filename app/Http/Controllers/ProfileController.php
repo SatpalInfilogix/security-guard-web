@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 
 class ProfileController extends Controller
 {
@@ -24,23 +25,23 @@ class ProfileController extends Controller
         ]);
 
         $user = User::where('id', Auth::id())->first();
-        $oldProfile = NULL;
-        if($user != '') {
-            $oldProfile = $user->profile_picture;
-        }
-
+        $oldProfile = $user ? $user->profile_picture : NULL;
         if ($request->hasFile('profile_image'))
         {
-            $file = $request->file('profile_image');
-            $filename = time().'.'.$file->getClientOriginalExtension();
-            $file->move(public_path('uploads/profile-pic/'), $filename);
+            $filename = uploadFile($request->file('profile_image'), 'uploads/profile-pic/');
+
+            if ($oldProfile && File::exists(public_path($oldProfile))) {
+                File::delete(public_path($oldProfile));
+            }
+        } else {
+            $filename = $oldProfile;
         }
 
         $user->update([
             'first_name'      => $request->first_name,
             'last_name'       => $request->last_name,
             'phone_number'    => $request->phone_no,
-            'profile_picture' => isset($filename) ? 'uploads/profile-pic/'. $filename : $oldProfile,
+            'profile_picture' => $filename,
         ]);
 
         return redirect()->route('profile.index')->with('success', 'Profile updated successfully');

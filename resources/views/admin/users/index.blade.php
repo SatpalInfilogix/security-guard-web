@@ -11,7 +11,9 @@
                         <h4 class="mb-sm-0 font-size-18">Users</h4>
 
                         <div class="page-title-right">
-                            <a href="{{ route('users.create') }}" class="btn btn-primary">Add New User</a>
+                            @if(Auth::user()->can('create user'))
+                                <a href="{{ route('users.create') }}" class="btn btn-primary">Add New User</a>
+                            @endif
                         </div>
 
                     </div>
@@ -34,7 +36,9 @@
                                     <th>Lastname</th>
                                     <th>Email</th>
                                     <th>Phone number</th>
+                                    @canany(['edit user', 'delete user'])
                                     <th>Action</th>
+                                    @endcanany
                                 </tr>
                                 </thead>
 
@@ -46,18 +50,19 @@
                                     <td>{{ $user->last_name}}</td>
                                     <td>{{ $user->email }}</td>
                                     <td>{{ $user->phone_number }}</td>
+                                    @canany(['edit user', 'delete user'])
                                     <td class="action-buttons">
-                                        <a href="{{ route('users.edit', $user->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
-                                        <button data-source="User" data-endpoint="{{ route('users.destroy', $user->id) }}"
-                                            class="delete-btn btn btn-outline-secondary btn-sm edit">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                        {{-- <form action="{{ route('users.destroy', $user->id) }}" method="POST">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"  class="btn btn-outline-secondary btn-sm"><i class="fas fa-trash-alt"></i></button>
-                                        </form> --}}
+                                        @if(Auth::user()->can('edit user'))
+                                            <a href="{{ route('users.edit', $user->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                        @endif
+                                        @if(Auth::user()->can('delete user'))
+                                            <button data-source="User" data-endpoint="{{ route('users.destroy', $user->id) }}"
+                                                class="delete-btn btn btn-outline-secondary btn-sm edit">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        @endif
                                     </td>
+                                    @endcanany
                                 </tr>
                                 @endforeach
                                 </tbody>
@@ -69,4 +74,5 @@
 
         </div> <!-- container-fluid -->
     </div>
+    <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
 @endsection

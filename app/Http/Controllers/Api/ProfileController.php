@@ -20,8 +20,8 @@ class ProfileController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'first_name'    => 'required',
-            'email' => 'nullable|email|unique:users,email,' . Auth::id(),
-            'phone_number' => 'nullable|numeric|unique:users,phone_number,' . Auth::id(),
+            'email'         => 'nullable|email|unique:users,email,' . Auth::id(),
+            'phone_number'  => 'nullable|numeric|unique:users,phone_number,' . Auth::id(),
             'trn_doc'       => 'nullable',
             'nis_doc'       => 'nullable',
             'psra_doc'      => 'nullable',
@@ -31,15 +31,15 @@ class ProfileController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'success'  => false,
-                'message' => $validator->errors()->first()
+                'message'  => $validator->errors()->first()
             ]);
         }
 
         $user = User::where('id', Auth::id())->first();
-        $user->first_name = $request->first_name;
-        $user->surname = $request->surname;
-        $user->middle_name = $request->middle_name;
-        $user->email = $request->email;
+        $user->first_name   = $request->first_name;
+        $user->surname      = $request->surname;
+        $user->middle_name  = $request->middle_name;
+        $user->email        = $request->email;
         $user->phone_number = $request->phone_number;
 
         if ($request->filled('password')) {
@@ -63,7 +63,7 @@ class ProfileController extends Controller
                 'location_name'         => $request->location_name,
                 'client_code'           => $request->client_code,
                 'client_name'           => $request->client_name,
-                'guard_type'            => $request->guard_type,
+                'guard_type_id'         => $request->guard_type,
                 'employed_as'           => $request->employed_as,
                 'date_of_seperation'    => $request->date_of_seperation,
             ]);
@@ -111,16 +111,16 @@ class ProfileController extends Controller
 
         $documents = [];
         if ($request->hasFile('trn_doc')) {
-            $documents['trn'] = $this->uploadFile($request->file('trn_doc'));
+            $documents['trn'] = uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/');
         }
         if ($request->hasFile('nis_doc')) {
-            $documents['nis'] = $this->uploadFile($request->file('nis_doc'));
+            $documents['nis'] = uploadFile($request->file('nis_doc'), 'uploads/user-documents/nis/');
         }
         if ($request->hasFile('psra_doc')) {
-            $documents['psra'] = $this->uploadFile($request->file('psra_doc'));
+            $documents['psra'] = uploadFile($request->file('psra_doc'), 'uploads/user-documents/psra/');
         }
         if ($request->hasFile('birth_certificate')) {
-            $documents['birth_certificate'] = $this->uploadFile($request->file('birth_certificate'));
+            $documents['birth_certificate'] = uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/');
         }
 
         usersDocuments::updateOrCreate(
@@ -135,16 +135,21 @@ class ProfileController extends Controller
         ]);
     }
 
-    private function uploadFile($file)
-    {   
-        if ($file) {
-            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-            $finalPath = 'uploads/user-documents/' . $filename;
-            $file->move(public_path('uploads/user-documents/'), $filename);
-            return $finalPath; 
-        }
+    public function guardProfile(){
+        $guard = User::with([
+                'guardAdditionalInformation', 'contactDetail', 'usersBankDetail','usersKinDetail','userDocuments'
+            ])->where('id',Auth::id())->first();
 
-        return null;
+        if($guard){
+            return response()->json([
+                'success' => true,
+                'data'    => $guard
+            ]); 
+        }else{
+            return response()->json([
+                'success' => false,
+            ]);
+        }
     }
 
 }

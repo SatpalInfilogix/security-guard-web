@@ -10,21 +10,57 @@ use App\Models\ContactDetail;
 use App\Models\UsersBankDetail;
 use App\Models\UsersKinDetail;
 use App\Models\UsersDocuments;
-use Illuminate\Support\Facades\DB;
+use App\Models\RateMaster;
 use Spatie\Permission\Models\Role;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\SecurityGuardImport;
+use App\Exports\GuardImportExport;
+use Symfony\Component\HttpFoundation\Response;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Gate;
 
 class SecurityGuardController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        if(!Gate::allows('view security guards')) {
+            abort(403);
+        }
+
         $userRole = Role::where('name', 'Security Guard')->first();
 
-        $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
+        $query = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
-        })->latest()->get();
+        });
+
+        if ($request->has('search_name') && $request->search_name) {
+            $query->where(function ($query) use ($request) {
+                $query->where('first_name', 'like', '%' . $request->search_name . '%');
+            });
+        }
+
+        if ($request->has('search_email') && $request->search_email) {
+            $query->where('email', 'like', '%' . $request->search_email . '%');
+        }
+
+        if ($request->has('search_phone') && $request->search_phone) {
+            $query->where('phone_number', 'like', '%' . $request->search_phone . '%');
+        }
+
+        if ($request->has('status') && $request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $securityGuards = $query->latest()->get();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'view' => view('admin.security-guards.filter-table', compact('securityGuards'))->render()
+            ]);
+        }
 
         return view('admin.security-guards.index', compact('securityGuards'));
     }
@@ -34,7 +70,13 @@ class SecurityGuardController extends Controller
      */
     public function create()
     {
-        return view('admin.security-guards.create');
+        if(!Gate::allows('create security guards')) {
+            abort(403);
+        }
+
+        $rateMasters = RateMaster::latest()->get();
+
+        return view('admin.security-guards.create', compact('rateMasters'));
     }
 
     /**
@@ -42,6 +84,10 @@ class SecurityGuardController extends Controller
      */
     public function store(Request $request)
     {
+        if(!Gate::allows('create security guards')) {
+            abort(403);
+        }
+
         $request->validate([
             'first_name'    => 'required',
             'email'         => 'nullable|email|unique:users,email',
@@ -54,11 +100,13 @@ class SecurityGuardController extends Controller
         ]);
 
         $user = User::create([
-            'surname'   => $request->surname,
-            'first_name' => $request->first_name,
+            'surname'      => $request->surname,
+            'first_name'   => $request->first_name,
             'middle_name'  => $request->middle_name,
-            'email'       => $request->email,
+            'email'        => $request->email,
             'phone_number' => $request->phone_number,
+            'status'       => $request->input('status') ?? 'Inactive',
+            'is_statutory' => $request->is_statutory,
             'password'     => Hash::make($request->password),
         ])->assignRole('Security Guard');
 
@@ -76,7 +124,7 @@ class SecurityGuardController extends Controller
                 'location_name'         => $request->location_name,
                 'client_code'           => $request->client_code,
                 'client_name'           => $request->client_name,
-                'guard_type'            => $request->guard_type,
+                'guard_type_id'         => $request->guard_type_id,
                 'employed_as'           => $request->employed_as,
                 'date_of_seperation'    => $request->date_of_seperation,
             ]);
@@ -117,15 +165,15 @@ class SecurityGuardController extends Controller
 
             usersDocuments::create([
                 'user_id'   => $user->id,
-                'trn'       => $this->uploadFile($request->file('trn_doc')),
-                'nis'       => $this->uploadFile($request->file('nis_doc')),
-                'psra'      => $this->uploadFile($request->file('psra_doc')),
-                'birth_certificate' => $this->uploadFile($request->file('birth_certificate')),
+                'trn'       => uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/'),
+                'nis'       => uploadFile($request->file('nis_doc'), 'uploads/user-documents/nis/'),
+                'psra'      => uploadFile($request->file('psra_doc'),'uploads/user-documents/psra/'),
+                'birth_certificate' => uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/'),
             ]);
         }
+
         return redirect()->route('security-guards.index')->with('success', 'Security Guard created successfully.');
     }
-
 
     /**
      * Display the specified resource.
@@ -140,9 +188,14 @@ class SecurityGuardController extends Controller
      */
     public function edit(string $id)
     {
+        if(!Gate::allows('edit security guards')) {
+            abort(403);
+        }
+
+        $rateMasters = RateMaster::latest()->get();
         $user = User::with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail', 'userDocuments'])->where('id', $id)->first();
-    
-        return view('admin.security-guards.edit', compact('user'));
+
+        return view('admin.security-guards.edit', compact('user', 'rateMasters'));
     }
 
     /**
@@ -150,6 +203,10 @@ class SecurityGuardController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        if(!Gate::allows('edit security guards')) {
+            abort(403);
+        }
+
         $request->validate([
             'first_name'    => 'required',
             'email' => 'nullable|email|unique:users,email,' . $id,
@@ -162,11 +219,13 @@ class SecurityGuardController extends Controller
         ]);
 
         $user = User::findOrFail($id);
-        $user->surname = $request->surname;
-        $user->first_name = $request->first_name;
-        $user->middle_name = $request->middle_name;
-        $user->email = $request->email;
+        $user->surname      = $request->surname;
+        $user->first_name   = $request->first_name;
+        $user->middle_name  = $request->middle_name;
+        $user->email        = $request->email;
         $user->phone_number = $request->phone_number;
+        $user->status       = $request->user_status ?? 'Inactive';
+        $user->is_statutory = $request->is_statutory;
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
@@ -189,7 +248,7 @@ class SecurityGuardController extends Controller
                 'location_name'         => $request->location_name,
                 'client_code'           => $request->client_code,
                 'client_name'           => $request->client_name,
-                'guard_type'            => $request->guard_type,
+                'guard_type_id'         => $request->guard_type_id,
                 'employed_as'           => $request->employed_as,
                 'date_of_seperation'    => $request->date_of_seperation,
             ]);
@@ -234,16 +293,16 @@ class SecurityGuardController extends Controller
         $usersDocuments = usersDocuments::where('user_id', $id)->first();
         $documents = [];
         if ($request->hasFile('trn_doc')) {
-            $documents['trn'] = $this->uploadFile($request->file('trn_doc'));
+            $documents['trn'] = uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/');
         }
         if ($request->hasFile('nis_doc')) {
-            $documents['nis'] = $this->uploadFile($request->file('nis_doc'));
+            $documents['nis'] = uploadFile($request->file('nis_doc'), 'uploads/user-documents/nis/');
         }
         if ($request->hasFile('psra_doc')) {
-            $documents['psra'] = $this->uploadFile($request->file('psra_doc'));
+            $documents['psra'] = uploadFile($request->file('psra_doc'), 'uploads/user-documents/psra/');
         }
         if ($request->hasFile('birth_certificate')) {
-            $documents['birth_certificate'] = $this->uploadFile($request->file('birth_certificate'));
+            $documents['birth_certificate'] = uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/');
         }
 
         $usersDocuments->update($documents);
@@ -256,6 +315,10 @@ class SecurityGuardController extends Controller
      */
     public function destroy(string $id)
     {
+        if(!Gate::allows('delete security guards')) {
+            abort(403);
+        }
+
         $user = User::where('id', $id)->delete();
 
         return response()->json([
@@ -264,15 +327,129 @@ class SecurityGuardController extends Controller
         ]);
     }
 
-    private function uploadFile($file)
-    {   
-        if ($file) {
-            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-            $finalPath = 'uploads/user-documents/' . $filename;
-            $file->move(public_path('uploads/user-documents/'), $filename);
-            return $finalPath; 
-        }
+    public function exportGuards()
+    {
+        $userRole = Role::where('name', 'Security Guard')->first();
 
-        return null;
+        $guards = User::whereHas('roles', function ($query) use ($userRole) {
+            $query->where('role_id', $userRole->id);
+        })->with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail','userDocuments'])->latest()->get();
+
+        $guardArray = $guards->map(function ($guard) {
+            return [
+                "First Name"            => $guard->first_name,
+                "Middle Name"           => $guard->middle_name,
+                "Surname"               => $guard->surname,
+                // Additional Detail
+                "Guard's TRN"           => $guard->guardAdditionalInformation->trn ?? '',
+                "NIS/NHT Number"        => $guard->guardAdditionalInformation->nis ?? '',
+                "PSRA Registration No"  => $guard->guardAdditionalInformation->psra ?? '',
+                "Guard's Date of Joining" => $guard->guardAdditionalInformation->date_of_joining ?? '',
+                "Date of Birth"         => $guard->guardAdditionalInformation->date_of_birth ?? '',
+                "Employer Company Name" => $guard->guardAdditionalInformation->employer_company_name ?? '',
+                "Guard's Current Rate"  => $guard->guardAdditionalInformation->guards_current_rate ?? '',
+                "Location Code"         => $guard->guardAdditionalInformation->location_code ?? '',
+                "Location Name"         => $guard->guardAdditionalInformation->location_name ?? '',
+                "Client Code"           => $guard->guardAdditionalInformation->client_code ?? '',
+                "Client Name"           => $guard->guardAdditionalInformation->client_name ?? '',
+                "Guard Type"            => $guard->guardAdditionalInformation->guard_type_id ?? '',
+                "Employed As"           => $guard->guardAdditionalInformation->employed_as ?? '',
+                "Date of Separation"    => $guard->guardAdditionalInformation->date_of_seperation ?? '',
+                // Contact details
+                "Apartment No"          => $guard->contactDetail->apartment_no ?? '',
+                "Building Name"         => $guard->contactDetail->building_name ?? '',
+                "Street Name"           => $guard->contactDetail->street_name ?? '',
+                "Parish"                => $guard->contactDetail->parish ?? '',
+                "City"                  => $guard->contactDetail->city ?? '',
+                "Postal Code"           => $guard->contactDetail->postal_code ?? '',
+                "Email"                 => $guard->email ?? '',
+                "Phone Number"          => $guard->phone_number ?? '',
+                // Bank details
+                "Bank Name"             => $guard->usersBankDetail->bank_name ?? '',
+                "Bank Branch Address"   => $guard->usersBankDetail->bank_branch_address ?? '',
+                "Account Number"        => $guard->usersBankDetail->account_no ?? '',
+                "Account Type"          => $guard->usersBankDetail->account_type ?? '',
+                "Routing Number"        => $guard->usersBankDetail->routing_number ?? '',
+                // Next of Kin details
+                "Kin Surname"           => $guard->usersKinDetail->surname ?? '',
+                "Kin First Name"        => $guard->usersKinDetail->first_name ?? '',
+                "Kin Middle Name"       => $guard->usersKinDetail->middle_name ?? '',
+                "Kin Apartment No"      => $guard->usersKinDetail->apartment_no ?? '',
+                "Kin Building Name"     => $guard->usersKinDetail->building_name ?? '',
+                "Kin Street Name"       => $guard->usersKinDetail->street_name ?? '',
+                "Kin Parish"            => $guard->usersKinDetail->parish ?? '',
+                "Kin City"              => $guard->usersKinDetail->city ?? '',
+                "Kin Postal Code"       => $guard->usersKinDetail->postal_code ?? '',
+                "Kin Email"             => $guard->usersKinDetail->email ?? '',
+                "Kin Phone Number"      => $guard->usersKinDetail->phone_number ?? '',
+                // User Documents
+                "TRN Document"          => url($guard->userDocuments->trn ?? ''),
+                "NIS Document"          => url($guard->userDocuments->nis ?? ''),
+                "PSRA Document"         => url($guard->userDocuments->psra ?? ''),
+                "Birth Certificate"     => url($guard->userDocuments->birth_certificate ?? ''),
+            ];
+        })->toArray();
+
+        $headers = [
+            "first_name","middle_name","surname","trn","nis","psra","date_of_joining","date_of_birth",
+            "employer_company_name","current_rate","location_code","location_name","client_code","client_name","guard_type","employed_as","date_of_separation",
+            "apartment_no","building_name","street_name","parish","city","postal_code","email","phone_number",
+            "bank_name","bank_branch_address","account_number","account_type","routing_number","kin_surname","kin_first_name","kin_middle_name","kin_apartment_no",
+            "kin_building_Name","kin_street_name","kin_parish","kin_city","kin_postal_code","kin_email","kin_phone_number",
+            "trn_document","nis_document","psra_document","birth_certificate",
+        ];
+
+        // Add headers at the top of the array
+        array_unshift($guardArray, $headers);
+
+        // Create a callback to generate the CSV
+        $callback = function () use ($guardArray) {
+            $file = fopen('php://output', 'w');
+            foreach ($guardArray as $row) {
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        };
+
+        // Return CSV as a response with appropriate headers
+        return response()->stream($callback, Response::HTTP_OK, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="guards.csv"',
+        ]);
+    }
+
+    public function importSecurityGuard(Request $request)
+    {
+        $import = new SecurityGuardImport;
+        Excel::import($import, $request->file('file'));
+
+        $importedData = $import->getErrors();
+
+        session()->put('imported_data', $importedData);
+
+        session()->flash('success', 'Security Guard imported successfully.');
+        $downloadUrl = route('security-guard.download');
+
+        return redirect()->route('security-guards.index')->with('downloadUrl', $downloadUrl); 
+    }
+
+    public function exportResultCsv()
+    {
+        $importedData = session()->get('imported_data', []);
+        $export = new GuardImportExport($importedData);
+        return Excel::download($export, 'guard_import_results.csv');
+    }
+
+    public function downloadPDF()
+    {
+        $userRole = Role::where('name', 'Security Guard')->first();
+
+        $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
+            $query->where('role_id', $userRole->id);
+        })->with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail','userDocuments'])->latest()->get();
+
+        $pdf = PDF::loadView('admin.security-guards.pdf.security-guard-pdf', compact('securityGuards'));
+        
+        return $pdf->download('security_guard_list.pdf');
     }
 }

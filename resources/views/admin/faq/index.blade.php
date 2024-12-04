@@ -41,7 +41,7 @@
                                 <tr>
                                     <td>{{ ++$key }}</td>
                                     <td>{{ $faq->question }}</td>
-                                    <td>{!! $faq->answer !!}</td>
+                                    <td>{!! Str::words($faq->answer, 5) !!}</td>
                                     <td class="action-buttons">
                                         <a href="{{ route('faq.edit', $faq->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
                                         <button data-source="Faq" data-endpoint="{{ route('faq.destroy', $faq->id) }}"
@@ -57,7 +57,7 @@
                     </div>
                 </div> <!-- end col -->
             </div> <!-- end row -->
-
         </div> <!-- container-fluid -->
     </div>
+    <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
 @endsection

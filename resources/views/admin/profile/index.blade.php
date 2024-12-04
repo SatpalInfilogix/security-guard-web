@@ -54,7 +54,7 @@
                                         <input type="file" class="form-control" name="profile_image" id="imageInput" accept="image/*">
                                         <img id="imagePreview" src="#" alt="Image Preview">
                                         @if($user->profile_picture)
-                                            <img src="{{ asset($user->profile_picture) }}" width="150" height="150">
+                                            <img src="{{ asset($user->profile_picture) }}" width="150" height="150" id="image-preview">
                                         @endif
                                     </div>
                                 </div>
@@ -82,6 +82,7 @@
                 var reader = new FileReader();
                 reader.onload = function(e) {
                     $('#imagePreview').attr('src', e.target.result).show();
+                    $('#image-preview').hide();
                 };
                 reader.readAsDataURL(file);
             } else {

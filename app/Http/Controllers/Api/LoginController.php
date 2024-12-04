@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Punch;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
@@ -23,7 +24,6 @@ class LoginController extends Controller
             return response()->json(['success' => false, 'message' => $validator->errors()], 400);
         }
     
-        // Determine if we're searching by email or phone_number
         $user = $request->filled('email') 
             ? User::where('email', $request->email)->first() 
             : User::where('phone_number', $request->phone_number)->first();
@@ -32,14 +32,18 @@ class LoginController extends Controller
             return response()->json(['success' => false, 'message' => 'User not found'], 404);
         }
     
-        // Check if the password is correct
         if (Hash::check($request->password, $user->password)) {
             $token = $user->createToken('MyApp')->plainTextToken;
             $user->token = $token;
+
+            $punchStatus = Punch::where('user_id', $user->id)->whereNull('out_time')->orderBy('created_at', 'desc')->latest()->first();
+            $user['is_punched_in'] = $punchStatus ? true : false;
+
             return response()->json([
-                'success' => true,
-                'message' => 'User logged in successfully!',
-                'data'    => $user
+                'success'   => true,
+                'message'   => 'User logged in successfully!',
+                'data'      => $user,
+                'punchInfo' => $punchStatus,
             ], 200);
         }
     

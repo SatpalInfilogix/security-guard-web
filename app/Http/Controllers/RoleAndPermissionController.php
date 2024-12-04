@@ -22,7 +22,7 @@ class RoleAndPermissionController extends Controller
 
         $roles = Role::where('name', '!=', 'Admin')->get();
         $modules = Module::get();
-        return view('admin.roles-and-permissions.index', compact('roles', 'modules'));
+        return view('admin.permissions.index', compact('roles', 'modules'));
     }
 
     /**
@@ -30,7 +30,7 @@ class RoleAndPermissionController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.roles.create');
     }
 
     /**
@@ -55,13 +55,26 @@ class RoleAndPermissionController extends Controller
 
         return redirect()->to(route('roles-and-permissions.index'))->with('success', 'Permissions updated successfully');
     }
+    public function storeRole(Request $request){
+
+        $exist = Role::where('name',$request->role)->first();
+        if($exist){
+            return redirect()->to(route('roles-and-permissions.create'))->with('message', 'Role already exist');
+        }else{    
+            Role::create([
+                'name' => $request->role
+            ]);
+            return redirect()->to(route('roles-and-permissions.role-list'))->with('success', 'Role created successfully');
+        }
+    }
 
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        //
+        $roles = Role::where('name', '!=', 'Admin')->get();
+        return view('admin.roles.index', compact('roles'));
     }
 
     /**
@@ -69,7 +82,8 @@ class RoleAndPermissionController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $role = Role::where('id', $id)->first();
+        return view('admin.roles.edit', compact('role'));
     }
 
     /**
@@ -77,7 +91,11 @@ class RoleAndPermissionController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        Role::where('id',$id)->update([
+            'name' => $request->role
+        ]);
+        return redirect()->to(route('roles-and-permissions.role-list'))->with('success', 'Role updated successfully');
+
     }
 
     /**
@@ -85,6 +103,10 @@ class RoleAndPermissionController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $role = Role::where('id',$id)->delete();
+        return response()->json([
+            'success' => true,
+            'message' => 'Role deleted successfully.'
+        ]);
     }
 }
