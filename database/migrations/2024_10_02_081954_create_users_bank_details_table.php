@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('account_no')->nullable();
             $table->string('account_type')->nullable();
             $table->string('routing_number')->nullable();
-
+            $table->string('recipient_id', 25)->nullable();
             $table->timestamps();
         });
     }

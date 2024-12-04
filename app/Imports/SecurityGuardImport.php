@@ -49,7 +49,6 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
         if (!$user) {
             // Create a new user if not found
             $user = User::create([
-                'user_code'    => null,
                 'first_name'   => $row["first_name"],
                 'middle_name'  => !empty($row["middle_name"]) ? $row["middle_name"] : null,
                 'last_name'    => !empty($row["last_name"]) ? $row["last_name"] : null,

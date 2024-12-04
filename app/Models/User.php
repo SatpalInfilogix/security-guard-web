@@ -61,6 +61,21 @@ class User extends Authenticatable
         ];
     }
 
+
+    /**
+     * Automatically generate a user code when the guard is activated for the first time.
+     */
+    public static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($guard) {
+            if ($guard->status == 'Active' && is_null($guard->user_code)) {
+                $guard->user_code = 'G' . str_pad($guard->id, 6, '0', STR_PAD_LEFT);
+            }
+        });
+    }
+
     public function guardAdditionalInformation()
     {
         return $this->hasOne(GuardAdditionalInformation::class);

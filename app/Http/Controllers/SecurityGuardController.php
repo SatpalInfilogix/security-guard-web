@@ -91,8 +91,9 @@ class SecurityGuardController extends Controller
         $request->validate([
             'first_name'    => 'required',
             'email'         => 'nullable|email|unique:users,email',
-            'phone_number'  => 'nullable|numeric|unique:users,phone_number',
+            'phone_number'  => 'required|numeric|unique:users,phone_number',
             'password'      => 'required',
+            'recipient_id'  => 'nullable|string|max:15',
             'trn_doc'       => 'required',
             'nis_doc'       => 'required',
             'psra_doc'      => 'required',
@@ -146,6 +147,7 @@ class SecurityGuardController extends Controller
                 'account_no'            => $request->account_number,
                 'account_type'          => $request->account_type,
                 'routing_number'        => $request->routing_number,
+                'recipient_id'          => $request->recipient_id,
             ]);
 
             UsersKinDetail::create([
@@ -209,9 +211,10 @@ class SecurityGuardController extends Controller
 
         $request->validate([
             'first_name'    => 'required',
-            'email' => 'nullable|email|unique:users,email,' . $id,
-            'phone_number' => 'nullable|numeric|unique:users,phone_number,' . $id,
+            'email'         => 'nullable|email|unique:users,email,' . $id,
+            'phone_number'  => 'required|numeric|unique:users,phone_number,' . $id,
             'password'      => 'nullable',
+            'recipient_id'  => 'nullable|string|max:15',
             'trn_doc'       => 'nullable',
             'nis_doc'       => 'nullable',
             'psra_doc'      => 'nullable',
@@ -273,6 +276,7 @@ class SecurityGuardController extends Controller
             'account_no'            => $request->account_number,
             'account_type'          => $request->account_type,
             'routing_number'        => $request->routing_number,
+            'recipient_id'          => $request->recipient_id,
         ]);
 
         $usersKinDetail = UsersKinDetail::where('user_id', $id)->first();

@@ -69,12 +69,12 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const datePickerOptions = {
-                dateFormat: "Y-m-d",
+                dateFormat: "d-m-Y",
                 allowInput: true
             };
     
             const dateTimePickerOptions = {
-                dateFormat: "Y-m-d H:i:S",
+                dateFormat: "d-m-Y H:i:S",
                 allowInput: true,
                 enableTime: true,
                 time_24hr: true,

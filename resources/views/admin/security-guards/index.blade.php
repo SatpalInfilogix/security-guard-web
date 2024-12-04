@@ -79,6 +79,7 @@
                                 <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>Emp. Code</th>
                                     <th>Surname</th>
                                     <th>Firstname</th>
                                     <th>Middlename</th>
@@ -94,6 +95,7 @@
                                 @foreach($securityGuards as $key => $securityGuard)
                                 <tr>
                                     <td>{{ ++$key }}</td>
+                                    <td>{{ $securityGuard->user_code}}</td>
                                     <td>{{ $securityGuard->surname}}</td>
                                     <td>{{ $securityGuard->first_name }}</td>
                                     <td>{{ $securityGuard->middle_name }}</td>
@@ -102,11 +104,11 @@
                                     @canany(['edit security guards', 'delete security guards'])
                                     <td class="action-buttons">
                                         @if(Auth::user()->can('edit security guards'))
-                                            <a href="{{ route('security-guards.edit', $securityGuard->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                            <a href="{{ route('security-guards.edit', $securityGuard->id)}}" class="btn btn-primary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
                                         @endif
                                         @if(Auth::user()->can('delete security guards'))
                                             <button data-source="Security Guard" data-endpoint="{{ route('security-guards.destroy', $securityGuard->id) }}"
-                                                class="delete-btn btn btn-outline-secondary btn-sm edit">
+                                                class="delete-btn btn btn-danger btn-sm edit">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         @endif

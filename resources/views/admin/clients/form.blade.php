@@ -1,19 +1,21 @@
 <div class="row mb-2">
-
     <div class="col-md-6">
         <div class="mb-3">
-            <input type="hidden" name="client_id" id="client_id" value="{{$client->id ?? ''}}">
-            <x-form-input name="client_name" value="{{ old('client_name', $client->client_name ?? '' ) }}" label="Client Name" placeholder="Enter your client name" required="true"  minlength="3" />
+            <input type="hidden" name="client_id" id="client_id" value="{{ $client->id ?? '' }}">
+            <x-form-input name="client_name" value="{{ old('client_name', $client->client_name ?? '') }}"
+                label="Client Name" placeholder="Enter your client name" required="true" minlength="3" />
         </div>
     </div>
     <div class="col-md-6">
         <div class="mb-3">
-            <x-form-input name="client_code" value="{{ old('client_code', $client->client_code ?? '') }}" label="Client Code" placeholder="Enter your client code"  required="true" readonly/>
+            <x-form-input name="client_code" value="{{ old('client_code', $client->client_code ?? '') }}"
+                label="Client Code" placeholder="Enter your client code" required="true" readonly />
         </div>
     </div>
     <div class="col-md-6">
         <div class="mb-3">
-            <x-form-input name="nis" value="{{ old('nis', $client->nis ?? '') }}" label="NIS/NHT Number" placeholder="Enter your NIS/NHT Number"/>
+            <x-form-input name="nis" value="{{ old('nis', $client->nis ?? '') }}" label="NIS/NHT Number"
+                placeholder="Enter your NIS/NHT Number" />
         </div>
     </div>
 </div>
@@ -23,23 +25,26 @@
         <button type="submit" class="btn btn-primary w-md">Submit</button>
     </div>
 </div>
-<x-include-plugins :plugins="['trn&nisFormat']"></x-include-plugins>
 <script>
-     document.addEventListener('DOMContentLoaded', function() {
-            function formatInput(input) {
-                let value = input.value.replace(/\D/g, '');
-                let formattedValue = value.replace(/(\d{3})(?=\d)/g, '$1-');
-                input.value = formattedValue;
+    $(document).ready(function() {
+        $('#nis').on('input', function() {
+            let value = $(this).val().toUpperCase();
+
+            if (value.length > 0 && /\d/.test(value.charAt(0))) {
+                value = '';
             }
 
-            const nisInput = document.querySelector('input[name="nis"]');
+            value = value.replace(/[^A-Z0-9]/g, '');
 
-            nisInput.addEventListener('input', function() {
-                formatInput(nisInput);
-            });
+            if (value.length > 1) {
+                value = value.charAt(0) + value.slice(1, 7).replace(/[^0-9]/g, '');
+            }
+
+            $(this).val(value.substring(0, 7));
         });
-    $(document).ready(function () {
-        $('#client_name').on('input', function () {
+
+
+        $('#client_name').on('input', function() {
             var clientName = $(this).val();
             var clientId = $('#client_id').val();
 
@@ -62,4 +67,3 @@
         });
     });
 </script>
-
