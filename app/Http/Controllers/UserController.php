@@ -59,6 +59,17 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
 
+    public function updateStatus(Request $request){
+        $user = User::find($request->user_id);
+        $user->status = $request->status;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status updated successfully.'
+        ]);
+    }
+
     public function show(string $id)
     {
         //
@@ -100,7 +111,8 @@ class UserController extends Controller
         if(!Gate::allows('delete user')) {
             abort(403);
         }
-        $user = User::where('id', $id)->delete();
+        
+        User::where('id', $id)->delete();
 
         return response()->json([
             'success' => true,

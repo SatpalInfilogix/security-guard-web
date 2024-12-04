@@ -41,10 +41,9 @@
                     </option>
                 @endforeach
             </select>
-            @error('client_id')
+            @error('manager_id')
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
-            {{-- <x-form-input name="vanguard_manager" value="{{ old('vanguard_manager', $clientSite->vanguard_manager ?? '') }}" label="Vanguard Manager" placeholder="Enter your Vanguard Manager"/> --}}
         </div>
     </div>
     <div class="col-md-4">

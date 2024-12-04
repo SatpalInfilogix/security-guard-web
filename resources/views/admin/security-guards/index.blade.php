@@ -80,11 +80,11 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Emp. Code</th>
-                                    <th>Surname</th>
-                                    <th>Firstname</th>
-                                    <th>Middlename</th>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
                                     <th>Email</th>
                                     <th>Phone number</th>
+                                    <th>Status</th>
                                     @canany(['edit security guards', 'delete security guards'])
                                     <th>Action</th>
                                     @endcanany
@@ -96,11 +96,23 @@
                                 <tr>
                                     <td>{{ ++$key }}</td>
                                     <td>{{ $securityGuard->user_code}}</td>
-                                    <td>{{ $securityGuard->surname}}</td>
                                     <td>{{ $securityGuard->first_name }}</td>
                                     <td>{{ $securityGuard->middle_name }}</td>
                                     <td>{{ $securityGuard->email }}</td>
                                     <td>{{ $securityGuard->phone_number }}</td>
+                                    <td>
+                                        @php
+                                            $statusOptions = ['Active', 'Inactive', 'Hold'];
+                                        @endphp
+                                        <select name="guard_status" class="form-control" data-user-id="{{ $securityGuard->id }}">
+                                            <option value="" selected disabled>Select Status</option>
+                                            @foreach ($statusOptions as $value)
+                                                <option value="{{ $value }}" @selected($securityGuard->status === $value)>
+                                                    {{ $value }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </td>
                                     @canany(['edit security guards', 'delete security guards'])
                                     <td class="action-buttons">
                                         @if(Auth::user()->can('edit security guards'))
@@ -150,6 +162,21 @@
             $('#is_status').on('change', function() {
                 fetchFilteredData();
             });
+
+            $('[name="guard_status"]').on('change', function(){
+                let status = $(this).val();
+                let userId = $(this).attr('data-user-id');
+                
+                $.ajax({
+                    url: "{{ route('users.update-status') }}",
+                    method: 'PUT',
+                    data: {
+                        user_id: userId,
+                        status: status,
+                        _token: '{{ csrf_token() }}'
+                    }
+                })
+            })
         });
     </script>
 @endsection

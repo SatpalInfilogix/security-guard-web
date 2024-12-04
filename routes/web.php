@@ -50,18 +50,20 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'leaves'                => LeaveController::class
         ]);
 
-        Route::get('payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
-        Route::get('gerenal-settings', [SettingController::class, 'generalSettings'])->name('settings.gerenal-settings');
+        Route::get('/payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
+        Route::get('/gerenal-settings', [SettingController::class, 'generalSettings'])->name('settings.gerenal-settings');
 
-        Route::get('roles-and-permissions/role-list', [RoleAndPermissionController::class,'show'])->name('roles-and-permissions.role-list');
-        Route::post('roles-and-permissions/store-role', [RoleAndPermissionController::class,'storeRole'])->name('roles-and-permissions.store-role');
+        Route::get('/roles-and-permissions/role-list', [RoleAndPermissionController::class,'show'])->name('roles-and-permissions.role-list');
+        Route::post('/roles-and-permissions/store-role', [RoleAndPermissionController::class,'storeRole'])->name('roles-and-permissions.store-role');
         // Route::post('import-guards', [SecurityGuardController::class, 'importGuards'])->name('import.guards');
-        Route::view('calendar-management','admin.calendar-management.index')->name('calendar.management');
+        Route::view('/calendar-management','admin.calendar-management.index')->name('calendar.management');
        
         Route::post('/generate-client-code', [ClientController::class, 'generateClientCode'])->name('generate.client.code');
     });
+
     Route::get('/get-client-sites/{clientId}', [GuardRosterController::class, 'getClientSites']);
     Route::get('/get-assigned-dates/{guardId}', [GuardRosterController::class, 'getAssignedDate']);
+    Route::put('/users/update-status', [UserController::class, 'updateStatus'])->name('users.update-status');
     Route::get('/get-public-holidays', [GuardRosterController::class, 'getPublicHolidays']);
     Route::get('/get-leaves/{guardId}', [GuardRosterController::class, 'getLeaves']);
     Route::get('/get-guard-roster-details', [GuardRosterController::class, 'getGuardRoasterDetails'])->name('get.guard.roster.details');

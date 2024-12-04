@@ -27,7 +27,7 @@ class ClientSiteController extends Controller
             abort(403);
         }
         $clients = Client::latest()->get();
-        $userRole = Role::where('name', 'Manager Operations')->first();
+        $userRole = Role::where('name', 'General Manager')->first();
         $users = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         })->latest()->get();
@@ -86,7 +86,7 @@ class ClientSiteController extends Controller
             abort(403);
         }
         $clients = Client::latest()->get();
-        $userRole = Role::where('name', 'Manager Operations')->first();
+        $userRole = Role::where('name', 'General Manager')->first();
         $users = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         })->latest()->get();
