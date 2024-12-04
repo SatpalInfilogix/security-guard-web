@@ -42,7 +42,7 @@
             <option value="" selected disabled>Select Status</option>
             @foreach ($statusOptions as $value)
                 <option value="{{ $value }}"
-                    {{ old('status', $user->status ?? '') === $value ? 'selected' : '' }}>
+                    {{ old('status', $user->status ?? 'Inactive') === $value ? 'selected' : '' }}>
                     {{ $value }}
                 </option>
             @endforeach
