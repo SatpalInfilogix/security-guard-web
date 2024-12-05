@@ -92,4 +92,17 @@ span.invalid-message {
     z-index: 1;
 }
 
+.holiday-label {
+    position: absolute;
+    top: 25px;
+    right: 5px;
+    color: red;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
 
