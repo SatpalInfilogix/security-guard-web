@@ -54,7 +54,7 @@ class GuardRosterController extends Controller
         return view('admin.guard-roster.index', compact('fortnight', 'securityGuards', 'clients', 'clientSites'));
     }
 
-    public function getGuardRoasterList(Request $request)
+    public function getGuardRosterList(Request $request)
     {
         $guardRoasterData = GuardRoster::with('user', 'client', 'clientSite');
         
@@ -285,7 +285,7 @@ class GuardRosterController extends Controller
         ]);
     }
 
-    public function getGuardRoasterDetails(Request $request)
+    public function getGuardRosterDetails(Request $request)
     {
         $guardId = $request->input('guard_id');
         $date = $request->input('date');
@@ -314,14 +314,14 @@ class GuardRosterController extends Controller
         ]);
     }
 
-    public function importGuardRoaster(Request $request)
+    public function importGuardRoster(Request $request)
     {
         $import = new GuardRoasterImport;
         Excel::import($import, $request->file('file'));
 
         session(['importData' => $import]);
         session()->flash('success', 'Guard roster imported successfully.');
-        $downloadUrl = route('guard-roasters.download');
+        $downloadUrl = route('guard-rosters.download');
 
         return redirect()->route('guard-rosters.index')->with('downloadUrl', $downloadUrl); 
     }
@@ -366,7 +366,7 @@ class GuardRosterController extends Controller
 
         foreach ($users as $key => $user) {
             $sheet->fromArray(
-                [$user->id, $user->first_name, $user->last_name, $user->email, $user->phone_number, $user->guardAdditionalInformation->trn, $user->guardAdditionalInformation->nis, $user->guardAdditionalInformation->psra, $user->guardAdditionalInformation->date_of_joining, $user->guardAdditionalInformation->date_of_birth, $user->guardAdditionalInformation->employer_company_name, $user->guardAdditionalInformation->guards_Current_rate, $user->guardAdditionalInformation->location_code, $user->guardAdditionalInformation->location_name, $user->guardAdditionalInformation->client_code, $user->guardAdditionalInformation->client_name, $user->guardAdditionalInformation->guard_type_id, $user->guardAdditionalInformation->employed_as, $user->guardAdditionalInformation->date_of_seperation, $user->usersBankDetail->bank_name, $user->usersBankDetail->bank_branch_address, $user->usersBankDetail->account_no, $user->usersBankDetail->account_type, $user->usersBankDetail->routing_number, $user->usersKinDetail->surname, $user->usersKinDetail->first_name, $user->usersKinDetail->middle_name, $user->usersKinDetail->apartment_no, $user->usersKinDetail->building_name, $user->usersKinDetail->street_name, $user->usersKinDetail->parish, $user->usersKinDetail->city, $user->usersKinDetail->postal_code, $user->usersKinDetail->email, $user->usersKinDetail->phone_number,  url($user->userDocuments->trn), url($user->userDocuments->nis), url($user->userDocuments->psra), url($user->userDocuments->birth_certificate), $user->contactDetail->apartment_no, $user->contactDetail->building_name, $user->contactDetail->street_name, $user->contactDetail->parish, $user->contactDetail->city, $user->contactDetail->postal_code],
+                [$user->id, $user->first_name, $user->last_name, $user->email, $user->phone_number, $user->guardAdditionalInformation->trn, $user->guardAdditionalInformation->nis, $user->guardAdditionalInformation->psra, $user->guardAdditionalInformation->date_of_joining, $user->guardAdditionalInformation->date_of_birth, $user->guardAdditionalInformation->employer_company_name, $user->guardAdditionalInformation->guards_Current_rate, $user->guardAdditionalInformation->location_code, $user->guardAdditionalInformation->location_name, $user->guardAdditionalInformation->client_code, $user->guardAdditionalInformation->client_name, $user->guardAdditionalInformation->guard_type_id, $user->guardAdditionalInformation->employed_as, $user->guardAdditionalInformation->date_of_seperation, $user->usersBankDetail->bank_name, $user->usersBankDetail->bank_branch_address, $user->usersBankDetail->account_no, $user->usersBankDetail->account_type, $user->usersBankDetail->routing_number, $user->usersKinDetail->surname, $user->usersKinDetail->first_name, $user->usersKinDetail->middle_name, $user->usersKinDetail->apartment_no, $user->usersKinDetail->building_name, $user->usersKinDetail->street_name, $user->usersKinDetail->parish, $user->usersKinDetail->city, $user->usersKinDetail->postal_code, $user->usersKinDetail->email, $user->usersKinDetail->phone_number,  $user->userDocuments->trn ? url($user->userDocuments->trn) : '', $user->userDocuments->nis ? url($user->userDocuments->nis) : '', $user->userDocuments->psra ? url($user->userDocuments->psra) : '', $user->userDocuments->birth_certificate ? url($user->userDocuments->birth_certificate) : '', $user->contactDetail->apartment_no, $user->contactDetail->building_name, $user->contactDetail->street_name, $user->contactDetail->parish, $user->contactDetail->city, $user->contactDetail->postal_code],
                 NULL,
                 'A' . ($key + 2)
             );
@@ -444,7 +444,7 @@ class GuardRosterController extends Controller
         return response()->json($leaves);
     }
 
-    public function getGuardRoasters(Request $request)
+    public function getGuardRosters(Request $request)
     {
         $today = Carbon::now();
         $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();

@@ -78,87 +78,26 @@
 </div>
 <x-include-plugins :plugins="['chosen', 'datePicker', 'time']"></x-include-plugins>
 <script>
-    // $(document).ready(function() {
-    //     function convertToDate(dateStr, timeStr) {
-    //         var timeParts = timeStr.split(' ');  
-    //         var time = timeParts[0].split(':');
-            
-    //         var hours = parseInt(time[0]);
-    //         var minutes = parseInt(time[1]);
-
-    //         if (timeParts[1] && timeParts[1].toUpperCase() === 'PM') {
-    //             if (hours !== 12) {
-    //                 hours += 12;
-    //             }
-    //         } else if (timeParts[1] && timeParts[1].toUpperCase() === 'AM') {
-    //             if (hours === 12) {
-    //                 hours = 0;
-    //             }
-    //         }
-
-    //         return new Date(dateStr + ' ' + (hours < 10 ? '0' : '') + hours + ':' + (minutes < 10 ? '0' : '') + minutes);
-    //     }
-
-    //     function updateEndDate() {
-    //         var date = $('#date').val();
-    //         var startTime = $('#start_time').val();
-    //         var endTime = $('#end_time').val();
-
-    //         if (!date || !startTime || !endTime) {
-    //             return;
-    //         }
-
-    //         var dateObj = new Date(date);
-
-    //         var startTimeObj = convertToDate(date, startTime);
-    //         var endTimeObj = convertToDate(date, endTime); 
-
-    //         console.log('Start time: ', startTimeObj);
-    //         console.log('End time: ', endTimeObj);
-
-    //         if (endTimeObj <= startTimeObj) {
-    //             dateObj.setDate(dateObj.getDate() + 1);
-    //         }
-
-    //         var endDate = dateObj.toISOString().split('T')[0];
-    //         $('#end_date').val(endDate);
-    //     }
-
-    //     $('#date, #start_time, #end_time').on('change', function() {
-    //         updateEndDate();
-    //     });
-
-    //     var initialDate = $('#date').val();
-    //     var initialStartTime = $('#start_time').val();
-    //     var initialEndTime = $('#end_time').val();
-
-    //     if (initialDate && initialStartTime && initialEndTime) {
-    //         updateEndDate();
-    //     }
-    // });
     $(document).ready(function() {
         function convertToDate(dateStr, timeStr) {
             console.log(dateStr);
             console.log(timeStr);
-            // Split time by AM/PM
             var timeParts = timeStr.split(' ');  
-            var time = timeParts[0].split(':'); // Split time into hours and minutes
+            var time = timeParts[0].split(':');
             
             var hours = parseInt(time[0]);
             var minutes = parseInt(time[1]);
 
-            // Convert PM times to 24-hour format, except for 12 PM
             if (timeParts[1] && timeParts[1].toUpperCase() === 'PM') {
                 if (hours !== 12) {
-                    hours += 12; // PM times, except 12 PM, should be 12 hours added
+                    hours += 12;
                 }
             } else if (timeParts[1] && timeParts[1].toUpperCase() === 'AM') {
                 if (hours === 12) {
-                    hours = 0; // 12 AM should be 00 hours
+                    hours = 0;
                 }
             }
 
-            // Return a Date object using the original date and the new 24-hour time
             return new Date(dateStr + ' ' + (hours < 10 ? '0' : '') + hours + ':' + (minutes < 10 ? '0' : '') + minutes);
         }
 
@@ -168,35 +107,29 @@
             var endTime = $('#end_time').val();
 
             if (!date || !startTime || !endTime) {
-                return; // If any of the inputs are empty, don't proceed
+                return;
             }
 
-            // Parse the date into a Date object
             var dateObj = new Date(date);
 
-            // Convert the start and end times to Date objects with proper handling for AM/PM
             var startTimeObj = convertToDate(date, startTime);
             var endTimeObj = convertToDate(date, endTime); 
 
             console.log('Start time: ', startTimeObj);
             console.log('End time: ', endTimeObj);
 
-            // If end time is earlier than start time, set the end date to the next day
             if (endTimeObj <= startTimeObj) {
                 dateObj.setDate(dateObj.getDate() + 1);
             }
 
-            // Format the date to ISO standard (YYYY-MM-DD) and set it as the value of #end_date
             var endDate = dateObj.toISOString().split('T')[0];
             $('#end_date').val(endDate);
         }
 
-        // Trigger the updateEndDate function whenever any of the input fields change
         $('#date, #start_time, #end_time').on('change', function() {
             updateEndDate();
         });
 
-        // Initial check to set the end date when the page loads with existing values
         var initialDate = $('#date').val();
         var initialStartTime = $('#start_time').val();
         var initialEndTime = $('#end_time').val();
@@ -215,7 +148,7 @@
             width: '100%',
             placeholder_text_multiple: 'Select Client'
         });
-     });
+    });
 
     $(document).ready(function() {
         var assignedDates = [];
@@ -236,7 +169,7 @@
             const clientSiteSelect = $('#client_site_id');
 
             clientSiteSelect.html('<option value="" disabled selected>Select Client Site</option>');
-            clientSiteSelect.chosen("destroy"); // Destroy the previous instance to avoid issues
+            clientSiteSelect.chosen("destroy");
 
             if (clientId) {
                 $.ajax({
@@ -320,13 +253,13 @@
        // Fetch leaves for a specific guard
         function fetchLeaves(guardId) {
             $.ajax({
-                url: '/get-leaves/' + guardId,  // Ensure this URL matches your backend route
+                url: '/get-leaves/' + guardId,
                 method: 'GET',
                 dataType: 'json',
                 success: function(data) {
                     if (Array.isArray(data) && data.length) {
                         leaveDates = data.map(leave => ({
-                            date: moment(leave.date).format('YYYY-MM-DD'),  // Format date as YYYY-MM-DD
+                            date: moment(leave.date).format('YYYY-MM-DD'),
                             status: leave.status
                         }));
                     } else {
@@ -342,21 +275,13 @@
         }
 
         function initDatePicker(assignedDates, holidayDates, leaveDates) {
-            // $('.date-picker-guard').flatpickr().destroy();
-
             $('.date-picker-guard').flatpickr({
-                dateFormat: "Y-m-d",         // Set date format
-                minDate: "today",            // Optionally disable past dates
-                defaultDate: selectedDate ? selectedDate : null,  // Set default date if editing
+                dateFormat: "Y-m-d",
+                minDate: "today",
+                defaultDate: selectedDate ? selectedDate : null,
                 onDayCreate: function(dObj, dStr, fp, dayElem) {
                     const dayDate = new Date($(dayElem).attr('aria-label'));
                     const formattedDate = moment(dayDate).format('YYYY-MM-DD');
-                    const holiday = holidayDates.find(holiday => holiday.date === formattedDate);
-                    if (holiday) {
-                        $(dayElem).attr('title', 'H').addClass('holiday');  // Add custom 'holiday' class
-                        const holidayLabel = $('<div></div>', { class: 'holiday-label', text: 'H' });
-                        $(dayElem).append(holidayLabel);
-                    }
 
                     const leave = leaveDates.find(leave => leave.date === formattedDate);
                     if (leave) {
@@ -372,14 +297,22 @@
 
                         $(dayElem).append(leaveLabel);
                     }
+
+                    const holiday = holidayDates.find(holiday => holiday.date === formattedDate);
+                    if (holiday) {
+                        $(dayElem).attr('title', 'Public Holiday: ' + holiday.name); 
+                        $(dayElem).addClass('highlighted holiday');
+                        const holidayLabel = $('<div></div>', { class: 'holiday-label', text: 'H' });
+                        $(dayElem).append(holidayLabel);
+                    }
                 }
             });
         }
 
         $('#date').change(function() {
-            const selectedDate = $(this).val().trim();  // Get and trim the value from the date input field
+            const selectedDate = $(this).val().trim();
             $('#holiday-name').hide();
-            const formattedSelectedDate = moment(selectedDate).format('YYYY-MM-DD');  // Using moment.js to format
+            const formattedSelectedDate = moment(selectedDate).format('YYYY-MM-DD');
             const holiday = holidayDates.find(holiday => {
                 return holiday.date === formattedSelectedDate;
             });

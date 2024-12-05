@@ -42,7 +42,7 @@
             processing: true,
             serverSide: true,
             ajax: {
-                url: "{{ route('get-guard-roaster') }}",
+                url: "{{ route('get-guard-roster') }}",
                 type: "POST",
                 data: function(d) {
                     d._token = "{{ csrf_token() }}";

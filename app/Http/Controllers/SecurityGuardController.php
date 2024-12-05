@@ -54,7 +54,7 @@ class SecurityGuardController extends Controller
             $query->where('status', $request->status);
         }
 
-        $securityGuards = $query->latest()->get();
+        $securityGuards = $query->with('userDocuments')->latest()->get();
 
         if ($request->ajax()) {
             return response()->json([
@@ -88,17 +88,26 @@ class SecurityGuardController extends Controller
             abort(403);
         }
 
-        $request->validate([
+        $validationRules = [
             'first_name'    => 'required',
             'email'         => 'nullable|email|unique:users,email',
             'phone_number'  => 'required|numeric|unique:users,phone_number',
             'password'      => 'required',
             'recipient_id'  => 'nullable|string|max:15',
-            /* 'trn_doc'       => 'required',
-            'nis_doc'       => 'required',
-            'psra_doc'      => 'required',
-            'birth_certificate' => 'required', */
-        ]);
+            'trn'           => 'nullable|unique:guard_additional_information,trn',
+            'nis'           => 'nullable|unique:guard_additional_information,nis',
+            'psra'          => 'nullable|unique:guard_additional_information,psra',
+            'account_number'=> 'nullable|unique:users_bank_details,account_no',
+        ];
+    
+        if ($request->user_status === 'Active') {
+            $validationRules['trn_doc'] = 'required';
+            $validationRules['nis_doc'] = 'required';
+            $validationRules['psra_doc'] = 'required';
+            $validationRules['birth_certificate'] = 'required';
+        }
+    
+        $request->validate($validationRules);
 
         $user = User::create([
             'surname'      => $request->surname,
@@ -106,7 +115,7 @@ class SecurityGuardController extends Controller
             'middle_name'  => $request->middle_name,
             'email'        => $request->email,
             'phone_number' => $request->phone_number,
-            'status'       => $request->input('status') ?? 'Inactive',
+            'status'       => $request->user_status ?? 'Inactive',
             'is_statutory' => $request->is_statutory,
             'password'     => Hash::make($request->password),
         ])->assignRole('Security Guard');
@@ -209,17 +218,30 @@ class SecurityGuardController extends Controller
             abort(403);
         }
 
-        $request->validate([
+        $guardInfo = GuardAdditionalInformation::where('user_id', $id)->first();
+        $usersBankDetail = UsersBankDetail::where('user_id', $id)->first();
+        $usersDocuments = usersDocuments::where('user_id', $id)->first();
+
+        $validationRules = [
             'first_name'    => 'required',
             'email'         => 'nullable|email|unique:users,email,' . $id,
             'phone_number'  => 'required|numeric|unique:users,phone_number,' . $id,
             'password'      => 'nullable',
             'recipient_id'  => 'nullable|string|max:15',
-            /* 'trn_doc'       => 'nullable',
-            'nis_doc'       => 'nullable',
-            'psra_doc'      => 'nullable',
-            'birth_certificate' => 'nullable', */
-        ]);
+            'trn'           => 'nullable|unique:guard_additional_information,trn,'. $guardInfo->id,
+            'nis'           => 'nullable|unique:guard_additional_information,nis,'. $guardInfo->id,
+            'psra'          => 'nullable|unique:guard_additional_information,psra,'. $guardInfo->id,
+            'account_no'    => 'nullable|unique:users_bank_details,account_no,'. $usersBankDetail->id
+        ];
+    
+        if ($request->user_status === 'Active') {
+            $validationRules['trn_doc'] = ($usersDocuments->trn ?? null || $request->hasFile('trn_doc')) ? 'nullable' : 'required';
+            $validationRules['nis_doc'] = ($usersDocuments->nis ?? null || $request->hasFile('nis_doc')) ? 'nullable' : 'required';
+            $validationRules['psra_doc'] = ($usersDocuments->psra ?? null || $request->hasFile('psra_doc')) ? 'nullable' : 'required';
+            $validationRules['birth_certificate'] = ($usersDocuments->birth_certificate ?? null || $request->hasFile('birth_certificate')) ? 'nullable' : 'required';
+        }
+    
+        $request->validate($validationRules);
 
         $user = User::findOrFail($id);
         $user->surname      = $request->surname;
@@ -236,8 +258,6 @@ class SecurityGuardController extends Controller
 
         $user->save();
 
-        // Update related records
-        $guardInfo = GuardAdditionalInformation::where('user_id', $id)->first();
         if ($guardInfo) {
             $guardInfo->update([
                 'trn'                   => $request->trn,
@@ -294,7 +314,6 @@ class SecurityGuardController extends Controller
             'phone_number'   => $request->kin_phone_number,
         ]);
 
-        $usersDocuments = usersDocuments::where('user_id', $id)->first();
         $documents = [];
         if ($request->hasFile('trn_doc')) {
             $documents['trn'] = uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/');
@@ -387,20 +406,21 @@ class SecurityGuardController extends Controller
                 "Kin Email"             => $guard->usersKinDetail->email ?? '',
                 "Kin Phone Number"      => $guard->usersKinDetail->phone_number ?? '',
                 // User Documents
-                "TRN Document"          => url($guard->userDocuments->trn ?? ''),
-                "NIS Document"          => url($guard->userDocuments->nis ?? ''),
-                "PSRA Document"         => url($guard->userDocuments->psra ?? ''),
-                "Birth Certificate"     => url($guard->userDocuments->birth_certificate ?? ''),
+                "TRN Document"          => $guard->userDocuments->trn ? url($guard->userDocuments->trn) : '',
+                "NIS Document"          => $guard->userDocuments->nis ? url($guard->userDocuments->nis) : '',
+                "PSRA Document"         => $guard->userDocuments->psra ? url($guard->userDocuments->psra) : '',
+                "Birth Certificate"     => $guard->userDocuments->birth_certificate ? url($guard->userDocuments->birth_certificate) : '',
+
             ];
         })->toArray();
 
         $headers = [
-            "first_name","middle_name","surname","trn","nis","psra","date_of_joining","date_of_birth",
-            "employer_company_name","current_rate","location_code","location_name","client_code","client_name","guard_type","employed_as","date_of_separation",
-            "apartment_no","building_name","street_name","parish","city","postal_code","email","phone_number",
-            "bank_name","bank_branch_address","account_number","account_type","routing_number","kin_surname","kin_first_name","kin_middle_name","kin_apartment_no",
-            "kin_building_Name","kin_street_name","kin_parish","kin_city","kin_postal_code","kin_email","kin_phone_number",
-            "trn_document","nis_document","psra_document","birth_certificate",
+            "First Name","Middle Name","Surname","TRN","NIS","PSRA","Date Of Joining","Date Of Birth",
+            "Employer Company Name","Current Rate","Location Code","Location Name","Client Code","Client Name","Guard Type","Employed As","Date Of Separation",
+            "Apartment No","Building Name","Street Name","Parish","City","Postal Code","Email","Phone Number",
+            "Bank Name","Bank Branch Address","Account Number","Account Type","Routing Number","Kin Surname","Kin First Name","Kin Middle Name","Kin Apartment No",
+            "Kin Building Name","Kin Street Name","Kin Parish","Kin City","Kin Postal Code","Kin Email","Kin Phone Number",
+            "Trn Document","Nis Document","Psra Document","Birth Certificate",
         ];
 
         // Add headers at the top of the array
@@ -453,7 +473,7 @@ class SecurityGuardController extends Controller
         })->with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail','userDocuments'])->latest()->get();
 
         $pdf = PDF::loadView('admin.security-guards.pdf.security-guard-pdf', compact('securityGuards'));
-        
+
         return $pdf->download('security_guard_list.pdf');
     }
 }
