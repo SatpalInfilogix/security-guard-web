@@ -18,11 +18,11 @@
                             </button>
 
                             <a href="{{ route('export.csv') }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard/Client Ids</a>
-                            <a href="{{ url('download-guard-roaster-sample') }}"
+                            <a href="{{ url('download-guard-roster-sample') }}"
                                 class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard Roster Sample File</a>
                             @canany(['create guard roaster'])
                                 <div class="d-inline-block ">
-                                    <form id="importForm" action="{{ route('import.guard-roaster') }}" method="POST" enctype="multipart/form-data">
+                                    <form id="importForm" action="{{ route('import.guard-roster') }}" method="POST" enctype="multipart/form-data">
                                         @csrf
                                         <label for="fileInput" class="btn btn-primary primary-btn btn-md mb-0">
                                             <i class="bx bx-cloud-download"></i> Import Guard Roster

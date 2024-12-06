@@ -107,7 +107,16 @@
                                         <select name="guard_status" class="form-control" data-user-id="{{ $securityGuard->id }}">
                                             <option value="" selected disabled>Select Status</option>
                                             @foreach ($statusOptions as $value)
-                                                <option value="{{ $value }}" @selected($securityGuard->status === $value)>
+                                                <option value="{{ $value }}" 
+                                                    @selected($securityGuard->status === $value) 
+                                                    @if ($value === 'Active' && (
+                                                            empty($securityGuard->userDocuments->trn) || 
+                                                            empty($securityGuard->userDocuments->nis) || 
+                                                            empty($securityGuard->userDocuments->birth_certificate) || 
+                                                            empty($securityGuard->userDocuments->psra)
+                                                        ))
+                                                        disabled 
+                                                    @endif>
                                                     {{ $value }}
                                                 </option>
                                             @endforeach

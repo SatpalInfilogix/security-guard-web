@@ -27,7 +27,7 @@ class AttendanceController extends Controller
         $attendances = Punch::with('user')->latest();
 
         if ($dateRange) {
-            list($startDate, $endDate) = explode(' - ', $dateRange);
+            list($startDate, $endDate) = explode(' to ', $dateRange);
             $startDate = Carbon::parse($startDate)->startOfDay();
             $endDate = Carbon::parse($endDate)->endOfDay();
             $attendances = $attendances->whereBetween('in_time', [$startDate, $endDate]);

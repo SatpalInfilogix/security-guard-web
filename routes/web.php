@@ -29,9 +29,8 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::prefix('admin')->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('admin.dashboard.index');
-        Route::get('/guard-roasters/list', [GuardRosterController::class, 'list'])->name('guard-roasters.list');
-        Route::post('/get-guard-roaster', [GuardRosterController::class, 'getGuardRoasters'])->name('get-guard-roaster');
-        Route::post('/get-guard-roaster-list', [GuardRosterController::class, 'getGuardRoasterList'])->name('get-guard-roaster-list');
+        Route::post('/get-guard-roster', [GuardRosterController::class, 'getGuardRosters'])->name('get-guard-roster');
+        Route::post('/get-guard-roster-list', [GuardRosterController::class, 'getGuardRosterList'])->name('get-guard-roster-list');
         
         Route::resources([
             'profile'               => ProfileController::class,
@@ -66,14 +65,14 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::put('/users/update-status', [UserController::class, 'updateStatus'])->name('users.update-status');
     Route::get('/get-public-holidays', [GuardRosterController::class, 'getPublicHolidays']);
     Route::get('/get-leaves/{guardId}', [GuardRosterController::class, 'getLeaves']);
-    Route::get('/get-guard-roster-details', [GuardRosterController::class, 'getGuardRoasterDetails'])->name('get.guard.roster.details');
+    Route::get('/get-guard-roster-details', [GuardRosterController::class, 'getGuardRosterDetails'])->name('get.guard.roster.details');
 
     //************************Import Csv Route********************/
-    Route::post('import-guard-roaster', [GuardRosterController::class, 'importGuardRoaster'])->name('import.guard-roaster');
+    Route::post('import-guard-roster', [GuardRosterController::class, 'importGuardRoster'])->name('import.guard-roster');
     Route::post('import-security-guard', [SecurityGuardController::class, 'importSecurityGuard'])->name('import.security-guard');
 
-    Route::get('download-guard-roaster-sample', function() {
-        $file = public_path('assets/sample-guard-roaster/guard-roaster.xlsx');
+    Route::get('download-guard-roster-sample', function() {
+        $file = public_path('assets/sample-guard-roster/guard-roster.xlsx');
         return Response::download($file);
     });
 
@@ -85,7 +84,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
 
     Route::post('/leaves/{leaveId}/update-status', [LeaveController::class, 'updateStatus'])->name('leaves.updateStatus');
 
-    Route::get('/guard-roasters/download', [GuardRosterController::class, 'download'])->name('guard-roasters.download');
+    Route::get('/guard-rosters/download', [GuardRosterController::class, 'download'])->name('guard-rosters.download');
     Route::get('/security-guard/download', [SecurityGuardController::class, 'exportResultCsv'])->name('security-guard.download');
     Route::get('/attendance-list/download', [AttendanceController::class, 'exportAttendance'])->name('attendance-list.download');
 });

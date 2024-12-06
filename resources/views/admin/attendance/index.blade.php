@@ -12,8 +12,10 @@
                         <div class="page-title-right">
                             <div class="d-inline-block ">
                                 <form method="GET" action="{{ route('attendance.index') }}" id="attendance-form">
-                                    <input type="text" name="date_range" class="form-control" id="date-range-picker" 
-                                           value="{{ request('date_range', isset($fortnight) ? \Carbon\Carbon::parse($fortnight->start_date)->format('Y-m-d') . ' - ' . \Carbon\Carbon::parse($fortnight->end_date)->format('Y-m-d') : '') }}">
+                                    <input type="text" id="flat" name="date_range" class="form-control" 
+           value="{{ request('date_range', isset($fortnight) ? \Carbon\Carbon::parse($fortnight->start_date)->format('Y-m-d') . ' to ' . \Carbon\Carbon::parse($fortnight->end_date)->format('Y-m-d') : '') }}">
+                                    {{-- <input type="text" name="date_range" class="form-control" id="date-range-picker" 
+                                           value="{{ request('date_range', isset($fortnight) ? \Carbon\Carbon::parse($fortnight->start_date)->format('Y-m-d') . ' to ' . \Carbon\Carbon::parse($fortnight->end_date)->format('Y-m-d') : '') }}"> --}}
                                 </form>
                             </div>
                             
@@ -82,26 +84,61 @@
     <x-include-plugins :plugins="['dataTable', 'dateRange']"></x-include-plugins>
     <script type="text/javascript">
         $(document).ready(function() {
-            var dateRange = $('#date-range-picker').val(); 
-            $('#date-range-picker').daterangepicker({
-                autoUpdateInput: true,
-                locale: {
-                    format: 'YYYY-MM-DD'
-                },
-                singleDatePicker: false,
-                showDropdowns: false,
-                autoApply: true,
-                alwaysShowCalendars: true,
-            });
+            var holidayDates = [];
 
-            $('#date-range-picker').on('apply.daterangepicker', function(ev, picker) {
-                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-                $('#attendance-form').submit();
-            });
+            fetchPublicHolidays();
 
-            $('#date-range-picker').on('change', function() {
-                $('#attendance-form').submit();
-            });
+            function fetchPublicHolidays() {
+                $.ajax({
+                    url: '/get-public-holidays',
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(data) {
+                        if (Array.isArray(data) && data.length) {
+                            holidayDates = data.map(holiday => ({
+                                date: moment(holiday.date).format('YYYY-MM-DD'),
+                                name: holiday.holiday_name
+                            }));
+                        }
+    
+                        initFlatpickr();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error fetching public holidays:', error);
+                    }
+                });
+            }
+
+            function initFlatpickr() {
+                flatpickr("#flat", {
+                    mode: 'range',
+                    dateFormat: "Y-m-d",
+                    showMonths: 2,
+                    monthSelectorType: "static",
+                    defaultDate: "{{ request('date_range', isset($fortnight) ? \Carbon\Carbon::parse($fortnight->start_date)->format('Y-m-d') . ' to ' . \Carbon\Carbon::parse($fortnight->end_date)->format('Y-m-d') : '') }}", // Pre-fill the start and end date range
+                    onChange: function(selectedDates, dateStr, instance) {
+                        if (selectedDates.length === 2) {
+                            $('#attendance-form').submit();
+                        } else {
+                            console.log("Please select both dates.");
+                        }
+                    },
+                    onDayCreate: function(dObj, dStr, fp, dayElem) {
+                        var date = dayElem.dateObj;
+                        var dateStr = moment(date).format('YYYY-MM-DD');
+                        
+                        var holiday = holidayDates.find(holiday => holiday.date === dateStr);
+                        if (holiday) {
+                            dayElem.classList.add('holiday');
+                            dayElem.title = 'Public Holiday: ' + holiday.name; 
+                            var holidayLabel = document.createElement('span');
+                            holidayLabel.classList.add('holiday-label');
+                            holidayLabel.innerHTML = 'H';
+                            dayElem.appendChild(holidayLabel);
+                        }
+                    }
+                });
+            }
         });
     </script>
 @endsection

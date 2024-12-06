@@ -109,15 +109,22 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                 }
 
                 if (!is_numeric($time_in)) {
+                    $start_time = Carbon::createFromFormat('Y-m-d h:i A', $formattedDate . ' ' . $time_in);
                     $time_in = Carbon::createFromFormat('h:iA', $time_in)->format('H:i');
                 }
 
                 if (!is_numeric($time_out)) {
+                    $end_time =  Carbon::createFromFormat('Y-m-d h:i A', $formattedDate . ' ' . $time_out);
                     $time_out = Carbon::createFromFormat('h:iA',$time_out)->format('H:i');
+                }
+                
+                $end_date = $end_time;
+                if ($end_time->lessThan($start_time)) {
+                    $end_date = $end_time->addDay();
                 }
 
                 $leave = Leave::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->where('status', 'Approved')->first();
-                $existingAssignment = GuardRoster::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->first();
+                $existingAssignment = GuardRoster::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->where('is_publish', 1)->first();
 
                 if ($existingAssignment) {
                     $this->importResults[] = [
@@ -132,20 +139,38 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                         'Failure Reason' => 'Guard ' . $row['guard_id'] . ' id is in leave for this date (' . $formattedDate . ')',
                     ];
                 } else {
-                    GuardRoster::create([
-                        'guard_id'       => $row['guard_id'],
-                        'client_id'      => $clientSite->client_id ?? Null,
-                        'client_site_id' => $row['client_site_id'],
-                        'date'           => $formattedDate,
-                        'start_time'     => $time_in ?? '',
-                        'end_time'       => $time_out ?? '',
-                    ]);
+                    $existingRoster = GuardRoster::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->where('is_publish', 0)->first();
+                    if ($existingRoster) {
+                        $existingRoster->update([
+                            'client_id'      => $clientSite->client_id ?? Null,
+                            'client_site_id' => $row['client_site_id'],
+                            'start_time'     => $time_in ?? '',
+                            'end_time'       => $time_out ?? '',
+                            'end_date'       => $end_date,
+                        ]);
+                
+                        $this->importResults[] = [
+                            'Row' => $this->rowNumber,
+                            'Status' => 'Success',
+                            'Failure Reason' => 'Updated successfully for date ' . $formattedDate,
+                        ];
+                    } else {
+                        GuardRoster::create([
+                            'guard_id'       => $row['guard_id'],
+                            'client_id'      => $clientSite->client_id ?? Null,
+                            'client_site_id' => $row['client_site_id'],
+                            'date'           => $formattedDate,
+                            'start_time'     => $time_in ?? '',
+                            'end_time'       => $time_out ?? '',
+                            'end_date'       => $end_date
+                        ]);
 
-                    $this->importResults[] = [
-                        'Row' => $this->rowNumber,
-                        'Status' => 'Success',
-                        'Failure Reason' => 'Created sucessfully for date'. $formattedDate,
-                    ];
+                        $this->importResults[] = [
+                            'Row' => $this->rowNumber,
+                            'Status' => 'Success',
+                            'Failure Reason' => 'Created sucessfully for date'. $formattedDate,
+                        ];
+                    }
                 }
             }
         }
