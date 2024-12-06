@@ -79,11 +79,11 @@ class GuardRosterController extends Controller
 
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
-    
+        
             $guardRoasterData->where(function($query) use ($searchValue) {
                 $query->whereHas('user', function($q) use ($searchValue) {
                     $q->where('first_name', 'like', '%' . $searchValue . '%')
-                      ->orWhere('surname', 'like', '%' . $searchValue . '%');
+                    ->orWhere('surname', 'like', '%' . $searchValue . '%');
                 })
                 ->orWhereHas('client', function($q) use ($searchValue) {
                     $q->where('client_name', 'like', '%' . $searchValue . '%');
@@ -91,25 +91,22 @@ class GuardRosterController extends Controller
                 ->orWhere('date', 'like', '%' . $searchValue . '%');
             });
         }
-    
+
         $totalRecords = GuardRoster::count();
-        
+        $filteredRecords = $guardRoasterData->count();
+
         $length = $request->input('length', 10);
         $start = $request->input('start', 0);
-    
-        $guardRoasters = $guardRoasterData->orderBy('id', 'desc')
-                                          ->skip($start)  // Start offset
-                                          ->take($length) // Limit records
-                                          ->get();  // Get the records as an array (not paginated yet)
-        // Prepare the response
+
+        $guardRoasters = $guardRoasterData->orderBy('id', 'desc')->skip($start)->take($length)->get();
+
         $data = [
             'draw' => $request->input('draw'),
-            'recordsTotal' => $totalRecords, // Total records without filtering
-            'recordsFiltered' => $guardRoasterData->count(), // Filtered records count
-            'data' => $guardRoasters, // The actual data (items on the current page)
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $guardRoasters,
         ];
     
-        // Return the response as JSON
         return response()->json($data);
     }
 
@@ -484,9 +481,10 @@ class GuardRosterController extends Controller
 
         $totalRecords = $query->count();
 
-        $perPage = $request->input('length', 10);
-        $currentPage = (int)($request->input('start', 0) / $perPage);
-        $guardRoasters = $query->skip($currentPage * $perPage)->take($perPage)->get()
+        // $perPage = $request->input('length', 10);
+        // $currentPage = (int)($request->input('start', 0) / $perPage);
+        // $guardRoasters = $query->skip($currentPage * $perPage)->take($perPage)->get()
+        $guardRoasters = $query->get()
             ->groupBy(function($item) {
                 return $item->user->first_name .'-'. $item->client_site_id;
             });

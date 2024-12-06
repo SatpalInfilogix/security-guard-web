@@ -80,8 +80,6 @@
 <script>
     $(document).ready(function() {
         function convertToDate(dateStr, timeStr) {
-            console.log(dateStr);
-            console.log(timeStr);
             var timeParts = timeStr.split(' ');  
             var time = timeParts[0].split(':');
             
