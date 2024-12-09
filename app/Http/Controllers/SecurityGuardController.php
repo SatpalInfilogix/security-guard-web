@@ -18,6 +18,7 @@ use App\Exports\GuardImportExport;
 use Symfony\Component\HttpFoundation\Response;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Gate;
+use Carbon\Carbon;
 
 class SecurityGuardController extends Controller
 {
@@ -126,8 +127,8 @@ class SecurityGuardController extends Controller
                 'trn'                   => $request->trn,
                 'nis'                   => $request->nis,
                 'psra'                  => $request->psra,
-                'date_of_joining'       => $request->date_of_joining,
-                'date_of_birth'         => $request->date_of_birth,
+                'date_of_joining'       => Carbon::createFromFormat('d-m-Y', $request->date_of_joining),
+                'date_of_birth'         => Carbon::createFromFormat('d-m-Y', $request->date_of_birth),
                 'employer_company_name' => $request->employer_company_name,
                 'guards_current_rate'   => $request->current_rate,
                 'location_code'         => $request->location_code,
@@ -136,7 +137,7 @@ class SecurityGuardController extends Controller
                 'client_name'           => $request->client_name,
                 'guard_type_id'         => $request->guard_type_id,
                 'employed_as'           => $request->employed_as,
-                'date_of_seperation'    => $request->date_of_seperation,
+                'date_of_seperation'    => Carbon::createFromFormat('d-m-Y', $request->date_of_seperation),
             ]);
 
             ContactDetail::create([
@@ -228,10 +229,10 @@ class SecurityGuardController extends Controller
             'phone_number'  => 'required|numeric|unique:users,phone_number,' . $id,
             'password'      => 'nullable',
             'recipient_id'  => 'nullable|string|max:15',
-            'trn'           => 'nullable|unique:guard_additional_information,trn,'. $guardInfo->id,
-            'nis'           => 'nullable|unique:guard_additional_information,nis,'. $guardInfo->id,
-            'psra'          => 'nullable|unique:guard_additional_information,psra,'. $guardInfo->id,
-            'account_no'    => 'nullable|unique:users_bank_details,account_no,'. $usersBankDetail->id
+            'trn'           => 'nullable|unique:guard_additional_information,trn,'. optional($guardInfo)->id,
+            'nis'           => 'nullable|unique:guard_additional_information,nis,'. optional($guardInfo)->id,
+            'psra'          => 'nullable|unique:guard_additional_information,psra,'. optional($guardInfo)->id,
+            'account_no'    => 'nullable|unique:users_bank_details,account_no,'. optional($usersBankDetail)->id
         ];
     
         if ($request->user_status === 'Active') {
@@ -263,8 +264,8 @@ class SecurityGuardController extends Controller
                 'trn'                   => $request->trn,
                 'nis'                   => $request->nis,
                 'psra'                  => $request->psra,
-                'date_of_joining'       => $request->date_of_joining,
-                'date_of_birth'         => $request->date_of_birth,
+                'date_of_joining'       => Carbon::createFromFormat('d-m-Y', $request->date_of_joining),
+                'date_of_birth'         => Carbon::createFromFormat('d-m-Y', $request->date_of_birth),
                 'employer_company_name' => $request->employer_company_name,
                 'guards_current_rate'   => $request->current_rate,
                 'location_code'         => $request->location_code,
@@ -273,7 +274,7 @@ class SecurityGuardController extends Controller
                 'client_name'           => $request->client_name,
                 'guard_type_id'         => $request->guard_type_id,
                 'employed_as'           => $request->employed_as,
-                'date_of_seperation'    => $request->date_of_seperation,
+                'date_of_seperation'    => Carbon::createFromFormat('d-m-Y', $request->date_of_seperation),
             ]);
         }
 
