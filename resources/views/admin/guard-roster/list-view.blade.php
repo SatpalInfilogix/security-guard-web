@@ -26,6 +26,9 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
+                </div>
             </div>
         </form>
     </div>
@@ -140,9 +143,12 @@
             lengthMenu: [10, 25, 50, 100],
             order: [[0, 'asc']]
         });
-        $(document).on('change', '[name="guard_id"], [name="client_id"], [name="client_site_id"]', function() {
+        $('#searchBtn').on('click', function() {
             guardRoasterTable.ajax.reload();
-            });
+        });
+        // $(document).on('change', '[name="guard_id"], [name="client_id"], [name="client_site_id"]', function() {
+        //     guardRoasterTable.ajax.reload();
+        //     });
 
         $('#list-view').on('click', '.guard-delete-btn', function() {
             let source = $(this).data('source');
