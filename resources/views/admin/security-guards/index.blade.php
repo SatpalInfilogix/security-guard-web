@@ -66,6 +66,11 @@
 
             <div class="row">
                 <div class="col-12">
+                    @if(session('error'))
+                        <div class="alert alert-danger">
+                            {{ session('error') }}
+                        </div>
+                    @endif
                     <x-error-message :message="$errors->first('message')" />
                     <x-success-message :message="session('success')" />
                     @if (session('downloadUrl'))

@@ -281,8 +281,9 @@ class SecurityGuardController extends Controller
 
         $user->save();
 
-        if ($guardInfo) {
-            $guardInfo->update([
+        GuardAdditionalInformation::updateOrCreate(
+            ['user_id' => $id],
+            [
                 'trn'                   => $request->trn,
                 'nis'                   => $request->nis,
                 'psra'                  => $request->psra,
@@ -298,11 +299,10 @@ class SecurityGuardController extends Controller
                 'employed_as'           => $request->employed_as,
                 'date_of_seperation'    => $this->parseDate($request->date_of_seperation),
             ]);
-        }
 
-        $contactDetail = ContactDetail::where('user_id', $id)->first();
-        if ($contactDetail) {
-            $contactDetail->update([
+            ContactDetail::updateOrCreate(
+                ['user_id' => $id], // Condition to find the existing record
+                [
                 'apartment_no'  => $request->apartment_no,
                 'building_name' => $request->building_name,
                 'street_name'   => $request->street_name,
@@ -310,10 +310,10 @@ class SecurityGuardController extends Controller
                 'city'          => $request->city,
                 'postal_code'   => $request->postal_code,
             ]);
-        }
 
-        $usersBankDetail = UsersBankDetail::where('user_id', $id)->first();
-        $usersBankDetail->update([
+            UsersBankDetail::updateOrCreate(
+            ['user_id' => $id], // Condition to find the existing record
+            [
             'bank_name'             => $request->bank_name,
             'bank_branch_address'   => $request->branch,
             'account_no'            => $request->account_number,
@@ -322,8 +322,9 @@ class SecurityGuardController extends Controller
             'recipient_id'          => $request->recipient_id,
         ]);
 
-        $usersKinDetail = UsersKinDetail::where('user_id', $id)->first();
-        $usersKinDetail->update([
+        UsersKinDetail::updateOrCreate(
+            ['user_id' => $id], // Condition to find the existing record
+            [
             'surname'        => $request->kin_surname,
             'first_name'     => $request->kin_first_name,
             'middle_name'    => $request->kin_middle_name,
@@ -352,7 +353,10 @@ class SecurityGuardController extends Controller
         }
 
         $usersDocuments->update($documents);
-
+        usersDocuments::updateOrCreate(
+            ['user_id' => $id], // Condition to check if the record exists
+            $documents // Data to update or create
+        );
         return redirect()->route('security-guards.index')->with('success', 'Security Guard updated successfully.');
     }
 
