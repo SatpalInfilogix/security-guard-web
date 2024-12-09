@@ -118,9 +118,10 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             'user_id'             => $user->id,
             'bank_name'           => $row["bank_name"] ?? null,
             'bank_branch_address' => $row["bank_branch_address"] ?? null,
-            'account_no'          => $row["account_no"] ?? null,
+            'account_no'          => $row["account_number"] ?? null,
             'account_type'        => $row["account_type"] ?? null,
             'routing_number'      => $row["routing_number"] ?? null,
+            'recipient_id'        => $row["recipient_id"] ?? null
         ]);
 
         // Update next of kin details

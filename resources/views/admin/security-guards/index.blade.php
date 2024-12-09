@@ -12,6 +12,8 @@
                         <div class="page-title-right">
                             <a href="{{ route('security-guards.pdf') }}" class="btn btn-primary"><i class="bx bx-download"></i> Download PDF</a>
                             <a href="{{ route('export.guards') }}" class="btn btn-primary"><i class="bx bx-export"></i> Security Guard Bulk Export</a>
+                            <a href="{{ url('download-guard-sample') }}"
+                                class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard Sample File</a>
                             <div class="d-inline-block me-1">
                                 <form id="importForm" action="{{ route('import.security-guard') }}" method="POST" enctype="multipart/form-data">
                                     @csrf

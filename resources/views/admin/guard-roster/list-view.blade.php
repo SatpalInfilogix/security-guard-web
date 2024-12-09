@@ -52,9 +52,23 @@
     </div>
 </div>
 
-<x-include-plugins :plugins="['sweetAlert']"></x-include-plugins>
+<x-include-plugins :plugins="['sweetAlert', 'chosen']"></x-include-plugins>
 
 <script>
+     $(function(){
+        $('#guard_id').chosen({
+            width: '100%',
+            placeholder_text_multiple: 'Select Guard'
+        });
+        $('#client_id').chosen({
+            width: '100%',
+            placeholder_text_multiple: 'Select Client'
+        });
+        $('#client_site_id').chosen({
+            width: '100%',
+            placeholder_text_multiple: 'Select Client Site'
+        });
+    });
     $(document).ready(function() {
         let guardRoasterTable = $('#list-view').DataTable({
             processing: true,

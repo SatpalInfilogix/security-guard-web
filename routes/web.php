@@ -76,6 +76,11 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         return Response::download($file);
     });
 
+    Route::get('download-guard-sample', function() {
+        $file = public_path('assets/sample-security-guard/security-guard.csv');
+        return Response::download($file);
+    });
+
     Route::get('/export/csv', [GuardRosterController::class, 'downloadExcel'])->name('export.csv');
     Route::get('export-guards', [SecurityGuardController::class, 'exportGuards'])->name('export.guards');
     Route::get('/security-guards/filter', [SecurityGuardController::class, 'filter'])->name('security-guards.filter');

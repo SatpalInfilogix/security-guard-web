@@ -19,6 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Gate;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class SecurityGuardController extends Controller
 {
@@ -83,6 +84,20 @@ class SecurityGuardController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+
+    private function parseDate($date)
+    {
+        if (empty($date)) {
+            return null; 
+        }
+
+        try {
+            return Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
     public function store(Request $request)
     {
         if(!Gate::allows('create security guards')) {
@@ -100,91 +115,98 @@ class SecurityGuardController extends Controller
             'psra'          => 'nullable|unique:guard_additional_information,psra',
             'account_number'=> 'nullable|unique:users_bank_details,account_no',
         ];
-    
+
         if ($request->user_status === 'Active') {
             $validationRules['trn_doc'] = 'required';
             $validationRules['nis_doc'] = 'required';
             $validationRules['psra_doc'] = 'required';
             $validationRules['birth_certificate'] = 'required';
         }
-    
+
         $request->validate($validationRules);
 
-        $user = User::create([
-            'surname'      => $request->surname,
-            'first_name'   => $request->first_name,
-            'middle_name'  => $request->middle_name,
-            'email'        => $request->email,
-            'phone_number' => $request->phone_number,
-            'status'       => $request->user_status ?? 'Inactive',
-            'is_statutory' => $request->is_statutory,
-            'password'     => Hash::make($request->password),
-        ])->assignRole('Security Guard');
+        DB::beginTransaction();
+        try {
+            $user = User::create([
+                'surname'      => $request->surname,
+                'first_name'   => $request->first_name,
+                'middle_name'  => $request->middle_name,
+                'email'        => $request->email,
+                'phone_number' => $request->phone_number,
+                'status'       => $request->user_status ?? 'Inactive',
+                'is_statutory' => $request->is_statutory,
+                'password'     => Hash::make($request->password),
+            ])->assignRole('Security Guard');
 
-        if ($user) {
-            GuardAdditionalInformation::create([
-                'user_id'               => $user->id,
-                'trn'                   => $request->trn,
-                'nis'                   => $request->nis,
-                'psra'                  => $request->psra,
-                'date_of_joining'       => Carbon::createFromFormat('d-m-Y', $request->date_of_joining),
-                'date_of_birth'         => Carbon::createFromFormat('d-m-Y', $request->date_of_birth),
-                'employer_company_name' => $request->employer_company_name,
-                'guards_current_rate'   => $request->current_rate,
-                'location_code'         => $request->location_code,
-                'location_name'         => $request->location_name,
-                'client_code'           => $request->client_code,
-                'client_name'           => $request->client_name,
-                'guard_type_id'         => $request->guard_type_id,
-                'employed_as'           => $request->employed_as,
-                'date_of_seperation'    => Carbon::createFromFormat('d-m-Y', $request->date_of_seperation),
-            ]);
+            if ($user) {
+                GuardAdditionalInformation::create([
+                    'user_id'               => $user->id,
+                    'trn'                   => $request->trn,
+                    'nis'                   => $request->nis,
+                    'psra'                  => $request->psra,
+                    'date_of_joining'       => $this->parseDate($request->date_of_joining),
+                    'date_of_birth'         => $this->parseDate($request->date_of_birth),
+                    'employer_company_name' => $request->employer_company_name,
+                    'guards_current_rate'   => $request->current_rate,
+                    'location_code'         => $request->location_code,
+                    'location_name'         => $request->location_name,
+                    'client_code'           => $request->client_code,
+                    'client_name'           => $request->client_name,
+                    'guard_type_id'         => $request->guard_type_id,
+                    'employed_as'           => $request->employed_as,
+                    'date_of_seperation'    => $this->parseDate($request->date_of_seperation)
+                ]);
 
-            ContactDetail::create([
-                'user_id'       => $user->id,
-                'apartment_no'  => $request->apartment_no,
-                'building_name' => $request->building_name,
-                'street_name'   => $request->street_name,
-                'parish'        => $request->parish,
-                'city'          => $request->city,
-                'postal_code'   => $request->postal_code,
-            ]);
+                ContactDetail::create([
+                    'user_id'       => $user->id,
+                    'apartment_no'  => $request->apartment_no,
+                    'building_name' => $request->building_name,
+                    'street_name'   => $request->street_name,
+                    'parish'        => $request->parish,
+                    'city'          => $request->city,
+                    'postal_code'   => $request->postal_code,
+                ]);
 
-            UsersBankDetail::create([
-                'user_id'               => $user->id,
-                'bank_name'             => $request->bank_name,
-                'bank_branch_address'   => $request->branch,
-                'account_no'            => $request->account_number,
-                'account_type'          => $request->account_type,
-                'routing_number'        => $request->routing_number,
-                'recipient_id'          => $request->recipient_id,
-            ]);
+                UsersBankDetail::create([
+                    'user_id'               => $user->id,
+                    'bank_name'             => $request->bank_name,
+                    'bank_branch_address'   => $request->branch,
+                    'account_no'            => $request->account_number,
+                    'account_type'          => $request->account_type,
+                    'routing_number'        => $request->routing_number,
+                    'recipient_id'          => $request->recipient_id,
+                ]);
 
-            UsersKinDetail::create([
-                'user_id'        => $user->id,
-                'surname'        => $request->kin_surname,
-                'first_name'     => $request->kin_first_name,
-                'middle_name'    => $request->kin_middle_name,
-                'apartment_no'   => $request->kin_apartment_no,
-                'building_name'  => $request->kin_building_name,
-                'street_name'    => $request->kin_street_name,
-                'parish'         => $request->kin_parish,
-                'city'           => $request->kin_city,
-                'postal_code'    => $request->kin_postal_code,
-                'email'          => $request->kin_email,
-                'phone_number'   => $request->kin_phone_number,
-            ]);
+                UsersKinDetail::create([
+                    'user_id'        => $user->id,
+                    'surname'        => $request->kin_surname,
+                    'first_name'     => $request->kin_first_name,
+                    'middle_name'    => $request->kin_middle_name,
+                    'apartment_no'   => $request->kin_apartment_no,
+                    'building_name'  => $request->kin_building_name,
+                    'street_name'    => $request->kin_street_name,
+                    'parish'         => $request->kin_parish,
+                    'city'           => $request->kin_city,
+                    'postal_code'    => $request->kin_postal_code,
+                    'email'          => $request->kin_email,
+                    'phone_number'   => $request->kin_phone_number,
+                ]);
 
-            usersDocuments::create([
-                'user_id'   => $user->id,
-                'trn'       => uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/'),
-                'nis'       => uploadFile($request->file('nis_doc'), 'uploads/user-documents/nis/'),
-                'psra'      => uploadFile($request->file('psra_doc'),'uploads/user-documents/psra/'),
-                'birth_certificate' => uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/'),
-            ]);
+                usersDocuments::create([
+                    'user_id'   => $user->id,
+                    'trn'       => uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/'),
+                    'nis'       => uploadFile($request->file('nis_doc'), 'uploads/user-documents/nis/'),
+                    'psra'      => uploadFile($request->file('psra_doc'),'uploads/user-documents/psra/'),
+                    'birth_certificate' => uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/'),
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('security-guards.index')->with('success', 'Security Guard created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('security-guards.index')->with('error', 'An error occurred while creating the security guard. Please try again.');
         }
-
-        return redirect()->route('security-guards.index')->with('success', 'Security Guard created successfully.');
     }
 
     /**
@@ -264,8 +286,8 @@ class SecurityGuardController extends Controller
                 'trn'                   => $request->trn,
                 'nis'                   => $request->nis,
                 'psra'                  => $request->psra,
-                'date_of_joining'       => Carbon::createFromFormat('d-m-Y', $request->date_of_joining),
-                'date_of_birth'         => Carbon::createFromFormat('d-m-Y', $request->date_of_birth),
+                'date_of_joining'       => $this->parseDate($request->date_of_joining),
+                'date_of_birth'         => $this->parseDate($request->date_of_birth),
                 'employer_company_name' => $request->employer_company_name,
                 'guards_current_rate'   => $request->current_rate,
                 'location_code'         => $request->location_code,
@@ -274,7 +296,7 @@ class SecurityGuardController extends Controller
                 'client_name'           => $request->client_name,
                 'guard_type_id'         => $request->guard_type_id,
                 'employed_as'           => $request->employed_as,
-                'date_of_seperation'    => Carbon::createFromFormat('d-m-Y', $request->date_of_seperation),
+                'date_of_seperation'    => $this->parseDate($request->date_of_seperation),
             ]);
         }
 
