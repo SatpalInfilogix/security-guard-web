@@ -23,7 +23,7 @@
                 <option value="" disabled selected>Select Client</option>
                 @foreach($clients as $client)
                     <option value="{{ $client->id }}" @selected(isset($guardRoaster->client_id) && $guardRoaster->client_id == $client->id)>
-                        {{ $client->client_name }}
+                        {{ $client->client_name }} ({{ $client->client_code }})
                     </option>
                 @endforeach
             </select>

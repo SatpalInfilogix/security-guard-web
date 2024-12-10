@@ -21,6 +21,41 @@ class ClientSiteController extends Controller
         return view('admin.client-sites.index', compact('clientSites'));
     }
 
+    public function getClientSite(Request $request)
+    {
+        $clientSites = ClientSite::with('client');
+
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $clientSites->where(function($query) use ($searchValue) {
+                $query->where('location_code', 'like', '%' . $searchValue . '%')
+                    ->orWhere('parish', 'like', '%' . $searchValue . '%')
+                    ->orWhere('email', 'like', '%' . $searchValue . '%')
+                    ->orWhereHas('client', function($q) use ($searchValue) {
+                        $q->where('client_name', 'like', '%' . $searchValue . '%');
+                    });
+            });
+        }
+
+        $totalRecords = ClientSite::count();
+
+        $filteredRecords = $clientSites->count();
+
+        $length = $request->input('length', 10);
+        $start = $request->input('start', 0);
+
+        $clientSites = $clientSites->skip($start)->take($length)->get();
+
+        $data = [
+            'draw' => $request->input('draw'),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $clientSites,
+        ];
+
+        return response()->json($data);
+    }
+
     public function create()
     {
         if(!Gate::allows('create client site')) {

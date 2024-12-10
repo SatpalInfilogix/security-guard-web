@@ -32,6 +32,10 @@ class LoginController extends Controller
             return response()->json(['success' => false, 'message' => 'User not found'], 404);
         }
     
+        if ($user->status !== 'Active') {
+            return response()->json(['success' => false, 'message' => 'Your account is not active.'], 403);
+        }
+    
         if (Hash::check($request->password, $user->password)) {
             $token = $user->createToken('MyApp')->plainTextToken;
             $user->token = $token;

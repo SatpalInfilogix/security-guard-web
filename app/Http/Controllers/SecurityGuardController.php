@@ -38,34 +38,68 @@ class SecurityGuardController extends Controller
             $query->where('role_id', $userRole->id);
         });
 
-        if ($request->has('search_name') && $request->search_name) {
-            $query->where(function ($query) use ($request) {
-                $query->where('first_name', 'like', '%' . $request->search_name . '%');
-            });
-        }
-
-        if ($request->has('search_email') && $request->search_email) {
-            $query->where('email', 'like', '%' . $request->search_email . '%');
-        }
-
-        if ($request->has('search_phone') && $request->search_phone) {
-            $query->where('phone_number', 'like', '%' . $request->search_phone . '%');
-        }
-
-        if ($request->has('status') && $request->status) {
-            $query->where('status', $request->status);
-        }
-
         $securityGuards = $query->with('userDocuments')->latest()->get();
-
-        if ($request->ajax()) {
-            return response()->json([
-                'view' => view('admin.security-guards.filter-table', compact('securityGuards'))->render()
-            ]);
-        }
 
         return view('admin.security-guards.index', compact('securityGuards'));
     }
+
+    public function getSecurityGuard(Request $request)
+    {
+        $userRole = Role::where('name', 'Security Guard')->first();
+    
+        $securityGuards = User::with('userDocuments')->whereHas('roles', function ($query) use ($userRole) {
+            $query->where('role_id', $userRole->id);
+        });
+    
+        if ($request->has('search_name') && !empty($request->search_name)) {
+            $securityGuards->where('first_name', 'like', '%' . $request->search_name . '%')
+                                 ->orWhere('surname', 'like', '%' . $request->search_name . '%');
+        }
+    
+        if ($request->has('search_email') && !empty($request->search_email)) {
+            $securityGuards->where('email', 'like', '%' . $request->search_email . '%');
+        }
+    
+        if ($request->has('search_phone') && !empty($request->search_phone)) {
+            $securityGuards->where('phone_number', 'like', '%' . $request->search_phone . '%');
+        }
+    
+        if ($request->has('status') && !empty($request->status)) {
+            $securityGuards->where('status', $request->status);
+        }
+    
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $securityGuards->where(function($query) use ($searchValue) {
+                $query->where('user_code', 'like', '%' . $searchValue . '%')
+                      ->orwhere('first_name', 'like', '%' . $searchValue . '%')
+                      ->orWhere('last_name', 'like', '%' . $searchValue . '%')
+                      ->orWhere('email', 'like', '%' . $searchValue . '%')
+                      ->orWhere('phone_number', 'like', '%' . $searchValue . '%');
+            });
+        }
+    
+        $filteredRecords = $securityGuards->count();
+        $length = $request->input('length', 10);
+        $start = $request->input('start', 0);
+    
+        $securityGuards = $securityGuards->orderBy('id', 'desc')
+                                         ->skip($start) 
+                                         ->take($length)
+                                         ->get();
+    
+        $data = [
+            'draw' => $request->input('draw'),
+            'recordsTotal' => User::whereHas('roles', function ($query) use ($userRole) {
+                $query->where('role_id', $userRole->id);
+            })->count(),
+            'recordsFiltered' => $filteredRecords,
+            'data' => $securityGuards,
+        ];
+    
+        return response()->json($data);
+    }
+    
 
     /**
      * Show the form for creating a new resource.
@@ -114,6 +148,8 @@ class SecurityGuardController extends Controller
             'nis'           => 'nullable|unique:guard_additional_information,nis',
             'psra'          => 'nullable|unique:guard_additional_information,psra',
             'account_number'=> 'nullable|unique:users_bank_details,account_no',
+            'date_of_birth' => 'nullable|date|before:date_of_joining',  // Ensure date_of_birth is before date_of_joining
+            'date_of_joining'=> 'nullable|date',
         ];
 
         if ($request->user_status === 'Active') {
@@ -254,7 +290,9 @@ class SecurityGuardController extends Controller
             'trn'           => 'nullable|unique:guard_additional_information,trn,'. optional($guardInfo)->id,
             'nis'           => 'nullable|unique:guard_additional_information,nis,'. optional($guardInfo)->id,
             'psra'          => 'nullable|unique:guard_additional_information,psra,'. optional($guardInfo)->id,
-            'account_no'    => 'nullable|unique:users_bank_details,account_no,'. optional($usersBankDetail)->id
+            'account_no'    => 'nullable|unique:users_bank_details,account_no,'. optional($usersBankDetail)->id,
+            'date_of_birth' => 'nullable|date|before:date_of_joining',
+            'date_of_joining'=> 'nullable|date',
         ];
     
         if ($request->user_status === 'Active') {

@@ -84,6 +84,10 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('/export/csv', [GuardRosterController::class, 'downloadExcel'])->name('export.csv');
     Route::get('export-guards', [SecurityGuardController::class, 'exportGuards'])->name('export.guards');
     Route::get('/security-guards/filter', [SecurityGuardController::class, 'filter'])->name('security-guards.filter');
+   
+    Route::post('get-security-guard', [SecurityGuardController::class, 'getSecurityGuard'])->name('get-security-guard');
+    Route::post('get-client-list', [ClientController::class, 'getClient'])->name('get-client-list');
+    Route::post('get-client-site-list', [ClientSiteController::class, 'getClientSite'])->name('get-client-site-list');
 
     Route::get('security-guards/pdf', [SecurityGuardController::class, 'downloadPDF'])->name('security-guards.pdf');
 

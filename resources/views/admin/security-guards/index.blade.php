@@ -37,14 +37,6 @@
                         <div class="row">
                             <div class="col-md-3">
                                 <input type="text" name="search_name" class="form-control" placeholder="Search by Name" value="{{ request('search_name') }}" id="search_name">
-                                {{-- <select name="search_name" class="form-control" id="search_name">
-                                    <option value="">Select Guard</option>
-                                    @foreach($securityGuards as $guard)
-                                        <option value="{{ $guard->first_name }}" {{ request('search_name') == $guard->first_name ? 'selected' : '' }}>
-                                            {{ $guard->first_name }}
-                                        </option>
-                                    @endforeach
-                                </select> --}}
                             </div>
                             <div class="col-md-3">
                                 <input type="text" name="search_email" class="form-control" placeholder="Search by Email" value="{{ request('search_email') }}" id="search_email">
@@ -82,7 +74,7 @@
                     @endif
                     <div class="card">
                         <div class="card-body">
-                            <table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
+                            <table id="security-guard-list" class="table table-bordered dt-responsive  nowrap w-100">
                                 <thead>
                                 <tr>
                                     <th>#</th>
@@ -99,51 +91,7 @@
                                 </thead>
 
                                 <tbody id="guardTableBody">
-                                @foreach($securityGuards as $key => $securityGuard)
-                                <tr>
-                                    <td>{{ ++$key }}</td>
-                                    <td>{{ $securityGuard->user_code}}</td>
-                                    <td>{{ $securityGuard->first_name }}</td>
-                                    <td>{{ $securityGuard->middle_name }}</td>
-                                    <td>{{ $securityGuard->email }}</td>
-                                    <td>{{ $securityGuard->phone_number }}</td>
-                                    <td>
-                                        @php
-                                            $statusOptions = ['Active', 'Inactive', 'Hold'];
-                                        @endphp
-                                        <select name="guard_status" class="form-control" data-user-id="{{ $securityGuard->id }}">
-                                            <option value="" selected disabled>Select Status</option>
-                                            @foreach ($statusOptions as $value)
-                                                <option value="{{ $value }}" 
-                                                    @selected($securityGuard->status === $value) 
-                                                    @if ($value === 'Active' && (
-                                                            empty($securityGuard->userDocuments->trn) || 
-                                                            empty($securityGuard->userDocuments->nis) || 
-                                                            empty($securityGuard->userDocuments->birth_certificate) || 
-                                                            empty($securityGuard->userDocuments->psra)
-                                                        ))
-                                                        disabled 
-                                                    @endif>
-                                                    {{ $value }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    @canany(['edit security guards', 'delete security guards'])
-                                    <td class="action-buttons">
-                                        @if(Auth::user()->can('edit security guards'))
-                                            <a href="{{ route('security-guards.edit', $securityGuard->id)}}" class="btn btn-primary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
-                                        @endif
-                                        @if(Auth::user()->can('delete security guards'))
-                                            <button data-source="Security Guard" data-endpoint="{{ route('security-guards.destroy', $securityGuard->id) }}"
-                                                class="delete-btn btn btn-danger btn-sm edit">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        @endif
-                                    </td>
-                                    @endcanany
-                                </tr>
-                                @endforeach
+                                
                                 </tbody>
                             </table>
                         </div>
@@ -155,31 +103,139 @@
     <x-include-plugins :plugins="['dataTable', 'import']"></x-include-plugins>
     <script>
         $(document).ready(function() {
-            function fetchFilteredData() {
-                var formData = $('#filterForm').serialize();
-
-                $.ajax({
-                    url: "{{ route('security-guards.index') }}",
-                    method: "GET",
-                    data: formData, 
-                    success: function(response) {
-                        $('#guardTableBody').html(response.view);
+            let securityGuardTable = $('#security-guard-list').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "{{ route('get-security-guard') }}",
+                    type: "POST",
+                    data: function(d) {
+                        d._token = "{{ csrf_token() }}";
+                        d.search_name = $('#search_name').val();  // Send filter values to the server
+                        d.search_email = $('#search_email').val();
+                        d.search_phone = $('#search_phone').val();
+                        d.status = $('#is_status').val();
+                        return d;
                     },
-                    error: function() {
-                        alert('Error fetching data');
+                    dataSrc: function(json) {
+                        return Object.values(json.data);
+                    }
+                },
+                columns: [
+                    { 
+                        data: null, 
+                        render: function(data, type, row, meta) {
+                            return meta.row + 1 + meta.settings._iDisplayStart;
+                        }
+                    },
+                    { data: 'user_code'},
+                    { data: 'first_name' },
+                    { data: 'last_name' },
+                    { data: 'email' },
+                    { data: 'phone_number' },
+                    {
+                        data: 'status',
+                        render: function(data, type, row) {
+                            let statusOptions = ['Active', 'Inactive', 'Hold'];
+                            let statusDropdown = `<select name="guard_status" class="form-control" data-user-id="${row.id}">`;
+                            statusDropdown += '<option value="" selected disabled>Select Status</option>';
+
+                            // Safeguard against undefined userDocuments
+                            const userDocuments = row.userDocuments || {};  // Ensure userDocuments is defined
+
+                            // Loop through status options
+                            statusOptions.forEach(function(value) {
+                                let disabled = '';
+                                if (value === 'Active' && (
+                                    !userDocuments.trn || 
+                                    !userDocuments.nis || 
+                                    !userDocuments.birth_certificate || 
+                                    !userDocuments.psra
+                                )) {
+                                    disabled = 'disabled';
+                                }
+
+                                statusDropdown += `<option value="${value}" 
+                                    ${data === value ? 'selected' : ''} 
+                                    ${disabled}>
+                                    ${value}
+                                </option>`;
+                            });
+
+                            statusDropdown += '</select>';
+                            return statusDropdown;
+                        }
+                    },
+                    {
+                        data: null,
+                        render: function(data, type, row) {
+                            var actions = '<div class="action-buttons">';
+                            
+                            @can('edit security guards')
+                            actions += `<a class="btn btn-outline-secondary btn-sm edit" href="{{ url('admin/security-guards') }}/${row.id}/edit">`;
+                            actions += '<i class="fas fa-pencil-alt"></i>';
+                            actions += '</a>';
+                            @endcan
+
+                            @can('delete security guards')
+                                actions += `<a data-source="Security Guard" class="security-guard-delete btn btn-outline-secondary btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
+                            @endcan
+
+                            actions += '</div>';
+                            return actions;
+                        }
+                    }
+                ],
+                paging: true,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
+                order: [[0, 'asc']]
+            });
+
+            $('#search_name, #search_email, #search_phone, #is_status').on('change keyup', function() {
+                securityGuardTable.ajax.reload();
+            });
+
+            $(document).on('click', '.security-guard-delete', function() {
+                let source = $(this).data('source');
+                let guardId = $(this).data('id');
+                var deleteApiEndpoint = "{{ route('security-guards.destroy', '') }}/" + guardId;
+
+                swal({
+                    title: "Are you sure?",
+                    text: `You really want to remove this ${source}?`,
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                }, function(isConfirm) {
+                    if (isConfirm) {
+                        $.ajax({
+                            url: deleteApiEndpoint,
+                            method: 'DELETE',
+                            data: {
+                                '_token': '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if(response.success){
+                                    swal({
+                                        title: "Success!",
+                                        text: response.message,
+                                        type: "success",
+                                        showConfirmButton: false
+                                    }) 
+
+                                    setTimeout(() => {
+                                        location.reload();
+                                    }, 2000);
+                                }
+                            }
+                        })
                     }
                 });
-            }
+            })
 
-            $('#search_name, #search_email, #search_phone').on('keyup', function() {
-                fetchFilteredData();
-            });
-
-            $('#is_status').on('change', function() {
-                fetchFilteredData();
-            });
-
-            $('[name="guard_status"]').on('change', function(){
+            $(document).on('change', 'select[name="guard_status"]', function() {
+                console.log('assa');
                 let status = $(this).val();
                 let userId = $(this).attr('data-user-id');
                 
@@ -190,6 +246,20 @@
                         user_id: userId,
                         status: status,
                         _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if(response.success){
+                            swal({
+                                title: "Success!",
+                                text: response.message,
+                                type: "success",
+                                showConfirmButton: false
+                            }) 
+
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                        }
                     }
                 })
             })
