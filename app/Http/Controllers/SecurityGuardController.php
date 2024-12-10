@@ -390,7 +390,7 @@ class SecurityGuardController extends Controller
             $documents['birth_certificate'] = uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/');
         }
 
-        $usersDocuments->update($documents);
+        // $usersDocuments->update($documents);
         usersDocuments::updateOrCreate(
             ['user_id' => $id], // Condition to check if the record exists
             $documents // Data to update or create
