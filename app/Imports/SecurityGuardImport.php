@@ -23,11 +23,15 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
 
         $validator = Validator::make($row, [
             'first_name'        => 'required',
-            'email'             => 'required|email|unique:users,email',
-            'phone_number'      => 'nullable|unique:users,phone_number',
+            'email'             => 'nullable|email|unique:users,email',
+            'phone_number'      => 'required|unique:users,phone_number',
             'date_of_joining'   => 'nullable|date_format:Y-m-d',
             'date_of_birth'     => 'nullable|date_format:Y-m-d',
             'date_of_separation'=> 'nullable|date_format:Y-m-d',
+            'trn'               => 'nullable|unique:guard_additional_information,trn',
+            'nis'               => 'nullable|unique:guard_additional_information,nis',
+            'psra'              => 'nullable|unique:guard_additional_information,psra',
+            'account_no'        => 'nullable|unique:users_bank_details,account_no'
             // 'trn_document'      => 'required',
             // 'nis_document'      => 'required',
             // 'psra_document'     => 'required',
@@ -45,7 +49,7 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             return null; // Skip processing if validation fails
         }
 
-        $user = User::where('email', $row['email'])->first();
+        $user = User::where('phone_number', $row['phone_number'])->first();
         if (!$user) {
             // Create a new user if not found
             $user = User::create([
@@ -114,9 +118,10 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             'user_id'             => $user->id,
             'bank_name'           => $row["bank_name"] ?? null,
             'bank_branch_address' => $row["bank_branch_address"] ?? null,
-            'account_no'          => $row["account_no"] ?? null,
+            'account_no'          => $row["account_number"] ?? null,
             'account_type'        => $row["account_type"] ?? null,
             'routing_number'      => $row["routing_number"] ?? null,
+            'recipient_id'        => $row["recipient_id"] ?? null
         ]);
 
         // Update next of kin details
@@ -137,10 +142,10 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
 
         $user->userDocuments()->updateOrCreate([], [
             'user_id'           => $user->id,
-            'trn'               => $this->uploadDoc($row['trn_document'] ?? null, 'uploads/user-documents/trn/'),
-            'nis'               => $this->uploadDoc($row['nis_document'] ?? null, 'uploads/user-documents/nis/'),
-            'psra'              => $this->uploadDoc($row['psra_document'] ?? null, 'uploads/user-documents/psra/'),
-            'birth_certificate' => $this->uploadDoc($row['birth_certificate'] ?? null, 'uploads/user-documents/birth_certificate/'),
+            'trn'               => Null,
+            'nis'               => NULL,
+            'psra'              => NULL,
+            'birth_certificate' => NULL,
         ]);
 
         return null;
@@ -160,7 +165,7 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             return asset($destinationPath . $filename); // Use asset() to generate the full public URL
         }
 
-        return null;  // Return null if the file is invalid or doesn't exist
+        return null;
     }
 
     /**

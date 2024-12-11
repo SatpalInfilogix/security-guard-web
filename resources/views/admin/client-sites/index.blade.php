@@ -27,7 +27,7 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
+                            <table id="client-site-list" class="table table-bordered dt-responsive  nowrap w-100">
                                 <thead>
                                 <tr>
                                     <th>#</th>
@@ -42,28 +42,7 @@
                                 </thead>
 
                                 <tbody>
-                                @foreach($clientSites as $key => $clientSite)
-                                <tr>
-                                    <td>{{ ++$key }}</td>
-                                    <td>{{ $clientSite->client->client_name }}</td>
-                                    <td>{{ $clientSite->location_code }}</td>
-                                    <td>{{ $clientSite->parish }}</td>
-                                    <td>{{ $clientSite->email }}</td>
-                                    @canany(['edit client site', 'delete client site'])
-                                    <td class="action-buttons">
-                                        @if(Auth::user()->can('edit client site'))
-                                        <a href="{{ route('client-sites.edit', $clientSite->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
-                                        @endif
-                                        @if(Auth::user()->can('delete client site'))
-                                        <button data-source="Client Site" data-endpoint="{{ route('client-sites.destroy', $clientSite->id) }}"
-                                            class="delete-btn btn btn-outline-secondary btn-sm edit">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                        @endif
-                                    </td>
-                                    @endcanany
-                                </tr>
-                                @endforeach
+
                                 </tbody>
                             </table>
                         </div>
@@ -74,4 +53,99 @@
         </div> <!-- container-fluid -->
     </div>
     <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
+    <script>
+         $(document).ready(function() {
+            let clientTable = $('#client-site-list').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "{{ route('get-client-site-list') }}",
+                    type: "POST",
+                    data: function(d) {
+                        d._token = "{{ csrf_token() }}";
+                        return d;
+                    },
+                    dataSrc: function(json) {
+                        return json.data || [];
+                    }
+                },
+                columns: [
+                    { 
+                        data: null, 
+                        render: function(data, type, row, meta) {
+                            return meta.row + 1 + meta.settings._iDisplayStart;
+                        }
+                    },
+                    { data: 'client.client_name' },
+                    { data: 'location_code' },
+                    { data: 'parish' },
+                    { data: 'email' }, 
+                    {
+                        data: null,
+                        render: function(data, type, row) {
+                            var actions = '<div class="action-buttons">';
+
+                            @can('edit client site')
+                                actions += `<a class="btn btn-outline-secondary btn-sm edit" href="{{ url('admin/client-sites') }}/${row.id}/edit">`;
+                                actions += '<i class="fas fa-pencil-alt"></i>';
+                                actions += '</a>';
+                            @endcan
+
+                            @can('delete client site')
+                                actions += `<a class="btn btn-outline-secondary btn-sm clientSite-delete-btn" href="#" data-source="Client site" data-id="${row.id}">`;
+                                actions += '<i class="fas fa-trash-alt"></i>';
+                                actions += '</a>';
+                            @endcan
+
+                            actions += '</div>';
+                            return actions;
+                        }
+                    }
+                ],
+                paging: true,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
+                order: [[0, 'asc']]
+            });
+
+            // Handle Delete button click
+            $(document).on('click', '.clientSite-delete-btn', function() {
+                let source = $(this).data('source');
+                let clientId = $(this).data('id');
+                var deleteApiEndpoint = "{{ route('client-sites.destroy', '') }}/" + clientId;
+
+                swal({
+                    title: "Are you sure?",
+                    text: `You really want to remove this ${source}?`,
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                }, function(isConfirm) {
+                    if (isConfirm) {
+                        $.ajax({
+                            url: deleteApiEndpoint,
+                            method: 'DELETE',
+                            data: {
+                                '_token': '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if(response.success){
+                                    swal({
+                                        title: "Success!",
+                                        text: response.message,
+                                        type: "success",
+                                        showConfirmButton: false
+                                    }) 
+
+                                    setTimeout(() => {
+                                        location.reload();
+                                    }, 2000);
+                                }
+                            }
+                        })
+                    }
+                });
+            })
+        });  
+    </script>
 @endsection

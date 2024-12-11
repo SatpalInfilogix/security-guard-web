@@ -26,6 +26,9 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
+                </div>
             </div>
         </form>
     </div>
@@ -52,15 +55,29 @@
     </div>
 </div>
 
-<x-include-plugins :plugins="['sweetAlert']"></x-include-plugins>
+<x-include-plugins :plugins="['sweetAlert', 'chosen']"></x-include-plugins>
 
 <script>
+     $(function(){
+        $('#guard_id').chosen({
+            width: '100%',
+            placeholder_text_multiple: 'Select Guard'
+        });
+        $('#client_id').chosen({
+            width: '100%',
+            placeholder_text_multiple: 'Select Client'
+        });
+        $('#client_site_id').chosen({
+            width: '100%',
+            placeholder_text_multiple: 'Select Client Site'
+        });
+    });
     $(document).ready(function() {
         let guardRoasterTable = $('#list-view').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
-                url: "{{ route('get-guard-roaster-list') }}",
+                url: "{{ route('get-guard-roster-list') }}",
                 type: "POST",
                 data: function(d) {
                     d._token = "{{ csrf_token() }}";
@@ -126,9 +143,12 @@
             lengthMenu: [10, 25, 50, 100],
             order: [[0, 'asc']]
         });
-        $(document).on('change', '[name="guard_id"], [name="client_id"], [name="client_site_id"]', function() {
+        $('#searchBtn').on('click', function() {
             guardRoasterTable.ajax.reload();
-            });
+        });
+        // $(document).on('change', '[name="guard_id"], [name="client_id"], [name="client_site_id"]', function() {
+        //     guardRoasterTable.ajax.reload();
+        //     });
 
         $('#list-view').on('click', '.guard-delete-btn', function() {
             let source = $(this).data('source');

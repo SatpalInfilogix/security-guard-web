@@ -20,7 +20,7 @@ return new class extends Migration
             $table->time('start_time')->nullable()->index();
             $table->time('end_time')->nullable()->index();
             $table->date('end_date')->nullable()->index();
-
+            $table->boolean('is_publish')->default(0);
             $table->timestamps();
 
             $table->foreign('guard_id')->references('id')->on('users')->onDelete('cascade');

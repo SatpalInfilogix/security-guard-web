@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Punch;
 use App\Models\PublicHoliday;
 use App\Models\RateMaster;
+use App\Models\FortnightDates;
 use App\Models\GuardAdditionalInformation;
 use Carbon\Carbon;
 
@@ -15,13 +16,21 @@ class AttendanceController extends Controller
 {
     public function getAttendance(Request $request)
     {
-        $month = Carbon::now()->format('m-Y');
-        if ($request->month) {
-            $month = $request->month;
+        $today = Carbon::now();
+        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+        if (!$fortnight) {
+            $fortnight = null;
         }
+        // $month = Carbon::now()->format('m-Y');
+        // if ($request->month) {
+        //     $month = $request->month;
+        // }
 
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::createFromFormat('m-Y', $month)->startOfMonth();
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::createFromFormat('m-Y', $month)->endOfMonth();
+        // $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::createFromFormat('m-Y', $month)->startOfMonth();
+        // $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::createFromFormat('m-Y', $month)->endOfMonth();
+
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::parse($fortnight->start_date);
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::parse($fortnight->end_date);
 
         if ($startDate->greaterThan($endDate)) {
             return response()->json(['error' => 'Start date must be before end date'], 400);
@@ -67,11 +76,11 @@ class AttendanceController extends Controller
                     }
                 }
             }
-    
+
             $attendanceData[] = [
                 'date'             => $date->toDateString(),
                 'status'           => $punchRecord ? 'present' : 'absent',
-                'LoggedHours'      => $loggedHours,
+                'LoggedHours'      => round($loggedHours, 2),
                 'holiday'          => $publicHolidays->contains($date->toDateString()) ? 'Public Holiday' : '',
                 'regularHours'     => $regularHours,
                 'regularHoursEarning' => $regularHoursEarning,

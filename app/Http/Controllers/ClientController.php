@@ -19,6 +19,39 @@ class ClientController extends Controller
         return view('admin.clients.index', compact('clients'));
     }
 
+    public function getClient(Request $request)
+    {
+        $clients = Client::query();
+
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $clients->where(function($query) use ($searchValue) {
+                $query->where('client_code', 'like', '%' . $searchValue . '%')
+                    ->orWhere('client_name', 'like', '%' . $searchValue . '%')
+                    ->orWhere('nis', 'like', '%' . $searchValue . '%');
+            });
+        }
+
+        $totalRecords = Client::count();
+
+        $filteredRecords = $clients->count();
+
+        $length = $request->input('length', 10);
+        $start = $request->input('start', 0);
+
+        $clients = $clients->skip($start)->take($length)->get();
+
+        $data = [
+            'draw' => $request->input('draw'),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $clients,
+        ];
+
+        return response()->json($data);
+    }
+
+
     public function create()
     {
         if(!Gate::allows('create client')) {
@@ -104,19 +137,21 @@ class ClientController extends Controller
 
         $baseCode = substr($clientCode, 0, -3);
         $clientId = $request->input('client_id');
+
         if ($clientId) {
             $existingClient = Client::where('client_code', $clientCode)->where('id', '!=', $clientId)->first();
         } else {
-            $existingClient = Client::where('client_code', $clientCode)->first();
+            $existingClient = Client::where('client_name', $clientName)->orderBy('created_at', 'desc') ->first();
         }
 
         if ($existingClient) {
-            $counter = 2;
-            
-            while (Client::where('client_code', "{$clientCode}".str_pad($counter, 3, '0', STR_PAD_LEFT))->exists()) {
+            $lastNumericPart = (int) substr($existingClient->client_code, -3);
+            $counter = $lastNumericPart + 1; // Increment by 1
+    
+            while (Client::where('client_code', "{$baseCode}" . str_pad($counter, 3, '0', STR_PAD_LEFT))->exists()) {
                 $counter++;
             }
-
+    
             $clientCode = $baseCode . str_pad($counter, 3, '0', STR_PAD_LEFT);
         }
 
@@ -133,7 +168,6 @@ class ClientController extends Controller
         } elseif (count($words) == 1) {
             $code = substr($words[0], 0, 3);
         }
-    
         return strtoupper($code) . '001';
     }
     private function sanitizeClientName($clientName)

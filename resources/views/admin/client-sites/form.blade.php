@@ -6,7 +6,7 @@
                 <option value="" selected disabled>Select Client</option>
                 @foreach($clients as $client)
                     <option value="{{ $client->id }}" @selected(isset($clientSite->client_id) && $clientSite->client_id == $client->id)>
-                        {{ $client->client_name }}
+                        {{ $client->client_name }} ({{ $client->client_code }})
                     </option>
                 @endforeach
             </select>
@@ -137,3 +137,13 @@
         <button type="submit" class="btn btn-primary w-md">Submit</button>
     </div>
 </div>
+
+<x-include-plugins :plugins="['chosen']"></x-include-plugins>
+<script>
+    $(function(){
+        $('#client_id').chosen({
+            width: '100%',
+            placeholder_text_multiple: 'Select Client'
+        });
+    });
+</script>

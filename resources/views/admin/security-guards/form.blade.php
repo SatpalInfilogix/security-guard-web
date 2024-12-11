@@ -38,11 +38,11 @@
         $statusOptions = ['Active', 'Inactive', 'Hold'];
         ?>
         <label for="status">Status</label>
-        <select name="user_status" id="user_status" class="form-control">
+        <select name="user_status" id="user_status" class="form-control" {{ isset($user) && $user->status == 'Active' && auth()->user()->role != 'Admin' ? 'disabled' : '' }}>
             <option value="" selected disabled>Select Status</option>
             @foreach ($statusOptions as $value)
                 <option value="{{ $value }}"
-                    {{ old('status', $user->status ?? 'Inactive') === $value ? 'selected' : '' }}>
+                    {{ old('user_status', $user->status ?? 'Inactive') === $value ? 'selected' : '' }}>
                     {{ $value }}
                 </option>
             @endforeach

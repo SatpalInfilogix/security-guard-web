@@ -32,6 +32,10 @@ class LoginController extends Controller
             return response()->json(['success' => false, 'message' => 'User not found'], 404);
         }
     
+        if ($user->status !== 'Active') {
+            return response()->json(['success' => false, 'message' => 'Your account is not active.'], 403);
+        }
+    
         if (Hash::check($request->password, $user->password)) {
             $token = $user->createToken('MyApp')->plainTextToken;
             $user->token = $token;
@@ -48,6 +52,58 @@ class LoginController extends Controller
         }
     
         return response()->json(['success' => false, 'message' => 'Invalid credentials.'], 401);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'old_password' => 'required',
+            'password'     => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success'  => false,
+                'status' => 'VALIDATION_ERROR',
+                'message'  => $validator->errors()->first()
+            ]);
+        }
+
+        $user = Auth::user();
+
+        if(!$user) {
+            return response()->json([
+                'success' => false,
+                'status' => 'USER_NOT_FOUND',
+                'message' => 'User not found.'
+            ]);
+        }
+
+        if (!Hash::check($request->old_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'status' => 'INVALID_OLD_PASSWORD',
+                'message' => 'Old password does not match.'
+            ]);
+        }
+
+        if ($request->old_password === $request->password) {
+            return response()->json([
+                'success' => false,
+                'status' => 'MATCH_NEW_AND_OLD_PASSWORD',
+                'message' => 'The new password cannot be the same as the old password.'
+            ]);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'Status'  => 'SUCCESSFULLY_CREATED',
+            'message' => 'Password changed successfully.'
+        ]);
     }
 
 }
