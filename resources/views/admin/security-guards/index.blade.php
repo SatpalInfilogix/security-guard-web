@@ -137,23 +137,31 @@
                         data: 'status',
                         render: function(data, type, row) {
                             let statusOptions = ['Active', 'Inactive', 'Hold'];
-                            let statusDropdown = `<select name="guard_status" class="form-control" data-user-id="${row.id}">`;
+                            let statusDropdown = ''; 
+                            @can('edit security guards')
+                            statusDropdown = `<select name="guard_status" class="form-control" data-user-id="${row.id}" `;
+                            if (data === 'Active' && !@json(Auth::user()->hasRole('Admin'))) {
+                                statusDropdown += 'disabled'; // Disable the dropdown for non-super-admin users
+                            }
+
+                            statusDropdown += '>';
                             statusDropdown += '<option value="" selected disabled>Select Status</option>';
 
-                            // Safeguard against undefined userDocuments
-                            const userDocuments = row.userDocuments || {};  // Ensure userDocuments is defined
+                            const userDocuments = row.userDocuments || {};
 
-                            // Loop through status options
                             statusOptions.forEach(function(value) {
                                 let disabled = '';
-                                if (value === 'Active' && (
-                                    !userDocuments.trn || 
-                                    !userDocuments.nis || 
-                                    !userDocuments.birth_certificate || 
-                                    !userDocuments.psra
-                                )) {
-                                    disabled = 'disabled';
-                                }
+
+                                // if (data === 'Inactive' && (
+                                //     userDocuments.trn == null || 
+                                //     userDocuments.nis == null || 
+                                //     userDocuments.birth_certificate == null || 
+                                //     userDocuments.psra == null
+                                // )) {
+                                //     if (value === 'Active') {
+                                //         disabled = 'disabled';
+                                //     }
+                                // }
 
                                 statusDropdown += `<option value="${value}" 
                                     ${data === value ? 'selected' : ''} 
@@ -163,6 +171,7 @@
                             });
 
                             statusDropdown += '</select>';
+                            @endcan
                             return statusDropdown;
                         }
                     },
@@ -176,10 +185,11 @@
                             actions += '<i class="fas fa-pencil-alt"></i>';
                             actions += '</a>';
                             @endcan
-
-                            @can('delete security guards')
-                                actions += `<a data-source="Security Guard" class="security-guard-delete btn btn-outline-secondary btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
-                            @endcan
+                            if (row.status !== 'Active' || @json(Auth::user()->hasRole('Admin'))) {
+                                @can('delete security guards')
+                                    actions += `<a data-source="Security Guard" class="security-guard-delete btn btn-outline-secondary btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
+                                @endcan
+                            }
 
                             actions += '</div>';
                             return actions;
@@ -235,10 +245,9 @@
             })
 
             $(document).on('change', 'select[name="guard_status"]', function() {
-                console.log('assa');
                 let status = $(this).val();
                 let userId = $(this).attr('data-user-id');
-                
+                let selectElement = $(this);
                 $.ajax({
                     url: "{{ route('users.update-status') }}",
                     method: 'PUT',
@@ -259,6 +268,16 @@
                             setTimeout(() => {
                                 location.reload();
                             }, 2000);
+                        } else {
+                            swal({
+                                title: "Missing Documents",
+                                text: "Please ensure all required documents (TRN, NIS, Birth Certificate, PSRA) are uploaded before setting the status to Active.",
+                                type: "error",
+                                showConfirmButton: true
+                            });
+                            if (status === "Active") {
+                                selectElement.val("Inactive"); // Reset the value back to "Inactive"
+                            }
                         }
                     }
                 })

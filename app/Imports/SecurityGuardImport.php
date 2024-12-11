@@ -142,10 +142,10 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
 
         $user->userDocuments()->updateOrCreate([], [
             'user_id'           => $user->id,
-            'trn'               => $this->uploadDoc($row['trn_document'] ?? null, 'uploads/user-documents/trn/'),
-            'nis'               => $this->uploadDoc($row['nis_document'] ?? null, 'uploads/user-documents/nis/'),
-            'psra'              => $this->uploadDoc($row['psra_document'] ?? null, 'uploads/user-documents/psra/'),
-            'birth_certificate' => $this->uploadDoc($row['birth_certificate'] ?? null, 'uploads/user-documents/birth_certificate/'),
+            'trn'               => Null,
+            'nis'               => NULL,
+            'psra'              => NULL,
+            'birth_certificate' => NULL,
         ]);
 
         return null;
