@@ -105,4 +105,7 @@ span.invalid-message {
     font-size: 12px;
     font-weight: bold;
 }
+tr.current-fortnight {
+    --bs-table-bg: #7184dd;
+}
 

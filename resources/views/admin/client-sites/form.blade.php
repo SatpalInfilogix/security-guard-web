@@ -32,7 +32,7 @@
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <label for="manager_id">Vanguard Manager</label>
+            <label for="manager_id">Vanguard Manager<span class="text-danger">*</span></label>
             <select name="manager_id" id="manager_id" class="form-control{{ $errors->has('manager_id') ? ' is-invalid' : '' }}">
                 <option value="" selected disabled>Select Manager</option>
                 @foreach($users as $user)

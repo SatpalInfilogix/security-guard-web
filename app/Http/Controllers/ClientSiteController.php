@@ -81,6 +81,7 @@ class ClientSiteController extends Controller
             'latitude'      => 'required',
             'longitude'     => 'required',
             'radius'        => 'required',
+            'manager_id'    => 'required'
         ]);
 
         ClientSite::create([
@@ -140,6 +141,7 @@ class ClientSiteController extends Controller
             'latitude'      => 'required',
             'longitude'     => 'required',
             'radius'        => 'required',
+            'manager_id'    => 'required'
         ]);
 
         $clientSite->update([

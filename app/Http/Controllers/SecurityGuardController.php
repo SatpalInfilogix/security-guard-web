@@ -148,8 +148,9 @@ class SecurityGuardController extends Controller
             'nis'           => 'nullable|unique:guard_additional_information,nis',
             'psra'          => 'nullable|unique:guard_additional_information,psra',
             'account_number'=> 'nullable|unique:users_bank_details,account_no',
-            'date_of_birth' => 'nullable|date|before:date_of_joining',  // Ensure date_of_birth is before date_of_joining
+            'date_of_birth' => 'nullable|date|before:date_of_joining',
             'date_of_joining'=> 'nullable|date',
+            'guard_type_id' => 'required'
         ];
 
         if ($request->user_status === 'Active') {
@@ -293,6 +294,7 @@ class SecurityGuardController extends Controller
             'account_no'    => 'nullable|unique:users_bank_details,account_no,'. optional($usersBankDetail)->id,
             'date_of_birth' => 'nullable|date|before:date_of_joining',
             'date_of_joining'=> 'nullable|date',
+            'guard_type_id' => 'required'
         ];
     
         if ($request->user_status === 'Active') {

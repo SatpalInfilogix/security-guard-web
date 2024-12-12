@@ -110,7 +110,7 @@ class UserController extends Controller
         $request->validate([
             'first_name'    => 'required',
             'last_name'     => 'required',
-            'phone_no'      => 'required|unique:users,phone_no,' . $id, 
+            'phone_no'      => 'required|unique:users,phone_number,' . $id, 
         ]);
 
         $user = User::where('id', $id)->update([

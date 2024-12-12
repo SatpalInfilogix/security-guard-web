@@ -80,20 +80,37 @@
 <script>
     $(document).ready(function() {
         function convertToDate(dateStr, timeStr) {
-            var timeParts = timeStr.split(' ');  
-            var time = timeParts[0].split(':');
+            if (timeStr.indexOf('AM') === -1 && timeStr.indexOf('PM') === -1) {
+                console.error('Invalid time format: ' + timeStr);
+                return new Date(NaN);
+            }
+
+            if (timeStr.indexOf('AM') === -1 && timeStr.indexOf('PM') !== -1) {
+                timeStr = timeStr.slice(0, timeStr.length - 2) + " " + timeStr.slice(-2);
+            } else if (timeStr.indexOf('PM') === -1 && timeStr.indexOf('AM') !== -1) {
+                timeStr = timeStr.slice(0, timeStr.length - 2) + " " + timeStr.slice(-2);
+            }
             
+            var timeParts = timeStr.split(' ');
+            if (timeParts.length < 2) {
+                console.error('Invalid time format: ' + timeStr);
+                return new Date(NaN);
+            }
+
+            var time = timeParts[0].split(':');
             var hours = parseInt(time[0]);
             var minutes = parseInt(time[1]);
+            var period = timeParts[1].toUpperCase();
 
-            if (timeParts[1] && timeParts[1].toUpperCase() === 'PM') {
-                if (hours !== 12) {
-                    hours += 12;
-                }
-            } else if (timeParts[1] && timeParts[1].toUpperCase() === 'AM') {
-                if (hours === 12) {
-                    hours = 0;
-                }
+            if (period !== 'AM' && period !== 'PM') {
+                console.error('Invalid time period: ' + period);
+                return new Date(NaN);
+            }
+
+            if (period === 'PM' && hours !== 12) {
+                hours += 12;
+            } else if (period === 'AM' && hours === 12) {
+                hours = 0;
             }
 
             return new Date(dateStr + ' ' + (hours < 10 ? '0' : '') + hours + ':' + (minutes < 10 ? '0' : '') + minutes);
@@ -113,8 +130,10 @@
             var startTimeObj = convertToDate(date, startTime);
             var endTimeObj = convertToDate(date, endTime); 
 
-            console.log('Start time: ', startTimeObj);
-            console.log('End time: ', endTimeObj);
+            if (startTimeObj.toString() === "Invalid Date" || endTimeObj.toString() === "Invalid Date") {
+                console.error('Invalid start or end time');
+                return;
+            }
 
             if (endTimeObj <= startTimeObj) {
                 dateObj.setDate(dateObj.getDate() + 1);

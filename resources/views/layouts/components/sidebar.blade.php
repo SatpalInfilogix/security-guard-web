@@ -38,6 +38,12 @@
                     </a>
                 </li>
                 @endcanany
+                <li>
+                    <a href="#" class="waves-effect">
+                        <i class="bx bx-checkbox-square"></i>
+                        <span key="t-spreadsheet">Payroll</span>
+                    </a>
+                </li>
                 @canany('view user')
                 <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}">
                     <a href="{{ route('users.index')}}" class="waves-effect">
@@ -85,6 +91,12 @@
                     </a>
                 </li>
                 @endcanany
+                <li class="{{ Request::segment(2) == 'fortnight-dates' ? 'mm-active' : '' }}">
+                    <a href="{{ route('fortnight-dates.index')}}" class="waves-effect">
+                        <i class="bx bx-grid-horizontal"></i>
+                        <span key="t-wrench">Fortnight Dates</span>
+                    </a>
+                </li>
                 @can('view public holiday')
                 <li class="{{ Request::segment(2) == 'public-holidays' ? 'mm-active' : '' }}">
                     <a href="{{ route('public-holidays.index')}}" class="waves-effect">
