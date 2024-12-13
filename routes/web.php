@@ -18,6 +18,7 @@ use App\Http\Controllers\GuardRosterController;
 use App\Http\Controllers\HelpRequestController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\FortnightDatesController;
+use App\Http\Controllers\PayrollController;
 
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');
@@ -48,7 +49,8 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'client-sites'          => ClientSiteController::class,
             'guard-rosters'         => GuardRosterController::class,
             'leaves'                => LeaveController::class,
-            'fortnight-dates'       => FortnightDatesController::class
+            'fortnight-dates'       => FortnightDatesController::class,
+            'payrolls'              => PayrollController::class,
         ]);
 
         Route::get('/payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
