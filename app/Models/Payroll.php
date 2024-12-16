@@ -12,6 +12,6 @@ class Payroll extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'guard_id'); // 'guard_id' is the foreign key
+        return $this->belongsTo(User::class, 'guard_id');
     }
 }

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('payroll_id');
             $table->unsignedBigInteger('guard_id');
             $table->date('date')->nullable();
-            $table->string('guard_type_id')->nullable()->constrained()->nullOnDelete();
+            $table->unsignedBigInteger('guard_type_id')->nullable();
             $table->string('normal_hours')->nullable();
             $table->string('overtime')->nullable();
             $table->string('public_holiday')->nullable();
@@ -24,6 +24,7 @@ return new class extends Migration
             
             $table->foreign('payroll_id')->references('id')->on('payrolls')->onDelete('cascade');
             $table->foreign('guard_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('guard_type_id')->references('id')->on('rate_masters')->onDelete('set null');
         });
     }
 

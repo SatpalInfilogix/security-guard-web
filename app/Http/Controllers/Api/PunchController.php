@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Punch;
+use App\Models\RateMaster;
 use App\Models\GuardRoster;
 use App\Services\GeocodingService;
 use Illuminate\Support\Facades\Validator;
@@ -154,13 +155,22 @@ class PunchController extends Controller
             $imageName = uploadFile($request->file('in_image'), 'uploads/activity/punch_in/');
             $in_location = $this->geocodingService->getAddress($request->in_lat, $request->in_long);
 
+            $rateMaster = RateMaster::where('id', $todaysDuty->guard_type_id)->first();
             $punchIn = Punch::create([
-                'user_id'     => Auth::id(),
-                'in_time'     => $request->time,
-                'in_lat'      => $request->in_lat,
-                'in_long'     => $request->in_long,
-                'in_location' => json_encode($in_location) ?? '',
-                'in_image'    => $imageName,
+                'user_id'       => Auth::id(),
+                'guard_type_id' => optional($rateMaster)->id,
+                'in_time'       => $request->time,
+                'in_lat'        => $request->in_lat,
+                'in_long'       => $request->in_long,
+                'in_location'   => json_encode($in_location) ?? '',
+                'in_image'      => $imageName,
+                'regular_rate'  => $rateMaster->regular_rate ?? 0,
+                'laundry_allowance' => $rateMaster->laundry_allowance ?? 0,
+                'canine_premium'    => $rateMaster->canine_premium ?? 0,
+                'fire_arm_premium'  => $rateMaster->fire_arm_premium ?? 0,
+                'gross_hourly_rate' => $rateMaster->gross_hourly_rate ?? 0,
+                'overtime_rate'     => $rateMaster->overtime_rate ?? 0,
+                'holiday_rate'      => $rateMaster->holiday_rate ?? 0
             ]);
 
             return $this->createResponse(true, 'Punch created successfully.', $punchIn);

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('punches', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade')->index();
+            $table->unsignedBigInteger('guard_type_id')->nullable();
             $table->timestamp('in_time')->nullable();
             $table->decimal('in_lat', 10, 8)->nullable();
             $table->decimal('in_long', 11, 8)->nullable();
@@ -24,10 +25,20 @@ return new class extends Migration
             $table->decimal('out_long', 11, 8)->nullable();
             $table->json('out_location')->nullable();
             $table->string('out_image')->nullable();
+
+            $table->decimal('regular_rate')->nullable();
+            $table->decimal('laundry_allowance')->nullable();
+            $table->decimal('canine_premium')->nullable();
+            $table->decimal('fire_arm_premium')->nullable();
+            $table->decimal('gross_hourly_rate')->nullable();
+            $table->decimal('overtime_rate')->nullable();
+            $table->decimal('holiday_rate')->nullable();
             $table->timestamps();
 
             $table->index(['in_time']);
             $table->index(['out_time']);
+
+            $table->foreign('guard_type_id')->references('id')->on('rate_masters')->onDelete('set null');
         });
     }
 

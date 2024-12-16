@@ -80,7 +80,7 @@
                                     <th>#</th>
                                     <th>Emp. Code</th>
                                     <th>First Name</th>
-                                    <th>Last Name</th>
+                                    <th>Middle Name</th>
                                     <th>Email</th>
                                     <th>Phone number</th>
                                     <th>Status</th>
@@ -130,7 +130,7 @@
                     },
                     { data: 'user_code'},
                     { data: 'first_name' },
-                    { data: 'last_name' },
+                    { data: 'middle_name' },
                     { data: 'email' },
                     { data: 'phone_number' },
                     {

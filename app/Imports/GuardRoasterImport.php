@@ -11,6 +11,7 @@ use App\Models\Client;
 use App\Models\User;
 use App\Models\Leave;
 use App\Models\ClientSite;
+use App\Models\RateMaster;
 use Spatie\Permission\Models\Role;
 
 class GuardRoasterImport implements ToModel, WithHeadingRow
@@ -28,7 +29,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
     public function model(array $row)
     {
         if ($this->rowNumber == 1) {
-            if (empty($row['guard_id']) || empty($row['client_site_id'])) {
+            if (empty($row['guard_id']) ||  empty($row['guard_type_id']) || empty($row['client_site_id'])) {
                 return null;
             }
         }
@@ -38,13 +39,18 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                 $this->addImportResult('Guard id is required.');
                 return null;
             }
+
+            if (empty($row['guard_type_id'])) {
+                $this->addImportResult('Guard type id is required.');
+                return null;
+            }
             
             if (empty($row['client_site_id'])) {
                 $this->addImportResult('Client Site id is required.');
                 return null;
             }
 
-            if (in_array($column, ['guard_id', 'client_site_id'])) {
+            if (in_array($column, ['guard_id', 'guard_type_id', 'client_site_id'])) {
                 continue;
             }
 
@@ -69,6 +75,12 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
 
             if (!$clientSite) {
                 $this->addImportResult('Client site ID ' . $row['client_site_id'] . ' does not exist.');
+                return null;
+            }
+
+            $guardTypeId = RateMaster::where('id', $row['guard_type_id'])->first();
+            if(!$guardTypeId) {
+                $this->addImportResult('Guard Type ID ' . $row['guard_type_id'] . ' does not exist.');
                 return null;
             }
 
@@ -142,6 +154,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                     $existingRoster = GuardRoster::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->where('is_publish', 0)->first();
                     if ($existingRoster) {
                         $existingRoster->update([
+                            'guard_type_id'  => $row['guard_type_id'],
                             'client_id'      => $clientSite->client_id ?? Null,
                             'client_site_id' => $row['client_site_id'],
                             'start_time'     => $time_in ?? '',
@@ -157,6 +170,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                     } else {
                         GuardRoster::create([
                             'guard_id'       => $row['guard_id'],
+                            'guard_type_id'  => $row['guard_type_id'],
                             'client_id'      => $clientSite->client_id ?? Null,
                             'client_site_id' => $row['client_site_id'],
                             'date'           => $formattedDate,

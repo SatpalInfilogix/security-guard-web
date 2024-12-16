@@ -94,6 +94,12 @@
                     minDate: "today"
                 });
             });
+
+            $('.datePicker').each(function() {
+                flatpickr(this, {
+                    dateFormat: "Y-m-d",
+                });
+            });
         });
     </script>
     @endpush

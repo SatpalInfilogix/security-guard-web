@@ -150,7 +150,8 @@ class SecurityGuardController extends Controller
             'account_number'=> 'nullable|unique:users_bank_details,account_no',
             'date_of_birth' => 'nullable|date|before:date_of_joining',
             'date_of_joining'=> 'nullable|date',
-            'guard_type_id' => 'required'
+            'guard_type_id' => 'required',
+            'guard_employee_as_id' => 'required'
         ];
 
         if ($request->user_status === 'Active') {
@@ -183,14 +184,14 @@ class SecurityGuardController extends Controller
                     'psra'                  => $request->psra,
                     'date_of_joining'       => $this->parseDate($request->date_of_joining),
                     'date_of_birth'         => $this->parseDate($request->date_of_birth),
-                    'employer_company_name' => $request->employer_company_name,
+                    /* 'employer_company_name' => $request->employer_company_name,
                     'guards_current_rate'   => $request->current_rate,
                     'location_code'         => $request->location_code,
                     'location_name'         => $request->location_name,
                     'client_code'           => $request->client_code,
-                    'client_name'           => $request->client_name,
+                    'client_name'           => $request->client_name, */
                     'guard_type_id'         => $request->guard_type_id,
-                    'employed_as'           => $request->employed_as,
+                    'guard_employee_as_id'  => $request->guard_employee_as_id,
                     'date_of_seperation'    => $this->parseDate($request->date_of_seperation)
                 ]);
 
@@ -294,7 +295,8 @@ class SecurityGuardController extends Controller
             'account_no'    => 'nullable|unique:users_bank_details,account_no,'. optional($usersBankDetail)->id,
             'date_of_birth' => 'nullable|date|before:date_of_joining',
             'date_of_joining'=> 'nullable|date',
-            'guard_type_id' => 'required'
+            'guard_type_id' => 'required',
+            'guard_employee_as_id' => 'required'
         ];
     
         if ($request->user_status === 'Active') {
@@ -329,19 +331,19 @@ class SecurityGuardController extends Controller
                 'psra'                  => $request->psra,
                 'date_of_joining'       => $this->parseDate($request->date_of_joining),
                 'date_of_birth'         => $this->parseDate($request->date_of_birth),
-                'employer_company_name' => $request->employer_company_name,
+                /* 'employer_company_name' => $request->employer_company_name,
                 'guards_current_rate'   => $request->current_rate,
                 'location_code'         => $request->location_code,
                 'location_name'         => $request->location_name,
                 'client_code'           => $request->client_code,
-                'client_name'           => $request->client_name,
+                'client_name'           => $request->client_name, */
                 'guard_type_id'         => $request->guard_type_id,
-                'employed_as'           => $request->employed_as,
+                'guard_employee_as_id'  => $request->guard_employee_as_id,
                 'date_of_seperation'    => $this->parseDate($request->date_of_seperation),
             ]);
 
             ContactDetail::updateOrCreate(
-                ['user_id' => $id], // Condition to find the existing record
+                ['user_id' => $id],
                 [
                 'apartment_no'  => $request->apartment_no,
                 'building_name' => $request->building_name,
@@ -352,7 +354,7 @@ class SecurityGuardController extends Controller
             ]);
 
             UsersBankDetail::updateOrCreate(
-            ['user_id' => $id], // Condition to find the existing record
+            ['user_id' => $id],
             [
             'bank_name'             => $request->bank_name,
             'bank_branch_address'   => $request->branch,
@@ -363,7 +365,7 @@ class SecurityGuardController extends Controller
         ]);
 
         UsersKinDetail::updateOrCreate(
-            ['user_id' => $id], // Condition to find the existing record
+            ['user_id' => $id],
             [
             'surname'        => $request->kin_surname,
             'first_name'     => $request->kin_first_name,
@@ -394,8 +396,8 @@ class SecurityGuardController extends Controller
 
         // $usersDocuments->update($documents);
         usersDocuments::updateOrCreate(
-            ['user_id' => $id], // Condition to check if the record exists
-            $documents // Data to update or create
+            ['user_id' => $id],
+            $documents 
         );
         return redirect()->route('security-guards.index')->with('success', 'Security Guard updated successfully.');
     }
@@ -436,14 +438,14 @@ class SecurityGuardController extends Controller
                 "PSRA Registration No"  => $guard->guardAdditionalInformation->psra ?? '',
                 "Guard's Date of Joining" => $guard->guardAdditionalInformation->date_of_joining ?? '',
                 "Date of Birth"         => $guard->guardAdditionalInformation->date_of_birth ?? '',
-                "Employer Company Name" => $guard->guardAdditionalInformation->employer_company_name ?? '',
-                "Guard's Current Rate"  => $guard->guardAdditionalInformation->guards_current_rate ?? '',
-                "Location Code"         => $guard->guardAdditionalInformation->location_code ?? '',
-                "Location Name"         => $guard->guardAdditionalInformation->location_name ?? '',
-                "Client Code"           => $guard->guardAdditionalInformation->client_code ?? '',
-                "Client Name"           => $guard->guardAdditionalInformation->client_name ?? '',
+                // "Employer Company Name" => $guard->guardAdditionalInformation->employer_company_name ?? '',
+                // "Guard's Current Rate"  => $guard->guardAdditionalInformation->guards_current_rate ?? '',
+                // "Location Code"         => $guard->guardAdditionalInformation->location_code ?? '',
+                // "Location Name"         => $guard->guardAdditionalInformation->location_name ?? '',
+                // "Client Code"           => $guard->guardAdditionalInformation->client_code ?? '',
+                // "Client Name"           => $guard->guardAdditionalInformation->client_name ?? '',
                 "Guard Type"            => $guard->guardAdditionalInformation->guard_type_id ?? '',
-                "Employed As"           => $guard->guardAdditionalInformation->employed_as ?? '',
+                "Guard Employed As"     => $guard->guardAdditionalInformation->guard_employee_as_id ?? '',
                 "Date of Separation"    => $guard->guardAdditionalInformation->date_of_seperation ?? '',
                 // Contact details
                 "Apartment No"          => $guard->contactDetail->apartment_no ?? '',
@@ -483,17 +485,16 @@ class SecurityGuardController extends Controller
 
         $headers = [
             "First Name","Middle Name","Surname","TRN","NIS","PSRA","Date Of Joining","Date Of Birth",
-            "Employer Company Name","Current Rate","Location Code","Location Name","Client Code","Client Name","Guard Type","Employed As","Date Of Separation",
+            // "Employer Company Name","Current Rate","Location Code","Location Name","Client Code","Client Name",
+            "Guard Type","Guard Employed As","Date Of Separation",
             "Apartment No","Building Name","Street Name","Parish","City","Postal Code","Email","Phone Number",
             "Bank Name","Bank Branch Address","Account Number","Account Type","Routing Number","Kin Surname","Kin First Name","Kin Middle Name","Kin Apartment No",
             "Kin Building Name","Kin Street Name","Kin Parish","Kin City","Kin Postal Code","Kin Email","Kin Phone Number",
             "Trn Document","Nis Document","Psra Document","Birth Certificate",
         ];
 
-        // Add headers at the top of the array
         array_unshift($guardArray, $headers);
 
-        // Create a callback to generate the CSV
         $callback = function () use ($guardArray) {
             $file = fopen('php://output', 'w');
             foreach ($guardArray as $row) {

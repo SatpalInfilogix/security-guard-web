@@ -31,7 +31,9 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             'trn'               => 'nullable|unique:guard_additional_information,trn',
             'nis'               => 'nullable|unique:guard_additional_information,nis',
             'psra'              => 'nullable|unique:guard_additional_information,psra',
-            'account_no'        => 'nullable|unique:users_bank_details,account_no'
+            'account_no'        => 'nullable|unique:users_bank_details,account_no',
+            'guard_employed_as' => 'required',
+            'guard_type'        => 'required',
             // 'trn_document'      => 'required',
             // 'nis_document'      => 'required',
             // 'psra_document'     => 'required',
@@ -89,14 +91,14 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             'psra'                => $row["psra"] ?? NULL,
             'date_of_joining'     => !empty($row["date_of_joining"]) ? $row["date_of_joining"] : null,
             'date_of_birth'       => !empty($row["date_of_birth"]) ? $row["date_of_birth"] : null,
-            'employer_company_name' => $row["employer_company_name"] ?? null,
+            /* 'employer_company_name' => $row["employer_company_name"] ?? null,
             'guards_current_rate' => $row["guards_current_rate"] ?? null,
             'location_code'       => $row["location_code"] ?? null,
             'location_name'       => $row["location_name"] ?? null,
             'client_code'         => $row["client_code"] ?? null,
-            'client_name'         => $row["client_name"] ?? null,
-            'guard_type_id'       => $row["guard_type_id"] ?? null,
-            'employed_as'         => $row["employed_as"] ?? null,
+            'client_name'         => $row["client_name"] ?? null, */
+            'guard_type_id'          => $row["guard_type"] ?? null,
+            'guard_employee_as_id'=> $row["guard_employed_as"] ?? null,
             'date_of_seperation'  => !empty($row["date_of_seperation"]) ? $row["date_of_seperation"] : null,
         ]);
 

@@ -10,6 +10,7 @@ use App\Models\Leave;
 use App\Models\Client;
 use App\Models\ClientSite;
 use App\Models\PublicHoliday;
+use App\Models\RateMaster;
 use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
 use App\Imports\GuardRoasterImport;
@@ -118,13 +119,14 @@ class GuardRosterController extends Controller
 
         $userRole = Role::where('name', 'Security Guard')->first();
 
-        $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
+        $securityGuards = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         })->where('status', 'Active')->latest()->get();
 
         $clients = Client::latest()->get();
+        $guardTypes = RateMaster::latest()->get();
 
-        return view('admin.guard-roster.create', compact('securityGuards', 'clients'));
+        return view('admin.guard-roster.create', compact('securityGuards', 'clients', 'guardTypes'));
     }
 
     public function store(Request $request)
@@ -137,6 +139,7 @@ class GuardRosterController extends Controller
             'guard_id'       => 'required',
             'client_id'      => 'required',
             'client_site_id' => 'required',
+            'guard_type_id'  => 'required',
             'date'           => 'required|date',
             'start_time'     => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
             'end_time'       => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
@@ -155,6 +158,7 @@ class GuardRosterController extends Controller
             [
                 'client_id'      => $request->client_id,
                 'client_site_id' => $request->client_site_id,
+                'guard_type_id'  => $request->guard_type_id,
                 'start_time'     => $start_time,
                 'end_time'       => $end_time,
                 'end_date'       => $request->end_date
@@ -193,8 +197,9 @@ class GuardRosterController extends Controller
 
         $guardRoaster['start_time'] = $start_time;
         $guardRoaster['end_time']   = $end_time;
+        $guardTypes = RateMaster::latest()->get();
 
-        return view('admin.guard-roster.edit', compact('securityGuards', 'clients', 'guardRoaster', 'clientSites'));
+        return view('admin.guard-roster.edit', compact('securityGuards', 'clients', 'guardRoaster', 'clientSites', 'guardTypes'));
     }
 
     public function update(Request $request, $id)
@@ -206,6 +211,7 @@ class GuardRosterController extends Controller
             'guard_id'    => 'required',
             'client_id'    => 'required',
             'client_site_id' => 'required',
+            'guard_type_id'  => 'required',
             'start_time'     => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
             'end_time'       => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
         ]);
@@ -229,6 +235,7 @@ class GuardRosterController extends Controller
             'guard_id'       => $request->guard_id,
             'client_id'      => $request->client_id,
             'client_site_id' => $request->client_site_id,
+            'guard_type_id'  => $request->guard_type_id,
             'date'           => $request->date,
             'start_time'     => $start_time,
             'end_time'       => $end_time,
@@ -496,8 +503,8 @@ class GuardRosterController extends Controller
             $time_in_out = $items->map(function ($item) {
                 return [
                     'date' => $item->date,
-                    'time_in' => \Carbon\Carbon::parse($item->start_time)->format('h:iA'),  // 12-hour AM/PM format
-                    'time_out' => \Carbon\Carbon::parse($item->end_time)->format('h:iA')   // 12-hour AM/PM format
+                    'time_in' => \Carbon\Carbon::parse($item->start_time)->format('h:iA'),
+                    'time_out' => \Carbon\Carbon::parse($item->end_time)->format('h:iA') 
                 ];
             });
 
@@ -505,15 +512,29 @@ class GuardRosterController extends Controller
                 'guard_name' => $firstItem->user->first_name . ' ' . optional($firstItem->user)->surname,
                 'location_code' => $firstItem->clientSite->location_code,
                 'client_name' => $firstItem->client->client_name,
-                'time_in_out' => $time_in_out,  // Added time_in and time_out
+                'time_in_out' => $time_in_out,
             ];
         });
 
         return response()->json([
             'draw' => intval($request->input('draw')),
             'recordsTotal' => $totalRecords,
-            'recordsFiltered' => $totalRecords,  // Adjust filtered count if needed
+            'recordsFiltered' => $totalRecords,
             'data' => $formattedGuardRoasters
         ]);
     }
+
+    public function getGuardTypeByGuardId($guardId)
+    {
+        $guardInfo = User::with('guardAdditionalInformation')->where('id', $guardId)->first();
+    
+        if ($guardInfo && $guardInfo->guardAdditionalInformation) {
+            return response()->json([
+                'guard_type_id' => $guardInfo->guardAdditionalInformation->guard_type_id ?? null,
+            ]);
+        }
+    
+        return response()->json(['guard_type_id' => null]);
+    }
+    
 }

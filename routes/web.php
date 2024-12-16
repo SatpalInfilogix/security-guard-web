@@ -76,7 +76,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('import-security-guard', [SecurityGuardController::class, 'importSecurityGuard'])->name('import.security-guard');
 
     Route::get('download-guard-roster-sample', function() {
-        $file = public_path('assets/sample-guard-roster/guard-roster.xlsx');
+        $file = public_path('assets/sample-guard-roster/guard_roster.xlsx');
         return Response::download($file);
     });
 
@@ -92,6 +92,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('get-security-guard', [SecurityGuardController::class, 'getSecurityGuard'])->name('get-security-guard');
     Route::post('get-client-list', [ClientController::class, 'getClient'])->name('get-client-list');
     Route::post('get-client-site-list', [ClientSiteController::class, 'getClientSite'])->name('get-client-site-list');
+    Route::post('get-payroll-list', [PayrollController::class, 'getPayroll'])->name('get-payroll-list');
 
     Route::get('security-guards/pdf', [SecurityGuardController::class, 'downloadPDF'])->name('security-guards.pdf');
 
@@ -100,4 +101,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('/guard-rosters/download', [GuardRosterController::class, 'download'])->name('guard-rosters.download');
     Route::get('/security-guard/download', [SecurityGuardController::class, 'exportResultCsv'])->name('security-guard.download');
     Route::get('/attendance-list/download', [AttendanceController::class, 'exportAttendance'])->name('attendance-list.download');
+
+    Route::get('/get-guard-type-by-guard-id/{guardId}', [GuardRosterController::class, 'getGuardTypeByGuardId']);
+
 });

@@ -1,6 +1,6 @@
 <div class="row mb-2">
     
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="mb-3">
             <label for="guard_id">Guard<span class="text-danger">*</span></label>
             <select name="guard_id" id="guard_id" class="form-control{{ $errors->has('guard_id') ? ' is-invalid' : '' }}">
@@ -16,7 +16,25 @@
             @enderror
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
+        <div class="mb-3">
+            <label for="guard_type_id">Guard Type<span class="text-danger">*</span></label>
+            <select name="guard_type_id" id="guard_type_id" class="form-control{{ $errors->has('guard_type_id') ? ' is-invalid' : '' }}">
+                <option value="" disabled selected>Select Guard Type</option>
+                @foreach($guardTypes as $guardType)
+                    <option value="{{ $guardType->id }}" 
+                            @selected(isset($guardRoaster->guard_type_id) && $guardRoaster->guard_type_id == $guardType->id)>
+                        {{ $guardType->guard_type }}
+                    </option>
+                @endforeach
+            </select>
+            @error('guard_type_id')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+    </div>
+
+    <div class="col-md-3">
         <div class="mb-3">
             <label for="client_id">Client<span class="text-danger">*</span></label>
             <select name="client_id" id="client_id" class="form-control{{ $errors->has('client_id') ? ' is-invalid' : '' }}">
@@ -32,7 +50,7 @@
             @enderror
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="mb-3">
             <label for="client_site_id">Client Site<span class="text-danger">*</span></label>
             <select name="client_site_id" id="client_site_id" class="form-control{{ $errors->has('client_site_id') ? ' is-invalid' : '' }}">
@@ -224,11 +242,11 @@
         $('#guard_id').change(function() {
             const guardId = $(this).val();
             if (guardId) {
-                $('#date').val('');  // Clear the date field when a new guard is selected
+                $('#date').val('');
                 fetchAssignedDates(guardId);
                 fetchLeaves(guardId);
             } else {
-                initDatePicker(assignedDates, holidayDates, leaveDates); // Reset date picker with no disabled dates
+                initDatePicker(assignedDates, holidayDates, leaveDates);
             }
         });
 
@@ -339,5 +357,28 @@
             }
         });
     });
+
+    $(document).ready(function() {
+        $('#guard_id').change(function() {
+            var guardId = $(this).val();
+            
+            if (guardId) {
+                $.ajax({
+                    url: '/get-guard-type-by-guard-id/' + guardId,
+                    method: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.guard_type_id) {
+                            $('#guard_type_id').val(response.guard_type_id).trigger('chosen:updated'); // Update chosen dropdown if you're using it
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error fetching guard type:', error);
+                    }
+                });
+            }
+        });
+    });
+
     </script>
 
