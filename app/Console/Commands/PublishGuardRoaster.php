@@ -257,6 +257,7 @@ class PublishGuardRoaster extends Command
 
                     $workedMinutes = $inTime->diffInMinutes($outTime);
                     $totalWorkedMinutes += $workedMinutes;
+                    $guardTypeId = $attendanceForDay['guard_type_id'];
                 }
 
                 $isPublicHoliday = in_array($attendanceDate, $publicHolidays);
@@ -281,12 +282,10 @@ class PublishGuardRoaster extends Command
                 $publicHolidayHours = intdiv($publicHolidayMinutes, 60);
                 $publicHolidayRemainingMinutes = $publicHolidayMinutes % 60;
 
-                $user = User::with('guardAdditionalInformation')->where('id', $userId)->first();
-
                 PayrollDetail::create([
                     'payroll_id' => $payrollId,
                     'guard_id' => $userId,
-                    'guard_type_id' => $user->guardAdditionalInformation->guard_type_id,
+                    'guard_type_id' => $guardTypeId,
                     'date' => $attendanceDate,
                     'normal_hours' => $regularHours . '.' . str_pad($regularRemainingMinutes, 2, '0', STR_PAD_LEFT),
                     'overtime' => $overtimeHours . '.' . str_pad($overtimeRemainingMinutes, 2, '0', STR_PAD_LEFT),
