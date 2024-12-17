@@ -72,8 +72,31 @@ class PayrollController extends Controller
     
     public function show(Payroll $payroll)
     {
-        $payrollDetails = PayrollDetail::where('payroll_id', $payroll->id)->get();
+        $payroll = $payroll->with('user', 'user.guardAdditionalInformation')->first();
+        $payrollDetails = PayrollDetail::with('user')->where('payroll_id', $payroll->id)->get();
 
-        return view('admin.payroll.view');
+        return view('admin.payroll.show', compact('payrollDetails', 'payroll'));
+    }
+
+    public function edit(Payroll $payroll)
+    {
+        $payroll = Payroll::where('id', $payroll->id)->with('user', 'user.guardAdditionalInformation')->first();
+        $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->count();
+        
+        return view('admin.payroll.edit', compact('payroll', 'fortnightDayCount'));
+    }
+
+    public function update(Request $request, Payroll $payroll) 
+    {
+        $payroll->update([
+            'paye'              => $request->paye,
+            'staff_loan'        => $request->staff_loan,
+            'medical_insurance' => $request->medical_insurance
+        ]);
+
+        session()->flash('success', 'Payroll details updated successfully');
+        return response()->json([
+            'success' => true
+        ]);
     }
 }

@@ -16,9 +16,22 @@ return new class extends Migration
             $table->unsignedBigInteger('guard_id');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->string('normal_hours')->nullable();
-            $table->string('overtime')->nulable();
-            $table->string('public_holidays')->nullable();
+            $table->decimal('normal_hours', 10, 2)->nullable();
+            $table->decimal('overtime', 10, 2)->nullable();
+            $table->decimal('public_holidays', 10, 2)->nullable();
+            $table->decimal('normal_hours_rate', 10, 2)->nullable();
+            $table->decimal('overtime_rate', 10, 2)->nullable();
+            $table->decimal('public_holiday_rate', 10, 2)->nullable();
+            $table->decimal('gross_salary_earned', 15, 2)->nullable();
+            $table->decimal('less_nis', 10, 2)->nullable();
+            $table->decimal('approved_pension_scheme', 10, 2)->nullable();
+            $table->decimal('statutory_income', 15, 2)->nullable();
+            $table->decimal('education_tax', 10, 2)->nullable();
+            $table->decimal('nht', 10, 2)->nullable();
+            $table->decimal('paye', 10, 2)->nullable();
+            $table->decimal('staff_loan', 10, 2)->nullable();
+            $table->decimal('medical_insurance', 10, 2)->nullable();
+            $table->decimal('threshold', 10, 2)->nullable();
             $table->timestamps();
 
             $table->foreign('guard_id')->references('id')->on('users')->onDelete('cascade');

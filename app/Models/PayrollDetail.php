@@ -9,5 +9,8 @@ class PayrollDetail extends Model
 {
     use HasFactory;
     protected $guarded = [];
-
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'guard_id');
+    }
 }

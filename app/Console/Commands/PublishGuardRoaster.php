@@ -48,9 +48,9 @@ class PublishGuardRoaster extends Command
 
                 $publicHolidays = PublicHoliday::whereBetween('date', [$previousFortnightStartDate, $previousFortnightEndDate])->pluck('date')->toArray();
                 $attendances = Punch::with('user')->whereBetween('in_time', [$previousFortnightStartDate, $previousFortnightEndDate])->latest()
-                                    ->select('id', 'user_id', 'in_time', 'in_lat', 'in_long', 'in_image', 'out_time', 'out_lat', 'out_long', 'out_image', 'created_at', 'updated_at')
+                                    ->select('id', 'user_id', 'guard_type_id', 'in_time', 'out_time', 'regular_rate', 'laundry_allowance', 'canine_premium', 'fire_arm_premium', 'gross_hourly_rate', 'overtime_rate', 'holiday_rate')
                                     ->get();
-
+       
                 $groupedAttendances = $attendances->groupBy('user_id');
 
                 $userHours = [];
@@ -67,12 +67,25 @@ class PublishGuardRoaster extends Command
 
                 if (!$existingPayroll) {
                     $payrollData = Payroll::create([
-                        'guard_id' => $userId,
-                        'start_date' => $previousFortnightStartDate->format('Y-m-d'),
-                        'end_date' => $previousFortnightEndDate->format('Y-m-d'),
-                        'normal_hours' => $userHours[$userId]['total_normal_hours'],
-                        'overtime' => $userHours[$userId]['total_overtime_hours'],
-                        'public_holidays' => $userHours[$userId]['total_public_holiday_hours'],
+                        'guard_id'              => $userId,
+                        'start_date'            => $previousFortnightStartDate->format('Y-m-d'),
+                        'end_date'              => $previousFortnightEndDate->format('Y-m-d'),
+                        'normal_hours'          => $userHours[$userId]['total_normal_hours'],
+                        'overtime'              => $userHours[$userId]['total_overtime_hours'],
+                        'public_holidays'       => $userHours[$userId]['total_public_holiday_hours'],
+                        'normal_hours_rate'     => $userHours[$userId]['total_normal_earnings'],
+                        'overtime_rate'         => $userHours[$userId]['total_overtime_earnings'],
+                        'public_holiday_rate'   => $userHours[$userId]['total_public_holiday_earnings'],
+                        'gross_salary_earned'   => $userHours[$userId]['gross_salary_earned'],
+                        'less_nis'              => $userHours[$userId]['less_nis'],
+                        'approved_pension_scheme'=> $userHours[$userId]['approved_pension_scheme'],
+                        'statutory_income'      => $userHours[$userId]['statutory_income'],
+                        'education_tax'         => $userHours[$userId]['education_tax'],
+                        'nht'                   => $userHours[$userId]['nht'],
+                        'paye'                  => $userHours[$userId]['paye'],
+                        'staff_loan'            => $userHours[$userId]['staff_loan'],
+                        'medical_insurance'     => $userHours[$userId]['medical_insurance'],
+                        'threshold'             => $userHours[$userId]['threshold'],
                     ]);
                 } else {
                     $payrollData = $existingPayroll;
@@ -134,6 +147,10 @@ class PublishGuardRoaster extends Command
         $totalPublicHolidayMinutes = 0;
         $regularHours = 8;
 
+        $totalNormalEarnings = 0;
+        $totalOvertimeEarnings = 0;
+        $totalPublicHolidayEarnings = 0;
+
         foreach ($attendanceDetails as $attendanceDate => $attendancesForDay) {
             $totalWorkedMinutesForDay = 0;
 
@@ -143,6 +160,24 @@ class PublishGuardRoaster extends Command
 
                 $workedMinutes = $inTime->diffInMinutes($outTime);
                 $totalWorkedMinutesForDay += $workedMinutes;
+    
+                $isPublicHoliday = in_array($attendanceDate, $publicHolidays);
+    
+                $rateMaster = $attendance;
+                if ($isPublicHoliday) {
+                    $totalPublicHolidayEarnings += ($workedMinutes / 60) * $rateMaster['holiday_rate'];
+                } else {
+                    if ($workedMinutes <= $regularHours * 60) {
+                        $totalNormalEarnings += ($workedMinutes / 60) * $rateMaster['gross_hourly_rate'];
+                    } else {
+                        $normalMinutes = $regularHours * 60;
+                        $overtimeMinutes = $workedMinutes - $normalMinutes;
+    
+                        $totalNormalEarnings += ($normalMinutes / 60) * $rateMaster['gross_hourly_rate'];
+                        $overTimeHours = ($overtimeMinutes / 60);
+                        $totalOvertimeEarnings += ($overtimeMinutes / 60) * $rateMaster['overtime_rate'];
+                    }
+                }
             }
 
             $isPublicHoliday = in_array($attendanceDate, $publicHolidays);
@@ -153,8 +188,8 @@ class PublishGuardRoaster extends Command
                 if ($totalWorkedMinutesForDay <= $regularHours * 60) {
                     $totalNormalMinutes += $totalWorkedMinutesForDay;
                 } else {
-                    $totalNormalMinutes += $regularHours * 60; // 8 hours in minutes
-                    $totalOvertimeMinutes += ($totalWorkedMinutesForDay - ($regularHours * 60)); // Remaining goes to overtime
+                    $totalNormalMinutes += $regularHours * 60;
+                    $totalOvertimeMinutes += ($totalWorkedMinutesForDay - ($regularHours * 60));
                 }
             }
         }
@@ -167,14 +202,38 @@ class PublishGuardRoaster extends Command
         $totalOvertimeHours = $extraOvertimeHours;
         $totalOvertimeMinutes = $totalOvertimeMinutes % 60;
 
-        $extraPublicHolidayHours = intdiv($totalPublicHolidayMinutes, 60);
-        $totalPublicHolidayHours = $extraPublicHolidayHours;
+        $extraPublicHolidayHours   = intdiv($totalPublicHolidayMinutes, 60);
+        $totalPublicHolidayHours   = $extraPublicHolidayHours;
         $totalPublicHolidayMinutes = $totalPublicHolidayMinutes % 60;
 
+        $grossSalaryEarned     = $totalNormalEarnings + $totalOvertimeEarnings + $totalPublicHolidayEarnings;
+        $lessNis               = $grossSalaryEarned * 0.03;
+        $approvedPensionScheme = 0;
+        $statutoryIncome       = $grossSalaryEarned -  $lessNis - $approvedPensionScheme;
+        $educationTax          = $statutoryIncome * 0.0225;
+        $nht                   = $grossSalaryEarned * 0.02;
+        $paye                  = 0;
+        $staffLoan             = 0;
+        $medicalInsurance     = 0;
+        $threshold             = 0;
+
         return [
-            'total_normal_hours' => $totalNormalHours . '.' . str_pad($totalNormalMinutes, 2, '0', STR_PAD_LEFT),
-            'total_overtime_hours' => $totalOvertimeHours . '.' . str_pad($totalOvertimeMinutes, 2, '0', STR_PAD_LEFT),
-            'total_public_holiday_hours' => $totalPublicHolidayHours . '.' . str_pad($totalPublicHolidayMinutes, 2, '0', STR_PAD_LEFT),
+            'total_normal_hours'            => $totalNormalHours . '.' . str_pad($totalNormalMinutes, 2, '0', STR_PAD_LEFT),
+            'total_overtime_hours'          => $totalOvertimeHours . '.' . str_pad($totalOvertimeMinutes, 2, '0', STR_PAD_LEFT),
+            'total_public_holiday_hours'    => $totalPublicHolidayHours . '.' . str_pad($totalPublicHolidayMinutes, 2, '0', STR_PAD_LEFT),
+            'total_normal_earnings'         => number_format($totalNormalEarnings, 2, '.', ''),
+            'total_overtime_earnings'       => number_format($totalOvertimeEarnings, 2, '.', ''),
+            'total_public_holiday_earnings' => number_format($totalPublicHolidayEarnings, 2, '.', ''),
+            'gross_salary_earned'           => number_format($grossSalaryEarned, 2, '.', ''),
+            'less_nis'                      => number_format($lessNis, 2, '.', ''),
+            'approved_pension_scheme'       => number_format($approvedPensionScheme, 2, '.', ''),
+            'statutory_income'              => number_format($statutoryIncome, 2, '.', ''),
+            'education_tax'                 => number_format($educationTax, 2, '.', ''),
+            'nht'                           => number_format($nht, 2, '.', ''),
+            'paye'                          => number_format($paye, 2, '.', ''),
+            'staff_loan'                    => number_format($staffLoan, 2, '.', ''),
+            'medical_insurance'             => number_format($medicalInsurance, 2, '.', ''),
+            'threshold'                     => number_format($threshold, 2, '.', ''),
         ];
     }
 

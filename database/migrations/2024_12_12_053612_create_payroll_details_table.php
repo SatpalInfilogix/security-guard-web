@@ -17,9 +17,9 @@ return new class extends Migration
             $table->unsignedBigInteger('guard_id');
             $table->date('date')->nullable();
             $table->unsignedBigInteger('guard_type_id')->nullable();
-            $table->string('normal_hours')->nullable();
-            $table->string('overtime')->nullable();
-            $table->string('public_holiday')->nullable();
+            $table->decimal('normal_hours', 10, 2)->nullable();
+            $table->decimal('overtime', 10, 2)->nullable();
+            $table->decimal('public_holiday', 10, 2)->nullable();
             $table->timestamps();
             
             $table->foreign('payroll_id')->references('id')->on('payrolls')->onDelete('cascade');

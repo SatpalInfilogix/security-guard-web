@@ -49,20 +49,6 @@
         </select>
     </div>
 </div>
-<div class="col-md-4 mb-3">
-    <label for="guard_type">Guard Type<span class="text-danger">*</span></label>
-    <select name="guard_type_id" id="guard_type" class="form-control{{ $errors->has('guard_type_id') ? ' is-invalid' : '' }}">
-        <option value="" selected disabled>Select Guard Type</option>
-        @foreach ($rateMasters as $rateMaster)
-            <option value="{{ $rateMaster->id }}" @selected(old('guard_type_id', $user->guardAdditionalInformation->guard_type_id ?? null) == $rateMaster->id)>
-                {{ $rateMaster->guard_type }}
-            </option>
-        @endforeach
-    </select>
-    @error('guard_type_id')
-        <span class="invalid-feedback">{{ $message }}</span>
-    @enderror
-</div>
 
 <div class="col-md-4">
     <div class="mb-3">
@@ -152,6 +138,21 @@
                 @endforeach
             </select>
             @error('guard_employee_as_id')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label for="guard_type">Guard Duty Type<span class="text-danger">*</span></label>
+            <select name="guard_type_id" id="guard_type" class="form-control{{ $errors->has('guard_type_id') ? ' is-invalid' : '' }}">
+                <option value="" selected disabled>Select Guard Type</option>
+                @foreach ($rateMasters as $rateMaster)
+                    <option value="{{ $rateMaster->id }}" @selected(old('guard_type_id', $user->guardAdditionalInformation->guard_type_id ?? null) == $rateMaster->id)>
+                        {{ $rateMaster->guard_type }}
+                    </option>
+                @endforeach
+            </select>
+            @error('guard_type_id')
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
