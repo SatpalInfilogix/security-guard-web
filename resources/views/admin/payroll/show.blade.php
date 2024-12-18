@@ -45,7 +45,7 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="col-md-3"><strong>Payroll No</strong></div>
-                                <div class="col-md-3">{{ $fortnightDayCount }}</div>
+                                <div class="col-md-3">{{ $fortnightDayCount->id }}</div>
                                 <div class="col-md-3"><strong>Date of Processing</strong></div>
                                 <div class="col-md-3">N/A</div>
                             </div>

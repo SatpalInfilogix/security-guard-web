@@ -34,7 +34,7 @@
                                     <h6><strong>NIS No: </strong>{{ $payroll->user->guardAdditionalInformation->nis }}</h6>
                                     <h6><strong>Employee TRN: </strong> {{ $payroll->user->guardAdditionalInformation->trn }}</h6>
                                     <h6><strong>Payroll Period: </strong> {{ $payroll->start_date }} to {{ $payroll->end_date }}</h6>
-                                    <h6><strong>Payroll No: </strong>{{ $fortnightDayCount }}</h6>
+                                    <h6><strong>Payroll No: </strong>{{ $fortnightDayCount->id }}</h6>
                                     <h6><strong>Date of Processing: </strong> 2-Feb-25</h6>
                                 </div>
                             </div>
