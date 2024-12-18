@@ -124,13 +124,13 @@
                         var actions = '<div class="action-buttons">';
                         
                         @can('edit guard roaster')
-                        actions += `<a class="btn btn-outline-secondary btn-sm edit" href="{{ url('admin/guard-rosters') }}/${row.id}/edit">`;
+                        actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/guard-rosters') }}/${row.id}/edit">`;
                         actions += '<i class="fas fa-pencil-alt"></i>';
                         actions += '</a>';
                         @endcan
 
                         @can('delete guard roaster')
-                            actions += `<a data-source="Guard Roster" class="guard-delete-btn btn btn-outline-secondary btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
+                            actions += `<a data-source="Guard Roster" class="guard-delete-btn btn btn-danger waves-effect waves-light btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
                         @endcan
 
                         actions += '</div>';

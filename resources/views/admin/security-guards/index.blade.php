@@ -181,13 +181,13 @@
                             var actions = '<div class="action-buttons">';
                             
                             @can('edit security guards')
-                            actions += `<a class="btn btn-outline-secondary btn-sm edit" href="{{ url('admin/security-guards') }}/${row.id}/edit">`;
+                            actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/security-guards') }}/${row.id}/edit">`;
                             actions += '<i class="fas fa-pencil-alt"></i>';
                             actions += '</a>';
                             @endcan
                             if (row.status !== 'Active' || @json(Auth::user()->hasRole('Admin'))) {
                                 @can('delete security guards')
-                                    actions += `<a data-source="Security Guard" class="security-guard-delete btn btn-outline-secondary btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
+                                    actions += `<a data-source="Security Guard" class="security-guard-delete btn btn-danger waves-effect waves-light btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
                                 @endcan
                             }
 

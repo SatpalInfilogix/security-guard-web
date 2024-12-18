@@ -86,13 +86,13 @@
                             var actions = '<div class="action-buttons">';
 
                             @can('edit client site')
-                                actions += `<a class="btn btn-outline-secondary btn-sm edit" href="{{ url('admin/client-sites') }}/${row.id}/edit">`;
+                                actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/client-sites') }}/${row.id}/edit">`;
                                 actions += '<i class="fas fa-pencil-alt"></i>';
                                 actions += '</a>';
                             @endcan
 
                             @can('delete client site')
-                                actions += `<a class="btn btn-outline-secondary btn-sm clientSite-delete-btn" href="#" data-source="Client site" data-id="${row.id}">`;
+                                actions += `<a class="btn btn-danger waves-effect waves-light btn-sm clientSite-delete-btn" href="#" data-source="Client site" data-id="${row.id}">`;
                                 actions += '<i class="fas fa-trash-alt"></i>';
                                 actions += '</a>';
                             @endcan

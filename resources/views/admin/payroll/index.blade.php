@@ -88,10 +88,10 @@
                         data: null,
                         render: function(data, type, row) {
                             var actions = '<div class="action-buttons">';
-                            actions += `<a class="btn btn-outline-secondary btn-sm edit" href="{{ url('admin/payrolls') }}/${row.id}/edit">`;
+                            actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/payrolls') }}/${row.id}/edit">`;
                             actions += '<i class="fas fa-pencil-alt"></i>';
                             actions += '</a>';
-                            actions += `<a class="btn btn-outline-secondary btn-sm edit" href="{{ url('admin/payrolls') }}/${row.id}">`;
+                            actions += `<a class="btn btn-danger waves-effect waves-light btn-sm edit" href="{{ url('admin/payrolls') }}/${row.id}">`;
                             actions += '<i class="fas fa-eye"></i>';
                             actions += '</a>';
                             actions += '</div>';

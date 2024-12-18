@@ -60,7 +60,7 @@
                                             <td class="action-buttons">
                                                 @if(Auth::user()->can('delete leaves'))
                                                 <button data-source="Leave" data-endpoint="{{ route('leaves.destroy', $leave->id) }}"
-                                                    class="delete-btn btn btn-outline-secondary btn-sm edit">
+                                                    class="delete-btn btn btn-danger waves-effect waves-light btn-sm edit">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>
                                                 @endif

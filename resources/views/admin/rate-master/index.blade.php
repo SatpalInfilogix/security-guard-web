@@ -55,11 +55,11 @@
                                     @canany(['edit rate master', 'delete rate master'])
                                     <td class="action-buttons">
                                         @if(Auth::user()->can('edit rate master'))
-                                        <a href="{{ route('rate-master.edit', $rateMaster->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                        <a href="{{ route('rate-master.edit', $rateMaster->id)}}" class="btn btn-primary waves-effect waves-light btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
                                         @endif
                                         @if(Auth::user()->can('delete rate master'))
                                         <button data-source="Rate Master" data-endpoint="{{ route('rate-master.destroy', $rateMaster->id)}}"
-                                            class="delete-btn btn btn-outline-secondary btn-sm edit">
+                                            class="delete-btn btn btn-danger waves-effect waves-light btn-sm edit">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                         @endif

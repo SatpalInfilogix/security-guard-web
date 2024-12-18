@@ -43,9 +43,9 @@
                                     <td>{{ $faq->question }}</td>
                                     <td>{!! Str::words($faq->answer, 5) !!}</td>
                                     <td class="action-buttons">
-                                        <a href="{{ route('faq.edit', $faq->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                        <a href="{{ route('faq.edit', $faq->id)}}" class="btn btn-primary waves-effect waves-light btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
                                         <button data-source="Faq" data-endpoint="{{ route('faq.destroy', $faq->id) }}"
-                                            class="delete-btn btn btn-outline-secondary btn-sm edit">
+                                            class="delete-btn btn btn-danger waves-effect waves-light btn-sm edit">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </td>

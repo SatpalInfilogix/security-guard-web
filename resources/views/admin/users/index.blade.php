@@ -53,11 +53,11 @@
                                     @canany(['edit user', 'delete user'])
                                     <td class="action-buttons">
                                         @if(Auth::user()->can('edit user'))
-                                            <a href="{{ route('users.edit', $user->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                            <a href="{{ route('users.edit', $user->id)}}" class="btn btn-primary waves-effect waves-light btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
                                         @endif
                                         @if(Auth::user()->can('delete user'))
                                             <button data-source="User" data-endpoint="{{ route('users.destroy', $user->id) }}"
-                                                class="delete-btn btn btn-outline-secondary btn-sm edit">
+                                                class="delete-btn btn btn-danger waves-effect waves-light btn-sm edit">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         @endif

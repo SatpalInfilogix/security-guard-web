@@ -72,7 +72,7 @@ class PayrollController extends Controller
     
     public function show(Payroll $payroll)
     {
-        $payroll = $payroll->with('user', 'user.guardAdditionalInformation')->first();
+        $payroll = Payroll::where('id', $payroll->id)->with('user', 'user.guardAdditionalInformation')->first();
         $payrollDetails = PayrollDetail::with('user')->where('payroll_id', $payroll->id)->get();
 
         return view('admin.payroll.show', compact('payrollDetails', 'payroll'));

@@ -33,13 +33,13 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="col-md-3"><strong>Department</strong></div>
-                                <div class="col-md-3">Operations</div>
+                                <div class="col-md-3">N/A</div>
                                 <div class="col-md-3"><strong>Employee TRN</strong></div>
                                 <div class="col-md-3">{{ $payroll->user->guardAdditionalInformation->trn }}</div>
                             </div>
                             <div class="row mb-3">
                                 <div class="col-md-3"><strong>Category</strong></div>
-                                <div class="col-md-3">Unarmed Guard</div>
+                                <div class="col-md-3">N/A</div>
                                 <div class="col-md-3"><strong>Payroll Period</strong></div>
                                 <div class="col-md-3">{{$payroll->start_date}} to {{$payroll->end_date}}</div>
                             </div>
@@ -47,7 +47,7 @@
                                 <div class="col-md-3"><strong>Payroll No</strong></div>
                                 <div class="col-md-3">1</div>
                                 <div class="col-md-3"><strong>Date of Processing</strong></div>
-                                <div class="col-md-3">2-Feb-25</div>
+                                <div class="col-md-3">N/A</div>
                             </div>
                         </div>
                     </div>
