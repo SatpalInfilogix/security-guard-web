@@ -47,10 +47,12 @@ class PublishGuardRoaster extends Command
                 $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
 
                 $publicHolidays = PublicHoliday::whereBetween('date', [$previousFortnightStartDate, $previousFortnightEndDate])->pluck('date')->toArray();
-                $attendances = Punch::with('user')->whereBetween('in_time', [$previousFortnightStartDate, $previousFortnightEndDate])->latest()
-                                    ->select('id', 'user_id', 'guard_type_id', 'in_time', 'out_time', 'regular_rate', 'laundry_allowance', 'canine_premium', 'fire_arm_premium', 'gross_hourly_rate', 'overtime_rate', 'holiday_rate')
-                                    ->get();
-       
+                $previousStartDate = $previousFortnightStartDate->format('Y-m-d');
+                $previousEndDate = $previousFortnightEndDate->format('Y-m-d');
+
+                $attendances = Punch::with('user')->whereDate('in_time', '>=', $previousStartDate)->whereDate('in_time', '<=', $previousEndDate)->latest()
+                                    ->select('id', 'user_id', 'guard_type_id', 'in_time', 'out_time', 'regular_rate', 'laundry_allowance', 'canine_premium', 'fire_arm_premium', 'gross_hourly_rate', 'overtime_rate', 'holiday_rate')->get();
+
                 $groupedAttendances = $attendances->groupBy('user_id');
 
                 $userHours = [];

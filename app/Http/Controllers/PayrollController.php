@@ -74,8 +74,9 @@ class PayrollController extends Controller
     {
         $payroll = Payroll::where('id', $payroll->id)->with('user', 'user.guardAdditionalInformation')->first();
         $payrollDetails = PayrollDetail::with('user')->where('payroll_id', $payroll->id)->get();
+        $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->count();
 
-        return view('admin.payroll.show', compact('payrollDetails', 'payroll'));
+        return view('admin.payroll.show', compact('payrollDetails', 'payroll', 'fortnightDayCount'));
     }
 
     public function edit(Payroll $payroll)
