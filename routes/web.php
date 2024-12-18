@@ -72,6 +72,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('/get-guard-roster-details', [GuardRosterController::class, 'getGuardRosterDetails'])->name('get.guard.roster.details');
 
     //************************Import Csv Route********************/
+    Route::post('import-payroll', [PayrollController::class, 'importPayroll'])->name('import.payroll');
     Route::post('import-guard-roster', [GuardRosterController::class, 'importGuardRoster'])->name('import.guard-roster');
     Route::post('import-security-guard', [SecurityGuardController::class, 'importSecurityGuard'])->name('import.security-guard');
 
@@ -85,9 +86,17 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         return Response::download($file);
     });
 
+    Route::get('download-payroll-sample', function() {
+        $file = public_path('assets/sample-payroll/payroll.csv');
+        return Response::download($file);
+    });
+
     Route::get('/export/csv', [GuardRosterController::class, 'downloadExcel'])->name('export.csv');
     Route::get('export-guards', [SecurityGuardController::class, 'exportGuards'])->name('export.guards');
     Route::get('/security-guards/filter', [SecurityGuardController::class, 'filter'])->name('security-guards.filter');
+   
+    Route::get('/payroll-export/csv', [PayrollController::class, 'payrollExport'])->name('payroll-export.csv');
+    Route::get('/payrolls/download', [PayrollController::class, 'download'])->name('payrolls.download');
    
     Route::post('get-security-guard', [SecurityGuardController::class, 'getSecurityGuard'])->name('get-security-guard');
     Route::post('get-client-list', [ClientController::class, 'getClient'])->name('get-client-list');

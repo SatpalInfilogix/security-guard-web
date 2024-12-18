@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\FortnightDates;
 use App\Models\PayrollDetail;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use App\Imports\PayrollImport;
+use App\Exports\PayrollExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PayrollController extends Controller
 {
@@ -99,5 +104,91 @@ class PayrollController extends Controller
         return response()->json([
             'success' => true
         ]);
+    }
+
+    public function payrollExport()
+    {
+        $spreadsheet = new Spreadsheet();
+
+        $this->addPayrollSheet($spreadsheet);
+
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'Payroll.xlsx';
+
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $fileName . '"');
+        header('Cache-Control: max-age=0');
+
+        $writer->save('php://output');
+        exit;
+    }
+
+    protected function addPayrollSheet($spreadsheet)
+    {
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Payrolls');
+
+        $headers = [
+            'ID', 'Surename', 'Firstname', 'Middle Initials', 'Employee TRN', 'Employee NIS',
+            'Gross Emoluments Received in Cash (Salaries, Wages, Fees, Bonuses, Overtime, Commissions)',
+            'Gross Emoluments Received in Kind',
+            'Superannuation / Pension, Agreed Expenses, Employees Share Ownership Plan',
+            'Number of weekly NIS and NHT Contributions for the month',
+            'NIS (Employee’s Rate + Employer’s Rate) x (Total Gross Emoluments)',
+            'NHT (Employee’s Rate + Employer’s Rate) x (Total Gross Emoluments)',
+            'Education Tax (Employee’s Rate + Employer’s Rate) x (Total Gross Emoluments after Deductions and NIS)',
+            'PAYE Income Tax / (Refunds) (Rate) x (Total Gross Emoluments after Deductions, NIS and Nil-Rate (NR))',
+        ];
+
+        $sheet->fromArray($headers, NULL, 'A1');
+
+        foreach (range('A', 'N') as $column) {
+            $sheet->getColumnDimension($column)->setWidth(15);
+            $sheet->getStyle($column . '1')->getAlignment()->setWrapText(true);
+            $sheet->getStyle($column . '1')->getFont()->setBold(true);
+        }
+
+        $sheet->getRowDimension(1)->setRowHeight(60);
+
+
+        $today = Carbon::now()->startOfDay();
+        $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+
+        $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
+        $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
+        $Payrolls = Payroll::with('user', 'user.guardAdditionalInformation')->where('start_date', '>=', $previousFortnightStartDate)->whereDate('end_date', '<=', $previousFortnightEndDate)->get();
+
+        foreach ($Payrolls as $key => $payroll) {
+            $sheet->fromArray(
+                [
+                    $payroll->id, $payroll->user->surname, $payroll->user->first_name, $payroll->user->middle_name,
+                    $payroll->user->guardAdditionalInformation->trn, $payroll->user->guardAdditionalInformation->nis,
+                    $payroll->gross_salary_earned, 0, $payroll->approved_pension_scheme, 0, $payroll->less_nis,
+                    $payroll->nht, $payroll->education_tax, $payroll->paye
+                ],
+                NULL, 'A' . ($key + 2)
+            );
+        }
+
+        $spreadsheet->createSheet();
+    }
+
+    public function importPayroll(Request $request)
+    {
+        $import = new PayrollImport;
+        Excel::import($import, $request->file('file'));
+
+        session(['importData' => $import]);
+        session()->flash('success', 'Payroll imported successfully.');
+        $downloadUrl = route('payrolls.download');
+
+        return redirect()->route('payrolls.index')->with('downloadUrl', $downloadUrl); 
+    }
+
+    public function download()
+    {
+        $import = session('importData'); 
+        $export = new PayrollExport($import);
+        return Excel::download($export, 'payroll_import_results.csv');
     }
 }

@@ -32,6 +32,7 @@ return new class extends Migration
             $table->decimal('staff_loan', 10, 2)->nullable();
             $table->decimal('medical_insurance', 10, 2)->nullable();
             $table->decimal('threshold', 10, 2)->nullable();
+            $table->boolean('is_publish')->default(0);
             $table->timestamps();
 
             $table->foreign('guard_id')->references('id')->on('users')->onDelete('cascade');

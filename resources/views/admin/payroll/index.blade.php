@@ -10,6 +10,18 @@
                         <h4 class="mb-sm-0 font-size-18">Payroll</h4>
 
                         <div class="page-title-right">
+                            <a href="{{ route('payroll-export.csv') }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> SO1 Report</a>
+                            <a href="{{ url('download-payroll-sample') }}"
+                            class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Payroll Sample File</a>
+                            <div class="d-inline-block ">
+                                <form id="importForm" action="{{ route('import.payroll') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <label for="fileInput" class="btn btn-primary primary-btn btn-md mb-0">
+                                        <i class="bx bx-cloud-download"></i> Import Payroll
+                                        <input type="file" id="fileInput" name="file" accept=".csv, .xlsx" style="display:none;">
+                                    </label>
+                                </form>
+                            </div>
                             <div class="d-inline-block ">
                                 <form method="GET" id="attendance-form">
                                     <label for="flat" class="mr-2">Date</label>
@@ -25,7 +37,13 @@
                 <div class="col-12">
                     <x-error-message :message="$errors->first('message')" />
                     <x-success-message :message="session('success')" />
-
+                    @if (session('downloadUrl'))
+                        <script>
+                            window.onload = function() {
+                                window.location.href = "{{ session('downloadUrl') }}";
+                            };
+                        </script>
+                    @endif
                     <div class="card">
                         <div class="card-body">
                             <table id="payroll-list" class="table table-bordered dt-responsive nowrap w-100">
@@ -52,7 +70,7 @@
         </div>
     </div>
 
-    <x-include-plugins :plugins="['datePicker','dataTable']"></x-include-plugins>
+    <x-include-plugins :plugins="['datePicker','dataTable', 'import']"></x-include-plugins>
 
     <script>
         $(document).ready(function() {
