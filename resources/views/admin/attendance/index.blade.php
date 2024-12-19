@@ -19,7 +19,7 @@
                                 </form>
                             </div>
                             
-                            <a href="{{ route('attendance-list.download', ['date_range' => request('date_range')]) }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Attendance Download</a>
+                            <a href="{{ route('attendance-list.download', ['date_range' => request('date_range')]) }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Attendance Report Download</a>
                         </div>
                     </div>
                 </div>
