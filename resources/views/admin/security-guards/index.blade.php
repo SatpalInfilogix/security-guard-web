@@ -35,10 +35,10 @@
                 <div class="col-md-12">
                     <form id="filterForm" method="GET">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <input type="text" name="search_name" class="form-control" placeholder="Search by Name" value="{{ request('search_name') }}" id="search_name">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <input type="text" name="search_email" class="form-control" placeholder="Search by Email" value="{{ request('search_email') }}" id="search_email">
                             </div>
                             <div class="col-md-3">
@@ -50,6 +50,9 @@
                                     <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
                                     <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
                                 </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
                             </div>
                         </div>
                     </form>
@@ -202,9 +205,12 @@
                 order: [[0, 'asc']]
             });
 
-            $('#search_name, #search_email, #search_phone, #is_status').on('change keyup', function() {
+            $('#searchBtn').on('click', function() {
                 securityGuardTable.ajax.reload();
             });
+            /* $('#search_name, #search_email, #search_phone, #is_status').on('change keyup', function() {
+                securityGuardTable.ajax.reload();
+            }); */
 
             $(document).on('click', '.security-guard-delete', function() {
                 let source = $(this).data('source');

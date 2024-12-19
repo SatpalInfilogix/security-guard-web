@@ -42,7 +42,10 @@ class PublishGuardRoaster extends Command
             $nextStartDate = Carbon::parse($fortnightDays->end_date)->addDay();
             $nextEndDate = $nextStartDate->copy()->addDays(13);
 
-            if(carbon::parse($fortnightDays->start_date) == $today) {
+            $sixthDay = Carbon::parse('10-12-2024')->addDays(6);
+            $isPublishDate =  Carbon::parse($sixthDay)->addDays(3);
+
+            if ($sixthDay = $today) {
                 $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
                 $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
 
@@ -94,13 +97,27 @@ class PublishGuardRoaster extends Command
                 }
                     $this->createPayrollDetails($payrollData->id, $userId, $attendanceDetails, $publicHolidays);
                 }
+            }
+
+            if ($isPublishDate = $today) {
+                $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
+                $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
+
+                $payrollPublished = Payroll::where('start_date', $previousFortnightStartDate->format('Y-m-d'))
+                                            ->where('end_date', $previousFortnightEndDate->format('Y-m-d'))->get();
+
+                foreach ($payrollPublished as $payroll) {
+                    $payroll->update([
+                        'is_publish' => 1
+                    ]);
+                }
             } else if ($differenceInDays == 2) {
                 $roster = GuardRoster::where('date', '>=', $fortnightDays->start_date)->where('end_date', '<=', $fortnightDays->end_date)->get();
 
                 $nextFortnightRoster = GuardRoster::whereDate('date', '>=', $nextStartDate)->whereDate('end_date', '<=', $nextEndDate)->get();
                 if ($nextFortnightRoster->isEmpty()) {
                     foreach ($roster as $currentRoster) {
-                        $shiftedDate = Carbon::parse($currentRoster->date)->addDays(14);  // Shifted date by 14 days
+                        $shiftedDate = Carbon::parse($currentRoster->date)->addDays(14);
                         $startTime = Carbon::parse($currentRoster->start_time);
                         $endTime = Carbon::parse($currentRoster->end_time);
 

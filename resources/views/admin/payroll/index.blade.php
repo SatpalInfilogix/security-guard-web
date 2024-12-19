@@ -22,14 +22,23 @@
                                     </label>
                                 </form>
                             </div>
-                            <div class="d-inline-block ">
-                                <form method="GET" id="attendance-form">
-                                    <label for="flat" class="mr-2">Date</label>
-                                    <input type="text" id="date" name="date" class="form-control datePicker" value="" placeholder="Select Date Range" autocomplete="off">
-                                </form>
-                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <form method="GET" id="attendance-form">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <input type="text" id="date" name="date" class="form-control datePicker" value="" placeholder="Select Date Range" autocomplete="off">
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -106,9 +115,11 @@
                         data: null,
                         render: function(data, type, row) {
                             var actions = '<div class="action-buttons">';
-                            actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/payrolls') }}/${row.id}/edit">`;
-                            actions += '<i class="fas fa-pencil-alt"></i>';
-                            actions += '</a>';
+                            if (row.is_publish != 1) {
+                                actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/payrolls') }}/${row.id}/edit">`;
+                                actions += '<i class="fas fa-pencil-alt"></i>';
+                                actions += '</a>';
+                            }
                             actions += `<a class="btn btn-danger waves-effect waves-light btn-sm edit" href="{{ url('admin/payrolls') }}/${row.id}">`;
                             actions += '<i class="fas fa-eye"></i>';
                             actions += '</a>';
@@ -123,9 +134,12 @@
                 order: [[0, 'asc']]
             });
 
-            $('#date').on('change', function() {
+            $('#searchBtn').on('click', function() {
                 payrollTable.ajax.reload();
             });
+           /*  $('#date').on('change', function() {
+                payrollTable.ajax.reload();
+            }); */
         });
     </script>
 @endsection
