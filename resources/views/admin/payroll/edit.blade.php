@@ -108,15 +108,50 @@
                                             <td colspan="4"></td>
                                             <td></td>
                                             <td>Staff Loan</td>
-                                            <td> <input type="text" class="form-control editable" id="staff_loan" value="{{ $payroll->staff_loan }}"></td>
-                                            <td id="balance">{{ number_format($payroll->staff_loan * 5 , 2)}}</td>
+                                            <td> <input type="text" class="form-control editable" id="staff_loan" value="{{ $payroll->staff_loan }}" readonly></td>
+                                            <td id="balance">{{ number_format($payroll->pending_staff_loan)}}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="4"></td>
                                             <td></td>
                                             <td>Medical Ins</td>
-                                            <td><input type="text" class="form-control editable" id="medical_insurance" value="{{ $payroll->medical_insurance }}">
-                                            </td></td>
+                                            <td><input type="text" class="form-control editable" id="medical_insurance" value="{{ $payroll->medical_insurance }}" readonly>
+                                            <td>{{ number_format($payroll->pending_medical_insurance)}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4"></td>
+                                            <td></td>
+                                            <td>Salary Advance</td>
+                                            <td>{{ $payroll->salary_advance }}</td>
+                                            <td>{{ number_format($payroll->pending_salary_advance)}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4"></td>
+                                            <td></td>
+                                            <td>Approved Pension</td>
+                                            <td>{{ $payroll->approved_pension_scheme }}</td>
+                                            <td>{{ number_format($payroll->pending_approved_pension)}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4"></td>
+                                            <td></td>
+                                            <td>PSRA</td>
+                                            <td>{{ $payroll->psra }}</td>
+                                            <td>{{ number_format($payroll->pending_psra)}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4"></td>
+                                            <td></td>
+                                            <td>Bank Loan</td>
+                                            <td>{{ $payroll->bank_loan }}</td>
+                                            <td>{{ number_format($payroll->pending_bank_loan)}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4"></td>
+                                            <td></td>
+                                            <td>Other Deduction</td>
+                                            <td>{{ $payroll->other_deduction }}</td>
+                                            <td>{{ number_format($payroll->pending_other_deduction)}}</td>
                                         </tr>
                                         <tr>
                                             <td><strong>Total</strong></td>
@@ -125,7 +160,7 @@
                                             <td></td>
                                             @php
                                                 $total = $payroll->normal_hours_rate +  $payroll->overtime_rate +  $payroll->public_holiday_rate ?? 0;
-                                                $totalAmount = $payroll->paye +  $payroll->education_tax + $payroll->less_nis + $payroll->nht + $payroll->staff_loan +  $payroll->medical_insurance;
+                                                $totalAmount = $payroll->paye +  $payroll->education_tax + $payroll->less_nis + $payroll->nht + $payroll->staff_loan +  $payroll->medical_insurance + $payroll->salary_advance + $payroll->approved_pension_scheme + $payroll->psra + $payroll->bank_loan +$payroll->other_deduction;
                                             @endphp
                                             <td><strong>{{ $total }}</strong></td>
                                             <td></td>

@@ -475,10 +475,10 @@ class SecurityGuardController extends Controller
                 "Kin Email"             => $guard->usersKinDetail->email ?? '',
                 "Kin Phone Number"      => $guard->usersKinDetail->phone_number ?? '',
                 // User Documents
-                "TRN Document"          => $guard->userDocuments->trn ? url($guard->userDocuments->trn) : '',
-                "NIS Document"          => $guard->userDocuments->nis ? url($guard->userDocuments->nis) : '',
-                "PSRA Document"         => $guard->userDocuments->psra ? url($guard->userDocuments->psra) : '',
-                "Birth Certificate"     => $guard->userDocuments->birth_certificate ? url($guard->userDocuments->birth_certificate) : '',
+                // "TRN Document"          => $guard->userDocuments->trn ? url($guard->userDocuments->trn) : '',
+                // "NIS Document"          => $guard->userDocuments->nis ? url($guard->userDocuments->nis) : '',
+                // "PSRA Document"         => $guard->userDocuments->psra ? url($guard->userDocuments->psra) : '',
+                // "Birth Certificate"     => $guard->userDocuments->birth_certificate ? url($guard->userDocuments->birth_certificate) : '',
 
             ];
         })->toArray();
@@ -490,7 +490,7 @@ class SecurityGuardController extends Controller
             "Apartment No","Building Name","Street Name","Parish","City","Postal Code","Email","Phone Number",
             "Bank Name","Bank Branch Address","Account Number","Account Type","Routing Number","Kin Surname","Kin First Name","Kin Middle Name","Kin Apartment No",
             "Kin Building Name","Kin Street Name","Kin Parish","Kin City","Kin Postal Code","Kin Email","Kin Phone Number",
-            "Trn Document","Nis Document","Psra Document","Birth Certificate",
+            // "Trn Document","Nis Document","Psra Document","Birth Certificate",
         ];
 
         array_unshift($guardArray, $headers);

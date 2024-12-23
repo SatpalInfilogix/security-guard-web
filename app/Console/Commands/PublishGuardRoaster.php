@@ -63,12 +63,11 @@ class PublishGuardRoaster extends Command
                 $userHours = [];
                 foreach ($groupedAttendances as $userId => $attendancesForUser)
                 {
-                    // $deduction = Deduction::where('guard_id', $userId)->where('type', 'Salary Advance')->whereDate('start_date', '<=', $previousStartDate)->whereDate('end_date', '>=', $previousEndDate)->get();
                     $attendanceDetails = $attendancesForUser->groupBy(function ($attendance) {
                         return Carbon::parse($attendance->in_time)->toDateString();
                     })->toArray();
 
-                    $userHours[$userId] = $this->calculateUserHours($userId, $attendanceDetails, $publicHolidays);
+                    $userHours[$userId] = $this->calculateUserHours($userId, $attendanceDetails, $publicHolidays, $previousStartDate, $previousEndDate);
 
                     $existingPayroll = Payroll::where('guard_id', $userId)->where('start_date', $previousFortnightStartDate->format('Y-m-d'))
                                                 ->where('end_date', $previousFortnightEndDate->format('Y-m-d'))->first();
@@ -82,22 +81,33 @@ class PublishGuardRoaster extends Command
                         'overtime'              => $userHours[$userId]['total_overtime_hours'],
                         'public_holidays'       => $userHours[$userId]['total_public_holiday_hours'],
                         'normal_hours_rate'     => $userHours[$userId]['total_normal_earnings'],
-                        'overtime_rate'         => $userHours[$userId]['total_overtime_earnings'],
-                        'public_holiday_rate'   => $userHours[$userId]['total_public_holiday_earnings'],
-                        'gross_salary_earned'   => $userHours[$userId]['gross_salary_earned'],
-                        'less_nis'              => $userHours[$userId]['less_nis'],
+                        'overtime_rate'                 => $userHours[$userId]['total_overtime_earnings'],
+                        'public_holiday_rate'           => $userHours[$userId]['total_public_holiday_earnings'],
+                        'gross_salary_earned'           => $userHours[$userId]['gross_salary_earned'],
+                        'less_nis'                      => $userHours[$userId]['less_nis'],
                         'employer_contribution_nis_tax' => $userHours[$userId]['employer_contribution_nis_tax'],
-                        'approved_pension_scheme'=> $userHours[$userId]['approved_pension_scheme'],
-                        'statutory_income'      => $userHours[$userId]['statutory_income'],
-                        'education_tax'         => $userHours[$userId]['education_tax'],
-                        'employer_eduction_tax' => $userHours[$userId]['employer_eduction_tax'],
-                        'nht'                   => $userHours[$userId]['nht'],
+                        'statutory_income'              => $userHours[$userId]['statutory_income'],
+                        'education_tax'                 => $userHours[$userId]['education_tax'],
+                        'employer_eduction_tax'         => $userHours[$userId]['employer_eduction_tax'],
+                        'nht'                           => $userHours[$userId]['nht'],
                         'employer_contribution_nht_tax' => $userHours[$userId]['employer_contribution_nht_tax'],
-                        'paye'                  => $userHours[$userId]['paye'],
-                        'staff_loan'            => $userHours[$userId]['staff_loan'],
-                        'medical_insurance'     => $userHours[$userId]['medical_insurance'],
-                        'threshold'             => $userHours[$userId]['threshold'],
-                        'heart'                 => $userHours[$userId]['heart'],
+                        'paye'                          => $userHours[$userId]['paye'],
+                        'heart'                         => $userHours[$userId]['heart'],
+                        'threshold'                     => $userHours[$userId]['threshold'],
+                        'staff_loan'                    => $userHours[$userId]['staff_loan'],
+                        'medical_insurance'             => $userHours[$userId]['medical_insurance'],
+                        'approved_pension_scheme'       => $userHours[$userId]['approved_pension'],
+                        'salary_advance'                => $userHours[$userId]['salary_advance'],
+                        'psra'                          => $userHours[$userId]['psra'],
+                        'bank_loan'                     => $userHours[$userId]['bank_loan'],
+                        'other_deduction'               => $userHours[$userId]['other_deduction'],
+                        'pending_staff_loan'            => $userHours[$userId]['pending_staff_loan'],
+                        'pending_medical_insurance'     => $userHours[$userId]['pending_medical_insurance'],
+                        'pending_salary_advance'        => $userHours[$userId]['pending_salary_advance'],
+                        'pending_psra'                  => $userHours[$userId]['pending_psra'],
+                        'pending_bank_loan'             => $userHours[$userId]['pending_bank_loan'],
+                        'pending_approved_pension'      => $userHours[$userId]['pending_approved_pension'],
+                        'pending_other_deduction'       => $userHours[$userId]['pending_other_deduction'],
                     ]);
                 } else {
                     $payrollData = $existingPayroll;
@@ -163,7 +173,7 @@ class PublishGuardRoaster extends Command
         }
     }
 
-    protected function calculateUserHours($userId, $attendanceDetails, $publicHolidays)
+    protected function calculateUserHours($userId, $attendanceDetails, $publicHolidays,  $previousStartDate, $previousEndDate)
     {
         $totalNormalHours = 0;
         $totalNormalMinutes = 0;
@@ -301,8 +311,52 @@ class PublishGuardRoaster extends Command
             $statutoryIncome  = $grossSalaryEarned -  $lessNis - $approvedPensionScheme;
         }
 
-        $today = Carbon::parse('28-12-2024')->subDay();
-        $staff_loan = 0;
+        if ($userData->is_statutory == 1) {
+            $deductionTypes = [
+                'Staff Loan' => 'pending_staff_loan',
+                'Medical Ins' => 'pending_medical_insurance',
+                'Salary Advance' => 'pending_salary_advance',
+                'PSRA' => 'pending_psra',
+                'Bank Loan' => 'pending_bank_loan',
+                'Approved Pension' => 'pending_approved_pension',
+                'Other deduction' => 'pending_other_deduction'
+            ];
+        
+            $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
+            $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
+        
+            foreach ($deductionTypes as $deductionType => $pendingField) {
+                $deductionRecords = Deduction::where('guard_id', $userId)->where('type', $deductionType)->whereDate('start_date', '<=', $previousEndDate)->whereDate('end_date', '>=', $previousStartDate)->get();
+        
+                foreach ($deductionRecords as $deduction) {
+                    if ($deduction->start_date <= $previousEndDate && $deduction->end_date >= $previousStartDate) {
+                        $totalDeductions[$deductionType] += $deduction->one_installment;
+                        $pendingBalance = $deduction->pending_balance - $deduction->one_installment;
+                        $pendingAmounts[$deductionType] += $deduction->pending_balance - $deduction->one_installment;
+                       
+                        $deduction->update([
+                            'pending_balance' => $pendingBalance
+                        ]);
+                    }
+                }
+            }
+
+            $pendingStaffLoan = $pendingAmounts['Staff Loan'];
+            $pendingMedicalInsurance = $pendingAmounts['Medical Ins'];
+            $pendingSalaryAdvance = $pendingAmounts['Salary Advance'];
+            $pendingPsra = $pendingAmounts['PSRA'];
+            $pendingBankLoan = $pendingAmounts['Bank Loan'];
+            $pendingApprovedPension = $pendingAmounts['Approved Pension'];
+            $pendingOtherDeduction = $pendingAmounts['Other deduction'];
+
+            $staffLoan = $totalDeductions['Staff Loan'];
+            $medicalInsurance = $totalDeductions['Medical Ins'];
+            $salaryAdvance = $totalDeductions['Salary Advance'];
+            $psra = $totalDeductions['PSRA'];
+            $bankLoan = $totalDeductions['Bank Loan'];
+            $approvedPension = $totalDeductions['Approved Pension'];
+            $otherDeduction = $totalDeductions['Other deduction'];
+        }
 
         $educationTax          = $eduction_tax;
         $employerEductionTax   = $employer_contribution;
@@ -311,8 +365,6 @@ class PublishGuardRoaster extends Command
         $paye                  = $payeIncome;
         $heart                 = $hearttax;
         $nis                   = $lessNis;
-        $staffLoan             = 0;
-        $medicalInsurance      = 0;
         $threshold             = 0;
 
         return [
@@ -334,8 +386,20 @@ class PublishGuardRoaster extends Command
             'paye'                          => number_format($paye, 2, '.', ''),
             'staff_loan'                    => number_format($staffLoan, 2, '.', ''),
             'medical_insurance'             => number_format($medicalInsurance, 2, '.', ''),
+            'salary_advance'                => number_format($salaryAdvance, 2, '.', ''),
+            'psra'                          => number_format($psra, 2, '.', ''),
+            'bank_loan'                     => number_format($bankLoan, 2, '.', ''),
+            'approved_pension'              => number_format($approvedPension, 2, '.', ''),
             'threshold'                     => number_format($threshold, 2, '.', ''),
+            'other_deduction'               => number_format($otherDeduction, 2, '.', ''),
             'heart'                         => number_format($heart, 2, '.', ''),
+            'pending_staff_loan'            => number_format($pendingStaffLoan, 2, '.', ''),
+            'pending_medical_insurance'     => number_format($pendingMedicalInsurance, 2, '.', ''),
+            'pending_salary_advance'        => number_format($pendingSalaryAdvance, 2, '.', ''),
+            'pending_psra'                  => number_format($pendingPsra, 2, '.', ''),
+            'pending_bank_loan'             => number_format($pendingBankLoan, 2, '.', ''),
+            'pending_approved_pension'      => number_format($pendingApprovedPension, 2, '.', ''),
+            'pending_other_deduction'       => number_format($pendingOtherDeduction, 2, '.', ''),
         ];
     }
 

@@ -19,7 +19,8 @@ return new class extends Migration
             $table->integer('no_of_payroll');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->decimal('one_installment')->nullable();
+            $table->decimal('one_installment',15, 2)->nullable();
+            $table->decimal('pending_balance',15, 2)->nullable();
 
             $table->timestamps();
             $table->foreign('guard_id')->references('id')->on('users')->onDelete('cascade');

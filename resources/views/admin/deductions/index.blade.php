@@ -22,6 +22,11 @@
             <div class="row">
                 <div class="col-12">
                     <x-error-message :message="$errors->first('message')" />
+                        @if(session('error'))
+                            <div class="alert alert-danger">
+                                {{ session('error') }}
+                            </div>
+                        @endif
                     <x-success-message :message="session('success')" />
 
                     <div class="card">

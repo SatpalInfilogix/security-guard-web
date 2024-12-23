@@ -62,17 +62,34 @@ class DeductionController extends Controller
         }
     }
 
-    public function store(request $request)
+    public function store(Request $request)
     {
         $request->validate([
-            'guard_id'    => 'required',
-            'type'        => 'required',
-            'amount'      => 'required',
-            'start_date'  => 'required',
-            'end_date'    => 'required'
+            'guard_id'    => 'required|exists:users,id',
+            'type'        => 'required|string',
+            'amount'      => 'required|numeric|min:0',
+            'start_date'  => 'required|date',
+            'end_date'    => 'required|date|after_or_equal:start_date',
         ]);
+
         $noOfPayrolls = $request->no_of_payroll ?? 1;
-        $oneInstallment = $request->amount/$noOfPayrolls;
+        $oneInstallment = $request->amount / $noOfPayrolls;
+
+        $existingDeduction = Deduction::where('guard_id', $request->guard_id)
+            ->where('type', $request->type)
+            ->where(function($query) use ($request) {
+                $query->whereBetween('start_date', [$this->parseDate($request->start_date), $this->parseDate($request->end_date)])
+                      ->orWhereBetween('end_date', [$this->parseDate($request->start_date), $this->parseDate($request->end_date)])
+                      ->orWhere(function($query) use ($request) {
+                          $query->where('start_date', '<=', $this->parseDate($request->start_date))
+                                ->where('end_date', '>=', $this->parseDate($request->end_date));
+                      });
+            })
+            ->exists();
+
+        if ($existingDeduction) {
+            return redirect()->route('deductions.index')->with('error', 'A deduction of this type already exists for this guard.');
+        }
 
         Deduction::create([
             'guard_id'     => $request->guard_id,
@@ -81,7 +98,8 @@ class DeductionController extends Controller
             'no_of_payroll'=> $noOfPayrolls,
             'start_date'   => $this->parseDate($request->start_date),
             'end_date'     => $this->parseDate($request->end_date),
-            'one_installment' => $oneInstallment
+            'one_installment' => $oneInstallment,
+            'pending_balance' => $request->amount
         ]);
 
         return redirect()->route('deductions.index')->with('success', 'Deduction created successfully.');
