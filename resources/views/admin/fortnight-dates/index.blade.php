@@ -43,8 +43,8 @@
                                     @endphp
                                 <tr class="{{ $isCurrentFortnight ? 'current-fortnight' : '' }}">
                                     <td>{{ ++$key }}</td>
-                                    <td>{{ $fortnightsDate->start_date }}</td>
-                                    <td>{{ $fortnightsDate->end_date}}</td>
+                                    <td>@if($fortnightsDate->start_date){{ \Carbon\Carbon::parse($fortnightsDate->start_date)->format('d-m-Y') }}@else N/A @endif</td>
+                                    <td>@if($fortnightsDate->end_date){{ \Carbon\Carbon::parse($fortnightsDate->end_date)->format('d-m-Y') }}@else N/A @endif</td>
                                 </tr>
                                 @endforeach
                                 </tbody>

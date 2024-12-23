@@ -7,6 +7,7 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class SecurityGuardImport implements ToModel, WithHeadingRow
 {
@@ -25,9 +26,9 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             'first_name'        => 'required',
             'email'             => 'nullable|email|unique:users,email',
             'phone_number'      => 'required|unique:users,phone_number',
-            'date_of_joining'   => 'nullable|date_format:Y-m-d',
-            'date_of_birth'     => 'nullable|date_format:Y-m-d',
-            'date_of_separation'=> 'nullable|date_format:Y-m-d',
+            'date_of_joining'   => 'nullable|date_format:d-m-Y',
+            'date_of_birth'     => 'required|date|before:date_of_joining|date_format:d-m-Y',
+            'date_of_separation'=> 'nullable|date_format:d-m-Y',
             'trn'               => 'nullable|unique:guard_additional_information,trn',
             'nis'               => 'nullable|unique:guard_additional_information,nis',
             'psra'              => 'nullable|unique:guard_additional_information,psra',
@@ -89,8 +90,8 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             'trn'                 => $row["trn"] ?? NULL,
             'nis'                 => $row["nis"] ?? NULL,
             'psra'                => $row["psra"] ?? NULL,
-            'date_of_joining'     => !empty($row["date_of_joining"]) ? $row["date_of_joining"] : null,
-            'date_of_birth'       => !empty($row["date_of_birth"]) ? $row["date_of_birth"] : null,
+            'date_of_joining'     => $this->parseDate($row["date_of_joining"] ?? null),
+            'date_of_birth'       => $this->parseDate($row["date_of_birth"] ?? null),
             /* 'employer_company_name' => $row["employer_company_name"] ?? null,
             'guards_current_rate' => $row["guards_current_rate"] ?? null,
             'location_code'       => $row["location_code"] ?? null,
@@ -99,7 +100,7 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             'client_name'         => $row["client_name"] ?? null, */
             'guard_type_id'          => $row["guard_type"] ?? null,
             'guard_employee_as_id'=> $row["guard_employed_as"] ?? null,
-            'date_of_seperation'  => !empty($row["date_of_seperation"]) ? $row["date_of_seperation"] : null,
+            'date_of_seperation'  => $this->parseDate($row["date_of_seperation"] ?? null),
         ]);
 
         // Update contact details
@@ -170,6 +171,18 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
         return null;
     }
 
+    private function parseDate($date)
+    {
+        if (empty($date)) {
+            return null; 
+        }
+
+        try {
+            return Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
     /**
      * Get all errors encountered during the import process.
      *

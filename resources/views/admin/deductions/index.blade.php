@@ -52,8 +52,8 @@
                                         <td>{{ $deduction->type }}</td>
                                         <td>{{ $deduction->amount }}</td>
                                         <td>{{ $deduction->no_of_payroll }}</td>
-                                        <td>{{ $deduction->start_date }}</td>
-                                        <td>{{ $deduction->end_date }}</td>
+                                        <td>@if($deduction->start_date){{ \Carbon\Carbon::parse($deduction->start_date)->format('d-m-Y') }}@else N/A @endif</td>
+                                        <td>@if($deduction->end_date){{ \Carbon\Carbon::parse($deduction->end_date)->format('d-m-Y') }}@else N/A @endif</td>
                                     </tr>
                                     @endforeach
                                 </tbody>

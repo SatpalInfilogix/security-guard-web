@@ -45,7 +45,7 @@
                                 <tr>
                                     <td>{{ ++$key }}</td>
                                     <td>{{ $publicHoliday->holiday_name }}</td>
-                                    <td>{{ $publicHoliday->date}}</td>
+                                    <td>@if($publicHoliday->date){{ \Carbon\Carbon::parse($publicHoliday->date)->format('d-m-Y')}} @else N/A @endif</td>
                                     @canany(['edit public holiday', 'delete public holiday'])
                                     <td class="action-buttons">
                                         @if(Auth::user()->can('edit public holiday'))

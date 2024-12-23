@@ -148,7 +148,7 @@ class SecurityGuardController extends Controller
             'nis'           => 'nullable|unique:guard_additional_information,nis',
             'psra'          => 'nullable|unique:guard_additional_information,psra',
             'account_number'=> 'nullable|unique:users_bank_details,account_no',
-            'date_of_birth' => 'nullable|date|before:date_of_joining',
+            'date_of_birth' => 'required|date|before:date_of_joining',
             'date_of_joining'=> 'nullable|date',
             'guard_type_id' => 'required',
             'guard_employee_as_id' => 'required'
@@ -293,7 +293,7 @@ class SecurityGuardController extends Controller
             'nis'           => 'nullable|unique:guard_additional_information,nis,'. optional($guardInfo)->id,
             'psra'          => 'nullable|unique:guard_additional_information,psra,'. optional($guardInfo)->id,
             'account_no'    => 'nullable|unique:users_bank_details,account_no,'. optional($usersBankDetail)->id,
-            'date_of_birth' => 'nullable|date|before:date_of_joining',
+            'date_of_birth' => 'required|date|before:date_of_joining',
             'date_of_joining'=> 'nullable|date',
             'guard_type_id' => 'required',
             'guard_employee_as_id' => 'required'
@@ -436,8 +436,8 @@ class SecurityGuardController extends Controller
                 "Guard's TRN"           => $guard->guardAdditionalInformation->trn ?? '',
                 "NIS/NHT Number"        => $guard->guardAdditionalInformation->nis ?? '',
                 "PSRA Registration No"  => $guard->guardAdditionalInformation->psra ?? '',
-                "Guard's Date of Joining" => $guard->guardAdditionalInformation->date_of_joining ?? '',
-                "Date of Birth"         => $guard->guardAdditionalInformation->date_of_birth ?? '',
+                "Guard's Date of Joining" => $guard->guardAdditionalInformation->date_of_joining ? Carbon::parse($guard->guardAdditionalInformation->date_of_joining)->format('d-m-Y') : '',
+                "Date of Birth"         => $guard->guardAdditionalInformation->date_of_birth ? Carbon::parse($guard->guardAdditionalInformation->date_of_birth)->format('d-m-Y') : '',
                 // "Employer Company Name" => $guard->guardAdditionalInformation->employer_company_name ?? '',
                 // "Guard's Current Rate"  => $guard->guardAdditionalInformation->guards_current_rate ?? '',
                 // "Location Code"         => $guard->guardAdditionalInformation->location_code ?? '',
@@ -446,7 +446,7 @@ class SecurityGuardController extends Controller
                 // "Client Name"           => $guard->guardAdditionalInformation->client_name ?? '',
                 "Guard Type"            => $guard->guardAdditionalInformation->guard_type_id ?? '',
                 "Guard Employed As"     => $guard->guardAdditionalInformation->guard_employee_as_id ?? '',
-                "Date of Separation"    => $guard->guardAdditionalInformation->date_of_seperation ?? '',
+                "Date of Separation"    => $guard->guardAdditionalInformation->date_of_seperation ? Carbon::parse($guard->guardAdditionalInformation->date_of_seperation)->format('d-m-Y') : '',
                 // Contact details
                 "Apartment No"          => $guard->contactDetail->apartment_no ?? '',
                 "Building Name"         => $guard->contactDetail->building_name ?? '',

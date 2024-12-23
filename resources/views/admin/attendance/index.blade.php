@@ -55,8 +55,8 @@
                                     <td>{{ $attendance->user->first_name }}</td>
                                     <td>{{ $attendance->user->middle_name }}</td>
                                     <td>{{ $attendance->user->surname}}</td>
-                                    <td>{{ $attendance->in_time }}</td>
-                                    <td>{{ $attendance->out_time }}</td>
+                                    <td>@if($attendance->in_time) {{ \Carbon\Carbon::parse($attendance->in_time)->format('d-m-Y h:i A') }} @else N/A @endif</td>
+                                    <td>@if($attendance->out_time) {{ \Carbon\Carbon::parse($attendance->out_time)->format('d-m-Y h:i A') }} @else N/A @endif</td>
                                     @canany(['edit attendance', 'delete attendance'])
                                     <td class="action-buttons">
                                         @if(Auth::user()->can('edit attendance'))
