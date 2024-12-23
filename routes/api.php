@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\SecurityGuardController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\LeaveController;
 use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\PayrollController;
 
 
 // Route::get('/user', function (Request $request) {
@@ -26,10 +27,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('check-status', [SecurityGuardController::class, 'checkStatus']);
     Route::get('/overtime/{userId}', [PunchController::class, 'calculateOvertime']);
     Route::post('get-attendance', [AttendanceController::class, 'getAttendance']);
+
     Route::post('/leave', [LeaveController::class, 'leave']);
     Route::get('/get-leave', [LeaveController::class, 'getLeave']);
     Route::post('/leaves/{id}/cancel', [LeaveController::class, 'cancelLeave']);
+
     Route::get('/stats', [HomeController::class, 'stats']);
+
+    Route::get('/payrolls', [PayrollController::class, 'getPayroll']);
+    Route::get('/payroll/{payrollId}',[PayrollController::class, 'payrollById']);
 });
 Route::get('faq', [FaqController::class, 'index']);
 Route::get('help-request', [FaqController::class, 'getHelpRequest']);

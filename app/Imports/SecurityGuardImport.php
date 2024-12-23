@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
+use App\Models\RateMaster;
 
 class SecurityGuardImport implements ToModel, WithHeadingRow
 {
@@ -33,8 +34,8 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             'nis'               => 'nullable|unique:guard_additional_information,nis',
             'psra'              => 'nullable|unique:guard_additional_information,psra',
             'account_no'        => 'nullable|unique:users_bank_details,account_no',
-            'guard_employed_as' => 'required',
             'guard_type'        => 'required',
+            'guard_employed_as' => 'required',
             // 'trn_document'      => 'required',
             // 'nis_document'      => 'required',
             // 'psra_document'     => 'required',
@@ -49,7 +50,31 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
                 'failure_reason' => $validator->errors()->toArray(),
                 'row' => $row
             ];
-            return null; // Skip processing if validation fails
+            return null;
+        }
+
+        $guardType = RateMaster::where('id', $row['guard_type'])->first();
+        if (!$guardType) {
+            $this->errors[] = [
+                'row_index' => $this->rowIndex,
+                'name' => $row['first_name'],
+                'status' => 'Failed',
+                'failure_reason' => "Guard type {$row['guard_type']} does not exist",
+                'row' => $row
+            ];
+            return null;
+        }
+    
+        $guardEmployedAs = RateMaster::where('id', $row['guard_employed_as'])->first();
+        if (!$guardEmployedAs) {
+            $this->errors[] = [
+                'row_index' => $this->rowIndex,
+                'name' => $row['first_name'],
+                'status' => 'Failed',
+                'failure_reason' => "Guard employed as {$row['guard_employed_as']} does not exist",
+                'row' => $row
+            ];
+            return null;
         }
 
         $user = User::where('phone_number', $row['phone_number'])->first();
