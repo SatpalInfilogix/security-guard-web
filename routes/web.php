@@ -19,6 +19,7 @@ use App\Http\Controllers\HelpRequestController;
 use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\FortnightDatesController;
 use App\Http\Controllers\PayrollController;
+use App\Http\Controllers\DeductionController;
 
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');
@@ -51,6 +52,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'leaves'                => LeaveController::class,
             'fortnight-dates'       => FortnightDatesController::class,
             'payrolls'              => PayrollController::class,
+            'deductions'            => DeductionController::class,
         ]);
 
         Route::get('/payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
@@ -113,4 +115,5 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
 
     Route::get('/get-guard-type-by-guard-id/{guardId}', [GuardRosterController::class, 'getGuardTypeByGuardId']);
 
+    Route::get('/get-end-date', [DeductionController::class, 'getEndDate']);
 });

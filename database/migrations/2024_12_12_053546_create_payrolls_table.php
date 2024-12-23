@@ -24,10 +24,14 @@ return new class extends Migration
             $table->decimal('public_holiday_rate', 10, 2)->nullable();
             $table->decimal('gross_salary_earned', 15, 2)->nullable();
             $table->decimal('less_nis', 10, 2)->nullable();
+            $table->decimal('employer_contribution_nis_tax', 10, 2)->nullable();
             $table->decimal('approved_pension_scheme', 10, 2)->nullable();
             $table->decimal('statutory_income', 15, 2)->nullable();
             $table->decimal('education_tax', 10, 2)->nullable();
+            $table->decimal('employer_eduction_tax', 10, 2)->nullable();
             $table->decimal('nht', 10, 2)->nullable();
+            $table->decimal('employer_contribution_nht_tax', 10, 2)->nullable();
+            $table->decimal('heart', 10, 2)->nullable();
             $table->decimal('paye', 10, 2)->nullable();
             $table->decimal('staff_loan', 10, 2)->nullable();
             $table->decimal('medical_insurance', 10, 2)->nullable();

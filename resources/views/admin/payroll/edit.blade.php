@@ -52,6 +52,7 @@
                                             <th>Deductions</th>
                                             <th>Amount</th>
                                             <th rowspan="2" class="align-middle text-center">Balance</th>
+                                            <th>Employer contribution</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -63,6 +64,7 @@
                                             <td id="normal_hours_rate">{{ $payroll->normal_hours_rate }}</td>
                                             <td>PAYE</td>
                                             <td><input type="text" class="form-control editable" id="paye" value="{{ $payroll->paye }}"></td>
+                                            <td></td>
                                         </tr>
                                         <tr>
                                             <td>Megamart Waterloo (Overtime)</td>
@@ -72,6 +74,8 @@
                                             <td id="overtime_rate">{{ $payroll->overtime_rate }}</td>
                                             <td>Ed Tax</td>
                                             <td id="education_tax">{{ $payroll->education_tax }}</td>
+                                            <td></td>
+                                            <td>{{ $payroll->employer_eduction_tax }}</td>
                                         </tr>
                                         <tr>
                                             <td>Megamart Waterloo (Public Holiday)</td>
@@ -81,12 +85,24 @@
                                             <td id="public_holiday_rate">{{ $payroll->public_holiday_rate }}</td>
                                             <td>NIS</td>
                                             <td id="less_nis">{{ $payroll->less_nis }}</td>
+                                            <td></td>
+                                            <td>{{ $payroll->employer_contribution_nis_tax }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="4"></td>
                                             <td></td>
                                             <td>NHT</td>
                                             <td id="nht">{{ $payroll->nht }}</td>
+                                            <td></td>
+                                            <td>{{$payroll->employer_contribution_nht_tax}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4"></td>
+                                            <td></td>
+                                            <td>Heart</td>
+                                            <td></td>
+                                            <td></td>
+                                            <td>{{$payroll->heart}}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="4"></td>

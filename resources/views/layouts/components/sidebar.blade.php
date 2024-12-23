@@ -38,6 +38,12 @@
                     </a>
                 </li>
                 @endcanany
+                <li class="{{ Request::segment(2) == 'deductions' ? 'mm-active' : '' }}">
+                    <a href="{{ route('deductions.index')}}" class="waves-effect">
+                        <i class="bx bx-briefcase-alt"></i>
+                        <span key="t-spreadsheet">NST Deduction</span>
+                    </a>
+                </li>
                 <li class="{{ Request::segment(2) == 'payrolls' ? 'mm-active' : '' }}">
                     <a href="{{ route('payrolls.index')}}" class="waves-effect">
                         <i class="bx bx-checkbox-square"></i>

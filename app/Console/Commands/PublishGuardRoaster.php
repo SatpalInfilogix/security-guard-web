@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Deduction;
 use Illuminate\Console\Command;
 use App\Models\FortnightDates;
 use App\Models\GuardRoster;
@@ -11,6 +12,7 @@ use App\Models\PublicHoliday;
 use Carbon\Carbon;
 use App\Models\Punch;
 use App\Models\User;
+use Google\Service\Sheets\NumberFormat;
 use Spatie\Permission\Models\Role;
 
 class PublishGuardRoaster extends Command
@@ -35,14 +37,14 @@ class PublishGuardRoaster extends Command
     public function handle()
     {
         $today = Carbon::now()->startOfDay();
-        $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+        $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();        
         if ($fortnightDays) {
             $endDate = Carbon::parse($fortnightDays->end_date)->startOfDay();
             $differenceInDays = $today->diffInDays($endDate, false); 
             $nextStartDate = Carbon::parse($fortnightDays->end_date)->addDay();
             $nextEndDate = $nextStartDate->copy()->addDays(13);
 
-            $sixthDay = Carbon::parse('10-12-2024')->addDays(6);
+            $sixthDay = Carbon::parse($fortnightDays->start_date)->addDays(6);
             $isPublishDate =  Carbon::parse($sixthDay)->addDays(3);
 
             if ($sixthDay = $today) {
@@ -61,11 +63,12 @@ class PublishGuardRoaster extends Command
                 $userHours = [];
                 foreach ($groupedAttendances as $userId => $attendancesForUser)
                 {
+                    // $deduction = Deduction::where('guard_id', $userId)->where('type', 'Salary Advance')->whereDate('start_date', '<=', $previousStartDate)->whereDate('end_date', '>=', $previousEndDate)->get();
                     $attendanceDetails = $attendancesForUser->groupBy(function ($attendance) {
                         return Carbon::parse($attendance->in_time)->toDateString();
                     })->toArray();
 
-                    $userHours[$userId] = $this->calculateUserHours($attendanceDetails, $publicHolidays);
+                    $userHours[$userId] = $this->calculateUserHours($userId, $attendanceDetails, $publicHolidays);
 
                     $existingPayroll = Payroll::where('guard_id', $userId)->where('start_date', $previousFortnightStartDate->format('Y-m-d'))
                                                 ->where('end_date', $previousFortnightEndDate->format('Y-m-d'))->first();
@@ -83,14 +86,18 @@ class PublishGuardRoaster extends Command
                         'public_holiday_rate'   => $userHours[$userId]['total_public_holiday_earnings'],
                         'gross_salary_earned'   => $userHours[$userId]['gross_salary_earned'],
                         'less_nis'              => $userHours[$userId]['less_nis'],
+                        'employer_contribution_nis_tax' => $userHours[$userId]['employer_contribution_nis_tax'],
                         'approved_pension_scheme'=> $userHours[$userId]['approved_pension_scheme'],
                         'statutory_income'      => $userHours[$userId]['statutory_income'],
                         'education_tax'         => $userHours[$userId]['education_tax'],
+                        'employer_eduction_tax' => $userHours[$userId]['employer_eduction_tax'],
                         'nht'                   => $userHours[$userId]['nht'],
+                        'employer_contribution_nht_tax' => $userHours[$userId]['employer_contribution_nht_tax'],
                         'paye'                  => $userHours[$userId]['paye'],
                         'staff_loan'            => $userHours[$userId]['staff_loan'],
                         'medical_insurance'     => $userHours[$userId]['medical_insurance'],
                         'threshold'             => $userHours[$userId]['threshold'],
+                        'heart'                 => $userHours[$userId]['heart'],
                     ]);
                 } else {
                     $payrollData = $existingPayroll;
@@ -156,7 +163,7 @@ class PublishGuardRoaster extends Command
         }
     }
 
-    protected function calculateUserHours($attendanceDetails, $publicHolidays)
+    protected function calculateUserHours($userId, $attendanceDetails, $publicHolidays)
     {
         $totalNormalHours = 0;
         $totalNormalMinutes = 0;
@@ -226,14 +233,86 @@ class PublishGuardRoaster extends Command
         $totalPublicHolidayMinutes = $totalPublicHolidayMinutes % 60;
 
         $grossSalaryEarned     = $totalNormalEarnings + $totalOvertimeEarnings + $totalPublicHolidayEarnings;
-        $lessNis               = $grossSalaryEarned * 0.03;
         $approvedPensionScheme = 0;
-        $statutoryIncome       = $grossSalaryEarned -  $lessNis - $approvedPensionScheme;
-        $educationTax          = $statutoryIncome * 0.0225;
-        $nht                   = $grossSalaryEarned * 0.02;
-        $paye                  = 0;
+
+        $userData = User::with('guardAdditionalInformation')->where('id', $userId)->first();
+        $dateOfBirth = $userData->guardAdditionalInformation->date_of_birth;
+        $birthDate = Carbon::parse($dateOfBirth);
+        $age = $birthDate->age;
+
+        $currentYear = Carbon::now()->year;
+        $fullYearNis = Payroll::where('guard_id', $userId)->whereYear('created_at', $currentYear)->get();
+
+        $payeIncome = 0;
+        $employer_contribution = 0;
+        $employerContributionNht = 0;
+        $nhtDeduction = 0;
+        $eduction_tax = 0;
+        $hearttax = 0;
+        $lessNis = 0;
+        $employerContributionNis = 0;
+
+        if($userData->is_statutory == 0) {
+            $totalNisForCurrentYear = $fullYearNis->sum('less_nis');
+           
+            if ($age >= 70) {
+                $lessNis = 0;
+                $employerContributionNis = 0;
+            } else {
+                if ($totalNisForCurrentYear < 150000) {
+                    $nisDeduction = $grossSalaryEarned * 0.03;
+                    $remainingNisToReachLimit = 150000 - $totalNisForCurrentYear;
+                    if ($nisDeduction > $remainingNisToReachLimit) {
+                        $lessNis = $remainingNisToReachLimit;
+                    } else {
+                        $lessNis = $nisDeduction;
+                    }
+                } else {
+                    $lessNis = 0;
+                }
+                $employerContributionNis = $grossSalaryEarned * 0.03;
+            }
+
+            $statutoryIncome  = $grossSalaryEarned -  $lessNis - $approvedPensionScheme;
+    
+            if ($statutoryIncome < 65389) {
+                $payeIncome = 0;
+            } elseif ($statutoryIncome > 65389 && $statutoryIncome <= 230769.23) {
+                $payeData = $statutoryIncome - 65389;
+                $payeIncome = $payeData * 0.25;
+            } elseif($statutoryIncome > 230770.23) {
+                $payeData = $statutoryIncome - 230770.23;
+                $payeIncome = $payeData * 0.30;
+            }
+
+            $eduction_tax = $statutoryIncome * 0.0225;
+            $employer_contribution = $grossSalaryEarned * 0.035;
+           
+            if ($age >= 65) {
+                $nhtDeduction = 0;
+                $employerContributionNht = 0;
+            } else {
+                $nhtDeduction = $grossSalaryEarned * 0.02;
+                $employerContributionNht =  $grossSalaryEarned * 0.03;
+            }
+
+            $hearttax = $grossSalaryEarned * 0.035;
+        } else {
+            $statutoryIncome  = $grossSalaryEarned -  $lessNis - $approvedPensionScheme;
+        }
+
+        $today = Carbon::parse('28-12-2024')->subDay();
+        $staff_loan = 0;
+
+        $educationTax          = $eduction_tax;
+        $employerEductionTax   = $employer_contribution;
+        $nht                   = $nhtDeduction;
+        $employerContributionNhtTax = $employerContributionNht;
+        $paye                  = $payeIncome;
+        $heart                 = $hearttax;
+        $nis                   = $lessNis;
         $staffLoan             = 0;
-        $medicalInsurance     = 0;
+        $medicalInsurance      = 0;
         $threshold             = 0;
 
         return [
@@ -244,15 +323,19 @@ class PublishGuardRoaster extends Command
             'total_overtime_earnings'       => number_format($totalOvertimeEarnings, 2, '.', ''),
             'total_public_holiday_earnings' => number_format($totalPublicHolidayEarnings, 2, '.', ''),
             'gross_salary_earned'           => number_format($grossSalaryEarned, 2, '.', ''),
-            'less_nis'                      => number_format($lessNis, 2, '.', ''),
+            'less_nis'                      => number_format($nis, 2, '.', ''),
+            'employer_contribution_nis_tax' => number_format($nis + $employerContributionNis , 2, '.', ''),
             'approved_pension_scheme'       => number_format($approvedPensionScheme, 2, '.', ''),
             'statutory_income'              => number_format($statutoryIncome, 2, '.', ''),
             'education_tax'                 => number_format($educationTax, 2, '.', ''),
+            'employer_eduction_tax'         => number_format($educationTax + $employerEductionTax, 2, '.', ''),
             'nht'                           => number_format($nht, 2, '.', ''),
+            'employer_contribution_nht_tax' => number_format($nht + $employerContributionNhtTax, 2, '.', ''),
             'paye'                          => number_format($paye, 2, '.', ''),
             'staff_loan'                    => number_format($staffLoan, 2, '.', ''),
             'medical_insurance'             => number_format($medicalInsurance, 2, '.', ''),
             'threshold'                     => number_format($threshold, 2, '.', ''),
+            'heart'                         => number_format($heart, 2, '.', ''),
         ];
     }
 

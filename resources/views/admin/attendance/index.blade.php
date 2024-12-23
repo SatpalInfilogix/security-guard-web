@@ -13,7 +13,7 @@
                             <div class="d-inline-block ">
                                 <form method="GET" action="{{ route('attendance.index') }}" id="attendance-form">
                                     <input type="text" id="flat" name="date_range" class="form-control" 
-           value="{{ request('date_range', isset($fortnight) ? \Carbon\Carbon::parse($fortnight->start_date)->format('Y-m-d') . ' to ' . \Carbon\Carbon::parse($fortnight->end_date)->format('Y-m-d') : '') }}">
+                                         value="{{ request('date_range', isset($fortnight) ? \Carbon\Carbon::parse($fortnight->start_date)->format('Y-m-d') . ' to ' . \Carbon\Carbon::parse($fortnight->end_date)->format('Y-m-d') : '') }}">
                                     {{-- <input type="text" name="date_range" class="form-control" id="date-range-picker" 
                                            value="{{ request('date_range', isset($fortnight) ? \Carbon\Carbon::parse($fortnight->start_date)->format('Y-m-d') . ' to ' . \Carbon\Carbon::parse($fortnight->end_date)->format('Y-m-d') : '') }}"> --}}
                                 </form>
