@@ -17,7 +17,7 @@
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <label for="type">Type<span class="text-danger">*</span></label>
+            <label for="type">Non Stat Deduction<span class="text-danger">*</span></label>
             <select name="type" id="type" class="form-control{{ $errors->has('type') ? ' is-invalid' : '' }}">
                 <option value="" disabled selected>Select Type</option>
                 @php
@@ -37,25 +37,25 @@
     <div class="col-md-4">
         <div class="mb-3">
             <x-form-input name="amount" value="{{ old('amount', $deduction->amount ?? '') }}" label="Amount"
-                placeholder="Amount" type="number"/>
+                placeholder="Amount" type="number" required="true" />
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="no_of_payroll" value="{{ old('no_of_payroll', $deduction->no_of_payroll ?? '') }}" label="No Of Payroll"
-                placeholder="No Of Payroll" type="number"/>
+            <x-form-input name="no_of_payroll" value="{{ old('no_of_payroll', $deduction->no_of_payroll ?? '') }}" label="No Of Deduction"
+                placeholder="No Of Deduction" type="number"/>
         </div>
     </div>
 
     <div class="col-md-4 mb-3">
-        <x-form-input name="document_date" id="document_date" value="{{ old('document_date', $deduction->document_date ?? '') }}" label="Document Date" placeholder="Enter your Document Date" class="date_of_separation" type="text"/>
+        <x-form-input name="document_date" id="document_date" value="{{ old('document_date', $deduction->document_date ?? '') }}" label="Document Date" placeholder="Enter your Document Date" class="date_of_separation" type="text" required="true" />
     </div>
 
     <div class="col-md-4 mb-3">
-        <x-form-input name="start_date" id="start_date" value="{{ old('start_date', $deduction->start_date ?? '') }}" label="Start Date" placeholder="Enter your Start Date" class="date-picker-guard" type="text"/>
+        <x-form-input name="start_date" id="start_date" value="{{ old('start_date', $deduction->start_date ?? '') }}" label="Start Date" placeholder="Enter your Start Date" class="date-picker-guard" type="text" required="true" />
     </div>
     <div class="col-md-4 mb-3">
-        <x-form-input name="end_date" value="{{ old('end_date', $deduction->end_date ?? '') }}" label="End Date" placeholder="Enter your End Date" class="date-picker-guard" type="text"/>
+        <x-form-input name="end_date" value="{{ old('end_date', $deduction->end_date ?? '') }}" label="End Date" placeholder="Enter your End Date" class="date-picker-guard" type="text" required="true" />
     </div>
 </div>
 

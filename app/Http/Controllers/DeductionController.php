@@ -21,6 +21,44 @@ class DeductionController extends Controller
         return view('admin.deductions.index', compact('deductions'));
     }
 
+    public function getDeductionsData(Request $request)
+    {
+        $deductions = Deduction::with('user');
+
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $deductions->where(function($query) use ($searchValue) {
+                $query->where('type', 'like', '%' . $searchValue . '%')
+                    ->orWhere('amount', 'like', '%' . $searchValue . '%')
+                    ->orWhere('no_of_payroll', 'like', '%' . $searchValue . '%')
+                    ->orWhere('start_date', 'like', '%' . $searchValue . '%')
+                    ->orWhere('end_date', 'like', '%' . $searchValue . '%')
+                    ->orWhereHas('user', function($subQuery) use ($searchValue) {
+                        $subQuery->where('user_code', 'like', '%' . $searchValue . '%')
+                                ->orWhere('first_name', 'like', '%' . $searchValue . '%');
+                    });
+            });
+        }
+
+        $totalRecords = Deduction::count();
+
+        $filteredRecords = $deductions->count();
+
+        $length = $request->input('length', 10);
+        $start = $request->input('start', 0);
+
+        $deductions = $deductions->skip($start)->take($length)->get();
+
+        $data = [
+            'draw' => $request->input('draw'),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $deductions,
+        ];
+
+        return response()->json($data);
+    }
+
     public function create()
     {
         $userRole = Role::where('name', 'Security Guard')->first();

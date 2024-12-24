@@ -104,6 +104,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('get-client-list', [ClientController::class, 'getClient'])->name('get-client-list');
     Route::post('get-client-site-list', [ClientSiteController::class, 'getClientSite'])->name('get-client-site-list');
     Route::post('get-payroll-list', [PayrollController::class, 'getPayroll'])->name('get-payroll-list');
+    Route::post('get-deductions-list', [DeductionController::class, 'getDeductionsData'])->name('get-deductions-list');
 
     Route::get('security-guards/pdf', [SecurityGuardController::class, 'downloadPDF'])->name('security-guards.pdf');
 
@@ -116,6 +117,6 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('/get-guard-type-by-guard-id/{guardId}', [GuardRosterController::class, 'getGuardTypeByGuardId']);
 
     Route::get('/get-end-date', [DeductionController::class, 'getEndDate']);
+    
     Route::get('export-deduction', [DeductionController::class, 'exportDeduction'])->name('export.deductions');
-
 });
