@@ -11,6 +11,7 @@
                         <h4 class="mb-sm-0 font-size-18">NST Deduction</h4>
 
                         <div class="page-title-right">
+                            <a href="{{ route('export.deductions') }}" class="btn btn-primary"><i class="bx bx-export"></i>Deduction Export</a>
                             <a href="{{ route('deductions.create') }}" class="btn btn-primary">Add New Deduction</a>
                         </div>
 

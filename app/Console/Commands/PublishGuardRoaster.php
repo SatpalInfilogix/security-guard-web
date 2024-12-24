@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Deduction;
+use App\Models\DeductionDetail;
 use Illuminate\Console\Command;
 use App\Models\FortnightDates;
 use App\Models\GuardRoster;
@@ -67,12 +68,11 @@ class PublishGuardRoaster extends Command
                         return Carbon::parse($attendance->in_time)->toDateString();
                     })->toArray();
 
-                    $userHours[$userId] = $this->calculateUserHours($userId, $attendanceDetails, $publicHolidays, $previousStartDate, $previousEndDate);
-
                     $existingPayroll = Payroll::where('guard_id', $userId)->where('start_date', $previousFortnightStartDate->format('Y-m-d'))
                                                 ->where('end_date', $previousFortnightEndDate->format('Y-m-d'))->first();
 
                 if (!$existingPayroll) {
+                    $userHours[$userId] = $this->calculateUserHours($userId, $attendanceDetails, $publicHolidays, $previousStartDate, $previousEndDate);
                     $payrollData = Payroll::create([
                         'guard_id'              => $userId,
                         'start_date'            => $previousFortnightStartDate->format('Y-m-d'),
@@ -325,7 +325,6 @@ class PublishGuardRoaster extends Command
                 'PSRA'              => 'pending_psra',
                 'Bank Loan'         => 'pending_bank_loan',
                 'Approved Pension'  => 'pending_approved_pension',
-                // 'Other deduction'   => 'pending_other_deduction',
                 'Garnishment'       => 'pending_garnishment',
                 'Missing Goods'     => 'pending_missing_goods',
                 'Damaged Goods'     => 'pending_damaged_goods'
@@ -333,18 +332,24 @@ class PublishGuardRoaster extends Command
         
             $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
             $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
-        
             foreach ($deductionTypes as $deductionType => $pendingField) {
                 $deductionRecords = Deduction::where('guard_id', $userId)->where('type', $deductionType)->whereDate('start_date', '<=', $previousEndDate)->whereDate('end_date', '>=', $previousStartDate)->get();
         
                 foreach ($deductionRecords as $deduction) {
                     if ($deduction->start_date <= $previousEndDate && $deduction->end_date >= $previousStartDate) {
-                        $totalDeductions[$deductionType] += $deduction->one_installment;
+                        $totalDeductions[$deductionType] = $deduction->one_installment;
                         $pendingBalance = $deduction->pending_balance - $deduction->one_installment;
-                        $pendingAmounts[$deductionType] += $deduction->pending_balance - $deduction->one_installment;
-                       
+                        $pendingAmounts[$deductionType] = $deduction->pending_balance - $deduction->one_installment;
                         $deduction->update([
                             'pending_balance' => $pendingBalance
+                        ]);
+
+                        DeductionDetail::create([
+                            'guard_id'        => $userId,
+                            'deduction_id'    => $deduction->id,
+                            'deduction_date'  => Carbon::now(),
+                            'amount_deducted' => $deduction->one_installment,
+                            'balance'         =>  $pendingBalance
                         ]);
                     }
                 }
@@ -372,6 +377,26 @@ class PublishGuardRoaster extends Command
             $garnishment = $totalDeductions['Garnishment'];
             $missingGoods  = $totalDeductions['Missing Goods'];
             $damagedGoods = $totalDeductions['Damaged Goods'];
+        } else {
+            $staffLoan = 0;
+            $medicalInsurance = 0;
+            $salaryAdvance = 0;
+            $psra = 0;
+            $bankLoan = 0;
+            $approvedPension = 0;
+            $garnishment = 0;
+            $missingGoods = 0;
+            $damagedGoods = 0;
+
+            $pendingStaffLoan = 0;
+            $pendingMedicalInsurance = 0;
+            $pendingSalaryAdvance = 0;
+            $pendingPsra = 0;
+            $pendingBankLoan = 0;
+            $pendingApprovedPension = 0;
+            $pendingGarnishment = 0;
+            $pendingMissingGoods = 0;
+            $pendingDamagedGoods = 0;
         }
 
         $educationTax          = $eduction_tax;

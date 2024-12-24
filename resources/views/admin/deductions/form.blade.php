@@ -48,7 +48,11 @@
     </div>
 
     <div class="col-md-4 mb-3">
-        <x-form-input name="start_date" id="start_date" value="{{ old('start_date', $deduction->start_date ?? '') }}" label="Start Date" placeholder="Enter your Start Date" class="date_of_separation" type="text"/>
+        <x-form-input name="document_date" id="document_date" value="{{ old('document_date', $deduction->document_date ?? '') }}" label="Document Date" placeholder="Enter your Document Date" class="date_of_separation" type="text"/>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <x-form-input name="start_date" id="start_date" value="{{ old('start_date', $deduction->start_date ?? '') }}" label="Start Date" placeholder="Enter your Start Date" class="date-picker-guard" type="text"/>
     </div>
     <div class="col-md-4 mb-3">
         <x-form-input name="end_date" value="{{ old('end_date', $deduction->end_date ?? '') }}" label="End Date" placeholder="Enter your End Date" class="date-picker-guard" type="text"/>
@@ -65,7 +69,7 @@
 
 <script>
 $(document).ready(function() {
-    $('#start_date').on('change', function() {
+    $('#document_date').on('change', function() {
         triggerEndDateCalculation();
     });
 
@@ -74,19 +78,20 @@ $(document).ready(function() {
     });
 
     function triggerEndDateCalculation() {
-        var startDate = $('#start_date').val();
+        var date = $('#document_date').val();
         var noOfPayrolls = $('#no_of_payroll').val();
 
-        if (startDate) {
+        if (date) {
             $.ajax({
                 url: '/get-end-date',
                 method: 'GET',
                 data: {
-                    start_date: startDate,
+                    date: date,
                     no_of_payroll: noOfPayrolls
                 },
                 success: function(response) {
                     if (response.end_date) {
+                        $('#start_date').val(response.start_date);
                         $('#end_date').val(response.end_date);
                     } else {
                         alert('End date could not be calculated.');

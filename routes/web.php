@@ -116,4 +116,6 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('/get-guard-type-by-guard-id/{guardId}', [GuardRosterController::class, 'getGuardTypeByGuardId']);
 
     Route::get('/get-end-date', [DeductionController::class, 'getEndDate']);
+    Route::get('export-deduction', [DeductionController::class, 'exportDeduction'])->name('export.deductions');
+
 });
