@@ -96,6 +96,7 @@ class DeductionController extends Controller
             'type'         => $request->type,
             'amount'       => $request->amount,
             'no_of_payroll'=> $noOfPayrolls,
+            'document_date'=> $this->parseDate($request->start_date),
             'start_date'   => $this->parseDate($request->start_date),
             'end_date'     => $this->parseDate($request->end_date),
             'one_installment' => $oneInstallment,

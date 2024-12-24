@@ -100,14 +100,20 @@ class PublishGuardRoaster extends Command
                         'salary_advance'                => $userHours[$userId]['salary_advance'],
                         'psra'                          => $userHours[$userId]['psra'],
                         'bank_loan'                     => $userHours[$userId]['bank_loan'],
-                        'other_deduction'               => $userHours[$userId]['other_deduction'],
+                        // 'other_deduction'               => $userHours[$userId]['other_deduction'],
                         'pending_staff_loan'            => $userHours[$userId]['pending_staff_loan'],
                         'pending_medical_insurance'     => $userHours[$userId]['pending_medical_insurance'],
                         'pending_salary_advance'        => $userHours[$userId]['pending_salary_advance'],
                         'pending_psra'                  => $userHours[$userId]['pending_psra'],
                         'pending_bank_loan'             => $userHours[$userId]['pending_bank_loan'],
                         'pending_approved_pension'      => $userHours[$userId]['pending_approved_pension'],
-                        'pending_other_deduction'       => $userHours[$userId]['pending_other_deduction'],
+                        // 'pending_other_deduction'       => $userHours[$userId]['pending_other_deduction'],
+                        'garnishment'                   => $userHours[$userId]['garnishment'],
+                        'missing_goods'                 => $userHours[$userId]['missing_goods'],
+                        'damaged_goods'                 => $userHours[$userId]['damaged_goods'],
+                        'pending_garnishment'           => $userHours[$userId]['pending_garnishment'],
+                        'pending_missing_goods'         => $userHours[$userId]['pending_missing_goods'],
+                        'pending_damaged_goods'         => $userHours[$userId]['pending_damaged_goods'],
                     ]);
                 } else {
                     $payrollData = $existingPayroll;
@@ -313,13 +319,16 @@ class PublishGuardRoaster extends Command
 
         if ($userData->is_statutory == 1) {
             $deductionTypes = [
-                'Staff Loan' => 'pending_staff_loan',
-                'Medical Ins' => 'pending_medical_insurance',
-                'Salary Advance' => 'pending_salary_advance',
-                'PSRA' => 'pending_psra',
-                'Bank Loan' => 'pending_bank_loan',
-                'Approved Pension' => 'pending_approved_pension',
-                'Other deduction' => 'pending_other_deduction'
+                'Staff Loan'        => 'pending_staff_loan',
+                'Medical Ins'       => 'pending_medical_insurance',
+                'Salary Advance'    => 'pending_salary_advance',
+                'PSRA'              => 'pending_psra',
+                'Bank Loan'         => 'pending_bank_loan',
+                'Approved Pension'  => 'pending_approved_pension',
+                // 'Other deduction'   => 'pending_other_deduction',
+                'Garnishment'       => 'pending_garnishment',
+                'Missing Goods'     => 'pending_missing_goods',
+                'Damaged Goods'     => 'pending_damaged_goods'
             ];
         
             $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
@@ -347,7 +356,11 @@ class PublishGuardRoaster extends Command
             $pendingPsra = $pendingAmounts['PSRA'];
             $pendingBankLoan = $pendingAmounts['Bank Loan'];
             $pendingApprovedPension = $pendingAmounts['Approved Pension'];
-            $pendingOtherDeduction = $pendingAmounts['Other deduction'];
+            // $pendingOtherDeduction = $pendingAmounts['Other deduction'];
+            $pendingGarnishment = $pendingAmounts['Garnishment'];
+            $pendingMissingGoods = $pendingAmounts['Missing Goods'];
+            $pendingDamagedGoods = $pendingAmounts['Damaged Goods'];
+
 
             $staffLoan = $totalDeductions['Staff Loan'];
             $medicalInsurance = $totalDeductions['Medical Ins'];
@@ -355,7 +368,10 @@ class PublishGuardRoaster extends Command
             $psra = $totalDeductions['PSRA'];
             $bankLoan = $totalDeductions['Bank Loan'];
             $approvedPension = $totalDeductions['Approved Pension'];
-            $otherDeduction = $totalDeductions['Other deduction'];
+            // $otherDeduction = $totalDeductions['Other deduction'];
+            $garnishment = $totalDeductions['Garnishment'];
+            $missingGoods  = $totalDeductions['Missing Goods'];
+            $damagedGoods = $totalDeductions['Damaged Goods'];
         }
 
         $educationTax          = $eduction_tax;
@@ -391,7 +407,7 @@ class PublishGuardRoaster extends Command
             'bank_loan'                     => number_format($bankLoan, 2, '.', ''),
             'approved_pension'              => number_format($approvedPension, 2, '.', ''),
             'threshold'                     => number_format($threshold, 2, '.', ''),
-            'other_deduction'               => number_format($otherDeduction, 2, '.', ''),
+            // 'other_deduction'               => number_format($otherDeduction, 2, '.', ''),
             'heart'                         => number_format($heart, 2, '.', ''),
             'pending_staff_loan'            => number_format($pendingStaffLoan, 2, '.', ''),
             'pending_medical_insurance'     => number_format($pendingMedicalInsurance, 2, '.', ''),
@@ -399,7 +415,13 @@ class PublishGuardRoaster extends Command
             'pending_psra'                  => number_format($pendingPsra, 2, '.', ''),
             'pending_bank_loan'             => number_format($pendingBankLoan, 2, '.', ''),
             'pending_approved_pension'      => number_format($pendingApprovedPension, 2, '.', ''),
-            'pending_other_deduction'       => number_format($pendingOtherDeduction, 2, '.', ''),
+            // 'pending_other_deduction'       => number_format($pendingOtherDeduction, 2, '.', ''),
+            'garnishment'                   => number_format($garnishment, 2, '.', ''),
+            'missing_goods'                 => number_format($missingGoods, 2, '.', ''),
+            'damaged_goods'                 => number_format($damagedGoods, 2, '.', ''),
+            'pending_garnishment'           => number_format($pendingGarnishment, 2, '.', ''),
+            'pending_missing_goods'         => number_format($pendingMissingGoods, 2, '.', ''),
+            'pending_damaged_goods'         => number_format($pendingDamagedGoods, 2, '.', ''),
         ];
     }
 

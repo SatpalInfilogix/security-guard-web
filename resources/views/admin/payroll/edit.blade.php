@@ -44,15 +44,15 @@
                                 <table class="table table-bordered">
                                     <thead>
                                         <tr>
-                                            <th>Gross Earnings</th>
-                                            <th>Rate</th>
+                                            <th style="width: 25%;">Gross Earnings</th>
+                                            <th style="width: 12%">Rate</th>
                                             <th>Units</th>
                                             <th>Rate per Unit</th>
                                             <th>Total</th>
-                                            <th>Deductions</th>
+                                            <th style="width: 15%;">Deductions</th>
                                             <th>Amount</th>
                                             <th rowspan="2" class="align-middle text-center">Balance</th>
-                                            <th>Employer contribution</th>
+                                            <th style="width: 10%;">Employer contribution</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -149,9 +149,23 @@
                                         <tr>
                                             <td colspan="4"></td>
                                             <td></td>
-                                            <td>Other Deduction</td>
-                                            <td>{{ $payroll->other_deduction }}</td>
-                                            <td>{{ number_format($payroll->pending_other_deduction)}}</td>
+                                            <td>Garnishment</td>
+                                            <td>{{ $payroll->garnishment }}</td>
+                                            <td>{{ number_format($payroll->pending_garnishment)}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4"></td>
+                                            <td></td>
+                                            <td>Damaged Goods</td>
+                                            <td>{{ $payroll->damaged_goods }}</td>
+                                            <td>{{ number_format($payroll->pending_damaged_goods)}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4"></td>
+                                            <td></td>
+                                            <td>Missing Goods</td>
+                                            <td>{{ $payroll->missing_goods }}</td>
+                                            <td>{{ number_format($payroll->pending_missing_goods)}}</td>
                                         </tr>
                                         <tr>
                                             <td><strong>Total</strong></td>
@@ -160,7 +174,7 @@
                                             <td></td>
                                             @php
                                                 $total = $payroll->normal_hours_rate +  $payroll->overtime_rate +  $payroll->public_holiday_rate ?? 0;
-                                                $totalAmount = $payroll->paye +  $payroll->education_tax + $payroll->less_nis + $payroll->nht + $payroll->staff_loan +  $payroll->medical_insurance + $payroll->salary_advance + $payroll->approved_pension_scheme + $payroll->psra + $payroll->bank_loan +$payroll->other_deduction;
+                                                $totalAmount = $payroll->paye +  $payroll->education_tax + $payroll->less_nis + $payroll->nht + $payroll->staff_loan +  $payroll->medical_insurance + $payroll->salary_advance + $payroll->approved_pension_scheme + $payroll->psra + $payroll->bank_loan + $payroll->missing_goods + $payroll->damaged_goods + $payroll->garnishment;
                                             @endphp
                                             <td><strong>{{ $total }}</strong></td>
                                             <td></td>

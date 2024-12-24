@@ -35,7 +35,8 @@
                                 <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>Guard Name</th>
+                                        <th>Employee No</th>
+                                        <th>Employee Name</th>
                                         <th>Type</th>
                                         <th>Amount</th>
                                         <th>No Of Payroll</th>
@@ -48,6 +49,7 @@
                                     @foreach($deductions as $key => $deduction)
                                     <tr>
                                         <td>{{ ++$key }}</td>
+                                        <td>{{ $deduction->user->user_code }}</td>
                                         <td>{{ $deduction->user->first_name }}</td>
                                         <td>{{ $deduction->type }}</td>
                                         <td>{{ $deduction->amount }}</td>
@@ -60,9 +62,9 @@
                             </table>
                         </div>
                     </div>
-                </div> <!-- end col -->
-            </div> <!-- end row -->
-        </div> <!-- container-fluid -->
+                </div>
+            </div>
+        </div>
     </div>
     <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
 @endsection

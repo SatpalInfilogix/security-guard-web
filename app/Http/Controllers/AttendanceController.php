@@ -127,6 +127,6 @@ class AttendanceController extends Controller
         $publicHolidays = PublicHoliday::whereBetween('date', [$startDate, $endDate])->pluck('date')->toArray();
 
 
-        return Excel::download(new AttendanceExport($startDate, $endDate, $publicHolidays), 'attendance-list.csv');
+        return Excel::download(new AttendanceExport($startDate, $endDate, $publicHolidays), 'attendance-list.xlsx');
     }
 }

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('type');
             $table->decimal('amount', 10, 2)->nullable();
             $table->integer('no_of_payroll');
+            $table->date('document_date')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->decimal('one_installment',15, 2)->nullable();

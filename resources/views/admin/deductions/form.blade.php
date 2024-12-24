@@ -21,7 +21,7 @@
             <select name="type" id="type" class="form-control{{ $errors->has('type') ? ' is-invalid' : '' }}">
                 <option value="" disabled selected>Select Type</option>
                 @php
-                    $types = ['Staff Loan', 'Salary Advance', 'Medical Ins', 'PSRA', 'Bank Loan', 'Approved Pension', 'Other deduction'];    
+                    $types = ['Staff Loan', 'Salary Advance', 'Medical Ins', 'PSRA', 'Garnishment', 'Missing Goods', 'Damaged Goods', 'Bank Loan', 'Approved Pension'];    
                 @endphp
                 @foreach($types as $type)
                     <option value="{{ $type }}" @selected(isset($deduction->type) && $deduction->type == $type)>

@@ -44,8 +44,12 @@ return new class extends Migration
             $table->decimal('pending_psra', 15, 2)->nullable();
             $table->decimal('bank_loan', 15, 2)->nullable();
             $table->decimal('pending_bank_loan', 15, 2)->nullable();
-            $table->decimal('other_deduction', 15, 2)->nullable();
-            $table->decimal('pending_other_deduction', 15, 2)->nullable();
+            $table->decimal('garnishment', 15, 2)->nullable();
+            $table->decimal('pending_garnishment', 15, 2)->nullable();
+            $table->decimal('missing_goods', 15, 2)->nullable();
+            $table->decimal('pending_missing_goods', 15, 2)->nullable();
+            $table->decimal('damaged_goods', 15, 2)->nullable();
+            $table->decimal('pending_damaged_goods', 15, 2)->nullable();
             $table->decimal('threshold', 10, 2)->nullable();
             $table->boolean('is_publish')->default(0);
             $table->timestamps();
