@@ -25,6 +25,16 @@ class DeductionController extends Controller
     {
         $deductions = Deduction::with('user');
 
+        if ($request->has('search_name') && !empty($request->search_name)) {
+            $deductions->whereHas('user', function ($query) use ($request) {
+                $query->where('first_name', 'like', '%' . $request->search_name . '%');
+            });
+        }
+
+        if ($request->has('search_type') && !empty($request->search_type)) {
+            $deductions->where('type', 'like', '%' . $request->search_type . '%');
+        }
+
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
             $deductions->where(function($query) use ($searchValue) {

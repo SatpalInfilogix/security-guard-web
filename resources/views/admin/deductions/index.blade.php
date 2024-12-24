@@ -27,7 +27,7 @@
                                 <input type="text" name="search_name" class="form-control" placeholder="Search by Name" value="{{ request('search_name') }}" id="search_name">
                             </div>
                             <div class="col-md-2">
-                                <select name="type" id="type" class="form-control{{ $errors->has('type') ? ' is-invalid' : '' }}">
+                                <select name="search_type" id="search_type" class="form-control{{ $errors->has('type') ? ' is-invalid' : '' }}">
                                     <option value="" disabled selected>Select Type</option>
                                     @php
                                         $types = ['Staff Loan', 'Salary Advance', 'Medical Ins', 'PSRA', 'Garnishment', 'Missing Goods', 'Damaged Goods', 'Bank Loan', 'Approved Pension'];    
@@ -96,6 +96,8 @@
                    type: "POST",
                    data: function(d) {
                        d._token = "{{ csrf_token() }}";
+                       d.search_name = $('#search_name').val();
+                       d.search_type = $('#search_type').val();
                        return d;
                    },
                    dataSrc: function(json) {
@@ -127,7 +129,9 @@
                order: [[0, 'asc']]
            });
 
-        
+           $('#searchBtn').on('click', function() {
+            deductionTable.ajax.reload();
+            });
        });  
    </script>
 @endsection
