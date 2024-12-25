@@ -48,7 +48,7 @@
     </div>
 
     <div class="col-md-4 mb-3">
-        <x-form-input name="document_date" id="document_date" value="{{ old('document_date', $deduction->document_date ?? '') }}" label="Document Date" placeholder="Enter your Document Date" class="date_of_separation" type="text" required="true" />
+        <x-form-input name="document_date" id="document_date" value="{{ old('document_date', $deduction->document_date ?? '') }}" label="Document Date" placeholder="Enter your Document Date" class="datepicker" type="text" required="true" />
     </div>
 
     <div class="col-md-4 mb-3">

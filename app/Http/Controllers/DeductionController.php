@@ -35,6 +35,15 @@ class DeductionController extends Controller
             $deductions->where('type', 'like', '%' . $request->search_type . '%');
         }
 
+        if($request->has('search_document_date') && !empty($request->search_document_date)) {
+            $deductions->whereDate('document_date', Carbon::parse($request->search_document_date)->format('Y-m-d'));
+        }
+
+        if ($request->has('search_period_date') && !empty($request->search_period_date)) {
+            $deductions->whereDate('start_date', '<=', Carbon::parse($request->search_period_date)->format('Y-m-d'))
+                       ->whereDate('end_date', '>=', Carbon::parse($request->search_period_date)->format('Y-m-d'));
+        }
+
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
             $deductions->where(function($query) use ($searchValue) {

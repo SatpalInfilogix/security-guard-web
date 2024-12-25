@@ -11,7 +11,7 @@
                         <h4 class="mb-sm-0 font-size-18">NST Deduction</h4>
 
                         <div class="page-title-right">
-                            <a href="{{ route('export.deductions') }}" class="btn btn-primary"><i class="bx bx-export"></i>Deduction Export</a>
+                            <a href="{{ route('export.deductions') }}" class="btn btn-primary"><i class="bx bx-export"></i> Deduction Export</a>
                             <a href="{{ route('deductions.create') }}" class="btn btn-primary">Add New Deduction</a>
                         </div>
 
@@ -26,7 +26,7 @@
                             <div class="col-md-2">
                                 <input type="text" name="search_name" class="form-control" placeholder="Search by Name" value="{{ request('search_name') }}" id="search_name">
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <select name="search_type" id="search_type" class="form-control{{ $errors->has('type') ? ' is-invalid' : '' }}">
                                     <option value="" disabled selected>Select Type</option>
                                     @php
@@ -39,8 +39,12 @@
                                     @endforeach
                                 </select>
                             </div>
+                            <div class="col-md-3">
+                                <input type="text" name="search_document_date" class="form-control date_of_separation" placeholder="Search by Document Date" value="{{ request('search_document_date') }}" id="search_document_date">
+                            </div>
+
                             <div class="col-md-2">
-                                <input type="text" name="search_document_date" class="form-control" placeholder="Search by Document Date" value="{{ request('search_document_date') }}" id="search_document_date">
+                                <input type="text" name="search_period_date" class="form-control date_of_separation" placeholder="Search by Period Date" value="{{ request('search_period_date') }}" id="search_period_date">
                             </div>
                             
                             <div class="col-md-2">
@@ -85,7 +89,7 @@
             </div>
         </div>
     </div>
-    <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
+    <x-include-plugins :plugins="['dataTable', 'datePicker']"></x-include-plugins>
     <script>
         $(document).ready(function() {
            let deductionTable = $('#deduction-list').DataTable({
@@ -98,6 +102,8 @@
                        d._token = "{{ csrf_token() }}";
                        d.search_name = $('#search_name').val();
                        d.search_type = $('#search_type').val();
+                       d.search_document_date = $('#search_document_date').val();
+                       d.search_period_date = $('#search_period_date').val();
                        return d;
                    },
                    dataSrc: function(json) {
@@ -130,7 +136,7 @@
            });
 
            $('#searchBtn').on('click', function() {
-            deductionTable.ajax.reload();
+                deductionTable.ajax.reload();
             });
        });  
    </script>
