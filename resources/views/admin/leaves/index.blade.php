@@ -11,6 +11,7 @@
                         <h4 class="mb-sm-0 font-size-18">Leaves</h4>
 
                         <div class="page-title-right">
+                            <a href="{{ route('leaves.create') }}" class="btn btn-primary">Add New Leave</a>
                         </div>
                     </div>
                 </div>
@@ -20,6 +21,11 @@
             <div class="row">
                 <div class="col-12">
                     <x-error-message :message="$errors->first('message')" />
+                    @if(session('error'))
+                        <div class="alert alert-danger">
+                            {{ session('error') }}
+                        </div>
+                    @endif
                     <x-success-message :message="session('success')" />
                     <div class="card">
                         <div class="card-body">
@@ -101,9 +107,9 @@
        $(document).ready(function() {
             let leaveId = null;
             $('.dropdown-item').on('click', function() {
-                const newStatus = $(this).data('status');  // Get the new status
-                const leaveId = $(this).data('id');        // Get the leave ID
-                const statusButton = $(this).closest('tr').find('.dropdown-toggle'); // Find the dropdown button in the same row
+                const newStatus = $(this).data('status');
+                const leaveId = $(this).data('id');
+                const statusButton = $(this).closest('tr').find('.dropdown-toggle');
 
                 if (newStatus === 'Rejected') {
                     $('#leaveId').val(leaveId);
@@ -155,12 +161,12 @@
             function updateLeaveStatus(leaveId, newStatus, rejectionReason = null) {
                 console.log('aas', leaveId);
                 $.ajax({
-                    url: `/leaves/${leaveId}/update-status`,  // The URL for the status update
+                    url: `/leaves/${leaveId}/update-status`,
                     method: 'POST',
                     data: {
                         status: newStatus,
-                        rejection_reason: rejectionReason,  // Pass rejection reason if applicable
-                        _token: '{{ csrf_token() }}'  // CSRF token for security
+                        rejection_reason: rejectionReason,
+                        _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
                         if (response.success) {
@@ -172,7 +178,7 @@
                             });
 
                             setTimeout(() => {
-                                location.reload();  // Reloads the page after 2 seconds
+                                location.reload();
                             }, 2000);
                         } else {
                             swal({

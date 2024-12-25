@@ -30,4 +30,15 @@ class PayrollController extends Controller
             'data'    => $payroll
         ]);
     }
+
+    public function latestPayroll()
+    {
+        $payroll = Payroll::where('guard_id', Auth::id())->latest()->first();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Latest Payroll.',
+            'data'    => $payroll
+        ]);
+    }
 }

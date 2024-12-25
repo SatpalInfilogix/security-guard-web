@@ -36,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/payrolls', [PayrollController::class, 'getPayroll']);
     Route::get('/payroll/{payrollId}',[PayrollController::class, 'payrollById']);
+    Route::get('/latest-payroll', [PayrollController::class, 'latestPayroll']);
 });
 Route::get('faq', [FaqController::class, 'index']);
 Route::get('help-request', [FaqController::class, 'getHelpRequest']);
