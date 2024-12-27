@@ -93,7 +93,7 @@
         <div class="col-md-4 mb-2">
             <x-form-input name="date_of_birth"
                 value="{{ old('date_of_birth', $user->guardAdditionalInformation->date_of_birth ?? '') }}"
-                label="Date of Birth" class="date-of-birth" placeholder="Enter Date of Birth" type="text" />
+                label="Date of Birth" class="date-of-birth" placeholder="Enter Date of Birth" type="text" required="true" />
         </div>
 
         {{--<div class="col-md-4 mb-3">

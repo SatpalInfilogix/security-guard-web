@@ -50,10 +50,13 @@ class SecurityGuardController extends Controller
         $securityGuards = User::with('userDocuments')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         });
+
+        if ($request->has('search_emp_code') && !empty($request->search_emp_code)) {
+            $securityGuards->where('id', 'like', '%' . $request->search_emp_code . '%');
+        }
     
         if ($request->has('search_name') && !empty($request->search_name)) {
-            $securityGuards->where('first_name', 'like', '%' . $request->search_name . '%')
-                                 ->orWhere('surname', 'like', '%' . $request->search_name . '%');
+            $securityGuards->where('first_name', 'like', '%' . $request->search_name . '%');
         }
     
         if ($request->has('search_email') && !empty($request->search_email)) {
@@ -148,7 +151,15 @@ class SecurityGuardController extends Controller
             'nis'           => 'nullable|unique:guard_additional_information,nis',
             'psra'          => 'nullable|unique:guard_additional_information,psra',
             'account_number'=> 'nullable|unique:users_bank_details,account_no',
-            'date_of_birth' => 'required|date|before:date_of_joining',
+            'date_of_birth' => [
+                'required',
+                'date',
+                function ($attribute, $value, $fail) {
+                    if (request()->has('date_of_joining') && !empty(request('date_of_joining')) && $value >= request('date_of_joining')) {
+                        $fail('The date of birth must be before the date of joining.');
+                    }
+                },
+            ],
             'date_of_joining'=> 'nullable|date',
             'guard_type_id' => 'required',
             'guard_employee_as_id' => 'required'
@@ -157,8 +168,6 @@ class SecurityGuardController extends Controller
         if ($request->user_status === 'Active') {
             $validationRules['trn_doc'] = 'required';
             $validationRules['nis_doc'] = 'required';
-            $validationRules['psra_doc'] = 'required';
-            $validationRules['birth_certificate'] = 'required';
         }
 
         $request->validate($validationRules);
@@ -293,7 +302,15 @@ class SecurityGuardController extends Controller
             'nis'           => 'nullable|unique:guard_additional_information,nis,'. optional($guardInfo)->id,
             'psra'          => 'nullable|unique:guard_additional_information,psra,'. optional($guardInfo)->id,
             'account_no'    => 'nullable|unique:users_bank_details,account_no,'. optional($usersBankDetail)->id,
-            'date_of_birth' => 'required|date|before:date_of_joining',
+            'date_of_birth' => [
+                'required',
+                'date',
+                function ($attribute, $value, $fail) {
+                    if (request()->has('date_of_joining') && !empty(request('date_of_joining')) && $value >= request('date_of_joining')) {
+                        $fail('The date of birth must be before the date of joining.');
+                    }
+                },
+            ],
             'date_of_joining'=> 'nullable|date',
             'guard_type_id' => 'required',
             'guard_employee_as_id' => 'required'
@@ -302,8 +319,6 @@ class SecurityGuardController extends Controller
         if ($request->user_status === 'Active') {
             $validationRules['trn_doc'] = ($usersDocuments->trn ?? null || $request->hasFile('trn_doc')) ? 'nullable' : 'required';
             $validationRules['nis_doc'] = ($usersDocuments->nis ?? null || $request->hasFile('nis_doc')) ? 'nullable' : 'required';
-            $validationRules['psra_doc'] = ($usersDocuments->psra ?? null || $request->hasFile('psra_doc')) ? 'nullable' : 'required';
-            $validationRules['birth_certificate'] = ($usersDocuments->birth_certificate ?? null || $request->hasFile('birth_certificate')) ? 'nullable' : 'required';
         }
     
         $request->validate($validationRules);

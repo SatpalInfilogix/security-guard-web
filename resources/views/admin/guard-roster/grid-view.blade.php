@@ -69,25 +69,16 @@
                         var schedule = row.time_in_out.find(function(item) {
                             return item.date === date;
                         });
-                        if (schedule) {
-                            return schedule.time_in ? moment(schedule.time_in, 'HH:mm:ss').format('h:mm A') : '-';
-                        } else {
-                            return '-';
-                        }
+                        return schedule && schedule.time_in ? moment(schedule.time_in, 'h:mm A').format('h:mm A') : '-';
                     },
                 },
-
                 {
                     data: function(row) {
                         var date = '{{ $startOfFortnight->copy()->addDays($dayOffset)->format('Y-m-d') }}';
                         var schedule = row.time_in_out.find(function(item) {
                             return item.date === date;
                         });
-                        if (schedule) {
-                            return schedule.time_out ? moment(schedule.time_out, 'HH:mm:ss').format('h:mm A') : '-';
-                        } else {
-                            return '-';
-                        }
+                        return schedule && schedule.time_out ? moment(schedule.time_out, 'h:mm A').format('h:mm A') : '-';
                     },
                 },
                 @endforeach

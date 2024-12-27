@@ -65,9 +65,7 @@ class UserController extends Controller
         if($userDocs){
             if (
                 empty($userDocs->trn) || 
-                empty($userDocs->nis) || 
-                empty($userDocs->psra) || 
-                empty($userDocs->birth_certificate)
+                empty($userDocs->nis)
             ) {
                 return response()->json([
                     'success' => false,

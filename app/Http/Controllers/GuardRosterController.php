@@ -153,7 +153,7 @@ class GuardRosterController extends Controller
         $guardRoaster = GuardRoster::updateOrCreate(
             [
                 'guard_id' => $request->guard_id,
-                'date'     => $request->date,  // We use these two attributes to search for the existing record
+                'date'     => $request->date,
             ],
             [
                 'client_id'      => $request->client_id,

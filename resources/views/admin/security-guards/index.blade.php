@@ -36,15 +36,25 @@
                     <form id="filterForm" method="GET">
                         <div class="row">
                             <div class="col-md-2">
+                                <select name="search_emp_code" class="form-control" id="search_emp_code">
+                                    <option value="">Select Employee Code</option>
+                                    @foreach ($securityGuards as $securityGuard)
+                                        @if (!empty($securityGuard->user_code))
+                                            <option value="{{ $securityGuard->id }}">{{ $securityGuard->user_code }}</option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
                                 <input type="text" name="search_name" class="form-control" placeholder="Search by Name" value="{{ request('search_name') }}" id="search_name">
                             </div>
                             <div class="col-md-2">
                                 <input type="text" name="search_email" class="form-control" placeholder="Search by Email" value="{{ request('search_email') }}" id="search_email">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <input type="text" name="search_phone" class="form-control" placeholder="Search by Phone" value="{{ request('search_phone') }}" id="search_phone">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <select name="status" class="form-control" id="is_status">
                                     <option value="">All Status</option>
                                     <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
@@ -84,7 +94,7 @@
                                     <th>Emp. Code</th>
                                     <th>First Name</th>
                                     <th>Middle Name</th>
-                                    <th>Email</th>
+                                    <th>Surname</th>
                                     <th>Phone number</th>
                                     <th>Status</th>
                                     @canany(['edit security guards', 'delete security guards'])
@@ -117,6 +127,7 @@
                         d.search_name = $('#search_name').val();  // Send filter values to the server
                         d.search_email = $('#search_email').val();
                         d.search_phone = $('#search_phone').val();
+                        d.search_emp_code = $('#search_emp_code').val();
                         d.status = $('#is_status').val();
                         return d;
                     },
@@ -134,7 +145,7 @@
                     { data: 'user_code'},
                     { data: 'first_name' },
                     { data: 'middle_name' },
-                    { data: 'email' },
+                    { data: 'surname' },
                     { data: 'phone_number' },
                     {
                         data: 'status',
@@ -277,12 +288,12 @@
                         } else {
                             swal({
                                 title: "Missing Documents",
-                                text: "Please ensure all required documents (TRN, NIS, Birth Certificate, PSRA) are uploaded before setting the status to Active.",
+                                text: "Please ensure all required documents (TRN, NIS) are uploaded before setting the status to Active.",
                                 type: "error",
                                 showConfirmButton: true
                             });
                             if (status === "Active") {
-                                selectElement.val("Inactive"); // Reset the value back to "Inactive"
+                                selectElement.val("Inactive");
                             }
                         }
                     }
