@@ -11,7 +11,8 @@
                         <h4 class="mb-sm-0 font-size-18">NST Deduction</h4>
 
                         <div class="page-title-right">
-                            <a href="{{ route('export.deductions') }}" class="btn btn-primary"><i class="bx bx-export"></i> Deduction Export</a>
+                            <a href="#" id="exportBtn" class="btn btn-primary"><i class="bx bx-export"></i> Deduction Export</a>
+                            {{-- <a href="{{ route('export.deductions') }}" class="btn btn-primary"><i class="bx bx-export"></i> Deduction Export</a> --}}
                             <a href="{{ route('deductions.create') }}" class="btn btn-primary">Add New Deduction</a>
                         </div>
 
@@ -134,6 +135,21 @@
                lengthMenu: [10, 25, 50, 100],
                order: [[0, 'asc']]
            });
+
+           $('#exportBtn').on('click', function(e) {
+            let searchName = $('#search_name').val();
+            let searchType = $('#search_type').val() ? $('#search_type').val() : ''; 
+            let searchDocumentDate = $('#search_document_date').val();
+            let searchPeriodDate = $('#search_period_date').val();
+
+            let exportUrl = "{{ route('export.deductions') }}";
+            exportUrl += `?search_name=${encodeURIComponent(searchName)}`;
+            exportUrl += `&search_type=${encodeURIComponent(searchType)}`;
+            exportUrl += `&search_document_date=${encodeURIComponent(searchDocumentDate)}`;
+            exportUrl += `&search_period_date=${encodeURIComponent(searchPeriodDate)}`;
+
+            window.location.href = exportUrl;
+        });
 
            $('#searchBtn').on('click', function() {
                 deductionTable.ajax.reload();

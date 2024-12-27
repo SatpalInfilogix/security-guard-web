@@ -10,7 +10,7 @@
                         <h4 class="mb-sm-0 font-size-18">Payroll</h4>
 
                         <div class="page-title-right">
-                            <a href="{{ route('payroll-export.csv') }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> SO1 Report</a>
+                            <a href="{{ route('payroll-export.csv', ['date' => request('date')] ) }}" id="exportBtn" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> SO1 Report</a>
                             <a href="{{ url('download-payroll-sample') }}"
                             class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Payroll Sample File</a>
                             <div class="d-inline-block ">
@@ -132,6 +132,13 @@
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100],
                 order: [[0, 'asc']]
+            });
+
+            $('#date').on('change', function() {
+                var selectedDate = $('#date').val();
+                var exportUrl = "{{ route('payroll-export.csv', ['date' => '__date__']) }}";
+                exportUrl = exportUrl.replace('__date__', selectedDate);
+                $('#exportBtn').attr('href', exportUrl);
             });
 
             $('#searchBtn').on('click', function() {

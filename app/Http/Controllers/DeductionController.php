@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use App\Exports\DeductionsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DeductionController extends Controller
 {
@@ -84,7 +86,7 @@ class DeductionController extends Controller
 
         $securityGuards = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
-        })->where('status', 'Active')->latest()->get();
+        })->where('status', 'Active')->where('is_statutory', 1)->latest()->get();
        
         return view('admin.deductions.create', compact('securityGuards'));
     }
@@ -159,7 +161,7 @@ class DeductionController extends Controller
             'type'         => $request->type,
             'amount'       => $request->amount,
             'no_of_payroll'=> $noOfPayrolls,
-            'document_date'=> $this->parseDate($request->document_date),
+            'document_date'=> $request->document_date,
             'start_date'   => $this->parseDate($request->start_date),
             'end_date'     => $this->parseDate($request->end_date),
             'one_installment' => $oneInstallment,
@@ -169,71 +171,39 @@ class DeductionController extends Controller
         return redirect()->route('deductions.index')->with('success', 'Deduction created successfully.');
     }
 
-    public function exportDeduction()
+    public function exportDeduction(Request $request)
     {
-        $spreadsheet = new Spreadsheet();
+        $searchName = $request->input('search_name');
+        $searchDocumentDate = $request->input('search_document_date');
+        $searchPeriodDate = $request->input('search_period_date');
 
-        $this->addDeductionsSheet($spreadsheet);
-
-        $writer = new Xlsx($spreadsheet);
-        $fileName = 'Deduction.xlsx';
-
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="' . $fileName . '"');
-        header('Cache-Control: max-age=0');
-
-        $writer->save('php://output');
-        exit;
-    }
-
-    protected function addDeductionsSheet($spreadsheet)
-    {
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Deductions');
-
-        $headers = ['ID', 'Employee No', 'Employee Name', 'Non Stat Deduction', 'Amount', 'No of deductions', 'Document Date', 'Date Deducted', 'Amount Deducted', 'Balance'];
-        $sheet->fromArray($headers, NULL, 'A1');
-
-        $deductionDetails = DeductionDetail::with('deduction', 'deduction.user')->get();
-
-        $row = 2;
-        $previousDeductionId = null;
-
-        foreach ($deductionDetails as $key => $deductionDetail) {
-            if ($deductionDetail->deduction->id != $previousDeductionId) {
-                $sheet->fromArray(
-                    [
-                        $deductionDetail->deduction->id,
-                        $deductionDetail->deduction->user->user_code,
-                        $deductionDetail->deduction->user->first_name,
-                        $deductionDetail->deduction->type,
-                        $deductionDetail->deduction->amount,
-                        $deductionDetail->deduction->no_of_payroll,
-                        $deductionDetail->deduction->document_date,
-                        $deductionDetail->deduction_date,
-                        $deductionDetail->amount_deducted,
-                        $deductionDetail->balance
-                    ],
-                    NULL,
-                    'A' . $row
-                );
-                $previousDeductionId = $deductionDetail->deduction->id;
-                $row++;
-            } else {
-                $sheet->fromArray(
-                    [
-                        '', '', '', '', '',
-                        '', '', $deductionDetail->deduction_date,
-                        $deductionDetail->amount_deducted,
-                        $deductionDetail->balance
-                    ],
-                    NULL,
-                    'A' . $row
-                );
-                $row++;
-            }
+        $query = DeductionDetail::with('deduction', 'user');
+        if ($searchName) {
+            $query->whereHas('user', function ($q) use ($searchName) {
+                $q->where('first_name', 'like', '%' . $searchName . '%');
+            });
         }
 
-        $spreadsheet->createSheet();
+        if ($request->has('search_type') && !empty($request->search_type)) {
+            $query->whereHas('deduction', function ($q) use ($request) {
+                $q->where('type', $request->search_type);
+            });
+        }
+
+        if ($searchDocumentDate) {
+            $query->whereHas('deduction', function ($q) use ($searchDocumentDate) {
+                $q->whereDate('document_date', '=', carbon::parse($searchDocumentDate)->format('Y-m-d'));
+            });
+        }
+
+        if ($searchPeriodDate) {
+            $query->whereHas('deduction', function ($q) use ($searchPeriodDate) {
+                $q->whereDate('start_date', '<=', Carbon::parse($searchPeriodDate)->format('Y-m-d'))
+                ->whereDate('end_date', '>=', Carbon::parse($searchPeriodDate)->format('Y-m-d'));
+            });
+        }
+        $deductionDetails = $query->get();
+
+        return Excel::download(new DeductionsExport($deductionDetails), 'deductions_report.xlsx');
     }
 }

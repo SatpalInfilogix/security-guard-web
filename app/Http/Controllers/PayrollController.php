@@ -106,11 +106,12 @@ class PayrollController extends Controller
         ]);
     }
 
-    public function payrollExport()
+    public function payrollExport(Request $request)
     {
+        $selectedDate = $request->input('date');
         $spreadsheet = new Spreadsheet();
 
-        $this->addPayrollSheet($spreadsheet);
+        $this->addPayrollSheet($spreadsheet, $selectedDate);
 
         $writer = new Xlsx($spreadsheet);
         $fileName = 'Payroll.xlsx';
@@ -123,7 +124,7 @@ class PayrollController extends Controller
         exit;
     }
 
-    protected function addPayrollSheet($spreadsheet)
+    protected function addPayrollSheet($spreadsheet, $selectedDate)
     {
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Payrolls');
@@ -151,11 +152,23 @@ class PayrollController extends Controller
         $sheet->getRowDimension(1)->setRowHeight(60);
 
 
-        $today = Carbon::now()->startOfDay();
-        $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+        if ($selectedDate) {
+            $today = Carbon::parse($selectedDate)->startOfDay();
+            $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+            if($fortnightDays) {
+                $previousFortnightStartDate = Carbon::parse($fortnightDays->start_date);
+                $previousFortnightEndDate = Carbon::parse($fortnightDays->end_date);
+            } else {
+                $previousFortnightStartDate = '';
+                $previousFortnightEndDate  = '';
+            }
+        } else {
+            $today = Carbon::now()->startOfDay();
+            $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+            $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
+            $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
+        }
 
-        $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
-        $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
         $Payrolls = Payroll::with('user', 'user.guardAdditionalInformation')->where('start_date', '>=', $previousFortnightStartDate)->whereDate('end_date', '<=', $previousFortnightEndDate)->get();
 
         foreach ($Payrolls as $key => $payroll) {

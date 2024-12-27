@@ -13,4 +13,9 @@ class Deduction extends Model
     {
         return $this->belongsTo(User::class, 'guard_id');
     }
+
+    public function deductionDetail()
+    {
+        return $this->belongsTo(DeductionDetail::class, 'id');
+    }
 }
