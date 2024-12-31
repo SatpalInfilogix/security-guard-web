@@ -64,15 +64,49 @@ class PunchController extends Controller
             'time' => 'required|date_format:Y-m-d H:i:s',
         ];
 
-        $today = Carbon::today();
-        $todaysDuty = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', $today)->first();
-        
-        if (!$todaysDuty) {
+        $today = Carbon::now();
+        // $start_time = carbon::parse($request->time)->format('H:i:s');
+        // echo"<pre>"; print_r($start_time); die();
+        // $todaysDuty = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', $today)->first();
+        // if (!$todaysDuty) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'status' => 'DUTY_NOT_ASSIGNED',
+        //         'message' => 'You do not have duty scheduled for today.'
+        //     ], 400);
+        // }
+
+        $start_time = Carbon::parse($request->time)->format('H:i:s');
+
+        $todaysDuties = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', $today)->get();
+        if ($todaysDuties->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'status' => 'DUTY_NOT_ASSIGNED',
                 'message' => 'You do not have duty scheduled for today.'
             ], 400);
+        }
+    
+        if ($todaysDuties->count() === 1) {
+            $todaysDuty = $todaysDuties->first();
+            $guard_type_id = $todaysDuty->guard_type_id;
+            $client_site_id = $todaysDuty->client_site_id;
+        } else {
+            $todaysDuty = $todaysDuties->first(function ($duty) use ($start_time) {
+                return Carbon::parse($duty->start_time)->lessThanOrEqualTo($start_time);
+            });
+    
+            if (!$todaysDuty) {
+                return response()->json([
+                    'success' => false,
+                    'status' => 'INVALID_TIME',
+                    'message' => 'The punch-in time does not match any assigned duty time for today.'
+                ], 400);
+            }
+    
+            // If a matching duty is found, assign its details
+            $guard_type_id = $todaysDuty->guard_type_id;
+            $client_site_id = $todaysDuty->client_site_id;
         }
        
         $clientLat = $todaysDuty->clientSite->latitude;
@@ -155,10 +189,11 @@ class PunchController extends Controller
             $imageName = uploadFile($request->file('in_image'), 'uploads/activity/punch_in/');
             $in_location = $this->geocodingService->getAddress($request->in_lat, $request->in_long);
 
-            $rateMaster = RateMaster::where('id', $todaysDuty->guard_type_id)->first();
+            $rateMaster = RateMaster::where('id', $guard_type_id)->first();
             $punchIn = Punch::create([
                 'user_id'       => Auth::id(),
                 'guard_type_id' => optional($rateMaster)->id,
+                'client_site_id'=> $client_site_id,
                 'in_time'       => $request->time,
                 'in_lat'        => $request->in_lat,
                 'in_long'       => $request->in_long,

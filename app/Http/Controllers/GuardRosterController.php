@@ -144,26 +144,39 @@ class GuardRosterController extends Controller
             'start_time'     => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
             'end_time'       => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
         ]);
+
         $start_time = trim($request->start_time);
         $end_time = trim($request->end_time);
-        
+
         $start_time = Carbon::createFromFormat('h:iA', $start_time)->format('H:i');
         $end_time = Carbon::createFromFormat('h:iA', $end_time)->format('H:i');
         
-        $guardRoaster = GuardRoster::updateOrCreate(
-            [
-                'guard_id' => $request->guard_id,
-                'date'     => $request->date,
-            ],
-            [
-                'client_id'      => $request->client_id,
-                'client_site_id' => $request->client_site_id,
-                'guard_type_id'  => $request->guard_type_id,
-                'start_time'     => $start_time,
-                'end_time'       => $end_time,
-                'end_date'       => $request->end_date
-            ]
-        );
+        $existingRoster = GuardRoster::where('guard_id', $request->guard_id)
+                            ->where('date', $request->date)
+                            ->where(function($query) use ($start_time, $end_time) {
+                                $query->whereBetween('start_time', [$start_time, $end_time])
+                                    ->orWhereBetween('end_time', [$start_time, $end_time])
+                                    ->orWhere(function($query) use ($start_time, $end_time) {
+                                        $query->where('start_time', '<=', $start_time)
+                                            ->where('end_time', '>=', $end_time);
+                                    });
+                            })
+                            ->first();
+    
+        if ($existingRoster) {
+            return back()->with('error', 'There is already an overlapping guard roster for this client site at this time.');
+        }
+
+        GuardRoster::create([
+            'guard_id'       => $request->guard_id,
+            'date'           => $request->date,
+            'client_id'      => $request->client_id,
+            'client_site_id' => $request->client_site_id,
+            'guard_type_id'  => $request->guard_type_id,
+            'start_time'     => $start_time,
+            'end_time'       => $end_time,
+            'end_date'       => $request->end_date,
+        ]);
 
         return redirect()->route('guard-rosters.index')->with('success', 'Guard Roster created successfully.');
     }

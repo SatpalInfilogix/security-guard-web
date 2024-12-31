@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade')->index();
             $table->unsignedBigInteger('guard_type_id')->nullable();
+            $table->unsignedBigInteger('client_site_id')->nullable();
             $table->timestamp('in_time')->nullable();
             $table->decimal('in_lat', 10, 8)->nullable();
             $table->decimal('in_long', 11, 8)->nullable();
@@ -38,6 +39,7 @@ return new class extends Migration
             $table->index(['in_time']);
             $table->index(['out_time']);
 
+            $table->foreign('client_site_id')->references('id')->on('client_sites')->onDelete('set null');
             $table->foreign('guard_type_id')->references('id')->on('rate_masters')->onDelete('set null');
         });
     }

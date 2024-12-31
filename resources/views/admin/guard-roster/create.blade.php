@@ -23,7 +23,11 @@
                 <div class="col-12">
                     <x-error-message :message="$errors->first('message')" />
                     <x-success-message :message="session('success')" />
-
+                    @if(session('error'))
+                        <div class="alert alert-danger">
+                            {{ session('error') }}
+                        </div>
+                    @endif
                     <div class="card">
                         <div class="card-body">
                             <form action="{{ route('guard-rosters.store') }}" method="post" enctype="multipart/form-data">
