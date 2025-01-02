@@ -461,6 +461,82 @@ class GuardRosterController extends Controller
         return response()->json($leaves);
     }
 
+    // public function getGuardRosters(Request $request)
+    // {
+    //     $today = Carbon::now();
+    //     $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+
+    //     if (!$fortnight) {
+    //         return response()->json([
+    //             'data' => [],
+    //             'recordsTotal' => 0,
+    //             'recordsFiltered' => 0
+    //         ]);
+    //     }
+
+    //     $query = GuardRoster::with('user', 'client', 'clientSite')
+    //         ->whereBetween('date', [$fortnight->start_date, $fortnight->end_date]);
+
+    //     $userId = Auth::id();
+    //     if (Auth::user()->hasRole('Manager Operations')) {
+    //         $query->whereHas('clientSite', function ($query) use ($userId) {
+    //             $query->where('manager_id', $userId);
+    //         });
+    //     }
+
+    //     if ($request->has('search') && !empty($request->search['value'])) {
+    //         $searchValue = $request->search['value'];
+    //         $query->where(function($query) use ($searchValue) {
+    //             $query->whereHas('user', function($query) use ($searchValue) {
+    //                 $query->where('first_name', 'like', '%' . $searchValue . '%');
+    //             })
+    //             ->orWhereHas('client', function($query) use ($searchValue) {
+    //                 $query->where('client_name', 'like', '%' . $searchValue . '%');
+    //             })
+    //             ->orWhereHas('clientSite', function($query) use ($searchValue) {
+    //                 $query->where('location_Code', 'like', '%' . $searchValue . '%');
+    //             });
+    //         });
+    //     }
+
+    //     $totalRecords = $query->count();
+
+    //     // $perPage = $request->input('length', 10);
+    //     // $currentPage = (int)($request->input('start', 0) / $perPage);
+    //     // $guardRoasters = $query->skip($currentPage * $perPage)->take($perPage)->get()
+    //     $guardRoasters = $query->get()
+    //         ->groupBy(function($item) {
+    //             return $item->user->first_name .'-'. $item->client_site_id;
+    //         });
+
+    //     $formattedGuardRoasters = $guardRoasters->map(function ($items) {
+    //         $firstItem = $items->first();
+    //         $dates = $items->pluck('date')->implode(', ');
+            
+    //         $time_in_out = $items->map(function ($item) {
+    //             return [
+    //                 'date' => $item->date,
+    //                 'time_in' => \Carbon\Carbon::parse($item->start_time)->format('h:iA'),
+    //                 'time_out' => \Carbon\Carbon::parse($item->end_time)->format('h:iA') 
+    //             ];
+    //         });
+
+    //         return [
+    //             'guard_name' => $firstItem->user->first_name . ' ' . optional($firstItem->user)->surname,
+    //             'location_code' => $firstItem->clientSite->location_code,
+    //             'client_name' => $firstItem->client->client_name,
+    //             'time_in_out' => $time_in_out,
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         'draw' => intval($request->input('draw')),
+    //         'recordsTotal' => $totalRecords,
+    //         'recordsFiltered' => $totalRecords,
+    //         'data' => $formattedGuardRoasters
+    //     ]);
+    // }
+
     public function getGuardRosters(Request $request)
     {
         $today = Carbon::now();
@@ -499,41 +575,47 @@ class GuardRosterController extends Controller
             });
         }
 
-        $totalRecords = $query->count();
+        $guardRoasters = $query->get();
 
-        // $perPage = $request->input('length', 10);
-        // $currentPage = (int)($request->input('start', 0) / $perPage);
-        // $guardRoasters = $query->skip($currentPage * $perPage)->take($perPage)->get()
-        $guardRoasters = $query->get()
-            ->groupBy(function($item) {
-                return $item->user->first_name .'-'. $item->client_site_id;
-            });
+        $formattedGuardRoasters = [];
 
-        $formattedGuardRoasters = $guardRoasters->map(function ($items) {
-            $firstItem = $items->first();
-            $dates = $items->pluck('date')->implode(', ');
-            
-            $time_in_out = $items->map(function ($item) {
-                return [
-                    'date' => $item->date,
-                    'time_in' => \Carbon\Carbon::parse($item->start_time)->format('h:iA'),
-                    'time_out' => \Carbon\Carbon::parse($item->end_time)->format('h:iA') 
-                ];
-            });
+        foreach ($guardRoasters as $item) {
+            $date = $item->date;
+            $guard_id = $item->user->id;
+            $client_site_id = $item->client_site_id;
 
-            return [
-                'guard_name' => $firstItem->user->first_name . ' ' . optional($firstItem->user)->surname,
-                'location_code' => $firstItem->clientSite->location_code,
-                'client_name' => $firstItem->client->client_name,
-                'time_in_out' => $time_in_out,
+            $formattedGuardRoasters[$guard_id][$client_site_id][$date][] = [
+                'guard_name' => $item->user->first_name . ' ' . optional($item->user)->surname,
+                'client_name' => $item->client->client_name,
+                'location_code' => $item->clientSite->location_code,
+                'time_in' => \Carbon\Carbon::parse($item->start_time)->format('h:iA'),
+                'time_out' => \Carbon\Carbon::parse($item->end_time)->format('h:iA'),
             ];
-        });
+        }
+
+        $flattenedData = [];
+        foreach ($formattedGuardRoasters as $guardId => $clientSites) {
+            foreach ($clientSites as $clientSiteId => $dates) {
+                $row = [
+                    'guard_name' => $dates[array_key_first($dates)][0]['guard_name'],
+                    'client_name' => $dates[array_key_first($dates)][0]['client_name'],
+                    'location_code' => $dates[array_key_first($dates)][0]['location_code'],
+                ];
+
+                foreach ($dates as $date => $timeEntries) {
+                    $row[$date . '_time_in'] = implode(', ', array_column($timeEntries, 'time_in'));
+                    $row[$date . '_time_out'] = implode(', ', array_column($timeEntries, 'time_out'));
+                }
+
+                $flattenedData[] = $row;
+            }
+        }
 
         return response()->json([
             'draw' => intval($request->input('draw')),
-            'recordsTotal' => $totalRecords,
-            'recordsFiltered' => $totalRecords,
-            'data' => $formattedGuardRoasters
+            'recordsTotal' => count($flattenedData),
+            'recordsFiltered' => count($flattenedData),
+            'data' => $flattenedData
         ]);
     }
 

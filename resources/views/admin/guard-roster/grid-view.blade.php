@@ -48,7 +48,8 @@
                     d._token = "{{ csrf_token() }}";
                 },
                 dataSrc: function(json) {
-                    return Object.values(json.data);
+                    // return Object.values(json.data);
+                    return json.data;
                 }
             },
             columns: [
@@ -65,21 +66,27 @@
                 @foreach(range(0, 13) as $dayOffset)
                 {
                     data: function(row) {
+                        // var date = '{{ $startOfFortnight->copy()->addDays($dayOffset)->format('Y-m-d') }}';
+                        // var schedule = row.time_in_out.find(function(item) {
+                        //     return item.date === date;
+                        // });
+                        // return schedule && schedule.time_in ? moment(schedule.time_in, 'h:mm A').format('h:mm A') : '-';
                         var date = '{{ $startOfFortnight->copy()->addDays($dayOffset)->format('Y-m-d') }}';
-                        var schedule = row.time_in_out.find(function(item) {
-                            return item.date === date;
-                        });
-                        return schedule && schedule.time_in ? moment(schedule.time_in, 'h:mm A').format('h:mm A') : '-';
+                        return row[date + '_time_in'] || '-';
                     },
+                    title: 'Time In'
                 },
                 {
                     data: function(row) {
+                        // var date = '{{ $startOfFortnight->copy()->addDays($dayOffset)->format('Y-m-d') }}';
+                        // var schedule = row.time_in_out.find(function(item) {
+                        //     return item.date === date;
+                        // });
+                        // return schedule && schedule.time_out ? moment(schedule.time_out, 'h:mm A').format('h:mm A') : '-';
                         var date = '{{ $startOfFortnight->copy()->addDays($dayOffset)->format('Y-m-d') }}';
-                        var schedule = row.time_in_out.find(function(item) {
-                            return item.date === date;
-                        });
-                        return schedule && schedule.time_out ? moment(schedule.time_out, 'h:mm A').format('h:mm A') : '-';
+                        return row[date + '_time_out'] || '-';
                     },
+                    title: 'Time Out'
                 },
                 @endforeach
             ],
