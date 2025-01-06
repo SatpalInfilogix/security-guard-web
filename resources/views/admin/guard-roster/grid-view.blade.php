@@ -1,12 +1,13 @@
 <div class="card">
     <div class="card-body">
         <div style="overflow-x: auto;">
-            <table id="grid-view" class="table table-bordered dt-responsive nowrap w-100 guard-roaster">
+            <table id="grid-view-listing" class="table table-bordered dt-responsive nowrap w-100 guard-roaster">
                 <thead>
                     <tr>
                         <th>#</th>
                         <th>Guard Name</th>
                         <th>Client Name</th>
+                        <th>Guard Type</th>
                         <th>Location Code</th>
                         @php
                             $startOfFortnight = \Carbon\Carbon::parse($fortnight->start_date); 
@@ -21,7 +22,7 @@
                     </tr>
 
                     <tr>
-                        <th colspan="4"></th>
+                        <th colspan="5"></th>
                         @foreach(range(0, 13) as $dayOffset)
                             <th>Time In</th>
                             <th>Time Out</th>
@@ -38,7 +39,7 @@
 
 <script>
     $(function() {
-        let guardRoasterTable = $('#grid-view').DataTable({
+        let guardRoasterTable = $('#grid-view-listing').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
@@ -61,6 +62,7 @@
                 },
                 { data: 'guard_name' },
                 { data: 'client_name' },
+                { data: 'guardType' },
                 { data: 'location_code' },
                 
                 @foreach(range(0, 13) as $dayOffset)

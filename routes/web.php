@@ -20,6 +20,7 @@ use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\FortnightDatesController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\DeductionController;
+use App\Http\Controllers\InvoiceController;
 
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');
@@ -53,6 +54,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'fortnight-dates'       => FortnightDatesController::class,
             'payrolls'              => PayrollController::class,
             'deductions'            => DeductionController::class,
+            'invoices'              => InvoiceController::class,
         ]);
 
         Route::get('/payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
@@ -75,6 +77,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
 
     //************************Import Csv Route********************/
     Route::post('import-payroll', [PayrollController::class, 'importPayroll'])->name('import.payroll');
+    Route::post('import-client-site', [ClientSiteController::class, 'importClientSite'])->name('import.client-site');
     Route::post('import-guard-roster', [GuardRosterController::class, 'importGuardRoster'])->name('import.guard-roster');
     Route::post('import-security-guard', [SecurityGuardController::class, 'importSecurityGuard'])->name('import.security-guard');
 
@@ -92,9 +95,15 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         $file = public_path('assets/sample-payroll/payroll.csv');
         return Response::download($file);
     });
+    Route::get('download-client-site-sample', function() {
+        $file = public_path('assets/sample-client-site/client-site.csv');
+        return Response::download($file);
+    });
 
     Route::get('/export/csv', [GuardRosterController::class, 'downloadExcel'])->name('export.csv');
     Route::get('export-guards', [SecurityGuardController::class, 'exportGuards'])->name('export.guards');
+    Route::get('export-clients', [ClientSiteController::class, 'exportClients'])->name('export.client');
+    Route::get('/client-site/download', [ClientSiteController::class, 'download'])->name('client-site.download');
     Route::get('/security-guards/filter', [SecurityGuardController::class, 'filter'])->name('security-guards.filter');
    
     Route::get('/payroll-export/csv', [PayrollController::class, 'payrollExport'])->name('payroll-export.csv');
@@ -105,6 +114,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('get-client-site-list', [ClientSiteController::class, 'getClientSite'])->name('get-client-site-list');
     Route::post('get-payroll-list', [PayrollController::class, 'getPayroll'])->name('get-payroll-list');
     Route::post('get-deductions-list', [DeductionController::class, 'getDeductionsData'])->name('get-deductions-list');
+    Route::post('get-invoice-list', [InvoiceController::class, 'getInvoice'])->name('get-invoice-list');
 
     Route::get('security-guards/pdf', [SecurityGuardController::class, 'downloadPDF'])->name('security-guards.pdf');
 

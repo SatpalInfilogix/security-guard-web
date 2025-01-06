@@ -151,21 +151,31 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                         'Failure Reason' => 'Guard ' . $row['guard_id'] . ' id is in leave for this date (' . $formattedDate . ')',
                     ];
                 } else {
-                    $existingRoster = GuardRoster::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->where('is_publish', 0)->first();
+                    $existingRoster = GuardRoster::where('guard_id', $row['guard_id'])
+                                            ->where('date', $formattedDate)
+                                            ->where(function($query) use ($time_in, $time_out) {
+                                                $query->whereBetween('start_time', [$time_in, $time_out])
+                                                    ->orWhereBetween('end_time', [$time_in, $time_out])
+                                                    ->orWhere(function($query) use ($time_in, $time_out) {
+                                                        $query->where('start_time', '<=', $time_in)
+                                                            ->where('end_time', '>=', $time_out);
+                                                    });
+                                            })
+                                            ->first();
                     if ($existingRoster) {
-                        $existingRoster->update([
-                            'guard_type_id'  => $row['guard_type_id'],
-                            'client_id'      => $clientSite->client_id ?? Null,
-                            'client_site_id' => $row['client_site_id'],
-                            'start_time'     => $time_in ?? '',
-                            'end_time'       => $time_out ?? '',
-                            'end_date'       => $end_date,
-                        ]);
+                    //     $existingRoster->update([
+                    //         'guard_type_id'  => $row['guard_type_id'],
+                    //         'client_id'      => $clientSite->client_id ?? Null,
+                    //         'client_site_id' => $row['client_site_id'],
+                    //         'start_time'     => $time_in ?? '',
+                    //         'end_time'       => $time_out ?? '',
+                    //         'end_date'       => $end_date,
+                    //     ]);
                 
                         $this->importResults[] = [
                             'Row' => $this->rowNumber,
-                            'Status' => 'Success',
-                            'Failure Reason' => 'Updated successfully for date ' . $formattedDate,
+                            'Status' => 'Failed',
+                            'Failure Reason' => 'There is already an overlapping guard roster for this client site at this time.',
                         ];
                     } else {
                         GuardRoster::create([

@@ -17,7 +17,7 @@ use App\Imports\GuardRoasterImport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\GuardRoasterExport;
 use Illuminate\Support\Facades\Session;
-use Illuminate\SUpport\Facades\Auth;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Traits\HasRoles;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -57,7 +57,7 @@ class GuardRosterController extends Controller
 
     public function getGuardRosterList(Request $request)
     {
-        $guardRoasterData = GuardRoster::with('user', 'client', 'clientSite');
+        $guardRoasterData = GuardRoster::with('user', 'client', 'clientSite', 'guardType');
         
         $userId = Auth::id();
         if (Auth::user()->hasRole('Manager Operations')) {
@@ -105,7 +105,18 @@ class GuardRosterController extends Controller
             'draw' => $request->input('draw'),
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
-            'data' => $guardRoasters,
+            'data' => $guardRoasters->map(function($guardRoster) {
+                return [
+                    'id' => $guardRoster->id,
+                    'user' => $guardRoster->user,
+                    'client' => $guardRoster->client,
+                    'clientSite' => $guardRoster->clientSite,
+                    'guardType' => $guardRoster->guardType ? $guardRoster->guardType->guard_type : 'N/A',
+                    'date' => $guardRoster->date,
+                    'start_time' => $guardRoster->start_time,
+                    'end_time' => $guardRoster->end_time,
+                ];
+            }),
         ];
     
         return response()->json($data);
@@ -550,7 +561,7 @@ class GuardRosterController extends Controller
             ]);
         }
 
-        $query = GuardRoster::with('user', 'client', 'clientSite')
+        $query = GuardRoster::with('user', 'client', 'clientSite', 'guardType')
             ->whereBetween('date', [$fortnight->start_date, $fortnight->end_date]);
 
         $userId = Auth::id();
@@ -576,7 +587,6 @@ class GuardRosterController extends Controller
         }
 
         $guardRoasters = $query->get();
-
         $formattedGuardRoasters = [];
 
         foreach ($guardRoasters as $item) {
@@ -584,12 +594,14 @@ class GuardRosterController extends Controller
             $guard_id = $item->user->id;
             $client_site_id = $item->client_site_id;
 
+            $guardTypes = $item->guardType->guard_type ?? '';
             $formattedGuardRoasters[$guard_id][$client_site_id][$date][] = [
                 'guard_name' => $item->user->first_name . ' ' . optional($item->user)->surname,
                 'client_name' => $item->client->client_name,
                 'location_code' => $item->clientSite->location_code,
                 'time_in' => \Carbon\Carbon::parse($item->start_time)->format('h:iA'),
                 'time_out' => \Carbon\Carbon::parse($item->end_time)->format('h:iA'),
+                'guard_types' => $guardTypes, 
             ];
         }
 
@@ -600,6 +612,7 @@ class GuardRosterController extends Controller
                     'guard_name' => $dates[array_key_first($dates)][0]['guard_name'],
                     'client_name' => $dates[array_key_first($dates)][0]['client_name'],
                     'location_code' => $dates[array_key_first($dates)][0]['location_code'],
+                    'guardType' => implode(', ', array_column($dates[array_key_first($dates)], 'guard_types')),
                 ];
 
                 foreach ($dates as $date => $timeEntries) {

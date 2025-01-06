@@ -11,6 +11,18 @@
                         <h4 class="mb-sm-0 font-size-18">Client Sites</h4>
 
                         <div class="page-title-right">
+                            <a href="{{ route('export.client') }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Client/Manager Ids</a>
+                            <a href="{{ url('download-client-site-sample') }}"
+                            class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Client Sample File</a>
+                            <div class="d-inline-block ">
+                                <form id="importForm" action="{{ route('import.client-site') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <label for="fileInput" class="btn btn-primary primary-btn btn-md mb-0">
+                                        <i class="bx bx-cloud-download"></i> Import Client Site
+                                        <input type="file" id="fileInput" name="file" accept=".csv, .xlsx" style="display:none;">
+                                    </label>
+                                </form>
+                            </div>
                             @if(Auth::user()->can('create client site'))
                             <a href="{{ route('client-sites.create') }}" class="btn btn-primary">Add New Client Site</a>
                             @endif
@@ -24,7 +36,13 @@
                 <div class="col-12">
                     <x-error-message :message="$errors->first('message')" />
                     <x-success-message :message="session('success')" />
-
+                    @if (session('downloadUrl'))
+                    <script>
+                        window.onload = function() {
+                            window.location.href = "{{ session('downloadUrl') }}";
+                        };
+                    </script>
+                @endif
                     <div class="card">
                         <div class="card-body">
                             <table id="client-site-list" class="table table-bordered dt-responsive  nowrap w-100">
@@ -52,7 +70,7 @@
 
         </div> <!-- container-fluid -->
     </div>
-    <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
+    <x-include-plugins :plugins="['dataTable', 'import']"></x-include-plugins>
     <script>
          $(document).ready(function() {
             let clientTable = $('#client-site-list').DataTable({

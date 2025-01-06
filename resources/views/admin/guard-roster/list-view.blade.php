@@ -41,6 +41,7 @@
                     <th>#</th>
                     <th>Guard Name</th>
                     <th>Client Name</th>
+                    <th>Guard Type</th>
                     <th>Date</th>
                     <th>Start Time</th>
                     <th>End Time</th>
@@ -99,6 +100,7 @@
                 },
                 { data: 'user.first_name' },
                 { data: 'client.client_name' },
+                { data: 'guardType', render: function(data) { return data ? data : 'N/A'; } },
                 { data: 'date' },
                 {
                     data: 'start_time',
