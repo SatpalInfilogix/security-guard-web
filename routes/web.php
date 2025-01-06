@@ -129,4 +129,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('/get-end-date', [DeductionController::class, 'getEndDate']);
     
     Route::get('export-deduction', [DeductionController::class, 'exportDeduction'])->name('export.deductions');
+    
+    Route::get('invoice/{id}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoice.download-pdf');
+    Route::post('/export-csv', [InvoiceController::class, 'exportCsv'])->name('invoice.export-csv');
 });

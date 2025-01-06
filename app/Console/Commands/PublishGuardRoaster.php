@@ -13,6 +13,9 @@ use App\Models\PublicHoliday;
 use Carbon\Carbon;
 use App\Models\Punch;
 use App\Models\User;
+use App\Models\Invoice;
+use App\Models\InvoiceDetail;
+use App\Models\RateMaster;
 use Google\Service\Sheets\NumberFormat;
 use Spatie\Permission\Models\Role;
 
@@ -46,9 +49,30 @@ class PublishGuardRoaster extends Command
             $nextEndDate = $nextStartDate->copy()->addDays(13);
 
             $sixthDay = Carbon::parse($fortnightDays->start_date)->addDays(6);
+            // $sixthDay = Carbon::parse('04-12-2024');
             $isPublishDate =  Carbon::parse($sixthDay)->addDays(3);
 
-            if ($sixthDay = $today) {
+            $eightDay = Carbon::parse($fortnightDays->start_date)->addDays(7);
+            if ($eightDay == $today) {
+                $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
+                $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
+               
+                $firstWeekStart = $previousFortnightStartDate;
+                $firstWeekEnd = $firstWeekStart->copy()->addDays(6);
+                
+                $secondWeekStart = $firstWeekEnd->copy()->addDay();
+                $secondWeekEnd = $previousFortnightEndDate;
+                
+                $firstWeekPayroll = PayrollDetail::whereBetween('date', [$firstWeekStart->format('Y-m-d'), $firstWeekEnd->format('Y-m-d')])->get();
+
+                $secondWeekPayroll = PayrollDetail::whereBetween('date', [$secondWeekStart->format('Y-m-d'), $secondWeekEnd->format('Y-m-d')])->get();
+
+                $firstWeekInvoice = $this->generateInvoice($firstWeekPayroll, $firstWeekStart, $firstWeekEnd);
+                $secondWeekInvoice = $this->generateInvoice($secondWeekPayroll, $secondWeekStart, $secondWeekEnd);
+           
+            }
+
+            if ($sixthDay == $today) {
                 $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
                 $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
 
@@ -85,7 +109,6 @@ class PublishGuardRoaster extends Command
                     $this->calculatePayrollUserHours($payrollData->id, $userId, $attendanceDetails, $publicHolidays, $previousStartDate, $previousEndDate);
                 }
             }
-
             if ($isPublishDate = $today) {
                 $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
                 $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
@@ -145,276 +168,6 @@ class PublishGuardRoaster extends Command
             }
         }
     }
-
-    // protected function calculateUserHours($userId, $attendanceDetails, $publicHolidays,  $previousStartDate, $previousEndDate)
-    // {
-    //     $totalNormalHours = 0;
-    //     $totalNormalMinutes = 0;
-    //     $totalOvertimeHours = 0;
-    //     $totalOvertimeMinutes = 0;
-    //     $totalPublicHolidayHours = 0;
-    //     $totalPublicHolidayMinutes = 0;
-    //     $regularHours = 8;
-
-    //     $totalNormalEarnings = 0;
-    //     $totalOvertimeEarnings = 0;
-    //     $totalPublicHolidayEarnings = 0;
-
-    //     foreach ($attendanceDetails as $attendanceDate => $attendancesForDay) {
-    //         $totalWorkedMinutesForDay = 0;
-
-    //         foreach ($attendancesForDay as $attendance) {
-    //             $inTime = Carbon::parse($attendance['in_time']);
-    //             $outTime = Carbon::parse($attendance['out_time']);
-
-    //             $workedMinutes = $inTime->diffInMinutes($outTime);
-    //             $totalWorkedMinutesForDay += $workedMinutes;
-    
-    //             $isPublicHoliday = in_array($attendanceDate, $publicHolidays);
-    
-    //             $rateMaster = $attendance;
-    //             if ($isPublicHoliday) {
-    //                 $totalPublicHolidayEarnings += ($workedMinutes / 60) * $rateMaster['holiday_rate'];
-    //             } else {
-    //                 if ($workedMinutes <= $regularHours * 60) {
-    //                     $totalNormalEarnings += ($workedMinutes / 60) * $rateMaster['gross_hourly_rate'];
-    //                 } else {
-    //                     $normalMinutes = $regularHours * 60;
-    //                     $overtimeMinutes = $workedMinutes - $normalMinutes;
-    
-    //                     $totalNormalEarnings += ($normalMinutes / 60) * $rateMaster['gross_hourly_rate'];
-    //                     $overTimeHours = ($overtimeMinutes / 60);
-    //                     $totalOvertimeEarnings += ($overtimeMinutes / 60) * $rateMaster['overtime_rate'];
-    //                 }
-    //             }
-    //         }
-
-    //         $isPublicHoliday = in_array($attendanceDate, $publicHolidays);
-
-    //         if ($isPublicHoliday) {
-    //             $totalPublicHolidayMinutes += $totalWorkedMinutesForDay;
-    //         } else {
-    //             if ($totalWorkedMinutesForDay <= $regularHours * 60) {
-    //                 $totalNormalMinutes += $totalWorkedMinutesForDay;
-    //             } else {
-    //                 $totalNormalMinutes += $regularHours * 60;
-    //                 $totalOvertimeMinutes += ($totalWorkedMinutesForDay - ($regularHours * 60));
-    //             }
-    //         }
-    //     }
-
-    //     $extraNormalHours = intdiv($totalNormalMinutes, 60);
-    //     $totalNormalHours = $extraNormalHours;
-    //     $totalNormalMinutes = $totalNormalMinutes % 60;
-    //     $extraOvertimeHours = intdiv($totalOvertimeMinutes, 60);
-    //     $totalOvertimeHours = $extraOvertimeHours;
-    //     $totalOvertimeMinutes = $totalOvertimeMinutes % 60;
-
-    //     $extraPublicHolidayHours   = intdiv($totalPublicHolidayMinutes, 60);
-    //     $totalPublicHolidayHours   = $extraPublicHolidayHours;
-    //     $totalPublicHolidayMinutes = $totalPublicHolidayMinutes % 60;
-
-    //     $grossSalaryEarned     = $totalNormalEarnings + $totalOvertimeEarnings + $totalPublicHolidayEarnings;
-    //     $approvedPensionScheme = 0;
-
-    //     $userData = User::with('guardAdditionalInformation')->where('id', $userId)->first();
-    //     $dateOfBirth = $userData->guardAdditionalInformation->date_of_birth;
-    //     $birthDate = Carbon::parse($dateOfBirth);
-    //     $age = $birthDate->age;
-
-    //     $currentYear = Carbon::now()->year;
-    //     $fullYearNis = Payroll::where('guard_id', $userId)->whereYear('created_at', $currentYear)->get();
-
-    //     $payeIncome = 0;
-    //     $employer_contribution = 0;
-    //     $employerContributionNht = 0;
-    //     $nhtDeduction = 0;
-    //     $eduction_tax = 0;
-    //     $hearttax = 0;
-    //     $lessNis = 0;
-    //     $employerContributionNis = 0;
-
-    //     if($userData->is_statutory == 0) {
-    //         $totalNisForCurrentYear = $fullYearNis->sum('less_nis');
-           
-    //         if ($age >= 70) {
-    //             $lessNis = 0;
-    //             $employerContributionNis = 0;
-    //         } else {
-    //             if ($totalNisForCurrentYear < 150000) {
-    //                 $nisDeduction = $grossSalaryEarned * 0.03;
-    //                 $remainingNisToReachLimit = 150000 - $totalNisForCurrentYear;
-    //                 if ($nisDeduction > $remainingNisToReachLimit) {
-    //                     $lessNis = $remainingNisToReachLimit;
-    //                 } else {
-    //                     $lessNis = $nisDeduction;
-    //                 }
-    //             } else {
-    //                 $lessNis = 0;
-    //             }
-    //             $employerContributionNis = $grossSalaryEarned * 0.03;
-    //         }
-
-    //         $statutoryIncome  = $grossSalaryEarned -  $lessNis - $approvedPensionScheme;
-    
-    //         if ($statutoryIncome < 65389) {
-    //             $payeIncome = 0;
-    //         } elseif ($statutoryIncome > 65389 && $statutoryIncome <= 230769.23) {
-    //             $payeData = $statutoryIncome - 65389;
-    //             $payeIncome = $payeData * 0.25;
-    //         } elseif($statutoryIncome > 230770.23) {
-    //             $payeData = $statutoryIncome - 230770.23;
-    //             $payeIncome = $payeData * 0.30;
-    //         }
-
-    //         $eduction_tax = $statutoryIncome * 0.0225;
-    //         $employer_contribution = $grossSalaryEarned * 0.035;
-           
-    //         if ($age >= 65) {
-    //             $nhtDeduction = 0;
-    //             $employerContributionNht = 0;
-    //         } else {
-    //             $nhtDeduction = $grossSalaryEarned * 0.02;
-    //             $employerContributionNht =  $grossSalaryEarned * 0.03;
-    //         }
-
-    //         $hearttax = $grossSalaryEarned * 0.035;
-    //     } else {
-    //         $statutoryIncome  = $grossSalaryEarned -  $lessNis - $approvedPensionScheme;
-    //     }
-
-    //     if ($userData->is_statutory == 1) {
-    //         $deductionTypes = [
-    //             'Staff Loan'        => 'pending_staff_loan',
-    //             'Medical Ins'       => 'pending_medical_insurance',
-    //             'Salary Advance'    => 'pending_salary_advance',
-    //             'PSRA'              => 'pending_psra',
-    //             'Bank Loan'         => 'pending_bank_loan',
-    //             'Approved Pension'  => 'pending_approved_pension',
-    //             'Garnishment'       => 'pending_garnishment',
-    //             'Missing Goods'     => 'pending_missing_goods',
-    //             'Damaged Goods'     => 'pending_damaged_goods'
-    //         ];
-        
-    //         $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
-    //         $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
-    //         foreach ($deductionTypes as $deductionType => $pendingField) {
-    //             $deductionRecords = Deduction::where('guard_id', $userId)->where('type', $deductionType)->whereDate('start_date', '<=', $previousEndDate)->whereDate('end_date', '>=', $previousStartDate)->get();
-        
-    //             foreach ($deductionRecords as $deduction) {
-    //                 if ($deduction->start_date <= $previousEndDate && $deduction->end_date >= $previousStartDate) {
-    //                     $totalDeductions[$deductionType] = $deduction->one_installment;
-    //                     $pendingBalance = $deduction->pending_balance - $deduction->one_installment;
-    //                     $pendingAmounts[$deductionType] = $deduction->pending_balance - $deduction->one_installment;
-    //                     $deduction->update([
-    //                         'pending_balance' => $pendingBalance
-    //                     ]);
-
-    //                     DeductionDetail::create([
-    //                         'guard_id'        => $userId,
-    //                         'deduction_id'    => $deduction->id,
-    //                         'deduction_date'  => Carbon::now(),
-    //                         'amount_deducted' => $deduction->one_installment,
-    //                         'balance'         =>  $pendingBalance
-    //                     ]);
-    //                 }
-    //             }
-    //         }
-
-    //         $pendingStaffLoan = $pendingAmounts['Staff Loan'];
-    //         $pendingMedicalInsurance = $pendingAmounts['Medical Ins'];
-    //         $pendingSalaryAdvance = $pendingAmounts['Salary Advance'];
-    //         $pendingPsra = $pendingAmounts['PSRA'];
-    //         $pendingBankLoan = $pendingAmounts['Bank Loan'];
-    //         $pendingApprovedPension = $pendingAmounts['Approved Pension'];
-    //         // $pendingOtherDeduction = $pendingAmounts['Other deduction'];
-    //         $pendingGarnishment = $pendingAmounts['Garnishment'];
-    //         $pendingMissingGoods = $pendingAmounts['Missing Goods'];
-    //         $pendingDamagedGoods = $pendingAmounts['Damaged Goods'];
-
-
-    //         $staffLoan = $totalDeductions['Staff Loan'];
-    //         $medicalInsurance = $totalDeductions['Medical Ins'];
-    //         $salaryAdvance = $totalDeductions['Salary Advance'];
-    //         $psra = $totalDeductions['PSRA'];
-    //         $bankLoan = $totalDeductions['Bank Loan'];
-    //         $approvedPension = $totalDeductions['Approved Pension'];
-    //         // $otherDeduction = $totalDeductions['Other deduction'];
-    //         $garnishment = $totalDeductions['Garnishment'];
-    //         $missingGoods  = $totalDeductions['Missing Goods'];
-    //         $damagedGoods = $totalDeductions['Damaged Goods'];
-    //     } else {
-    //         $staffLoan = 0;
-    //         $medicalInsurance = 0;
-    //         $salaryAdvance = 0;
-    //         $psra = 0;
-    //         $bankLoan = 0;
-    //         $approvedPension = 0;
-    //         $garnishment = 0;
-    //         $missingGoods = 0;
-    //         $damagedGoods = 0;
-
-    //         $pendingStaffLoan = 0;
-    //         $pendingMedicalInsurance = 0;
-    //         $pendingSalaryAdvance = 0;
-    //         $pendingPsra = 0;
-    //         $pendingBankLoan = 0;
-    //         $pendingApprovedPension = 0;
-    //         $pendingGarnishment = 0;
-    //         $pendingMissingGoods = 0;
-    //         $pendingDamagedGoods = 0;
-    //     }
-
-    //     $educationTax          = $eduction_tax;
-    //     $employerEductionTax   = $employer_contribution;
-    //     $nht                   = $nhtDeduction;
-    //     $employerContributionNhtTax = $employerContributionNht;
-    //     $paye                  = $payeIncome;
-    //     $heart                 = $hearttax;
-    //     $nis                   = $lessNis;
-    //     $threshold             = 0;
-
-    //     return [
-    //         'total_normal_hours'            => $totalNormalHours . '.' . str_pad($totalNormalMinutes, 2, '0', STR_PAD_LEFT),
-    //         'total_overtime_hours'          => $totalOvertimeHours . '.' . str_pad($totalOvertimeMinutes, 2, '0', STR_PAD_LEFT),
-    //         'total_public_holiday_hours'    => $totalPublicHolidayHours . '.' . str_pad($totalPublicHolidayMinutes, 2, '0', STR_PAD_LEFT),
-    //         'total_normal_earnings'         => number_format($totalNormalEarnings, 2, '.', ''),
-    //         'total_overtime_earnings'       => number_format($totalOvertimeEarnings, 2, '.', ''),
-    //         'total_public_holiday_earnings' => number_format($totalPublicHolidayEarnings, 2, '.', ''),
-    //         'gross_salary_earned'           => number_format($grossSalaryEarned, 2, '.', ''),
-    //         'less_nis'                      => number_format($nis, 2, '.', ''),
-    //         'employer_contribution_nis_tax' => number_format($nis + $employerContributionNis , 2, '.', ''),
-    //         'approved_pension_scheme'       => number_format($approvedPensionScheme, 2, '.', ''),
-    //         'statutory_income'              => number_format($statutoryIncome, 2, '.', ''),
-    //         'education_tax'                 => number_format($educationTax, 2, '.', ''),
-    //         'employer_eduction_tax'         => number_format($educationTax + $employerEductionTax, 2, '.', ''),
-    //         'nht'                           => number_format($nht, 2, '.', ''),
-    //         'employer_contribution_nht_tax' => number_format($nht + $employerContributionNhtTax, 2, '.', ''),
-    //         'paye'                          => number_format($paye, 2, '.', ''),
-    //         'staff_loan'                    => number_format($staffLoan, 2, '.', ''),
-    //         'medical_insurance'             => number_format($medicalInsurance, 2, '.', ''),
-    //         'salary_advance'                => number_format($salaryAdvance, 2, '.', ''),
-    //         'psra'                          => number_format($psra, 2, '.', ''),
-    //         'bank_loan'                     => number_format($bankLoan, 2, '.', ''),
-    //         'approved_pension'              => number_format($approvedPension, 2, '.', ''),
-    //         'threshold'                     => number_format($threshold, 2, '.', ''),
-    //         // 'other_deduction'               => number_format($otherDeduction, 2, '.', ''),
-    //         'heart'                         => number_format($heart, 2, '.', ''),
-    //         'pending_staff_loan'            => number_format($pendingStaffLoan, 2, '.', ''),
-    //         'pending_medical_insurance'     => number_format($pendingMedicalInsurance, 2, '.', ''),
-    //         'pending_salary_advance'        => number_format($pendingSalaryAdvance, 2, '.', ''),
-    //         'pending_psra'                  => number_format($pendingPsra, 2, '.', ''),
-    //         'pending_bank_loan'             => number_format($pendingBankLoan, 2, '.', ''),
-    //         'pending_approved_pension'      => number_format($pendingApprovedPension, 2, '.', ''),
-    //         // 'pending_other_deduction'       => number_format($pendingOtherDeduction, 2, '.', ''),
-    //         'garnishment'                   => number_format($garnishment, 2, '.', ''),
-    //         'missing_goods'                 => number_format($missingGoods, 2, '.', ''),
-    //         'damaged_goods'                 => number_format($damagedGoods, 2, '.', ''),
-    //         'pending_garnishment'           => number_format($pendingGarnishment, 2, '.', ''),
-    //         'pending_missing_goods'         => number_format($pendingMissingGoods, 2, '.', ''),
-    //         'pending_damaged_goods'         => number_format($pendingDamagedGoods, 2, '.', ''),
-    //     ];
-    // }
 
     protected function createPayrollDetails($payrollId, $userId, $attendanceDetails, $publicHolidays)
     {
@@ -740,5 +493,137 @@ class PublishGuardRoaster extends Command
             'pending_missing_goods' => number_format($pendingMissingGoods, 2, '.', ''),
             'pending_damaged_goods' => number_format($pendingDamagedGoods, 2, '.', ''),
         ]);
+    }
+
+    private function generateInvoice($payrollDetails, $startDate, $endDate)
+    {
+        $aggregatedData = $payrollDetails->groupBy('client_site_id')->map(function ($clientGroup, $clientSiteId) {
+            return $clientGroup->groupBy('guard_type_id')->map(function ($guardGroup, $guardTypeId) use ($clientSiteId) {
+                return [
+                    'client_site_id' => $clientSiteId,
+                    'guard_type_id' => $guardTypeId,
+                    'dates' => $guardGroup->groupBy('date'),
+                ];
+            });
+        });
+    
+        $invoiceDetails = [];
+
+        
+    
+        foreach ($aggregatedData as $clientSiteId => $clientData) {
+            $existingInvoice = Invoice::where('client_site_id', $clientSiteId)
+                                        ->where('start_date', Carbon::parse($startDate)->format('Y-m-d'))
+                                        ->where('end_date', Carbon::parse($endDate)->format('Y-m-d'))->first();
+    
+            if ($existingInvoice) {
+                $invoice = $existingInvoice;
+            } else {
+                $invoiceCode = $this->generateInvoiceCode();
+                $invoice = Invoice::create([
+                    'invoice_code' => $invoiceCode,
+                    'client_site_id' => $clientSiteId,
+                    'invoice_date' => Carbon::now()->format('Y-m-d'),
+                    'start_date' => Carbon::parse($startDate)->format('Y-m-d'),
+                    'end_date' => Carbon::parse($endDate)->format('Y-m-d'),
+                ]);
+            }
+
+            if ($invoice) {
+                foreach ($clientData as $guardTypeId => $dateData) {
+                    // echo"<pre>"; print_R($clientData->toArray()); die();
+                    $rate = RateMaster::find($guardTypeId);
+                    if (!$rate) continue;
+    
+                    foreach ($dateData['dates'] as $date => $guardData) {
+                        $noOfGuards = $guardData->pluck('guard_id')->unique()->count() ?? 0;
+    
+                        $normalHours = $guardData->sum('normal_hours');
+                        if ($normalHours > 0) {
+                            $totalAmount = $noOfGuards * $normalHours * ($rate->gross_hourly_rate ?? 0);
+                            $existingDetail = InvoiceDetail::where('invoice_id', $invoice->id)->where('guard_type_id', $guardTypeId)->where('hours_type', 'Normal')->where('date', Carbon::parse($date)->format('Y-m-d'))->exists();
+                            
+                            if(!$existingDetail) {
+                                $invoiceDetails[] = [
+                                    'invoice_id' => $invoice->id,
+                                    'guard_type_id' => $guardTypeId,
+                                    'hours_type' => 'Normal',
+                                    'date' => $date,
+                                    'rate' => $rate->gross_hourly_rate,
+                                    'no_of_guards' => $noOfGuards,
+                                    'total_hours' => number_format($normalHours, 2),
+                                    'invoice_amount' => $totalAmount,
+                                ];
+                            }
+                        }
+    
+                        $overtimeHours = $guardData->sum('overtime');
+                        if ($overtimeHours > 0) {
+                            $totalAmount = $noOfGuards * $overtimeHours * ($rate->overtime_rate ?? 0);
+                            $existingDetail = InvoiceDetail::where('invoice_id', $invoice->id)->where('guard_type_id', $guardTypeId)->where('hours_type', 'Overtime')->where('date', Carbon::parse($date)->format('Y-m-d'))->exists();
+
+                            if (!$existingDetail) {
+                                $invoiceDetails[] = [
+                                    'invoice_id' => $invoice->id,
+                                    'guard_type_id' => $guardTypeId,
+                                    'hours_type' => 'Overtime',
+                                    'date' => $date,
+                                    'rate' => $rate->overtime_rate,
+                                    'no_of_guards' => $noOfGuards,
+                                    'total_hours' => $overtimeHours,
+                                    'invoice_amount' => $totalAmount,
+                                ];
+                            }
+                        }
+    
+                        $publicHolidayHours = $guardData->sum('public_holiday');
+                        if ($publicHolidayHours > 0) {
+                            $totalAmount = $noOfGuards * $publicHolidayHours * ($rate->holiday_rate ?? 0);
+                            $existingDetail = InvoiceDetail::where('invoice_id', $invoice->id)->where('guard_type_id', $guardTypeId)->where('hours_type', 'Public Holiday')->where('date', Carbon::parse($date)->format('Y-m-d'))->exists();
+                            
+                            if (!$existingDetail) {
+                                $invoiceDetails[] = [
+                                    'invoice_id' => $invoice->id,
+                                    'guard_type_id' => $guardTypeId,
+                                    'hours_type' => 'Public Holiday',
+                                    'date' => $date,
+                                    'rate' => $rate->holiday_rate,
+                                    'no_of_guards' => $noOfGuards,
+                                    'total_hours' => $publicHolidayHours,
+                                    'invoice_amount' => $totalAmount,
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    
+        if (!empty($invoiceDetails)) {
+            InvoiceDetail::insert($invoiceDetails);
+            foreach ($invoiceDetails as $detail) {
+                $totalAmount = InvoiceDetail::where('invoice_id', $detail['invoice_id'])->sum('invoice_amount');
+                $invoice = Invoice::find($detail['invoice_id']);
+                if ($invoice) {
+                    $invoice->total_amount = $totalAmount;
+                    $invoice->save();
+                }
+            }
+        }
+    }
+
+    private function generateInvoiceCode()
+    {
+        $lastInvoice = Invoice::orderBy('invoice_code', 'desc')->first();
+
+        if (!$lastInvoice) {
+            return 'S-25-000001';
+        }
+
+        preg_match('/S-25-(\d+)/', $lastInvoice->invoice_code, $matches);
+        $lastNumber = isset($matches[1]) ? (int) $matches[1] : 0;
+        $newNumber = str_pad($lastNumber + 1, 6, '0', STR_PAD_LEFT); // Pad the number to 6 digits
+
+        return 'S-25-' . $newNumber;
     }
 }

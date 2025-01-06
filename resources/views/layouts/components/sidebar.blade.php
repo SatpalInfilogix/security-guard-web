@@ -50,6 +50,12 @@
                         <span key="t-spreadsheet">Payroll</span>
                     </a>
                 </li>
+                <li class="{{ Request::segment(2) == 'invoices' ? 'mm-active' : '' }}">
+                    <a href="{{ route('invoices.index')}}" class="waves-effect">
+                        <i class="bx bx-checkbox-square"></i>
+                        <span key="t-spreadsheet">Invoice</span>
+                    </a>
+                </li>
                 @canany('view user')
                 <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}">
                     <a href="{{ route('users.index')}}" class="waves-effect">
