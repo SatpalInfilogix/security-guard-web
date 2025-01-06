@@ -132,4 +132,5 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     
     Route::get('invoice/{id}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoice.download-pdf');
     Route::post('/export-csv', [InvoiceController::class, 'exportCsv'])->name('invoice.export-csv');
+    Route::post('/invoice/update-status', [InvoiceController::class, 'updateStatus'])->name('invoice.update-status');
 });

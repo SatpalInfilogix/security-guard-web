@@ -78,7 +78,22 @@
                     { data: 'invoice_date' },
                     { data: 'location_code' },
                     { data: 'total_amount' },
-                    { data: 'status' },
+                    {
+                        data: null,
+                        render: function(data, type, row) {
+                            return `
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="statusDropdown${row.id}" data-bs-toggle="dropdown" aria-expanded="false">
+                                        ${row.status}
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="statusDropdown${row.id}">
+                                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="updateInvoiceStatus(${row.id}, 'Paid')">Paid</a></li>
+                                        <li><a class="dropdown-item" href="javascript:void(0);" onclick="updateInvoiceStatus(${row.id}, 'Unpaid')">Unpaid</a></li>
+                                    </ul>
+                                </div>
+                            `;
+                        }
+                    },
                     {
                         data: null,
                         render: function(data, type, row) {
@@ -102,6 +117,31 @@
                 form.append('<input type="hidden" name="invoice_id" value="' + invoiceId + '">');
                 $('body').append(form);
                 form.submit();
+            };
+
+            window.updateInvoiceStatus = function(invoiceId, status) {
+                if (confirm('Are you sure you want to change the status to ' + status + '?')) {
+                    $.ajax({
+                        url: "{{ route('invoice.update-status') }}",
+                        type: "POST",
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            invoice_id: invoiceId,
+                            status: status
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                invoiceTable.ajax.reload();
+                                alert('Invoice status updated to ' + status);
+                            } else {
+                                alert('Error updating status');
+                            }
+                        },
+                        error: function() {
+                            alert('Error updating status');
+                        }
+                    });
+                }
             };
         });
     </script>

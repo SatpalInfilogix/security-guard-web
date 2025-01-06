@@ -60,6 +60,20 @@ class InvoiceController extends Controller
     
         return response()->json($response);
     }
+
+    public function updateStatus(Request $request)
+    {
+        $request->validate([
+            'invoice_id' => 'required|exists:invoices,id',
+            'status' => 'required|in:Paid,Unpaid',
+        ]);
+
+        $invoice = Invoice::find($request->invoice_id);
+        $invoice->status = $request->status;
+        $invoice->save();
+
+        return response()->json(['success' => true]);
+    }
     
     public function downloadPdf($invoiceId)
     {
