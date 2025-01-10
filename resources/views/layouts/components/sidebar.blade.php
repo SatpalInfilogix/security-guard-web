@@ -56,14 +56,6 @@
                         <span key="t-spreadsheet">Invoice</span>
                     </a>
                 </li>
-                @canany('view user')
-                <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}">
-                    <a href="{{ route('users.index')}}" class="waves-effect">
-                        <i class="bx bx-user"></i>
-                        <span key="t-user">Onboard Admin</span>
-                    </a>
-                </li>
-                @endcanany
                 @can('view leaves')
                 <li class="{{ Request::segment(2) == 'leaves' ? 'mm-active' : '' }}">
                     <a href="{{ route('leaves.index')}}" class="waves-effect">
@@ -170,13 +162,18 @@
                 </li>
 
                 @can('view roles & permissions')
-                <li>
+                <li  @class([
+                    'active' => Request::is('roles-and-permissions', 'users/index', 'roles-and-permissions/role-list', 'roles-and-permissions/index'),
+                ])>
                     <a href="javascript: void(0);" class="has-arrow waves-effect">
                         <i class="bx bxs-user-detail"></i>
                         <span key="t-dashboards">Roles and Permissions</span>
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
                         <li><a href="{{ route('roles-and-permissions.role-list') }}" key="t-tui-calendar">Manage Roles</a></li>
+                        @canany('view user')
+                        <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}"><a href="{{ route('users.index')}}" key="t-user">Onboard Admin</a></li>
+                        @endcanany
                         <li><a href="{{ route('roles-and-permissions.index') }}" key="t-full-calendar">Manage Permissions</a></li>
                     </ul>
                 </li>

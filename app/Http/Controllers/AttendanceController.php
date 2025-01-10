@@ -39,6 +39,16 @@ class AttendanceController extends Controller
         }
 
         $attendances = $attendances->get();
+        foreach($attendances as $key => $attendance)
+        {
+            $inTime = Carbon::parse($attendance->in_time);
+            $outTime = Carbon::parse($attendance->out_time);
+            if ($inTime < $outTime) {
+                $workedHours = $inTime->diffInHours($outTime);
+                $loggedHours = $workedHours;
+            }
+            $attendance['total_hours'] = $loggedHours;
+        }
 
         return view('admin.attendance.index', compact('attendances', 'fortnight'));
     }

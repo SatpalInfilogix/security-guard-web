@@ -42,6 +42,7 @@
                                     <th>Surname</th>
                                     <th>Punch In</th>
                                     <th>Punch Out</th>
+                                    <th>Total Hours</th>
                                     @canany(['edit attendance', 'delete attendance'])
                                     <th>Action</th>
                                     @endcanany
@@ -57,6 +58,7 @@
                                     <td>{{ $attendance->user->surname}}</td>
                                     <td>@if($attendance->in_time) {{ \Carbon\Carbon::parse($attendance->in_time)->format('d-m-Y h:i A') }} @else N/A @endif</td>
                                     <td>@if($attendance->out_time) {{ \Carbon\Carbon::parse($attendance->out_time)->format('d-m-Y h:i A') }} @else N/A @endif</td>
+                                    <td>{{ $attendance->total_hours }}</td>
                                     @canany(['edit attendance', 'delete attendance'])
                                     <td class="action-buttons">
                                         @if(Auth::user()->can('edit attendance'))

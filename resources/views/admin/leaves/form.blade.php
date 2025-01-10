@@ -19,13 +19,13 @@
     
     <div class="col-md-4 mb-3">
         <div class="show-input">
-            <x-form-input type="text" id="start_date" name="start_date" value="{{ old('start_date') }}" label="Start Date" placeholder="Enter Start Date" class="datepicker" type="text" required="true"/>
+            <x-form-input type="text" id="start_date" name="start_date" value="{{ old('start_date') }}" label="Start Date" placeholder="Enter Start Date" class="datePicker-leave" type="text" required="true"/>
         </div>
     </div>
 
     <div class="col-md-4 mb-3">
         <div class="show-input">
-            <x-form-input type="text" id="end_date" name="end_date" value="{{ old('end_date') }}" label="End Date" placeholder="Enter End Date" class="datepicker" type="text"/>
+            <x-form-input type="text" id="end_date" name="end_date" value="{{ old('end_date') }}" label="End Date" placeholder="Enter End Date" class="datePicker-leave" type="text"/>
         </div>
     </div>
     
