@@ -95,6 +95,12 @@
                 });
             });
 
+            $('.datePicker').each(function() {
+                flatpickr(this, {
+                    dateFormat: "Y-m-d",
+                });
+            });
+
             $('.datePicker-leave').each(function() {
                 flatpickr(this, {
                     dateFormat: "Y-m-d",

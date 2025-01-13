@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\ClientSite;
 use App\Models\Deduction;
 use App\Models\DeductionDetail;
 use Illuminate\Console\Command;
@@ -239,10 +240,12 @@ class PublishGuardRoaster extends Command
                     $existingRecord->public_holiday_rate += $publicHolidayEarnings;
                     $existingRecord->save();
                 } else {
+                    $client = ClientSite::where('id', $clientSiteId)->first();
                     PayrollDetail::create([
                         'payroll_id' => $payrollId,
                         'guard_id' => $userId,
                         'guard_type_id' => $guardTypeId,
+                        'client_id'     => $client->client_id,
                         'client_site_id' => $clientSiteId,
                         'date' => $attendanceDate,
                         'normal_hours' => $regularHours,
@@ -509,8 +512,6 @@ class PublishGuardRoaster extends Command
     
         $invoiceDetails = [];
 
-        
-    
         foreach ($aggregatedData as $clientSiteId => $clientData) {
             $existingInvoice = Invoice::where('client_site_id', $clientSiteId)
                                         ->where('start_date', Carbon::parse($startDate)->format('Y-m-d'))
@@ -531,7 +532,6 @@ class PublishGuardRoaster extends Command
 
             if ($invoice) {
                 foreach ($clientData as $guardTypeId => $dateData) {
-                    // echo"<pre>"; print_R($clientData->toArray()); die();
                     $rate = RateMaster::find($guardTypeId);
                     if (!$rate) continue;
     
@@ -540,7 +540,7 @@ class PublishGuardRoaster extends Command
     
                         $normalHours = $guardData->sum('normal_hours');
                         if ($normalHours > 0) {
-                            $totalAmount = $noOfGuards * $normalHours * ($rate->gross_hourly_rate ?? 0);
+                            $totalAmount = $normalHours * ($rate->gross_hourly_rate ?? 0);
                             $existingDetail = InvoiceDetail::where('invoice_id', $invoice->id)->where('guard_type_id', $guardTypeId)->where('hours_type', 'Normal')->where('date', Carbon::parse($date)->format('Y-m-d'))->exists();
                             
                             if(!$existingDetail) {

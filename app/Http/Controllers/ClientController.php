@@ -75,7 +75,8 @@ class ClientController extends Controller
         Client::create([
             'client_name' => $request->client_name,
             'client_code' => $request->client_code,
-            'nis'         => $request->nis
+            'nis'         => $request->nis,
+            'gct'         => $request->gct
         ]);
 
         return redirect()->route('clients.index')->with('success', 'Client created successfully.');
@@ -109,7 +110,8 @@ class ClientController extends Controller
         $client->update([
             'client_name' => $request->client_name,
             'client_code' => $request->client_code,
-            'nis'         => $request->nis
+            'nis'         => $request->nis,
+            'gct'         => $request->gct
         ]);
 
         return redirect()->route('clients.index')->with('success', 'Client updated successfully.');

@@ -172,7 +172,7 @@
                     <ul class="sub-menu" aria-expanded="false">
                         <li><a href="{{ route('roles-and-permissions.role-list') }}" key="t-tui-calendar">Manage Roles</a></li>
                         @canany('view user')
-                        <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}"><a href="{{ route('users.index')}}" key="t-user">Onboard Admin</a></li>
+                        <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}"><a href="{{ route('users.index')}}" key="t-user">User</a></li>
                         @endcanany
                         <li><a href="{{ route('roles-and-permissions.index') }}" key="t-full-calendar">Manage Permissions</a></li>
                     </ul>

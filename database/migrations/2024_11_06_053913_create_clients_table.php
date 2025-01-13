@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('client_code')->nullable();
             $table->string('client_name');
             $table->string('nis')->nullable();
+            $table->decimal('gct', 15)->nullable();
             $table->timestamps();
         });
     }

@@ -22,6 +22,7 @@
             display: flex;
             align-items: center;
             margin-bottom: 20px;
+            background-color: #66a2eb;
         }
 
         .header-left {
@@ -47,6 +48,7 @@
             display: flex;
             justify-content: space-between;
             margin-top: 10px;
+            background-color: #ddebfb;
         }
 
         .company-info-left,
@@ -108,13 +110,36 @@
         th {
             text-align: left;
         }
+
+        .company-details {
+            /* padding-top: 100px; */
+            background-color: #66a2eb38;
+        }
+        td.security {
+            color: #66a2eb;
+        }
+        .table tbody tr:nth-child(odd) {
+        background-color: #f9f9f9; /* Light gray for odd rows */
+    }
+
+    .table tbody tr:nth-child(even) {
+        background-color: #ddebfb; /* White for even rows */
+    }
+
+    .table th {
+        background-color: #ddebfb; 
+    }
+    .table th, .table td {
+        border: none; /* Remove table borders */
+    }
+
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div class="header-left">
-                <img src="{{ asset('images/logo.png') }}" alt="Vanguard Security Ltd. Logo">
+                <img src="https://guard.vsljamaica.com/uploads/logo/677b7fb67adc6.png" alt="Logo">
             </div>
             <div class="header-center">
                 <h3>INVOICE</h3>
@@ -122,14 +147,18 @@
         </div>
 
         <div class="company-info">
-            <div class="company-info-left">
-                <h3>Vanguard Security Ltd.</h3>
-                <p>6 Eastwood Avenue, Kingston 10. Tel: 876-968-2413/4</p>
-            </div>
-            <div class="company-info-center">
-                <p>GCT REG. NO. 000-973-777</p>
-                <p>Email: <a href="mailto:accounts@vanguard-group.com">accounts@vanguard-group.com</a></p>
-            </div>
+            <table width="100%">
+                <tr>
+                    <td class="security" style="width: 50%; vertical-align: top;">
+                        <h3>Vanguard Security Ltd.</h3>
+                        <p>6 Eastwood Avenue, Kingston 10. Tel: 876-968-2413/4</p>
+                    </td>
+                    <td style="width: 50%; vertical-align: top; text-align: right;">
+                        <p>GCT REG. NO. 000-973-777</p>
+                        <p>Email: <a href="mailto:accounts@vanguard-group.com">accounts@vanguard-group.com</a></p>
+                    </td>
+                </tr>
+            </table>
         </div>
 
         <div class="invoice-details">
@@ -140,7 +169,7 @@
                 </tr>
                 <tr>
                     <td><strong>Service Period:</strong></td>
-                    <td>{{ $invoice->start_date }}</td>
+                    <td>{{ $invoice->start_date }} to {{ $invoice->end_date }}</td>
                 </tr>
                 <tr>
                     <td><strong>Invoice Date:</strong></td>
@@ -148,11 +177,12 @@
                 </tr>
                 <tr>
                     <td><strong>Due Date:</strong></td>
-                    <td></td>
+                    <td>{{ $invoice->due_date }}</td>
                 </tr>
             </table>
         </div>
-
+        <div style="height: 130px;"></div> 
+        
         <div class="company-details">
             <table>
                 <tr>
@@ -168,13 +198,12 @@
         </div>
 
         <div class="company-info">
-            <div class="company-info-left">
-                <p><strong>Customer Id:</strong></p>
-                
-            </div>
-            <div class="Payment">
-                <p><strong>Payment Terms:</strong> Net 7 Days</p>
-            </div>
+            <table style="width: 100%; margin-top: 20px;" >
+                <tr>
+                    <td style="width: 50%;"><strong>Customer Id:</strong></td>
+                    <td style="width: 50%;"><strong>Payment Terms:</strong>Net 7 Days</td>
+                </tr>
+            </table>
         </div>
 
         <div class="clear"></div>

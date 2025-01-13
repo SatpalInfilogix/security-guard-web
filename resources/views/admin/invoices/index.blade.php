@@ -11,12 +11,40 @@
                         <h4 class="mb-sm-0 font-size-18">Invoices</h4>
 
                         <div class="page-title-right">
+                            <button id="exportBtn" class="btn btn-success" style="display: none;" onclick="exportInvoices()">Export Invoices</button>
                         </div>
                     </div>
                 </div>
             </div>
             <!-- end page title -->
-
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <form id="filterForm" method="GET">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <select name="client_id[]" id="client_id" class="form-control" multiple>
+                                    @foreach($clients as $client)
+                                        <option value="{{ $client->id }}">{{ $client->client_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="client_site_id[]" id="client_site_id" class="form-control" multiple>
+                                    {{-- @foreach($clientSites as $clientSite)
+                                        <option value="{{ $clientSite->id }}">{{ $clientSite->location_code }}</option>
+                                    @endforeach --}}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" id="date" name="date" class="form-control datePicker" value="" placeholder="Select Date Range" autocomplete="off">
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-12">
                     <x-error-message :message="$errors->first('message')" />
@@ -49,9 +77,74 @@
         </div>
     </div>
 
-    <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
+    <x-include-plugins :plugins="['dataTable', 'chosen', 'datePicker']"></x-include-plugins>
 
     <script>
+        $(function(){
+            $('#client_id').chosen({
+                width: '100%',
+                placeholder_text_multiple: 'Select Client'
+            });
+            $('#client_site_id').chosen({
+                width: '100%',
+                placeholder_text_multiple: 'Select Client Site'
+            });
+
+            $('#client_id').on('change', function() {
+                let selectedClientIds = $(this).val();
+                updateClientSites(selectedClientIds);
+            });
+
+            function updateClientSites(clientIds) {
+                if (clientIds.length > 0) {
+                    $.ajax({
+                        url: "{{ route('get-client-sites') }}",
+                        type: "GET",
+                        data: {
+                            client_ids: clientIds
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                $('#client_site_id').empty();
+                                response.clientSites.forEach(function(clientSite) {
+                                    $('#client_site_id').append(new Option(clientSite.location_code, clientSite.id)); // Add new options
+                                });
+                                $('#client_site_id').trigger('chosen:updated');
+                            } else {
+                                alert('Error fetching client sites');
+                            }
+                        },
+                        error: function() {
+                            alert('Error fetching client sites');
+                        }
+                    });
+                } else {
+                    $('#client_site_id').empty();
+                    $('#client_site_id').trigger('chosen:updated');
+                }
+            }
+
+            $('#client_id, #client_site_id').on('change', function() {
+                checkExportButtonVisibility();
+            });
+
+            $('#date').on('change', function() {
+                checkExportButtonVisibility();
+            });
+
+            function checkExportButtonVisibility() {
+                let selectedClientIds = $('#client_id').val();
+                let selectedClientSiteIds = $('#client_site_id').val();
+                let selectedDate = $('#date').val();
+
+                if (selectedClientIds.length > 0 && selectedDate !== '') {
+                    $('#exportBtn').show();
+                } else {
+                    $('#exportBtn').hide();
+                }
+            }
+        });
+
         $(document).ready(function() {
             let invoiceTable = $('#invoice-list').DataTable({
                 processing: true,
@@ -61,6 +154,9 @@
                     type: "POST",
                     data: function(d) {
                         d._token = "{{ csrf_token() }}";
+                        d.client_ids = $('#client_id').val();
+                        d.client_site_ids = $('#client_site_id').val(); 
+                        d.date = $('#date').val(); 
                         return d;
                     },
                     dataSrc: function(json) {
@@ -106,6 +202,9 @@
                 lengthMenu: [10, 25, 50, 100],
                 order: [[0, 'asc']]
             });
+            $('#searchBtn').on('click', function() {
+                invoiceTable.ajax.reload();
+            });
 
             window.downloadInvoicePdf = function(invoiceId) {
                 window.location.href = "{{ route('invoice.download-pdf', ':invoiceId') }}".replace(':invoiceId', invoiceId);
@@ -142,6 +241,14 @@
                         }
                     });
                 }
+            };
+
+            window.exportInvoices = function() {
+                let selectedClientIds = $('#client_id').val();
+                let selectedClientSiteIds = $('#client_site_id').val();
+                let selectDate = $('#date').val();
+                
+                window.location.href = `{{ route('invoice.export-csv') }}?client_ids=${selectedClientIds.join(',')}&client_site_ids=${selectedClientSiteIds.join(',')}&date=${selectDate}`;
             };
         });
     </script>

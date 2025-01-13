@@ -131,6 +131,8 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('export-deduction', [DeductionController::class, 'exportDeduction'])->name('export.deductions');
     
     Route::get('invoice/{id}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoice.download-pdf');
-    Route::post('/export-csv', [InvoiceController::class, 'exportCsv'])->name('invoice.export-csv');
+    Route::get('/export-csv', [InvoiceController::class, 'exportCsv'])->name('invoice.export-csv');
     Route::post('/invoice/update-status', [InvoiceController::class, 'updateStatus'])->name('invoice.update-status');
+    Route::get('/get-client-sites', [InvoiceController::class, 'getClientSites'])->name('get-client-sites');
+
 });
