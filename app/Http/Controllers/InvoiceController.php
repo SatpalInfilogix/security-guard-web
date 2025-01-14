@@ -370,7 +370,7 @@ class InvoiceController extends Controller
                         $sheet->setCellValue("G{$row}", 0);
                         $sheet->setCellValue("H{$row}", 0);
                         $sheet->setCellValue("I{$row}", '$ '.$data['rate_overtime']);
-                        $sheet->setCellValue("J{$row}", 0);
+                        $sheet->setCellValue("J{$row}", '$ '. 0);
                         $sheet->setCellValue("K{$row}", $data['no_of_guards_overtime']);
                         $sheet->setCellValue("L{$row}", $data['overtime_guard']);
                         $sheet->setCellValue("M{$row}", '$ '.$data['rate_overtime']);
