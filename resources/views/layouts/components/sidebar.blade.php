@@ -52,7 +52,7 @@
                 </li>
                 <li class="{{ Request::segment(2) == 'invoices' ? 'mm-active' : '' }}">
                     <a href="{{ route('invoices.index')}}" class="waves-effect">
-                        <i class="bx bx-checkbox-square"></i>
+                        <i class="bx bx-selection"></i>
                         <span key="t-spreadsheet">Invoice</span>
                     </a>
                 </li>

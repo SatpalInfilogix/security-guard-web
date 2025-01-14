@@ -19,6 +19,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class InvoiceController extends Controller
 {
@@ -107,31 +108,33 @@ class InvoiceController extends Controller
     
     public function downloadPdf($invoiceId)
     {
-        $invoice = Invoice::with('clientSite')->where('id', $invoiceId)->first();
+        $invoice = Invoice::with('clientSite', 'clientSite.client')->where('id', $invoiceId)->first();
         if (!$invoice) {
             return response()->json(['error' => 'Invoice not found'], 404);
         }
+        $clientId = $invoice->clientSite->client->id;
+        $clientSites = ClientSite::where('client_id', $clientId)->get();
+        $previousInvoices = Invoice::with('clientSite', 'clientSite.client')->whereIn('client_site_id', $clientSites->pluck('id'))->where('id', '<', $invoiceId)->where('status', 'Unpaid')->take(4)->get();
+        $list = collect([$invoice])->merge($previousInvoices);
+        $invoicesList = $list->sortBy('id');
 
         $invoice['items'] = InvoiceDetail::where('invoice_id', $invoiceId)->with('guardType')->get();
         $invoice['total'] = InvoiceDetail::where('invoice_id', $invoiceId)->sum('invoice_amount');
+        $invoice['due_date'] = Carbon::parse($invoice->invoice_date)->addDays(7)->format('Y-m-d');
 
         $pdfOptions = new Options();
         $pdfOptions->set('isHtml5ParserEnabled', true);
         $pdfOptions->set('isPhpEnabled', true);
-    
-        // Instantiate DomPDF
+
         $dompdf = new Dompdf($pdfOptions);
-    
-        // Generate the HTML content for the PDF
-        $html = view('admin.invoices.invoice-pdf.invoice', ['invoice' => $invoice])->render();
-    
+        $html = view('admin.invoices.invoice-pdf.invoice', ['invoice' => $invoice, 'invoicesList' => $invoicesList])->render();
         $dompdf->loadHtml($html);
-    
         $dompdf->setPaper('A4', 'portrait');
-    
         $dompdf->render();
     
         return $dompdf->stream('invoice-' . $invoiceId . '.pdf');
+
+        // return view('admin.invoices.invoice-pdf.invoice', compact('invoice'));
     }
 
     public function getClientSites(Request $request)
@@ -156,25 +159,25 @@ class InvoiceController extends Controller
         if (is_string($clientIds)) {
             $clientIds = explode(',', $clientIds);
         }
-    
+
         $clientSiteIds = $request->input('client_site_ids', []);
         if (is_string($clientSiteIds)) {
             $clientSiteIds = explode(',', $clientSiteIds);
         }
         $date = Carbon::parse($request->input('date'));
-    
+
         if ($date) {
             $fortnightDays = FortnightDates::whereDate('start_date', '<=', $date)->whereDate('end_date', '>=', $date)->first();
-    
+
             if (!$fortnightDays) {
                 return response()->json(["message" => "No fortnight found for the selected date {$date->toDateString()}."], 400);
             }
-    
+
             $firstWeekStart = Carbon::parse($fortnightDays->start_date);
             $firstWeekEnd = $firstWeekStart->copy()->addDays(6);
             $secondWeekStart = $firstWeekEnd->copy()->addDay();
             $secondWeekEnd = Carbon::parse($fortnightDays->end_date);
-    
+
             if ($date >= $firstWeekStart && $date <= $firstWeekEnd) {
                 $start_date = $firstWeekStart;
                 $end_date = $firstWeekEnd;
@@ -184,7 +187,7 @@ class InvoiceController extends Controller
             } else {
                 return response()->json(["message" => "No valid fortnight period found."], 400);
             }
-    
+
             $payrollDetails = PayrollDetail::whereBetween('date', [
                 Carbon::parse($start_date)->format('Y-m-d'),
                 Carbon::parse($end_date)->format('Y-m-d'),
@@ -193,34 +196,38 @@ class InvoiceController extends Controller
             if (!empty($clientSiteIds)) {
                 $payrollDetails->whereIn('client_site_id', $clientSiteIds);
             }
-            
+
             $payrollDetails = $payrollDetails->get();
-    
-            $aggregatedData = $payrollDetails->groupBy('client_id')->map(function ($clientGroup, $clientId) {
-                return $clientGroup->groupBy('client_site_id')->map(function ($siteGroup, $clientSiteId) use ($clientId) {
+
+            $startDate =  Carbon::parse($start_date)->format('Y-m-d');
+            $endDate = Carbon::parse($end_date)->format('Y-m-d');
+            $aggregatedData = $payrollDetails->groupBy('client_id')->map(function ($clientGroup, $clientId) use ($startDate, $endDate) {
+                return $clientGroup->groupBy('client_site_id')->map(function ($siteGroup, $clientSiteId) use ($clientId, $startDate, $endDate) {
                     $clientSite = ClientSite::find($clientSiteId);
                     $clientSiteName = $clientSite ? $clientSite->location_code : 'Unknown Site';
-                    return $siteGroup->groupBy('guard_type_id')->map(function ($guardGroup, $guardTypeId) use ($clientId, $clientSiteId, $clientSiteName) {
+                    return $siteGroup->groupBy('guard_type_id')->map(function ($guardGroup, $guardTypeId) use ($clientId, $clientSiteId, $clientSiteName, $startDate, $endDate) {
                         $guardsForNormalHours = $guardGroup->filter(function ($entry) {
                             return $entry->normal_hours > 0;
                         })->pluck('guard_id')->unique()->count();
-    
+
                         $guardsForOvertimeHours = $guardGroup->filter(function ($entry) {
                             return $entry->overtime > 0;
                         })->pluck('guard_id')->unique()->count();
-    
+
                         $guardsForPublicHolidayHours = $guardGroup->filter(function ($entry) {
                             return $entry->public_holiday > 0;
                         })->pluck('guard_id')->unique()->count();
-    
+
+                        $invoice = Invoice::whereDate('start_date', $startDate)->where('end_date', $endDate)->where('client_site_id', $clientSiteId)->first();
                         $rate = RateMaster::find($guardGroup->first()->guard_type_id);
-    
-                        return [
+                            return [
+                            'invoice_number'                =>$invoice->invoice_code,
+                            'invoice_date'                  =>$invoice->invoice_date,
                             'client_site_id'                => $clientSiteId,
                             'client_site_name'              => $clientSiteName,
                             'guard_type_id_name'            => $rate ? $rate->guard_type : 'Unknown',
-                            'normal_hours'                  => $guardGroup->sum('normal_hours'),
-                            'time_and_half_hours'           => $guardGroup->sum('overtime'),
+                            'normal_hours_guard'            => $guardGroup->sum('normal_hours'),
+                            'overtime_guard'                => $guardGroup->sum('overtime'),
                             'double_hours'                  => $guardGroup->sum('public_holiday'),
                             'no_of_guards_normal'           => $guardsForNormalHours,
                             'no_of_guards_overtime'         => $guardsForOvertimeHours,
@@ -232,57 +239,61 @@ class InvoiceController extends Controller
                     });
                 });
             });
-    
+
             $flattenedData = $aggregatedData->flatMap(function ($siteGroup) {
                 return $siteGroup->flatMap(function ($guardGroup) {
                     return $guardGroup;
                 });
             });
-    
-            // Create a new spreadsheet
+
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
-    
+
             $sheet->mergeCells('A1:H1');
             $sheet->setCellValue('A1', 'Report Name: Analysis of Client Billing  Vs Guard Payment for the same period ');
             $sheet->getStyle('A1')->getFont()->setBold(true);
             $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            
+
             $sheet->mergeCells('A2:B2');
             $sheet->setCellValue('A2', 'Report Filters');
             $sheet->getStyle('A2')->getFont()->setBold(true);
             $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-    
+
             $sheet->mergeCells('A5:D5');
             $sheet->setCellValue('A5', 'PERIOD: ' . $start_date->toFormattedDateString() . ' to ' . $end_date->toFormattedDateString());
             $sheet->getStyle('A5')->getFont()->setBold(true);
             $sheet->getStyle('A5')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-    
+
             $sheet->mergeCells('A7:B7');
             $sheet->setCellValue('A7', 'SENIOR MANAGER:');
             $sheet->getStyle('A7')->getFont()->setBold(true);
             $sheet->getStyle('A7')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-    
+
             $sheet->mergeCells('F7:I7');
             $sheet->setCellValue('F7', 'MANAGER:');
             $sheet->getStyle('F7')->getFont()->setBold(true);
             $sheet->getStyle('F7')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-    
+
             $sheet->mergeCells('K7:N7');
             $sheet->setCellValue('K7', 'SUPERVISOR');
             $sheet->getStyle('K7')->getFont()->setBold(true);
             $sheet->getStyle('K7')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-    
+
             $sheet->mergeCells('A9:C9');
             $sheet->setCellValue('A9', 'Expected output from report');
             $sheet->getStyle('A9')->getFont()->setBold(true);
             $sheet->getStyle('A9')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-    
+
             $sheet->mergeCells('A10:J10');
             $sheet->setCellValue('A10', 'CLIENT INVOICED');
             $sheet->getStyle('A10')->getFont()->setBold(true);
             $sheet->getStyle('A10')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-           
+
+            $sheet->mergeCells('K10:P10');
+            $sheet->setCellValue('K10', 'GUARD SALARY PAYMENTS');
+            $sheet->getStyle('K10')->getFont()->setBold(true);
+            $sheet->getStyle('K10')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
             $headers = [
                 'Invoice Date',
                 'Invoice Number',
@@ -294,12 +305,17 @@ class InvoiceController extends Controller
                 'Hours Billed',
                 'Rate',
                 'Invoice Amount',
+                'No of Guards',
+                'Hours Paid',
+                'Hourly Rate',
+                'Salary Paid',
+                'Gross Margin',
+                'Cost Absorbed'
             ];
-    
+
             $sheet->fromArray($headers, null, 'A11');
-            $sheet->getStyle('A11:J11')->getFont()->setBold(true);
-    
-            // Process each client site and calculate totals
+            $sheet->getStyle('A11:P11')->getFont()->setBold(true);
+
             $row = 12;
             foreach ($aggregatedData as $clientId => $clientSiteGroup) {
                 foreach ($clientSiteGroup as $clientSiteId => $siteData) {
@@ -310,64 +326,102 @@ class InvoiceController extends Controller
                     $siteTotalGuardsOvertime = 0;
                     $siteTotalGuardsPublicHoliday = 0;
                     $siteTotalAmount = 0;
-    
+
+                    $guardTotalHours = 0;
+                    $guardTotalOvertime = 0;
+                    $guardTotalPublicHoliday = 0;
+                    $guardTotalGuardsNormal = 0;
+                    $guardTotalGuardsOvertime = 0;
+                    $guardTotalGuardsPublicHoliday = 0;
+                    $guardSalaryPaid = 0;
+                    $guardGrossMargin = 0;
+
                     foreach ($siteData as $data) {
-                        // Calculate Invoice Amount for Normal
-                        $normalInvoiceAmount = $data['normal_hours'] * $data['rate_normal'];
-                        // Write invoice data for Normal
-                        $sheet->setCellValue("A{$row}", now()->format('m/d/Y'));
-                        $sheet->setCellValue("B{$row}", '12345');
+                        $normalInvoiceAmount = ($data['normal_hours_guard'] + $data['overtime_guard']) * $data['rate_normal'];
+                        $normalSalaryPaid = $data['normal_hours_guard'] * $data['rate_normal'];
+                        $normalGrossMargin = $normalInvoiceAmount - $normalSalaryPaid;
+
+                        $sheet->setCellValue("A{$row}", $data['invoice_date']);
+                        $sheet->setCellValue("B{$row}", $data['invoice_number']);
                         $sheet->setCellValue("C{$row}", '');
                         $sheet->setCellValue("D{$row}", $data['client_site_name']);
                         $sheet->setCellValue("E{$row}", $data['guard_type_id_name']);
                         $sheet->setCellValue("F{$row}", 'Normal');
                         $sheet->setCellValue("G{$row}", $data['no_of_guards_normal']);
-                        $sheet->setCellValue("H{$row}", $data['normal_hours']);
-                        $sheet->setCellValue("I{$row}", $data['rate_normal']);
-                        $sheet->setCellValue("J{$row}", $normalInvoiceAmount);
+                        $sheet->setCellValue("H{$row}", $data['normal_hours_guard'] + $data['overtime_guard']);
+                        $sheet->setCellValue("I{$row}", '$ '.$data['rate_normal']);
+                        $sheet->setCellValue("J{$row}", '$ '.$normalInvoiceAmount);
+                        $sheet->setCellValue("K{$row}", $data['no_of_guards_normal']);
+                        $sheet->setCellValue("L{$row}", $data['normal_hours_guard']);
+                        $sheet->setCellValue("M{$row}", '$ '.$data['rate_normal']);
+                        $sheet->setCellValue("N{$row}", '$ '.$normalSalaryPaid);
+                        $sheet->setCellValue("O{$row}", '$ '.$normalGrossMargin);
                         $row++;
-    
-                        // Time & 1/2
-                        $overtimeInvoiceAmount = $data['time_and_half_hours'] * $data['rate_overtime'];
+
+                        $overtimeInvoiceAmount = $data['overtime_guard'] * $data['rate_overtime'];
+                        $overtimeSalaryPaid = $data['overtime_guard'] * $data['rate_overtime'];
+                        $overtimeGrossMargin = $overtimeInvoiceAmount - $overtimeSalaryPaid;
+
                         $sheet->setCellValue("F{$row}", 'Time & 1/2');
-                        $sheet->setCellValue("G{$row}", $data['no_of_guards_overtime']);
-                        $sheet->setCellValue("H{$row}", $data['time_and_half_hours']);
-                        $sheet->setCellValue("I{$row}", $data['rate_overtime']);
-                        $sheet->setCellValue("J{$row}", $overtimeInvoiceAmount);
+                        $sheet->setCellValue("G{$row}", 0);
+                        $sheet->setCellValue("H{$row}", 0);
+                        $sheet->setCellValue("I{$row}", '$ '.$data['rate_overtime']);
+                        $sheet->setCellValue("J{$row}", 0);
+                        $sheet->setCellValue("K{$row}", $data['no_of_guards_overtime']);
+                        $sheet->setCellValue("L{$row}", $data['overtime_guard']);
+                        $sheet->setCellValue("M{$row}", '$ '.$data['rate_overtime']);
+                        $sheet->setCellValue("N{$row}", '$ '.$overtimeSalaryPaid);
+                        $sheet->setCellValue("O{$row}", '$ '.$overtimeGrossMargin);
                         $row++;
-    
-                        // Double
+
                         $holidayInvoiceAmount = $data['double_hours'] * $data['rate_holiday'];
+                        $holidaySalaryPaid = $data['double_hours'] * $data['rate_holiday'];
+                        $holidayGrossMargin = $holidayInvoiceAmount - $holidaySalaryPaid;
+
                         $sheet->setCellValue("F{$row}", 'Double');
                         $sheet->setCellValue("G{$row}", $data['no_of_guards_publicHoliday']);
                         $sheet->setCellValue("H{$row}", $data['double_hours']);
-                        $sheet->setCellValue("I{$row}", $data['rate_holiday']);
-                        $sheet->setCellValue("J{$row}", $holidayInvoiceAmount);
+                        $sheet->setCellValue("I{$row}", '$ '.$data['rate_holiday']);
+                        $sheet->setCellValue("J{$row}", '$ '.$holidayInvoiceAmount);
+                        $sheet->setCellValue("K{$row}", $data['no_of_guards_publicHoliday']);
+                        $sheet->setCellValue("L{$row}", $data['double_hours']);
+                        $sheet->setCellValue("M{$row}", '$ '.$data['rate_holiday']);
+                        $sheet->setCellValue("N{$row}", '$ '.$holidaySalaryPaid);
+                        $sheet->setCellValue("O{$row}", '$ '.$holidayGrossMargin);
                         $row++;
-    
-                        // Aggregate totals for the site
-                        $siteTotalNormalHours += $data['normal_hours'];
-                        $siteTotalOvertime += $data['time_and_half_hours'];
+
+                        $siteTotalNormalHours += $data['normal_hours_guard'];
+                        $siteTotalOvertime += $data['overtime_guard'];
                         $siteTotalPublicHoliday += $data['double_hours'];
                         $siteTotalGuardsNormal += $data['no_of_guards_normal'];
                         $siteTotalGuardsOvertime += $data['no_of_guards_overtime'];
                         $siteTotalGuardsPublicHoliday += $data['no_of_guards_publicHoliday'];
                         $siteTotalAmount += $normalInvoiceAmount + $overtimeInvoiceAmount + $holidayInvoiceAmount;
+
+                        $guardTotalHours +=  $data['normal_hours_guard'];
+                        $guardTotalOvertime += $data['overtime_guard'];
+                        $guardTotalPublicHoliday += $data['double_hours'];
+                        $guardTotalGuardsNormal += $data['no_of_guards_normal'];
+                        $guardTotalGuardsOvertime += $data['no_of_guards_overtime'];
+                        $guardTotalGuardsPublicHoliday += $data['no_of_guards_publicHoliday'];
+                        $guardSalaryPaid += $normalSalaryPaid + $overtimeSalaryPaid + $holidaySalaryPaid;
+                        $guardGrossMargin += $normalGrossMargin + $overtimeGrossMargin + $holidayGrossMargin;
                     }
     
-                    // Output total row for this site (bold)
                     $sheet->setCellValue("A{$row}", 'Totals');
-                    $sheet->setCellValue("F{$row}", 'Total Hours');
                     $sheet->setCellValue("H{$row}", $siteTotalNormalHours + $siteTotalOvertime + $siteTotalPublicHoliday);
-                    $sheet->setCellValue("J{$row}", $siteTotalAmount);
-                    $sheet->getStyle("A{$row}:J{$row}")->getFont()->setBold(true); // Make total row bold
+                    $sheet->setCellValue("J{$row}", '$ '.$siteTotalAmount);
+                    $sheet->setCellValue("L{$row}", $guardTotalHours + $guardTotalOvertime + $guardTotalPublicHoliday);
+                    $sheet->setCellValue("N{$row}", '$ '.$guardSalaryPaid);
+                    $sheet->setCellValue("O{$row}", '$ '.$guardGrossMargin);
+
+                    $sheet->getStyle("A{$row}:p{$row}")->getFont()->setBold(true);
                     $row++;
     
-                    $row++; // Empty row between client sites
+                    $row++;
                 }
             }
     
-            // Create writer and save output
             $writer = new Xlsx($spreadsheet);
             $filename = "payroll_export_" . now()->format('Y_m_d_H_i_s') . ".xlsx";
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

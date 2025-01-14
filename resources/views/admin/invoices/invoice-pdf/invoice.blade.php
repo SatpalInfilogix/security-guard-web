@@ -95,6 +95,14 @@
             border-collapse: collapse;
         }
 
+        .gct-total {
+            color: #66a2eb;
+        }
+
+        .billed-to {
+            color: #66a2eb;
+        }
+
         .table, .table th, .table td {
             border: 1px solid #000;
         }
@@ -132,7 +140,9 @@
     .table th, .table td {
         border: none; /* Remove table borders */
     }
-
+    p.instruction {
+        color: #66a2ed;
+    }
     </style>
 </head>
 <body>
@@ -186,7 +196,7 @@
         <div class="company-details">
             <table>
                 <tr>
-                    <td><strong>Billed To:</strong></td>
+                    <td class="billed-to"><strong>Billed To:</strong></td>
                 </tr>
                 <tr>
                     <td>{{ $invoice->clientSite->location_code }}</td>
@@ -240,8 +250,8 @@
                 </tr>
                 <tr>
                     <td colspan="4"></td>
-                    <td colspan="2" class="total"><strong>GCT@15%</strong></td>
-                    <td class="total" style="text-align: left;">${{ number_format($invoice->total * 0.15, 2) }}</td>
+                    <td colspan="2" class="total gct-total"><strong>GCT @ {{ $invoice->clientSite->client->gct ?? '15' }}%</strong></td>
+                    <td class="total" style="text-align: left;"> ${{ number_format($invoice->total * ($invoice->clientSite->client->gct ?? 15) / 100, 2) }}</td>
                 </tr>
                 <tr>
                     <td colspan="4"></td>
@@ -253,43 +263,53 @@
         </table>
 
         <div class="payment-instructions" style="margin-top: 30px;">
-            <p><strong>On payment, kindly indicate the invoice number that the payment applies to. Thank you.</strong></p>
+            <p class="instruction"><strong>On payment, kindly indicate the invoice number that the payment applies to. Thank you.</strong></p>
             
             <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-                <div class="banking-info" style="flex: 3;">
-                    <strong>Banking Information:</strong>
-                    <table style="width: 100%; margin-top: 10px;">
-                        <tr>
-                            <th>Bank Name</th>
-                            <th>Branch</th>
-                            <th>Type</th>
-                            <th>Routing No. - Account No.</th>
-                        </tr>
-                        <tr>
-                            <td>Scotia Bank</td>
-                            <td>Scotiacentre</td>
-                            <td>Current</td>
-                            <td>00250765-000806384</td>
-                        </tr>
-                        <tr>
-                            <td>Scotia Bank</td>
-                            <td>Scotiacentre</td>
-                            <td>Current</td>
-                            <td>00250765-000077615</td>
-                        </tr>
-                        <tr>
-                            <td>Sagicor</td>
-                            <td>Tropical Plaza</td>
-                            <td>Current</td>
-                            <td>08101063-5501180779</td>
-                        </tr>
-                    </table>
-                </div>
-                <div style="flex: 1; margin-right: 20px;">
-                    <label for="sign"><strong>Sign:</strong></label>
-                    <div style="height: 50px; border-bottom: 1px solid #000; width: 200px;"></div>
-                    <div for="sign"><strong>Manager</strong></div>
-                </div>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                    <tr>
+                        <td style="width: 75%; vertical-align: top; padding-right: 20px;">
+                            <strong>Banking Information:</strong>
+                            <table style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>Bank Name</th>
+                                        <th>Branch</th>
+                                        <th>Type</th>
+                                        <th>Routing No. - Account No.</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Scotia Bank</td>
+                                        <td>Scotiacentre</td>
+                                        <td>Current</td>
+                                        <td>00250765-000806384</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Scotia Bank</td>
+                                        <td>Scotiacentre</td>
+                                        <td>Current</td>
+                                        <td>00250765-000077615</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Sagicor</td>
+                                        <td>Tropical Plaza</td>
+                                        <td>Current</td>
+                                        <td>08101063-5501180779</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </td>
+            
+                        <!-- Right Column: Signature -->
+                        <td style="width: 25%; vertical-align: top; padding-left: 20px;">
+                            <strong>Sign:</strong>
+                            <div style="height: 50px; border-bottom: 1px solid #000; width: 200px; margin-top: 10px;"></div>
+                            <div style="margin-top: 10px;"><strong>Manager</strong></div>
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
 
@@ -299,31 +319,28 @@
             <div style="display: flex; justify-content: space-between; margin-top: 30px;">
                 <div class="banking-info" style="flex: 3;">
                     <table style="width: 100%; margin-top: 10px;">
-                        <tr>
-                            <th>Date</th>
-                            <th>Invoice No</th>
-                            <th>Invoice Amount</th>
-                            <th>Status</th>
-                        </tr>
-
-                        <tr>
-                            <td>30-Nov-24</td>
-                            <td>12345</td>
-                            <td></td>
-                            <td>Overdue</td>
-                        </tr>
-                        <tr>
-                            <td>30-Nov-24</td>
-                            <td>12345</td>
-                            <td></td>
-                            <td>Overdue</td>
-                        </tr>
-                        <tr>
-                            <td>30-Nov-24</td>
-                            <td>12345</td>
-                            <td></td>
-                            <td>Overdue</td>
-                        </tr>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Invoice No</th>
+                                <th>Invoice Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($invoicesList as $list)
+                                <tr>
+                                    <td>{{ $list->invoice_date }}</td>
+                                    <td>{{ $list->invoice_code }}</td>
+                                    <td>${{ number_format($list->total_amount, 2) }}</td>
+                                    @if($invoice->invoice_code == $list->invoice_code)
+                                        <td> Due </td>
+                                    @else
+                                        <td>Overdue </td>
+                                    @endif
+                                </tr>
+                            @endforeach
+                        </tbody>
                     </table>
                 </div>
             </div>
