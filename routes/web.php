@@ -115,6 +115,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('get-payroll-list', [PayrollController::class, 'getPayroll'])->name('get-payroll-list');
     Route::post('get-deductions-list', [DeductionController::class, 'getDeductionsData'])->name('get-deductions-list');
     Route::post('get-invoice-list', [InvoiceController::class, 'getInvoice'])->name('get-invoice-list');
+    Route::post('get-leaves-list', [LeaveController::class, 'getLeave'])->name('get-leaves-list');
 
     Route::get('security-guards/pdf', [SecurityGuardController::class, 'downloadPDF'])->name('security-guards.pdf');
 

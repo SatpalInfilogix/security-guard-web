@@ -281,22 +281,22 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td>Scotia Bank</td>
-                                        <td>Scotiacentre</td>
-                                        <td>Current</td>
-                                        <td>00250765-000806384</td>
+                                        <td>{{ setting('branch_name1') ? setting('branch_name1') : '' }}</td>
+                                        <td>{{ setting('branch1') ? setting('branch1') : '' }}</td>
+                                        <td>{{ setting('type1') ? setting('type1') : '' }}</td>
+                                        <td>{{ setting('account_number1') ? setting('account_number1') : '' }}</td>
                                     </tr>
                                     <tr>
-                                        <td>Scotia Bank</td>
-                                        <td>Scotiacentre</td>
-                                        <td>Current</td>
-                                        <td>00250765-000077615</td>
+                                        <td>{{ setting('branch_name2') ? setting('branch_name2') : '' }}</td>
+                                        <td>{{ setting('branch2') ? setting('branch2') : '' }}</td>
+                                        <td>{{ setting('type2') ? setting('type2') : '' }}</td>
+                                        <td>{{ setting('account_number2') ? setting('account_number2') : '' }}</td>
                                     </tr>
                                     <tr>
-                                        <td>Sagicor</td>
-                                        <td>Tropical Plaza</td>
-                                        <td>Current</td>
-                                        <td>08101063-5501180779</td>
+                                        <td>{{ setting('branch_name3') ? setting('branch_name3') : '' }}</td>
+                                        <td>{{ setting('branch3') ? setting('branch1') : '' }}</td>
+                                        <td>{{ setting('type3') ? setting('type3') : '' }}</td>
+                                        <td>{{ setting('account_number3') ? setting('account_number3') : '' }}</td>
                                     </tr>
                                 </tbody>
                             </table>

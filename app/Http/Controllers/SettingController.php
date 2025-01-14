@@ -55,12 +55,12 @@ class SettingController extends Controller
             ]);
         }
 
-        if($request->stripe_api_key && $request->stripe_secret_key) {
-            return redirect()->route('settings.payment-settings')->with('success', 'Payment Setting updated successfully');
+        if($request->site_name || $request->hasFile('logo')) {
+            return redirect()->route('settings.index')->with('success', 'Site Setting updated successfully');
         } else if($request->duty_time) {
             return redirect()->route('settings.gerenal-settings')->with('success', 'Gerenal Setting updated successfully');
         } else {
-            return redirect()->route('settings.index')->with('success', 'Site Setting updated successfully');
+            return redirect()->route('settings.payment-settings')->with('success', 'Payment Setting updated successfully');
         }
     }
 

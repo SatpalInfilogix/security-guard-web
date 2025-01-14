@@ -16,6 +16,28 @@
                     </div>
                 </div>
             </div>
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <form id="filterForm" method="GET">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <?php
+                                    $reasons = ['Approve', 'Pending', 'Reject'];
+                                ?>
+                                <select name="leave_status" id="leave_status" class="form-control">
+                                    <option value="" selected disabled>Select status</option>
+                                    @foreach ($reasons as $reason)
+                                        <option value="{{ $reason }}" {{ old('reason') }}>{{ $reason }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
             <!-- end page title -->
 
             <div class="row">
@@ -29,7 +51,7 @@
                     <x-success-message :message="session('success')" />
                     <div class="card">
                         <div class="card-body">
-                            <table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
+                            <table id="leaves-list" class="table table-bordered dt-responsive  nowrap w-100">
                                 <thead>
                                     <tr>
                                         <th>#</th>
@@ -43,7 +65,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($leaves as $key => $leave)
+                                    {{-- @foreach($leaves as $key => $leave)
                                         <tr>
                                             <td>{{ ++$key }}</td>
                                             <td>{{ optional($leave->user)->first_name .' '. optional($leave->user)->surname }}</td>
@@ -73,7 +95,7 @@
                                             </td>
                                             @endcanany
                                         </tr>
-                                    @endforeach
+                                    @endforeach --}}
                                 </tbody>
                             </table>
                         </div>
@@ -104,9 +126,110 @@
 
     <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
     <script>
-       $(document).ready(function() {
+        $(document).ready(function() {
+            var table = $('#leaves-list').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "{{ route('get-leaves-list') }}",
+                    type: "POST",
+                    data: function(d) {
+                        d._token = "{{ csrf_token() }}";
+                        d.leave_status = $('#leave_status').val();
+                        return d;
+                    },
+                },
+                columns: [
+                    { 
+                        data: null, 
+                        render: function(data, type, row, meta) {
+                            return meta.row + 1 + meta.settings._iDisplayStart;
+                        }
+                    },
+                    { data: 'user.first_name' },
+                    { data: 'date' },
+                    { data: 'reason' },
+                    {
+                        data: null,
+                        name: 'status',
+                        render: function(data, type, row) {
+                            return `
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="statusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        ${row.status}
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="statusDropdown">
+                                        <li><a class="dropdown-item" href="javascript:void(0);" data-status="Approved" data-id="${row.id}">Approve</a></li>
+                                        ${row.status !== 'Cancelled' ? `<li><a class="dropdown-item" href="javascript:void(0);" data-status="Rejected" data-id="${row.id}">Reject</a></li>` : ''}
+                                    </ul>
+                                </div>
+                            `;
+                        }
+                    },
+                    {
+                    data: null,
+                    render: function(data, type, row) {
+                        var actions = '<div class="action-buttons">';
+                    
+                        @can('delete leaves')
+                            actions += `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${row.id}">`;
+                            actions += '<i class="fas fa-trash-alt"></i>';
+                            actions += '</a>';
+                        @endcan
+
+                        actions += '</div>';
+                        return actions;
+                    }
+                }
+                ]
+            });
+
+            $('#searchBtn').click(function() {
+                table.draw();
+            });
+        });
+
+        $(document).on('click', '.leave-delete-btn', function() {
+            let source = $(this).data('source');
+            let leaveId = $(this).data('id');
+            var deleteApiEndpoint = "{{ route('leaves.destroy', '') }}/" + leaveId;
+
+            swal({
+                title: "Are you sure?",
+                text: `You really want to remove this ${source}?`,
+                type: "warning",
+                showCancelButton: true,
+                closeOnConfirm: false,
+            }, function(isConfirm) {
+                if (isConfirm) {
+                    $.ajax({
+                        url: deleteApiEndpoint,
+                        method: 'DELETE',
+                        data: {
+                            '_token': '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            if(response.success){
+                                swal({
+                                    title: "Success!",
+                                    text: response.message,
+                                    type: "success",
+                                    showConfirmButton: false
+                                }) 
+
+                                setTimeout(() => {
+                                    location.reload();
+                                }, 2000);
+                            }
+                        }
+                    })
+                }
+            });
+        })
+
+        $(document).ready(function() {
             let leaveId = null;
-            $('.dropdown-item').on('click', function() {
+            $(document).on('click', '.dropdown-item', function() {
                 const newStatus = $(this).data('status');
                 const leaveId = $(this).data('id');
                 const statusButton = $(this).closest('tr').find('.dropdown-toggle');
@@ -152,7 +275,6 @@
                     closeOnConfirm: false,
                 }, function(isConfirm) {
                     if (isConfirm) {
-                        console.log(leaveId);
                         updateLeaveStatus(leaveId, 'Rejected', rejectionReason);
                     }
                 });

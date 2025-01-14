@@ -39,6 +39,13 @@
                                 <input type="text" id="date" name="date" class="form-control datePicker" value="" placeholder="Select Date Range" autocomplete="off">
                             </div>
                             <div class="col-md-3">
+                                <select name="paid_status" id="paid_status" class="form-control">
+                                <option value="" selected disabled>Select Status</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Unpaid">Unpaid</option>
+                            </select>
+                            </div>
+                            <div class="col-md-3">
                                 <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
                             </div>
                         </div>
@@ -156,7 +163,8 @@
                         d._token = "{{ csrf_token() }}";
                         d.client_ids = $('#client_id').val();
                         d.client_site_ids = $('#client_site_id').val(); 
-                        d.date = $('#date').val(); 
+                        d.date = $('#date').val();
+                        d.paid_status = $('#paid_status').val();
                         return d;
                     },
                     dataSrc: function(json) {

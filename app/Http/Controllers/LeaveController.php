@@ -21,6 +21,43 @@ class LeaveController extends Controller
         return view('admin.leaves.index', compact('leaves'));
     }
 
+    public function getLeave(Request $request)
+    {
+        $leaves = Leave::with('user');
+
+        if ($request->has('leave_status') && !empty($request->leave_status)) {
+            $leaves->where('status', 'like', '%' . $request->leave_status . '%');
+        }
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $leaves->where(function($query) use ($searchValue) {
+                $query->where('date', 'like', '%' . $searchValue . '%')
+                    ->orWhere('reason', 'like', '%' . $searchValue . '%')
+                    ->orWhereHas('user', function($q) use ($searchValue) {
+                        $q->where('first_name', 'like', '%' . $searchValue . '%');
+                    });
+            });
+        }
+
+        $totalRecords = Leave::count();
+
+        $filteredRecords = $leaves->count();
+
+        $length = $request->input('length', 10);
+        $start = $request->input('start', 0);
+
+        $leaves = $leaves->skip($start)->take($length)->get();
+
+        $data = [
+            'draw' => $request->input('draw'),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $leaves,
+        ];
+
+        return response()->json($data);
+    }
+
     public function create()
     {
         $userRole = Role::where('name', 'Security Guard')->first();
@@ -103,12 +140,12 @@ class LeaveController extends Controller
         return response()->json(['success' => true, 'message' => 'Status updated successfully.']);
     }
 
-    public function destroy(Leave $leave)
+    public function destroy($id)
     {
         if(!Gate::allows('delete leaves')) {
             abort(403);
         }
-        $leave->delete();
+        Leave::where('id', $id)->delete();
 
         return response()->json([
             'success' => true,

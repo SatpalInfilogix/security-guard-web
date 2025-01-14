@@ -52,6 +52,10 @@ class InvoiceController extends Controller
             $invoices->whereDate('start_date', '<=', $searchDate)->whereDate('end_date', '>=', $searchDate);
         }
 
+        if ($request->has('paid_status') && !empty($request->paid_status)) {
+            $invoices->where('status', $request->paid_status);
+        }
+
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
             $invoices->where(function($query) use ($searchValue) {
