@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\FortnightDates;
 use App\Models\GuardRoster;
 use App\Models\PublicHoliday;
 use App\Models\Punch;
@@ -15,15 +16,18 @@ class HomeController extends Controller
 {
     public function stats()
     {
-        $today = Carbon::today();
+        $today = Carbon::now();
+        $fortnightDate = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+        $startDate = Carbon::parse($fortnightDate->start_date);
+        $endDate = Carbon::parse($fortnightDate->end_date);
         $todaysDuties = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', $today)->first();
-        $upcomingDuties = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', '>', $today)->take(2)->get();
+        $upcomingDuties = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', '>', $startDate)->whereDate('date', '<=', $endDate)->take(2)->get();
         $upcommingHolidays = PublicHoliday::whereDate('date', '>', $today)->take(2)->get();
-        $leaves = Leave::where('guard_id', Auth::id())->whereMonth('date', now()->month)->whereYear('date', now()->year)->get();
+        $leaves = Leave::where('guard_id', Auth::id())->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)->get();
         $approvedLeaves = $leaves->where('status', 'Approved')->count();
         $pendingLeaves = $leaves->where('status', 'Pending')->count();
         $rejectedLeaves = $leaves->where('status', 'Rejected')->count();
-        $attendances = Punch::where('user_id', Auth::id())->whereMonth('in_time', now()->month)->whereYear('in_time', now()->year)->get();
+        $attendances = Punch::where('user_id', Auth::id())->whereDate('in_time', '>=', $startDate)->whereDate('in_time', '<=', $endDate)->get();
 
         $presentDays = 0;
         $halfDays = 0;
@@ -41,15 +45,17 @@ class HomeController extends Controller
             }
         }
 
-        $assignedDuties = GuardRoster::where('guard_id', Auth::id())->whereMonth('date', now()->month)->whereYear('date', now()->year)->get();
+        $assignedDuties = GuardRoster::where('guard_id', Auth::id())->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)->get();        
         foreach ($assignedDuties as $duty) {
             $dutyDate = Carbon::parse($duty->date);
-            $attendanceForDuty = $attendances->filter(function ($attendance) use ($dutyDate) {
-                return Carbon::parse($attendance->in_time)->isSameDay($dutyDate);
-            });
-    
-            if ($attendanceForDuty->isEmpty()) {
-                $absentDays++;
+            if ($dutyDate->isToday() || $dutyDate->isBefore(Carbon::today())) {
+                $attendanceForDuty = $attendances->filter(function ($attendance) use ($dutyDate) {
+                    return Carbon::parse($attendance->in_time)->isSameDay($dutyDate);
+                });
+        
+                if ($attendanceForDuty->isEmpty()) {
+                    $absentDays++;
+                }
             }
         }
 

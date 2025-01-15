@@ -17,7 +17,7 @@ class AttendanceController extends Controller
     public function getAttendance(Request $request)
     {
         $today = Carbon::now();
-        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();                         
         if (!$fortnight) {
             $fortnight = null;
         }
@@ -29,16 +29,42 @@ class AttendanceController extends Controller
         // $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::createFromFormat('m-Y', $month)->startOfMonth();
         // $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::createFromFormat('m-Y', $month)->endOfMonth();
 
-        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::parse($fortnight->start_date);
-        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::parse($fortnight->end_date);
+        $previousFortnight = FortnightDates::whereDate('end_date', '<', $today)->orderByDesc('end_date')->first();
+        
+        if (!$previousFortnight) {
+            $previousFortnight = $fortnight;
+        }
 
-        if ($startDate->greaterThan($endDate)) {
+        $startDateCurrent = $request->start_date ? Carbon::parse($request->start_date) : Carbon::parse($fortnight->start_date);
+        $endDateCurrent = $request->end_date ? Carbon::parse($request->end_date) : Carbon::parse($fortnight->end_date);
+
+        $startDatePrevious = $request->start_date ? Carbon::parse($request->start_date) : Carbon::parse($previousFortnight->start_date);
+        $endDatePrevious = $request->end_date ? Carbon::parse($request->end_date) : Carbon::parse($previousFortnight->end_date);
+
+        if ($startDateCurrent->greaterThan($endDateCurrent) || $startDatePrevious->greaterThan($endDatePrevious)) {
             return response()->json(['error' => 'Start date must be before end date'], 400);
         }
 
-        $publicHolidays = $this->getPublicHolidays($startDate, $endDate);
+        $publicHolidaysCurrent = $this->getPublicHolidays($startDateCurrent, $endDateCurrent);
+        $publicHolidaysPrevious = $this->getPublicHolidays($startDatePrevious, $endDatePrevious);
 
+        $attendanceDataCurrent = $this->getAttendanceData($startDateCurrent, $endDateCurrent, $publicHolidaysCurrent);
+
+        $attendanceDataPrevious = $this->getAttendanceData($startDatePrevious, $endDatePrevious, $publicHolidaysPrevious);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Attendance',
+            'currentFortnight' => $attendanceDataCurrent,
+            'previousFortnight' => $attendanceDataPrevious,
+        ]);
+    }
+
+    private function getAttendanceData($startDate, $endDate, $publicHolidays)
+    {
         $attendanceData = [];
+        $today = Carbon::now();
+
         for ($date = $startDate; $date->lessThanOrEqualTo($endDate); $date->addDay()) {
             $punchRecord = Punch::where('user_id', Auth::id())->whereDate('in_time', $date)->whereNotNull('in_time')->whereNotNull('out_time')->first();
 
@@ -49,6 +75,7 @@ class AttendanceController extends Controller
             $publicHolidayEarning = 0;
             $overtimeEarning = 0;
             $overtimeHours = 0;
+            $status = 'absent';
 
             if ($punchRecord) {
                 $inTime = Carbon::parse($punchRecord->in_time);
@@ -67,7 +94,7 @@ class AttendanceController extends Controller
 
                 $guardAdditionalInformation = GuardAdditionalInformation::where('user_id', Auth::id())->first();
                 $rateMater = RateMaster::where('id', $guardAdditionalInformation->guard_type_id)->first();
-                if($rateMater) {
+                if ($rateMater) {
                     if ($publicHolidays->contains($date->toDateString())) {
                         $publicHolidayEarning = $workedHours * $rateMater->holiday_rate; // Use public holiday rate
                     } else {
@@ -75,30 +102,33 @@ class AttendanceController extends Controller
                         $overtimeEarning = $overtimeHours * $rateMater->overtime_rate;
                     }
                 }
+                $status = 'present';
+            } else {
+                if ($date->isToday()) {
+                    $status = 'pending';
+                } elseif ($date->isAfter($today)) {
+                    $status = 'pending';
+                } else {
+                    $status = 'absent';
+                }
             }
 
             $attendanceData[] = [
-                'date'             => $date->toDateString(),
-                'status'           => $punchRecord ? 'present' : 'absent',
-                'LoggedHours'      => round($loggedHours, 2),
-                'holiday'          => $publicHolidays->contains($date->toDateString()) ? 'Public Holiday' : '',
-                'regularHours'     => $regularHours,
-                'regularHoursEarning' => $regularHoursEarning,
-                'overtimeHours'    => $overtimeHours,
-                'overtimeEarning'  => $overtimeEarning,
-                'publicHolidayEarning' => $publicHolidayEarning,
+                'date'                   => $date->toDateString(),
+                'status'                 => $status,
+                'LoggedHours'            => round($loggedHours, 2),
+                'holiday'                => $publicHolidays->contains($date->toDateString()) ? 'Public Holiday' : '',
+                'regularHours'           => $regularHours,
+                'regularHoursEarning'    => $regularHoursEarning,
+                'overtimeHours'          => $overtimeHours,
+                'overtimeEarning'        => $overtimeEarning,
+                'publicHolidayEarning'  => $publicHolidayEarning,
             ];
         }
 
-        return response()->json([
-            'status'  => true,
-            'message' => 'Attendance',
-            'data'    => $attendanceData,
-        ]);
+        return $attendanceData;
     }
     
-
-
     private function getPublicHolidays($startDate, $endDate)
     {
         $holidays = PublicHoliday::whereBetween('date', [$startDate, $endDate])->pluck('date');
@@ -110,6 +140,4 @@ class AttendanceController extends Controller
     {
         return 20;
     }
-
-
 }

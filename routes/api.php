@@ -37,6 +37,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/payrolls', [PayrollController::class, 'getPayroll']);
     Route::get('/payroll/{payrollId}',[PayrollController::class, 'payrollById']);
     Route::get('/latest-payroll', [PayrollController::class, 'latestPayroll']);
+
+    Route::post('/change-profile-image', [ProfileController::class, 'changeProfileImage']);
+    Route::post('/logout', [LoginController::class, 'logout']);
 });
 Route::get('faq', [FaqController::class, 'index']);
 Route::get('help-request', [FaqController::class, 'getHelpRequest']);
