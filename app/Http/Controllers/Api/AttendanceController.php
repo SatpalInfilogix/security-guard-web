@@ -11,6 +11,7 @@ use App\Models\RateMaster;
 use App\Models\FortnightDates;
 use App\Models\GuardAdditionalInformation;
 use Carbon\Carbon;
+use App\Models\GuardRoster;
 
 class AttendanceController extends Controller
 {
@@ -85,7 +86,12 @@ class AttendanceController extends Controller
         $today = Carbon::now();
 
         for ($date = $startDate; $date->lessThanOrEqualTo($endDate); $date->addDay()) {
+            $guardRoster = GuardRoster::where('guard_id', Auth::id())->whereDate('date', $date)->first();
             $punchRecord = Punch::where('user_id', Auth::id())->whereDate('in_time', $date)->whereNotNull('in_time')->whereNotNull('out_time')->first();
+            $status = 'absent';
+            if (!$guardRoster) {
+                $status = 'duty-not-assigned';
+            }
 
             $workedHours = 0;
             $loggedHours = 0;
@@ -94,7 +100,6 @@ class AttendanceController extends Controller
             $publicHolidayEarning = 0;
             $overtimeEarning = 0;
             $overtimeHours = 0;
-            $status = 'absent';
 
             if ($punchRecord) {
                 $inTime = Carbon::parse($punchRecord->in_time);
@@ -127,8 +132,6 @@ class AttendanceController extends Controller
                     $status = 'pending';
                 } elseif ($date->isAfter($today)) {
                     $status = 'pending';
-                } else {
-                    $status = 'absent';
                 }
             }
 
@@ -147,6 +150,7 @@ class AttendanceController extends Controller
 
         return $attendanceData;
     }
+
     
     private function getPublicHolidays($startDate, $endDate)
     {
