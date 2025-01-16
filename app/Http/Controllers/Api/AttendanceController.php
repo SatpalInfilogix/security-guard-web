@@ -35,28 +35,47 @@ class AttendanceController extends Controller
             $previousFortnight = $fortnight;
         }
 
-        $startDateCurrent = $request->start_date ? Carbon::parse($request->start_date) : Carbon::parse($fortnight->start_date);
-        $endDateCurrent = $request->end_date ? Carbon::parse($request->end_date) : Carbon::parse($fortnight->end_date);
+        $startDateCurrent = Carbon::parse($fortnight->start_date);
+        $endDateCurrent = Carbon::parse($fortnight->end_date);
 
-        $startDatePrevious = $request->start_date ? Carbon::parse($request->start_date) : Carbon::parse($previousFortnight->start_date);
-        $endDatePrevious = $request->end_date ? Carbon::parse($request->end_date) : Carbon::parse($previousFortnight->end_date);
+        $startDatePrevious = Carbon::parse($previousFortnight->start_date);
+        $endDatePrevious = Carbon::parse($previousFortnight->end_date);
 
-        if ($startDateCurrent->greaterThan($endDateCurrent) || $startDatePrevious->greaterThan($endDatePrevious)) {
+        if ($request->start_date && $request->end_date) {
+            $startCustomDate = Carbon::parse($request->start_date);
+            $endCustomDate = Carbon::parse($request->end_date);
+        } else {
+            $startCustomDate = null;
+            $endCustomDate = null;
+        }
+
+        if (($startCustomDate && $endCustomDate) && ($startCustomDate->greaterThan($endCustomDate))) {
             return response()->json(['error' => 'Start date must be before end date'], 400);
         }
+    
+        // if ($startDateCurrent->greaterThan($endDateCurrent) || $startDatePrevious->greaterThan($endDatePrevious) || ($)) {
+        //     return response()->json(['error' => 'Start date must be before end date'], 400);
+        // }
 
         $publicHolidaysCurrent = $this->getPublicHolidays($startDateCurrent, $endDateCurrent);
         $publicHolidaysPrevious = $this->getPublicHolidays($startDatePrevious, $endDatePrevious);
+        
+        if ($startCustomDate && $endCustomDate) {
+            $publicHolidaysCustom = $this->getPublicHolidays($startCustomDate, $endCustomDate);
+            $attedanceCustomData = $this->getAttendanceData($startCustomDate, $endCustomDate, $publicHolidaysCustom);
+        } else {
+            $attedanceCustomData = [];
+        }
 
         $attendanceDataCurrent = $this->getAttendanceData($startDateCurrent, $endDateCurrent, $publicHolidaysCurrent);
-
         $attendanceDataPrevious = $this->getAttendanceData($startDatePrevious, $endDatePrevious, $publicHolidaysPrevious);
-
+        
         return response()->json([
             'status'  => true,
             'message' => 'Attendance',
             'currentFortnight' => $attendanceDataCurrent,
             'previousFortnight' => $attendanceDataPrevious,
+            'customData'    => $attedanceCustomData,
         ]);
     }
 

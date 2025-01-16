@@ -59,16 +59,70 @@ class HomeController extends Controller
             }
         }
 
+        $previousFortnightDate = FortnightDates::whereDate('end_date', '<', $startDate)->orderBy('end_date', 'desc')->first();
+        if ($previousFortnightDate) {
+            $previousStartDate = Carbon::parse($previousFortnightDate->start_date);
+            $previousEndDate = Carbon::parse($previousFortnightDate->end_date);
+    
+            $previousAttendances = Punch::where('user_id', Auth::id())->whereDate('in_time', '>=', $previousStartDate)
+                ->whereDate('in_time', '<=', $previousEndDate)->get();
+    
+            $previousPresentDays = 0;
+            $previousHalfDays = 0;
+            $previousAbsentDays = 0;
+    
+            foreach ($previousAttendances as $attendance) {
+                $inTime = Carbon::parse($attendance->in_time);
+                $outTime = Carbon::parse($attendance->out_time);
+    
+                $shiftDuration = $inTime->diffInHours($outTime);
+                if ($shiftDuration >= 8) {
+                    $previousPresentDays++;
+                } elseif ($shiftDuration <= 7) {
+                    $previousHalfDays++;
+                }
+            }
+
+            $previousAssignedDuties = GuardRoster::where('guard_id', Auth::id())
+                ->whereDate('date', '>=', $previousStartDate)
+                ->whereDate('date', '<=', $previousEndDate)
+                ->get();
+    
+            foreach ($previousAssignedDuties as $duty) {
+                $dutyDate = Carbon::parse($duty->date);
+                $attendanceForDuty = $previousAttendances->filter(function ($attendance) use ($dutyDate) {
+                    return Carbon::parse($attendance->in_time)->isSameDay($dutyDate);
+                });
+    
+                if ($attendanceForDuty->isEmpty()) {
+                    $previousAbsentDays++;
+                }
+            }
+    
+            $previousFortnightStats = [
+                'presentDays' => $previousPresentDays,
+                'halfDays' => $previousHalfDays,
+                'absentDays' => $previousAbsentDays,
+            ];
+        } else {
+            $previousFortnightStats = [
+                'presentDays' => 0,
+                'halfDays' => 0,
+                'absentDays' => 0,
+            ];
+        }
+
         return response()->json([
             'success'           => true,
             'today_duty'        => $todaysDuties,
             'upcoming_duties'   => $upcomingDuties,
             'upcoming_holidays' => $upcommingHolidays,
-            'attendances'       => [
+            'current_attendances' => [
                 'presentDays'   => $presentDays,
                 'halfDays'      => $halfDays,
                 'absentDays'    => $absentDays
             ],
+            'previous_attendances' => $previousFortnightStats,
             'leaves'            => [
                 'approvedLeaves'=> $approvedLeaves,
                 'pendingLeaves' => $pendingLeaves,
