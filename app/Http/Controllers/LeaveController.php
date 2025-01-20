@@ -8,9 +8,84 @@ use APp\Models\User;
 use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Gate;
+use App\Services\PushNotificationService;
 
 class LeaveController extends Controller
 {
+    protected $pushNotificationService;
+
+    public function __construct(PushNotificationService $pushNotificationService)
+    {
+        $this->pushNotificationService = $pushNotificationService;
+    }
+
+    // protected $messaging;
+
+    // public function __construct()
+    // {
+    //     $credentialsPath = public_path('assets/service-account.json');
+    //     if (!file_exists($credentialsPath)) {
+    //         throw new \Exception("Firebase credentials file does not exist at path: $credentialsPath");
+    //     }
+
+    //     $firebase = (new Factory)->withServiceAccount($credentialsPath);
+
+    //     $this->messaging = $firebase->createMessaging();
+
+    // }
+
+    // public function sendLeaveNotification($deviceToken, $leaveStatus)
+    // {
+    //     $message = CloudMessage::withTarget('token', $deviceToken)
+    //         ->withNotification([
+    //             'title' => 'Leave Status Update',
+    //             'body' => "Your leave status has been updated: $leaveStatus"
+    //         ])
+
+    //         ->withData([
+    //             'leave_status' => $leaveStatus
+    //         ]);
+       
+    //        $response =  $this->messaging->send($message);
+    //        dd($response);
+    //         Log::info("Your leave status has been updated:" . json_encode($response));
+    //         return response()->json(['message' => 'Notification sent successfully!']);
+    // }
+
+    public function updateStatus($leaveId, Request $request)
+    {
+        $request->validate([
+            'status' => 'required',
+        ]);
+        
+        $leave = Leave::where('id', $leaveId)->first();
+        if (!$leave) {
+            return response()->json(['success' => false, 'message' => 'Leave record not found.'], 404);
+        }
+
+        if ($request->status === 'Rejected' && empty($request->rejection_reason)) {
+            return response()->json(['success' => false, 'message' => 'Rejection reason is required.'], 400);
+        }
+
+        $leave->status = $request->status;
+        if ($request->status === 'Rejected') {
+            $leave->rejection_reason = $request->rejection_reason;
+        }
+        $leave->save();
+
+        $title ='Leave Status Update';
+        $body = "Your leave status has been updated: $request->status";
+        $data = $this->pushNotificationService->sendNotification($leave->guard_id, $title, $body); 
+        print_r($data);
+        die();
+        // $firebaseService->sendPushNotificationSync($user, $title, $body);        
+        // $token = FcmToken::where('user_id', $leave->guard_id)->first();
+        // if ($token->fcm_token) {
+        //     $this->sendLeaveNotification($token->fcm_token, $request->status);
+        // }
+        return response()->json(['success' => true, 'message' => 'Status updated successfully.']);
+    }
+
     public function index()
     {
         if(!Gate::allows('view leaves')) {
@@ -114,30 +189,6 @@ class LeaveController extends Controller
     public function edit(Leave $leave)
     {
         return view('admin.leaves.edit', compact('leave'));
-    }
-
-    public function updateStatus($leaveId, Request $request)
-    {
-        $request->validate([
-            'status' => 'required',
-        ]);
-        
-        $leave = Leave::where('id', $leaveId)->first();
-        if (!$leave) {
-            return response()->json(['success' => false, 'message' => 'Leave record not found.'], 404);
-        }
-
-        if ($request->status === 'Rejected' && empty($request->rejection_reason)) {
-            return response()->json(['success' => false, 'message' => 'Rejection reason is required.'], 400);
-        }
-
-        $leave->status = $request->status;
-        if ($request->status === 'Rejected') {
-            $leave->rejection_reason = $request->rejection_reason;
-        }
-        $leave->save();
-
-        return response()->json(['success' => true, 'message' => 'Status updated successfully.']);
     }
 
     public function destroy($id)
