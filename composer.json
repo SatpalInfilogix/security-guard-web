@@ -7,7 +7,9 @@
     "require": {
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.0",
+        "google/apiclient": "*",
         "guzzlehttp/guzzle": "^7.9",
+        "kreait/laravel-firebase": "^5.10",
         "laravel/framework": "^11.9",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
