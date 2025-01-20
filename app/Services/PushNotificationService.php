@@ -26,7 +26,7 @@ class PushNotificationService
 
     protected function send($deviceToken, $title, $body)
     {
-        $credentialsFilePath = public_path('firebase-service-account.json');
+        $credentialsFilePath = public_path('service-account.json');
         $client = new GoogleClient();
         $client->setAuthConfig($credentialsFilePath);
         $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
