@@ -18,10 +18,8 @@ class PushNotificationService
     {
         $deviceTokens = FcmToken::where('user_id', $userId)->pluck('fcm_token')->toArray();
         foreach($deviceTokens as $deviceToken) {
-            $response = $this->send($deviceToken, $title, $body);
-            print_r($response);
+            $this->send($deviceToken, $title, $body);
         }
-        die();
     }
 
     protected function send($deviceToken, $title, $body)
@@ -32,32 +30,33 @@ class PushNotificationService
         $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
         $client->refreshTokenWithAssertion();
         $token = $client->getAccessToken();
-
         $access_token = $token['access_token'];
 
-        $url = 'https://fcm.googleapis.com/v1/projects/'.$this->projectId.'/messages:send';
-        $data = [
-            'message' => [
-                'token' => $deviceToken,
-                'notification' => [
-                    'title' => $title,
-                    'body' => $body,
-                ],
-            ],
+       
+        $headers = [
+            "Authorization: Bearer $access_token",
+            'Content-Type: application/json'
         ];
 
-        $headers = [
-            'Authorization: Bearer '.$access_token,
-            'Content-Type: application/json',
+        $data = [
+            "message" => [
+                "token" => $deviceToken,
+                "notification" => [
+                    "title" => $title,
+                    "body" => $body,
+                ],
+            ]
         ];
+        $payload = json_encode($data);
 
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_URL, "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send");
+        curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_VERBOSE, true); // Enable verbose output for debugging
         $response = curl_exec($ch);
         curl_close($ch);
 

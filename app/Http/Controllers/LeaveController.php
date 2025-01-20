@@ -75,14 +75,7 @@ class LeaveController extends Controller
 
         $title ='Leave Status Update';
         $body = "Your leave status has been updated: $request->status";
-        $data = $this->pushNotificationService->sendNotification($leave->guard_id, $title, $body); 
-        print_r($data);
-        die();
-        // $firebaseService->sendPushNotificationSync($user, $title, $body);        
-        // $token = FcmToken::where('user_id', $leave->guard_id)->first();
-        // if ($token->fcm_token) {
-        //     $this->sendLeaveNotification($token->fcm_token, $request->status);
-        // }
+        $this->pushNotificationService->sendNotification($leave->guard_id, $title, $body); 
         return response()->json(['success' => true, 'message' => 'Status updated successfully.']);
     }
 
