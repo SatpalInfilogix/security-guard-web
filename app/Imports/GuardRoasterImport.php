@@ -11,6 +11,7 @@ use App\Models\Client;
 use App\Models\User;
 use App\Models\Leave;
 use App\Models\ClientSite;
+use App\Models\RateMaster;
 use Spatie\Permission\Models\Role;
 
 class GuardRoasterImport implements ToModel, WithHeadingRow
@@ -28,7 +29,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
     public function model(array $row)
     {
         if ($this->rowNumber == 1) {
-            if (empty($row['guard_id']) || empty($row['client_site_id'])) {
+            if (empty($row['guard_id']) ||  empty($row['guard_type_id']) || empty($row['client_site_id'])) {
                 return null;
             }
         }
@@ -38,13 +39,18 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                 $this->addImportResult('Guard id is required.');
                 return null;
             }
+
+            if (empty($row['guard_type_id'])) {
+                $this->addImportResult('Guard type id is required.');
+                return null;
+            }
             
             if (empty($row['client_site_id'])) {
                 $this->addImportResult('Client Site id is required.');
                 return null;
             }
 
-            if (in_array($column, ['guard_id', 'client_site_id'])) {
+            if (in_array($column, ['guard_id', 'guard_type_id', 'client_site_id'])) {
                 continue;
             }
 
@@ -69,6 +75,12 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
 
             if (!$clientSite) {
                 $this->addImportResult('Client site ID ' . $row['client_site_id'] . ' does not exist.');
+                return null;
+            }
+
+            $guardTypeId = RateMaster::where('id', $row['guard_type_id'])->first();
+            if(!$guardTypeId) {
+                $this->addImportResult('Guard Type ID ' . $row['guard_type_id'] . ' does not exist.');
                 return null;
             }
 
@@ -109,15 +121,22 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                 }
 
                 if (!is_numeric($time_in)) {
+                    $start_time = Carbon::createFromFormat('Y-m-d h:i A', $formattedDate . ' ' . $time_in);
                     $time_in = Carbon::createFromFormat('h:iA', $time_in)->format('H:i');
                 }
 
                 if (!is_numeric($time_out)) {
+                    $end_time =  Carbon::createFromFormat('Y-m-d h:i A', $formattedDate . ' ' . $time_out);
                     $time_out = Carbon::createFromFormat('h:iA',$time_out)->format('H:i');
+                }
+                
+                $end_date = $end_time;
+                if ($end_time->lessThan($start_time)) {
+                    $end_date = $end_time->addDay();
                 }
 
                 $leave = Leave::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->where('status', 'Approved')->first();
-                $existingAssignment = GuardRoster::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->first();
+                $existingAssignment = GuardRoster::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->where('is_publish', 1)->first();
 
                 if ($existingAssignment) {
                     $this->importResults[] = [
@@ -132,20 +151,50 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                         'Failure Reason' => 'Guard ' . $row['guard_id'] . ' id is in leave for this date (' . $formattedDate . ')',
                     ];
                 } else {
-                    GuardRoster::create([
-                        'guard_id'       => $row['guard_id'],
-                        'client_id'      => $clientSite->client_id ?? Null,
-                        'client_site_id' => $row['client_site_id'],
-                        'date'           => $formattedDate,
-                        'start_time'     => $time_in ?? '',
-                        'end_time'       => $time_out ?? '',
-                    ]);
+                    $existingRoster = GuardRoster::where('guard_id', $row['guard_id'])
+                                            ->where('date', $formattedDate)
+                                            ->where(function($query) use ($time_in, $time_out) {
+                                                $query->whereBetween('start_time', [$time_in, $time_out])
+                                                    ->orWhereBetween('end_time', [$time_in, $time_out])
+                                                    ->orWhere(function($query) use ($time_in, $time_out) {
+                                                        $query->where('start_time', '<=', $time_in)
+                                                            ->where('end_time', '>=', $time_out);
+                                                    });
+                                            })
+                                            ->first();
+                    if ($existingRoster) {
+                    //     $existingRoster->update([
+                    //         'guard_type_id'  => $row['guard_type_id'],
+                    //         'client_id'      => $clientSite->client_id ?? Null,
+                    //         'client_site_id' => $row['client_site_id'],
+                    //         'start_time'     => $time_in ?? '',
+                    //         'end_time'       => $time_out ?? '',
+                    //         'end_date'       => $end_date,
+                    //     ]);
+                
+                        $this->importResults[] = [
+                            'Row' => $this->rowNumber,
+                            'Status' => 'Failed',
+                            'Failure Reason' => 'There is already an overlapping guard roster for this client site at this time.',
+                        ];
+                    } else {
+                        GuardRoster::create([
+                            'guard_id'       => $row['guard_id'],
+                            'guard_type_id'  => $row['guard_type_id'],
+                            'client_id'      => $clientSite->client_id ?? Null,
+                            'client_site_id' => $row['client_site_id'],
+                            'date'           => $formattedDate,
+                            'start_time'     => $time_in ?? '',
+                            'end_time'       => $time_out ?? '',
+                            'end_date'       => $end_date
+                        ]);
 
-                    $this->importResults[] = [
-                        'Row' => $this->rowNumber,
-                        'Status' => 'Success',
-                        'Failure Reason' => 'Created sucessfully for date'. $formattedDate,
-                    ];
+                        $this->importResults[] = [
+                            'Row' => $this->rowNumber,
+                            'Status' => 'Success',
+                            'Failure Reason' => 'Created sucessfully for date'. $formattedDate,
+                        ];
+                    }
                 }
             }
         }

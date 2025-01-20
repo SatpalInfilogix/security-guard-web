@@ -71,7 +71,15 @@ class User extends Authenticatable
 
         static::saving(function ($guard) {
             if ($guard->status == 'Active' && is_null($guard->user_code)) {
-                $guard->user_code = 'G' . str_pad($guard->id, 6, '0', STR_PAD_LEFT);
+                $lastGuard = self::where('user_code', 'LIKE', 'G%')->orderBy('user_code', 'desc')->first();
+
+                if ($lastGuard) {
+                    $lastCodeNumber = (int) substr($lastGuard->user_code, 1);
+                    $newCodeNumber = $lastCodeNumber + 1;
+                    $guard->user_code = 'G' . str_pad($newCodeNumber, 6, '0', STR_PAD_LEFT);
+                } else {
+                    $guard->user_code = 'G' . str_pad(1, 6, '0', STR_PAD_LEFT);
+                }
             }
         });
     }

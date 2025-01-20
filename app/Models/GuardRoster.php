@@ -15,16 +15,21 @@ class GuardRoster extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'guard_id'); // 'guard_id' is the foreign key
+        return $this->belongsTo(User::class, 'guard_id');
     }
 
     public function client()
     {
-        return $this->belongsTo(Client::class, 'client_id'); // 'client_id' is the foreign key
+        return $this->belongsTo(Client::class, 'client_id');
     }
 
     public function clientSite()
     {
-        return $this->belongsTo(ClientSite::class, 'client_site_id'); // 'client_id' is the foreign key
+        return $this->belongsTo(ClientSite::class, 'client_site_id');
+    }
+
+    public function guardType()
+    {
+        return $this->belongsTo(RateMaster::class, 'guard_type_id');
     }
 }

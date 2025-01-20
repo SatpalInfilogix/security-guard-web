@@ -18,6 +18,12 @@
                 placeholder="Enter your NIS/NHT Number" />
         </div>
     </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <x-form-input type="number" name="gct" value="{{ old('gct', $client->gct ?? '') }}" label="GCT%"
+                placeholder="Enter GCT%" />
+        </div>
+    </div>
 </div>
 
 <div class="row mb-2">

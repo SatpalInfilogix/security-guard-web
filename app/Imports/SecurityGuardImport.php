@@ -7,6 +7,8 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
+use App\Models\RateMaster;
 
 class SecurityGuardImport implements ToModel, WithHeadingRow
 {
@@ -23,11 +25,17 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
 
         $validator = Validator::make($row, [
             'first_name'        => 'required',
-            'email'             => 'required|email|unique:users,email',
-            'phone_number'      => 'nullable|unique:users,phone_number',
-            'date_of_joining'   => 'nullable|date_format:Y-m-d',
-            'date_of_birth'     => 'nullable|date_format:Y-m-d',
-            'date_of_separation'=> 'nullable|date_format:Y-m-d',
+            'email'             => 'nullable|email|unique:users,email',
+            'phone_number'      => 'required|numeric|unique:users,phone_number',
+            'date_of_joining'   => 'nullable|date_format:d-m-Y',
+            'date_of_birth'     => 'required|date|before:date_of_joining|date_format:d-m-Y',
+            'date_of_separation'=> 'nullable|date_format:d-m-Y',
+            'trn'               => 'nullable|unique:guard_additional_information,trn',
+            'nis'               => 'nullable|unique:guard_additional_information,nis',
+            'psra'              => 'nullable|unique:guard_additional_information,psra',
+            'account_no'        => 'nullable|unique:users_bank_details,account_no',
+            'guard_type'        => 'required',
+            'guard_employed_as' => 'required',
             // 'trn_document'      => 'required',
             // 'nis_document'      => 'required',
             // 'psra_document'     => 'required',
@@ -42,10 +50,34 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
                 'failure_reason' => $validator->errors()->toArray(),
                 'row' => $row
             ];
-            return null; // Skip processing if validation fails
+            return null;
         }
 
-        $user = User::where('email', $row['email'])->first();
+        $guardType = RateMaster::where('id', $row['guard_type'])->first();
+        if (!$guardType) {
+            $this->errors[] = [
+                'row_index' => $this->rowIndex,
+                'name' => $row['first_name'],
+                'status' => 'Failed',
+                'failure_reason' => "Guard type {$row['guard_type']} does not exist",
+                'row' => $row
+            ];
+            return null;
+        }
+    
+        $guardEmployedAs = RateMaster::where('id', $row['guard_employed_as'])->first();
+        if (!$guardEmployedAs) {
+            $this->errors[] = [
+                'row_index' => $this->rowIndex,
+                'name' => $row['first_name'],
+                'status' => 'Failed',
+                'failure_reason' => "Guard employed as {$row['guard_employed_as']} does not exist",
+                'row' => $row
+            ];
+            return null;
+        }
+
+        $user = User::where('phone_number', $row['phone_number'])->first();
         if (!$user) {
             // Create a new user if not found
             $user = User::create([
@@ -83,17 +115,17 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             'trn'                 => $row["trn"] ?? NULL,
             'nis'                 => $row["nis"] ?? NULL,
             'psra'                => $row["psra"] ?? NULL,
-            'date_of_joining'     => !empty($row["date_of_joining"]) ? $row["date_of_joining"] : null,
-            'date_of_birth'       => !empty($row["date_of_birth"]) ? $row["date_of_birth"] : null,
-            'employer_company_name' => $row["employer_company_name"] ?? null,
+            'date_of_joining'     => $this->parseDate($row["date_of_joining"] ?? null),
+            'date_of_birth'       => $this->parseDate($row["date_of_birth"] ?? null),
+            /* 'employer_company_name' => $row["employer_company_name"] ?? null,
             'guards_current_rate' => $row["guards_current_rate"] ?? null,
             'location_code'       => $row["location_code"] ?? null,
             'location_name'       => $row["location_name"] ?? null,
             'client_code'         => $row["client_code"] ?? null,
-            'client_name'         => $row["client_name"] ?? null,
-            'guard_type_id'       => $row["guard_type_id"] ?? null,
-            'employed_as'         => $row["employed_as"] ?? null,
-            'date_of_seperation'  => !empty($row["date_of_seperation"]) ? $row["date_of_seperation"] : null,
+            'client_name'         => $row["client_name"] ?? null, */
+            'guard_type_id'          => $row["guard_type"] ?? null,
+            'guard_employee_as_id'=> $row["guard_employed_as"] ?? null,
+            'date_of_seperation'  => $this->parseDate($row["date_of_seperation"] ?? null),
         ]);
 
         // Update contact details
@@ -114,9 +146,10 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             'user_id'             => $user->id,
             'bank_name'           => $row["bank_name"] ?? null,
             'bank_branch_address' => $row["bank_branch_address"] ?? null,
-            'account_no'          => $row["account_no"] ?? null,
+            'account_no'          => $row["account_number"] ?? null,
             'account_type'        => $row["account_type"] ?? null,
             'routing_number'      => $row["routing_number"] ?? null,
+            'recipient_id'        => $row["recipient_id"] ?? null
         ]);
 
         // Update next of kin details
@@ -137,10 +170,10 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
 
         $user->userDocuments()->updateOrCreate([], [
             'user_id'           => $user->id,
-            'trn'               => $this->uploadDoc($row['trn_document'] ?? null, 'uploads/user-documents/trn/'),
-            'nis'               => $this->uploadDoc($row['nis_document'] ?? null, 'uploads/user-documents/nis/'),
-            'psra'              => $this->uploadDoc($row['psra_document'] ?? null, 'uploads/user-documents/psra/'),
-            'birth_certificate' => $this->uploadDoc($row['birth_certificate'] ?? null, 'uploads/user-documents/birth_certificate/'),
+            'trn'               => Null,
+            'nis'               => NULL,
+            'psra'              => NULL,
+            'birth_certificate' => NULL,
         ]);
 
         return null;
@@ -160,9 +193,21 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             return asset($destinationPath . $filename); // Use asset() to generate the full public URL
         }
 
-        return null;  // Return null if the file is invalid or doesn't exist
+        return null;
     }
 
+    private function parseDate($date)
+    {
+        if (empty($date)) {
+            return null; 
+        }
+
+        try {
+            return Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
     /**
      * Get all errors encountered during the import process.
      *

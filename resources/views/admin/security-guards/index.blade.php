@@ -12,6 +12,8 @@
                         <div class="page-title-right">
                             <a href="{{ route('security-guards.pdf') }}" class="btn btn-primary"><i class="bx bx-download"></i> Download PDF</a>
                             <a href="{{ route('export.guards') }}" class="btn btn-primary"><i class="bx bx-export"></i> Security Guard Bulk Export</a>
+                            <a href="{{ url('download-guard-sample') }}"
+                                class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard Sample File</a>
                             <div class="d-inline-block me-1">
                                 <form id="importForm" action="{{ route('import.security-guard') }}" method="POST" enctype="multipart/form-data">
                                     @csrf
@@ -33,29 +35,34 @@
                 <div class="col-md-12">
                     <form id="filterForm" method="GET">
                         <div class="row">
-                            <div class="col-md-3">
-                                <input type="text" name="search_name" class="form-control" placeholder="Search by Name" value="{{ request('search_name') }}" id="search_name">
-                                {{-- <select name="search_name" class="form-control" id="search_name">
-                                    <option value="">Select Guard</option>
-                                    @foreach($securityGuards as $guard)
-                                        <option value="{{ $guard->first_name }}" {{ request('search_name') == $guard->first_name ? 'selected' : '' }}>
-                                            {{ $guard->first_name }}
-                                        </option>
+                            <div class="col-md-2">
+                                <select name="search_emp_code" class="form-control" id="search_emp_code">
+                                    <option value="">Select Employee Code</option>
+                                    @foreach ($securityGuards as $securityGuard)
+                                        @if (!empty($securityGuard->user_code))
+                                            <option value="{{ $securityGuard->id }}">{{ $securityGuard->user_code }}</option>
+                                        @endif
                                     @endforeach
-                                </select> --}}
+                                </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
+                                <input type="text" name="search_name" class="form-control" placeholder="Search by Name" value="{{ request('search_name') }}" id="search_name">
+                            </div>
+                            <div class="col-md-2">
                                 <input type="text" name="search_email" class="form-control" placeholder="Search by Email" value="{{ request('search_email') }}" id="search_email">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <input type="text" name="search_phone" class="form-control" placeholder="Search by Phone" value="{{ request('search_phone') }}" id="search_phone">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <select name="status" class="form-control" id="is_status">
                                     <option value="">All Status</option>
                                     <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
                                     <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
                                 </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
                             </div>
                         </div>
                     </form>
@@ -64,6 +71,11 @@
 
             <div class="row">
                 <div class="col-12">
+                    @if(session('error'))
+                        <div class="alert alert-danger">
+                            {{ session('error') }}
+                        </div>
+                    @endif
                     <x-error-message :message="$errors->first('message')" />
                     <x-success-message :message="session('success')" />
                     @if (session('downloadUrl'))
@@ -75,14 +87,14 @@
                     @endif
                     <div class="card">
                         <div class="card-body">
-                            <table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
+                            <table id="security-guard-list" class="table table-bordered dt-responsive  nowrap w-100">
                                 <thead>
                                 <tr>
                                     <th>#</th>
                                     <th>Emp. Code</th>
                                     <th>First Name</th>
-                                    <th>Last Name</th>
-                                    <th>Email</th>
+                                    <th>Middle Name</th>
+                                    <th>Surname</th>
                                     <th>Phone number</th>
                                     <th>Status</th>
                                     @canany(['edit security guards', 'delete security guards'])
@@ -92,42 +104,7 @@
                                 </thead>
 
                                 <tbody id="guardTableBody">
-                                @foreach($securityGuards as $key => $securityGuard)
-                                <tr>
-                                    <td>{{ ++$key }}</td>
-                                    <td>{{ $securityGuard->user_code}}</td>
-                                    <td>{{ $securityGuard->first_name }}</td>
-                                    <td>{{ $securityGuard->middle_name }}</td>
-                                    <td>{{ $securityGuard->email }}</td>
-                                    <td>{{ $securityGuard->phone_number }}</td>
-                                    <td>
-                                        @php
-                                            $statusOptions = ['Active', 'Inactive', 'Hold'];
-                                        @endphp
-                                        <select name="guard_status" class="form-control" data-user-id="{{ $securityGuard->id }}">
-                                            <option value="" selected disabled>Select Status</option>
-                                            @foreach ($statusOptions as $value)
-                                                <option value="{{ $value }}" @selected($securityGuard->status === $value)>
-                                                    {{ $value }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    @canany(['edit security guards', 'delete security guards'])
-                                    <td class="action-buttons">
-                                        @if(Auth::user()->can('edit security guards'))
-                                            <a href="{{ route('security-guards.edit', $securityGuard->id)}}" class="btn btn-primary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
-                                        @endif
-                                        @if(Auth::user()->can('delete security guards'))
-                                            <button data-source="Security Guard" data-endpoint="{{ route('security-guards.destroy', $securityGuard->id) }}"
-                                                class="delete-btn btn btn-danger btn-sm edit">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        @endif
-                                    </td>
-                                    @endcanany
-                                </tr>
-                                @endforeach
+                                
                                 </tbody>
                             </table>
                         </div>
@@ -139,34 +116,155 @@
     <x-include-plugins :plugins="['dataTable', 'import']"></x-include-plugins>
     <script>
         $(document).ready(function() {
-            function fetchFilteredData() {
-                var formData = $('#filterForm').serialize();
-
-                $.ajax({
-                    url: "{{ route('security-guards.index') }}",
-                    method: "GET",
-                    data: formData, 
-                    success: function(response) {
-                        $('#guardTableBody').html(response.view);
+            let securityGuardTable = $('#security-guard-list').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "{{ route('get-security-guard') }}",
+                    type: "POST",
+                    data: function(d) {
+                        d._token = "{{ csrf_token() }}";
+                        d.search_name = $('#search_name').val();  // Send filter values to the server
+                        d.search_email = $('#search_email').val();
+                        d.search_phone = $('#search_phone').val();
+                        d.search_emp_code = $('#search_emp_code').val();
+                        d.status = $('#is_status').val();
+                        return d;
                     },
-                    error: function() {
-                        alert('Error fetching data');
+                    dataSrc: function(json) {
+                        return Object.values(json.data);
+                    }
+                },
+                columns: [
+                    { 
+                        data: null, 
+                        render: function(data, type, row, meta) {
+                            return meta.row + 1 + meta.settings._iDisplayStart;
+                        }
+                    },
+                    { data: 'user_code'},
+                    { data: 'first_name' },
+                    { data: 'middle_name' },
+                    { data: 'surname' },
+                    { data: 'phone_number' },
+                    {
+                        data: 'status',
+                        render: function(data, type, row) {
+                            let statusOptions = ['Active', 'Inactive', 'Hold'];
+                            let statusDropdown = ''; 
+                            @can('edit security guards')
+                            statusDropdown = `<select name="guard_status" class="form-control" data-user-id="${row.id}" `;
+                            if (data === 'Active' && !@json(Auth::user()->hasRole('Admin'))) {
+                                statusDropdown += 'disabled'; // Disable the dropdown for non-super-admin users
+                            }
+
+                            statusDropdown += '>';
+                            statusDropdown += '<option value="" selected disabled>Select Status</option>';
+
+                            const userDocuments = row.userDocuments || {};
+
+                            statusOptions.forEach(function(value) {
+                                let disabled = '';
+
+                                // if (data === 'Inactive' && (
+                                //     userDocuments.trn == null || 
+                                //     userDocuments.nis == null || 
+                                //     userDocuments.birth_certificate == null || 
+                                //     userDocuments.psra == null
+                                // )) {
+                                //     if (value === 'Active') {
+                                //         disabled = 'disabled';
+                                //     }
+                                // }
+
+                                statusDropdown += `<option value="${value}" 
+                                    ${data === value ? 'selected' : ''} 
+                                    ${disabled}>
+                                    ${value}
+                                </option>`;
+                            });
+
+                            statusDropdown += '</select>';
+                            @endcan
+                            return statusDropdown;
+                        }
+                    },
+                    {
+                        data: null,
+                        render: function(data, type, row) {
+                            var actions = '<div class="action-buttons">';
+                            
+                            @can('edit security guards')
+                            actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/security-guards') }}/${row.id}/edit">`;
+                            actions += '<i class="fas fa-pencil-alt"></i>';
+                            actions += '</a>';
+                            @endcan
+                            if (row.status !== 'Active' || @json(Auth::user()->hasRole('Admin'))) {
+                                @can('delete security guards')
+                                    actions += `<a data-source="Security Guard" class="security-guard-delete btn btn-danger waves-effect waves-light btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
+                                @endcan
+                            }
+
+                            actions += '</div>';
+                            return actions;
+                        }
+                    }
+                ],
+                paging: true,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
+                order: [[0, 'asc']]
+            });
+
+            $('#searchBtn').on('click', function() {
+                securityGuardTable.ajax.reload();
+            });
+            /* $('#search_name, #search_email, #search_phone, #is_status').on('change keyup', function() {
+                securityGuardTable.ajax.reload();
+            }); */
+
+            $(document).on('click', '.security-guard-delete', function() {
+                let source = $(this).data('source');
+                let guardId = $(this).data('id');
+                var deleteApiEndpoint = "{{ route('security-guards.destroy', '') }}/" + guardId;
+
+                swal({
+                    title: "Are you sure?",
+                    text: `You really want to remove this ${source}?`,
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                }, function(isConfirm) {
+                    if (isConfirm) {
+                        $.ajax({
+                            url: deleteApiEndpoint,
+                            method: 'DELETE',
+                            data: {
+                                '_token': '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if(response.success){
+                                    swal({
+                                        title: "Success!",
+                                        text: response.message,
+                                        type: "success",
+                                        showConfirmButton: false
+                                    }) 
+
+                                    setTimeout(() => {
+                                        location.reload();
+                                    }, 2000);
+                                }
+                            }
+                        })
                     }
                 });
-            }
+            })
 
-            $('#search_name, #search_email, #search_phone').on('keyup', function() {
-                fetchFilteredData();
-            });
-
-            $('#is_status').on('change', function() {
-                fetchFilteredData();
-            });
-
-            $('[name="guard_status"]').on('change', function(){
+            $(document).on('change', 'select[name="guard_status"]', function() {
                 let status = $(this).val();
                 let userId = $(this).attr('data-user-id');
-                
+                let selectElement = $(this);
                 $.ajax({
                     url: "{{ route('users.update-status') }}",
                     method: 'PUT',
@@ -174,6 +272,30 @@
                         user_id: userId,
                         status: status,
                         _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if(response.success){
+                            swal({
+                                title: "Success!",
+                                text: response.message,
+                                type: "success",
+                                showConfirmButton: false
+                            }) 
+
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
+                        } else {
+                            swal({
+                                title: "Missing Documents",
+                                text: "Please ensure all required documents (TRN, NIS) are uploaded before setting the status to Active.",
+                                type: "error",
+                                showConfirmButton: true
+                            });
+                            if (status === "Active") {
+                                selectElement.val("Inactive");
+                            }
+                        }
                     }
                 })
             })

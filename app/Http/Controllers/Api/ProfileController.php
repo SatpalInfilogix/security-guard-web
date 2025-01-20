@@ -13,19 +13,42 @@ use App\Models\ContactDetail;
 use App\Models\UsersBankDetail;
 use App\Models\UsersKinDetail;
 use App\Models\UsersDocuments;
+use Carbon\Carbon;
 
 class ProfileController extends Controller
 {
+    private function parseDate($date)
+    {
+        if (empty($date)) {
+            return null; 
+        }
+
+        try {
+            return Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
     public function editProfile(Request $request)
     {
+        $guardInfo = GuardAdditionalInformation::where('user_id', Auth::id())->first();
+        $usersBankDetail = UsersBankDetail::where('user_id', Auth::id())->first();
         $validator = Validator::make($request->all(), [
-            'first_name'    => 'required',
-            'email'         => 'nullable|email|unique:users,email,' . Auth::id(),
-            'phone_number'  => 'nullable|numeric|unique:users,phone_number,' . Auth::id(),
-            'trn_doc'       => 'nullable',
-            'nis_doc'       => 'nullable',
-            'psra_doc'      => 'nullable',
+            'first_name'        => 'required',
+            'email'             => 'nullable|email|unique:users,email,' . Auth::id(),
+            'phone_number'      => 'nullable|numeric|unique:users,phone_number,' . Auth::id(),
+            'trn_doc'           => 'nullable',
+            'nis_doc'           => 'nullable',
+            'psra_doc'          => 'nullable',
             'birth_certificate' => 'nullable',
+            'trn'               => 'nullable|unique:guard_additional_information,trn,'. optional($guardInfo)->id,
+            'nis'               => 'nullable|unique:guard_additional_information,nis,'. optional($guardInfo)->id,
+            'psra'              => 'nullable|unique:guard_additional_information,psra,'. optional($guardInfo)->id,
+            'account_no'        => 'nullable|unique:users_bank_details,account_no,'. optional($usersBankDetail)->id,
+            'date_of_joining'   => 'nullable|date_format:d-m-Y',
+            'date_of_birth'     => 'required|date|before:date_of_joining|date_format:d-m-Y',
+            'date_of_separation'=> 'nullable|date_format:d-m-Y',
         ]);
 
         if ($validator->fails()) {
@@ -46,26 +69,28 @@ class ProfileController extends Controller
             $user->password = Hash::make($request->password);
         }
 
+        if ($user->profile_picture) {
+            $oldProfilePicturePath = public_path($user->profile_picture);
+            if (file_exists($oldProfilePicturePath)) {
+                unlink($oldProfilePicturePath);
+            }
+        }
+        if ($request->hasFile('profile_picture')) {
+            $user->profile_picture = uploadFile($request->file('profile_picture'), 'uploads/profile-pic/');
+        }
         $user->save();
 
         // Update related records
-        $guardInfo = GuardAdditionalInformation::where('user_id', Auth::id())->first();
         if ($guardInfo) {
             $guardInfo->update([
                 'trn'                   => $request->trn,
                 'nis'                   => $request->nis,
                 'psra'                  => $request->psra,
-                'date_of_joining'       => $request->date_of_joining,
-                'date_of_birth'         => $request->date_of_birth,
-                'employer_company_name' => $request->employer_company_name,
-                'guards_current_rate'   => $request->current_rate,
-                'location_code'         => $request->location_code,
-                'location_name'         => $request->location_name,
-                'client_code'           => $request->client_code,
-                'client_name'           => $request->client_name,
-                'guard_type_id'         => $request->guard_type,
-                'employed_as'           => $request->employed_as,
-                'date_of_seperation'    => $request->date_of_seperation,
+                'date_of_joining'       => $this->parseDate($request->date_of_joining),
+                'date_of_birth'         => $this->parseDate($request->date_of_birth),
+                'guard_type_id'         => $request->guard_type_id,
+                'guard_employee_as_id'  => $request->guard_employee_as_id,
+                'date_of_seperation'    => $this->parseDate($request->date_of_seperation),
             ]);
         }
 
@@ -82,18 +107,19 @@ class ProfileController extends Controller
         }
 
         UsersBankDetail::updateOrCreate(
-            ['user_id' => Auth::id()], // Conditions to find the existing record
+            ['user_id' => Auth::id()],
             [
                 'bank_name'           => $request->bank_name,
                 'bank_branch_address' => $request->branch,
                 'account_no'          => $request->account_number,
                 'account_type'        => $request->account_type,
                 'routing_number'      => $request->routing_number,
+                'recipient_id'        => $request->recipient_id
             ]
         );
 
         UsersKinDetail::updateOrCreate(
-            ['user_id' => Auth::id()], // Conditions to find the existing record
+            ['user_id' => Auth::id()],
             [
                 'surname'        => $request->kin_surname,
                 'first_name'     => $request->kin_first_name,
@@ -124,8 +150,8 @@ class ProfileController extends Controller
         }
 
         usersDocuments::updateOrCreate(
-            ['user_id' => Auth::id()], // Conditions to find the existing record
-            $documents // The data to be updated or created
+            ['user_id' => Auth::id()],
+            $documents
         );
 
         return response()->json([
@@ -135,7 +161,8 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function guardProfile(){
+    public function guardProfile()
+    {
         $guard = User::with([
                 'guardAdditionalInformation', 'contactDetail', 'usersBankDetail','usersKinDetail','userDocuments'
             ])->where('id',Auth::id())->first();
@@ -152,4 +179,26 @@ class ProfileController extends Controller
         }
     }
 
+    public function changeProfileImage(Request $request)
+    {
+        $request->validate([
+            'profile_picture' => 'required'
+        ]);
+
+        $user = User::where('id', Auth::id())->first();
+        if ($user->profile_picture) {
+            $oldProfilePicturePath = public_path($user->profile_picture);
+            if (file_exists($oldProfilePicturePath)) {
+                unlink($oldProfilePicturePath);
+            }
+        }
+        $user->profile_picture = uploadFile($request->file('profile_picture'), 'uploads/profile-pic/');
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Profile picture updated successfully.',
+            'data'    => $user
+        ]);
+    }
 }

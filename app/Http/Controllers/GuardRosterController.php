@@ -10,13 +10,14 @@ use App\Models\Leave;
 use App\Models\Client;
 use App\Models\ClientSite;
 use App\Models\PublicHoliday;
+use App\Models\RateMaster;
 use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
 use App\Imports\GuardRoasterImport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\GuardRoasterExport;
 use Illuminate\Support\Facades\Session;
-use Illuminate\SUpport\Facades\Auth;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Traits\HasRoles;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -54,9 +55,9 @@ class GuardRosterController extends Controller
         return view('admin.guard-roster.index', compact('fortnight', 'securityGuards', 'clients', 'clientSites'));
     }
 
-    public function getGuardRoasterList(Request $request)
+    public function getGuardRosterList(Request $request)
     {
-        $guardRoasterData = GuardRoster::with('user', 'client', 'clientSite');
+        $guardRoasterData = GuardRoster::with('user', 'client', 'clientSite', 'guardType');
         
         $userId = Auth::id();
         if (Auth::user()->hasRole('Manager Operations')) {
@@ -79,11 +80,11 @@ class GuardRosterController extends Controller
 
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
-    
+        
             $guardRoasterData->where(function($query) use ($searchValue) {
                 $query->whereHas('user', function($q) use ($searchValue) {
                     $q->where('first_name', 'like', '%' . $searchValue . '%')
-                      ->orWhere('surname', 'like', '%' . $searchValue . '%');
+                    ->orWhere('surname', 'like', '%' . $searchValue . '%');
                 })
                 ->orWhereHas('client', function($q) use ($searchValue) {
                     $q->where('client_name', 'like', '%' . $searchValue . '%');
@@ -91,25 +92,33 @@ class GuardRosterController extends Controller
                 ->orWhere('date', 'like', '%' . $searchValue . '%');
             });
         }
-    
+
         $totalRecords = GuardRoster::count();
-        
+        $filteredRecords = $guardRoasterData->count();
+
         $length = $request->input('length', 10);
         $start = $request->input('start', 0);
-    
-        $guardRoasters = $guardRoasterData->orderBy('id', 'desc')
-                                          ->skip($start)  // Start offset
-                                          ->take($length) // Limit records
-                                          ->get();  // Get the records as an array (not paginated yet)
-        // Prepare the response
+
+        $guardRoasters = $guardRoasterData->orderBy('id', 'desc')->skip($start)->take($length)->get();
+
         $data = [
             'draw' => $request->input('draw'),
-            'recordsTotal' => $totalRecords, // Total records without filtering
-            'recordsFiltered' => $guardRoasterData->count(), // Filtered records count
-            'data' => $guardRoasters, // The actual data (items on the current page)
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $guardRoasters->map(function($guardRoster) {
+                return [
+                    'id' => $guardRoster->id,
+                    'user' => $guardRoster->user,
+                    'client' => $guardRoster->client,
+                    'clientSite' => $guardRoster->clientSite,
+                    'guardType' => $guardRoster->guardType ? $guardRoster->guardType->guard_type : 'N/A',
+                    'date' => $guardRoster->date,
+                    'start_time' => $guardRoster->start_time,
+                    'end_time' => $guardRoster->end_time,
+                ];
+            }),
         ];
     
-        // Return the response as JSON
         return response()->json($data);
     }
 
@@ -121,13 +130,14 @@ class GuardRosterController extends Controller
 
         $userRole = Role::where('name', 'Security Guard')->first();
 
-        $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
+        $securityGuards = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         })->where('status', 'Active')->latest()->get();
 
         $clients = Client::latest()->get();
+        $guardTypes = RateMaster::latest()->get();
 
-        return view('admin.guard-roster.create', compact('securityGuards', 'clients'));
+        return view('admin.guard-roster.create', compact('securityGuards', 'clients', 'guardTypes'));
     }
 
     public function store(Request $request)
@@ -140,29 +150,44 @@ class GuardRosterController extends Controller
             'guard_id'       => 'required',
             'client_id'      => 'required',
             'client_site_id' => 'required',
+            'guard_type_id'  => 'required',
             'date'           => 'required|date',
             'start_time'     => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
             'end_time'       => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
         ]);
+
         $start_time = trim($request->start_time);
         $end_time = trim($request->end_time);
-        
+
         $start_time = Carbon::createFromFormat('h:iA', $start_time)->format('H:i');
         $end_time = Carbon::createFromFormat('h:iA', $end_time)->format('H:i');
         
-        $guardRoaster = GuardRoster::updateOrCreate(
-            [
-                'guard_id' => $request->guard_id,
-                'date'     => $request->date,  // We use these two attributes to search for the existing record
-            ],
-            [
-                'client_id'      => $request->client_id,
-                'client_site_id' => $request->client_site_id,
-                'start_time'     => $start_time,
-                'end_time'       => $end_time,
-                'end_date'       => $request->end_date
-            ]
-        );
+        $existingRoster = GuardRoster::where('guard_id', $request->guard_id)
+                            ->where('date', $request->date)
+                            ->where(function($query) use ($start_time, $end_time) {
+                                $query->whereBetween('start_time', [$start_time, $end_time])
+                                    ->orWhereBetween('end_time', [$start_time, $end_time])
+                                    ->orWhere(function($query) use ($start_time, $end_time) {
+                                        $query->where('start_time', '<=', $start_time)
+                                            ->where('end_time', '>=', $end_time);
+                                    });
+                            })
+                            ->first();
+    
+        if ($existingRoster) {
+            return back()->with('error', 'There is already an overlapping guard roster for this client site at this time.');
+        }
+
+        GuardRoster::create([
+            'guard_id'       => $request->guard_id,
+            'date'           => $request->date,
+            'client_id'      => $request->client_id,
+            'client_site_id' => $request->client_site_id,
+            'guard_type_id'  => $request->guard_type_id,
+            'start_time'     => $start_time,
+            'end_time'       => $end_time,
+            'end_date'       => $request->end_date,
+        ]);
 
         return redirect()->route('guard-rosters.index')->with('success', 'Guard Roster created successfully.');
     }
@@ -196,8 +221,9 @@ class GuardRosterController extends Controller
 
         $guardRoaster['start_time'] = $start_time;
         $guardRoaster['end_time']   = $end_time;
+        $guardTypes = RateMaster::latest()->get();
 
-        return view('admin.guard-roster.edit', compact('securityGuards', 'clients', 'guardRoaster', 'clientSites'));
+        return view('admin.guard-roster.edit', compact('securityGuards', 'clients', 'guardRoaster', 'clientSites', 'guardTypes'));
     }
 
     public function update(Request $request, $id)
@@ -209,6 +235,7 @@ class GuardRosterController extends Controller
             'guard_id'    => 'required',
             'client_id'    => 'required',
             'client_site_id' => 'required',
+            'guard_type_id'  => 'required',
             'start_time'     => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
             'end_time'       => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
         ]);
@@ -232,6 +259,7 @@ class GuardRosterController extends Controller
             'guard_id'       => $request->guard_id,
             'client_id'      => $request->client_id,
             'client_site_id' => $request->client_site_id,
+            'guard_type_id'  => $request->guard_type_id,
             'date'           => $request->date,
             'start_time'     => $start_time,
             'end_time'       => $end_time,
@@ -285,7 +313,7 @@ class GuardRosterController extends Controller
         ]);
     }
 
-    public function getGuardRoasterDetails(Request $request)
+    public function getGuardRosterDetails(Request $request)
     {
         $guardId = $request->input('guard_id');
         $date = $request->input('date');
@@ -314,14 +342,14 @@ class GuardRosterController extends Controller
         ]);
     }
 
-    public function importGuardRoaster(Request $request)
+    public function importGuardRoster(Request $request)
     {
         $import = new GuardRoasterImport;
         Excel::import($import, $request->file('file'));
 
         session(['importData' => $import]);
         session()->flash('success', 'Guard roster imported successfully.');
-        $downloadUrl = route('guard-roasters.download');
+        $downloadUrl = route('guard-rosters.download');
 
         return redirect()->route('guard-rosters.index')->with('downloadUrl', $downloadUrl); 
     }
@@ -366,7 +394,7 @@ class GuardRosterController extends Controller
 
         foreach ($users as $key => $user) {
             $sheet->fromArray(
-                [$user->id, $user->first_name, $user->last_name, $user->email, $user->phone_number, $user->guardAdditionalInformation->trn, $user->guardAdditionalInformation->nis, $user->guardAdditionalInformation->psra, $user->guardAdditionalInformation->date_of_joining, $user->guardAdditionalInformation->date_of_birth, $user->guardAdditionalInformation->employer_company_name, $user->guardAdditionalInformation->guards_Current_rate, $user->guardAdditionalInformation->location_code, $user->guardAdditionalInformation->location_name, $user->guardAdditionalInformation->client_code, $user->guardAdditionalInformation->client_name, $user->guardAdditionalInformation->guard_type_id, $user->guardAdditionalInformation->employed_as, $user->guardAdditionalInformation->date_of_seperation, $user->usersBankDetail->bank_name, $user->usersBankDetail->bank_branch_address, $user->usersBankDetail->account_no, $user->usersBankDetail->account_type, $user->usersBankDetail->routing_number, $user->usersKinDetail->surname, $user->usersKinDetail->first_name, $user->usersKinDetail->middle_name, $user->usersKinDetail->apartment_no, $user->usersKinDetail->building_name, $user->usersKinDetail->street_name, $user->usersKinDetail->parish, $user->usersKinDetail->city, $user->usersKinDetail->postal_code, $user->usersKinDetail->email, $user->usersKinDetail->phone_number,  url($user->userDocuments->trn), url($user->userDocuments->nis), url($user->userDocuments->psra), url($user->userDocuments->birth_certificate), $user->contactDetail->apartment_no, $user->contactDetail->building_name, $user->contactDetail->street_name, $user->contactDetail->parish, $user->contactDetail->city, $user->contactDetail->postal_code],
+                [$user->id, $user->first_name, $user->last_name, $user->email, $user->phone_number, $user->guardAdditionalInformation->trn, $user->guardAdditionalInformation->nis, $user->guardAdditionalInformation->psra, $user->guardAdditionalInformation->date_of_joining, $user->guardAdditionalInformation->date_of_birth, $user->guardAdditionalInformation->employer_company_name, $user->guardAdditionalInformation->guards_Current_rate, $user->guardAdditionalInformation->location_code, $user->guardAdditionalInformation->location_name, $user->guardAdditionalInformation->client_code, $user->guardAdditionalInformation->client_name, $user->guardAdditionalInformation->guard_type_id, $user->guardAdditionalInformation->employed_as, $user->guardAdditionalInformation->date_of_seperation, $user->usersBankDetail->bank_name, $user->usersBankDetail->bank_branch_address, $user->usersBankDetail->account_no, $user->usersBankDetail->account_type, $user->usersBankDetail->routing_number, $user->usersKinDetail->surname, $user->usersKinDetail->first_name, $user->usersKinDetail->middle_name, $user->usersKinDetail->apartment_no, $user->usersKinDetail->building_name, $user->usersKinDetail->street_name, $user->usersKinDetail->parish, $user->usersKinDetail->city, $user->usersKinDetail->postal_code, $user->usersKinDetail->email, $user->usersKinDetail->phone_number,  $user->userDocuments->trn ? url($user->userDocuments->trn) : '', $user->userDocuments->nis ? url($user->userDocuments->nis) : '', $user->userDocuments->psra ? url($user->userDocuments->psra) : '', $user->userDocuments->birth_certificate ? url($user->userDocuments->birth_certificate) : '', $user->contactDetail->apartment_no, $user->contactDetail->building_name, $user->contactDetail->street_name, $user->contactDetail->parish, $user->contactDetail->city, $user->contactDetail->postal_code],
                 NULL,
                 'A' . ($key + 2)
             );
@@ -444,7 +472,83 @@ class GuardRosterController extends Controller
         return response()->json($leaves);
     }
 
-    public function getGuardRoasters(Request $request)
+    // public function getGuardRosters(Request $request)
+    // {
+    //     $today = Carbon::now();
+    //     $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+
+    //     if (!$fortnight) {
+    //         return response()->json([
+    //             'data' => [],
+    //             'recordsTotal' => 0,
+    //             'recordsFiltered' => 0
+    //         ]);
+    //     }
+
+    //     $query = GuardRoster::with('user', 'client', 'clientSite')
+    //         ->whereBetween('date', [$fortnight->start_date, $fortnight->end_date]);
+
+    //     $userId = Auth::id();
+    //     if (Auth::user()->hasRole('Manager Operations')) {
+    //         $query->whereHas('clientSite', function ($query) use ($userId) {
+    //             $query->where('manager_id', $userId);
+    //         });
+    //     }
+
+    //     if ($request->has('search') && !empty($request->search['value'])) {
+    //         $searchValue = $request->search['value'];
+    //         $query->where(function($query) use ($searchValue) {
+    //             $query->whereHas('user', function($query) use ($searchValue) {
+    //                 $query->where('first_name', 'like', '%' . $searchValue . '%');
+    //             })
+    //             ->orWhereHas('client', function($query) use ($searchValue) {
+    //                 $query->where('client_name', 'like', '%' . $searchValue . '%');
+    //             })
+    //             ->orWhereHas('clientSite', function($query) use ($searchValue) {
+    //                 $query->where('location_Code', 'like', '%' . $searchValue . '%');
+    //             });
+    //         });
+    //     }
+
+    //     $totalRecords = $query->count();
+
+    //     // $perPage = $request->input('length', 10);
+    //     // $currentPage = (int)($request->input('start', 0) / $perPage);
+    //     // $guardRoasters = $query->skip($currentPage * $perPage)->take($perPage)->get()
+    //     $guardRoasters = $query->get()
+    //         ->groupBy(function($item) {
+    //             return $item->user->first_name .'-'. $item->client_site_id;
+    //         });
+
+    //     $formattedGuardRoasters = $guardRoasters->map(function ($items) {
+    //         $firstItem = $items->first();
+    //         $dates = $items->pluck('date')->implode(', ');
+            
+    //         $time_in_out = $items->map(function ($item) {
+    //             return [
+    //                 'date' => $item->date,
+    //                 'time_in' => \Carbon\Carbon::parse($item->start_time)->format('h:iA'),
+    //                 'time_out' => \Carbon\Carbon::parse($item->end_time)->format('h:iA') 
+    //             ];
+    //         });
+
+    //         return [
+    //             'guard_name' => $firstItem->user->first_name . ' ' . optional($firstItem->user)->surname,
+    //             'location_code' => $firstItem->clientSite->location_code,
+    //             'client_name' => $firstItem->client->client_name,
+    //             'time_in_out' => $time_in_out,
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         'draw' => intval($request->input('draw')),
+    //         'recordsTotal' => $totalRecords,
+    //         'recordsFiltered' => $totalRecords,
+    //         'data' => $formattedGuardRoasters
+    //     ]);
+    // }
+
+    public function getGuardRosters(Request $request)
     {
         $today = Carbon::now();
         $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
@@ -457,7 +561,7 @@ class GuardRosterController extends Controller
             ]);
         }
 
-        $query = GuardRoster::with('user', 'client', 'clientSite')
+        $query = GuardRoster::with('user', 'client', 'clientSite', 'guardType')
             ->whereBetween('date', [$fortnight->start_date, $fortnight->end_date]);
 
         $userId = Auth::id();
@@ -482,40 +586,63 @@ class GuardRosterController extends Controller
             });
         }
 
-        $totalRecords = $query->count();
+        $guardRoasters = $query->get();
+        $formattedGuardRoasters = [];
 
-        $perPage = $request->input('length', 10);
-        $currentPage = (int)($request->input('start', 0) / $perPage);
-        $guardRoasters = $query->skip($currentPage * $perPage)->take($perPage)->get()
-            ->groupBy(function($item) {
-                return $item->user->first_name .'-'. $item->client_site_id;
-            });
+        foreach ($guardRoasters as $item) {
+            $date = $item->date;
+            $guard_id = $item->user->id;
+            $client_site_id = $item->client_site_id;
 
-        $formattedGuardRoasters = $guardRoasters->map(function ($items) {
-            $firstItem = $items->first();
-            $dates = $items->pluck('date')->implode(', ');
-            
-            $time_in_out = $items->map(function ($item) {
-                return [
-                    'date' => $item->date,
-                    'time_in' => \Carbon\Carbon::parse($item->start_time)->format('h:iA'),  // 12-hour AM/PM format
-                    'time_out' => \Carbon\Carbon::parse($item->end_time)->format('h:iA')   // 12-hour AM/PM format
-                ];
-            });
-
-            return [
-                'guard_name' => $firstItem->user->first_name . ' ' . optional($firstItem->user)->surname,
-                'location_code' => $firstItem->clientSite->location_code,
-                'client_name' => $firstItem->client->client_name,
-                'time_in_out' => $time_in_out,  // Added time_in and time_out
+            $guardTypes = $item->guardType->guard_type ?? '';
+            $formattedGuardRoasters[$guard_id][$client_site_id][$date][] = [
+                'guard_name' => $item->user->first_name . ' ' . optional($item->user)->surname,
+                'client_name' => $item->client->client_name,
+                'location_code' => $item->clientSite->location_code,
+                'time_in' => \Carbon\Carbon::parse($item->start_time)->format('h:iA'),
+                'time_out' => \Carbon\Carbon::parse($item->end_time)->format('h:iA'),
+                'guard_types' => $guardTypes, 
             ];
-        });
+        }
+
+        $flattenedData = [];
+        foreach ($formattedGuardRoasters as $guardId => $clientSites) {
+            foreach ($clientSites as $clientSiteId => $dates) {
+                $row = [
+                    'guard_name' => $dates[array_key_first($dates)][0]['guard_name'],
+                    'client_name' => $dates[array_key_first($dates)][0]['client_name'],
+                    'location_code' => $dates[array_key_first($dates)][0]['location_code'],
+                    'guardType' => implode(', ', array_column($dates[array_key_first($dates)], 'guard_types')),
+                ];
+
+                foreach ($dates as $date => $timeEntries) {
+                    $row[$date . '_time_in'] = implode(', ', array_column($timeEntries, 'time_in'));
+                    $row[$date . '_time_out'] = implode(', ', array_column($timeEntries, 'time_out'));
+                }
+
+                $flattenedData[] = $row;
+            }
+        }
 
         return response()->json([
             'draw' => intval($request->input('draw')),
-            'recordsTotal' => $totalRecords,
-            'recordsFiltered' => $totalRecords,  // Adjust filtered count if needed
-            'data' => $formattedGuardRoasters
+            'recordsTotal' => count($flattenedData),
+            'recordsFiltered' => count($flattenedData),
+            'data' => $flattenedData
         ]);
     }
+
+    public function getGuardTypeByGuardId($guardId)
+    {
+        $guardInfo = User::with('guardAdditionalInformation')->where('id', $guardId)->first();
+    
+        if ($guardInfo && $guardInfo->guardAdditionalInformation) {
+            return response()->json([
+                'guard_type_id' => $guardInfo->guardAdditionalInformation->guard_type_id ?? null,
+            ]);
+        }
+    
+        return response()->json(['guard_type_id' => null]);
+    }
+    
 }

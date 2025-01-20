@@ -8,4 +8,4 @@ use Illuminate\Support\Facades\Schedule;
 //     $this->comment(Inspiring::quote());
 // })->purpose('Display an inspiring quote')->hourly();
 
-Schedule::command('publish:guard-roaster')->everyMinute();
+Schedule::command('publish:guard-roaster')->daily();

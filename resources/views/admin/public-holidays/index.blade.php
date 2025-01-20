@@ -45,15 +45,15 @@
                                 <tr>
                                     <td>{{ ++$key }}</td>
                                     <td>{{ $publicHoliday->holiday_name }}</td>
-                                    <td>{{ $publicHoliday->date}}</td>
+                                    <td>@if($publicHoliday->date){{ \Carbon\Carbon::parse($publicHoliday->date)->format('d-m-Y')}} @else N/A @endif</td>
                                     @canany(['edit public holiday', 'delete public holiday'])
                                     <td class="action-buttons">
                                         @if(Auth::user()->can('edit public holiday'))
-                                        <a href="{{ route('public-holidays.edit', $publicHoliday->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                        <a href="{{ route('public-holidays.edit', $publicHoliday->id)}}" class="btn btn-primary waves-effect waves-light btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
                                         @endif
                                         @if(Auth::user()->can('delete public holiday'))
                                         <button data-source="Public Holiday" data-endpoint="{{ route('public-holidays.destroy', $publicHoliday->id)}}"
-                                            class="delete-btn btn btn-outline-secondary btn-sm edit">
+                                            class="delete-btn btn btn-danger waves-effect waves-light btn-sm edit">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                         @endif

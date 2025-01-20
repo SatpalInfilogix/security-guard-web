@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 Use App\Models\User;
+use App\Models\UsersDocuments;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Gate;
@@ -60,6 +61,19 @@ class UserController extends Controller
     }
 
     public function updateStatus(Request $request){
+        $userDocs = UsersDocuments::where('user_id', $request->user_id)->first();
+        if($userDocs){
+            if (
+                empty($userDocs->trn) || 
+                empty($userDocs->nis)
+            ) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User documents are missing or incomplete. Please upload all necessary documents.'
+                ]);
+            }
+        }
+
         $user = User::find($request->user_id);
         $user->status = $request->status;
         $user->save();
@@ -94,7 +108,7 @@ class UserController extends Controller
         $request->validate([
             'first_name'    => 'required',
             'last_name'     => 'required',
-            'phone_no'      => 'required|unique:users,phone_no,' . $id, 
+            'phone_no'      => 'required|unique:users,phone_number,' . $id, 
         ]);
 
         $user = User::where('id', $id)->update([

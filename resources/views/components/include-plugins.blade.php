@@ -94,6 +94,18 @@
                     minDate: "today"
                 });
             });
+
+            $('.datePicker').each(function() {
+                flatpickr(this, {
+                    dateFormat: "Y-m-d",
+                });
+            });
+
+            $('.datePicker-leave').each(function() {
+                flatpickr(this, {
+                    dateFormat: "Y-m-d",
+                });
+            });
         });
     </script>
     @endpush
@@ -101,11 +113,11 @@
 
 @if($hasPlugin('dateRange'))
     @push('styles')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     @endpush
 
     @push('scripts')
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     @endpush
 @endif
 

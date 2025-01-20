@@ -6,7 +6,7 @@
                 <option value="" selected disabled>Select Client</option>
                 @foreach($clients as $client)
                     <option value="{{ $client->id }}" @selected(isset($clientSite->client_id) && $clientSite->client_id == $client->id)>
-                        {{ $client->client_name }}
+                        {{ $client->client_name }} ({{ $client->client_code }})
                     </option>
                 @endforeach
             </select>
@@ -32,7 +32,7 @@
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <label for="manager_id">Vanguard Manager</label>
+            <label for="manager_id">Vanguard Manager<span class="text-danger">*</span></label>
             <select name="manager_id" id="manager_id" class="form-control{{ $errors->has('manager_id') ? ' is-invalid' : '' }}">
                 <option value="" selected disabled>Select Manager</option>
                 @foreach($users as $user)
@@ -137,3 +137,13 @@
         <button type="submit" class="btn btn-primary w-md">Submit</button>
     </div>
 </div>
+
+<x-include-plugins :plugins="['chosen']"></x-include-plugins>
+<script>
+    $(function(){
+        $('#client_id').chosen({
+            width: '100%',
+            placeholder_text_multiple: 'Select Client'
+        });
+    });
+</script>

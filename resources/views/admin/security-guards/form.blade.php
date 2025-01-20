@@ -38,11 +38,11 @@
         $statusOptions = ['Active', 'Inactive', 'Hold'];
         ?>
         <label for="status">Status</label>
-        <select name="user_status" id="user_status" class="form-control">
+        <select name="user_status" id="user_status" class="form-control" {{ isset($user) && $user->status == 'Active' && auth()->user()->role != 'Admin' ? 'disabled' : '' }}>
             <option value="" selected disabled>Select Status</option>
             @foreach ($statusOptions as $value)
                 <option value="{{ $value }}"
-                    {{ old('status', $user->status ?? 'Inactive') === $value ? 'selected' : '' }}>
+                    {{ old('user_status', $user->status ?? 'Inactive') === $value ? 'selected' : '' }}>
                     {{ $value }}
                 </option>
             @endforeach
@@ -65,7 +65,7 @@
 </div>
 
 <fieldset class="col-md-12 mb-3">
-    <legend>Addtitional Detail</legend>
+    <legend>Guard Credentials</legend>
     <div class="row mb-2">
         <div class="col-md-4 mb-3">
             <x-form-input name="trn" value="{{ old('trn', $user->guardAdditionalInformation->trn ?? '') }}"
@@ -93,11 +93,11 @@
         <div class="col-md-4 mb-2">
             <x-form-input name="date_of_birth"
                 value="{{ old('date_of_birth', $user->guardAdditionalInformation->date_of_birth ?? '') }}"
-                label="Date of Birth" class="date-of-birth" placeholder="Enter Date of Birth" type="text" />
+                label="Date of Birth" class="date-of-birth" placeholder="Enter Date of Birth" type="text" required="true" />
         </div>
 
-        <div class="col-md-4 mb-3">
-            <x-form-input name="employer_company_name"
+        {{--<div class="col-md-4 mb-3">
+             <x-form-input name="employer_company_name"
                 value="{{ old('employer_company_name', $user->guardAdditionalInformation->employer_company_name ?? '') }}"
                 label="Employer Company Name" placeholder="Enter Employer Company Name" />
         </div>
@@ -125,25 +125,38 @@
             <x-form-input name="client_name"
                 value="{{ old('client_name', $user->guardAdditionalInformation->client_name ?? '') }}"
                 label="Client Name" placeholder="Enter Client Name" />
+        </div> --}}
+
+        <div class="col-md-4 mb-3">
+            <label for="guard_employee_as">Guard Employed As<span class="text-danger">*</span></label>
+            <select name="guard_employee_as_id" id="guard_employee_as_id" class="form-control{{ $errors->has('guard_employee_as_id') ? ' is-invalid' : '' }}">
+                <option value="" selected disabled>Select Guard Employed As</option>
+                @foreach ($rateMasters as $rateMaster)
+                    <option value="{{ $rateMaster->id }}" @selected(old('guard_employee_as_id', $user->guardAdditionalInformation->guard_employee_as_id ?? null) == $rateMaster->id)>
+                        {{ $rateMaster->guard_type }}
+                    </option>
+                @endforeach
+            </select>
+            @error('guard_employee_as_id')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
         </div>
 
         <div class="col-md-4 mb-3">
-            <label for="guard_type">Guard Type</label>
-            <select name="guard_type_id" id="guard_type" class="form-control">
+            <label for="guard_type">Guard Duty Type<span class="text-danger">*</span></label>
+            <select name="guard_type_id" id="guard_type" class="form-control{{ $errors->has('guard_type_id') ? ' is-invalid' : '' }}">
                 <option value="" selected disabled>Select Guard Type</option>
-
                 @foreach ($rateMasters as $rateMaster)
                     <option value="{{ $rateMaster->id }}" @selected(old('guard_type_id', $user->guardAdditionalInformation->guard_type_id ?? null) == $rateMaster->id)>
                         {{ $rateMaster->guard_type }}
                     </option>
                 @endforeach
             </select>
+            @error('guard_type_id')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
         </div>
-        <div class="col-md-4 mb-3">
-            <x-form-input name="employed_as"
-                value="{{ old('employed_as', $user->guardAdditionalInformation->employed_as ?? '') }}"
-                label="Employed As" placeholder="Enter Employed As" />
-        </div>
+
         <div class="col-md-4 mb-3">
             <x-form-input name="date_of_seperation"
                 value="{{ old('date_of_seperation', $user->guardAdditionalInformation->date_of_seperation ?? '') }}"

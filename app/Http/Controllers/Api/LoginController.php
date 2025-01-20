@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Punch;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\FcmToken;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -32,9 +33,20 @@ class LoginController extends Controller
             return response()->json(['success' => false, 'message' => 'User not found'], 404);
         }
     
+        if ($user->status !== 'Active') {
+            return response()->json(['success' => false, 'message' => 'Your account is not active.'], 403);
+        }
+    
         if (Hash::check($request->password, $user->password)) {
             $token = $user->createToken('MyApp')->plainTextToken;
             $user->token = $token;
+
+            if($request->device_token) {
+                $fcmToken = FcmToken::create([
+                    'user_id' => $user->id,
+                    'fcm_token' => $request->device_token,
+                ]);
+            }
 
             $punchStatus = Punch::where('user_id', $user->id)->whereNull('out_time')->orderBy('created_at', 'desc')->latest()->first();
             $user['is_punched_in'] = $punchStatus ? true : false;
@@ -50,4 +62,68 @@ class LoginController extends Controller
         return response()->json(['success' => false, 'message' => 'Invalid credentials.'], 401);
     }
 
+    public function changePassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'old_password' => 'required',
+            'password'     => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success'  => false,
+                'status' => 'VALIDATION_ERROR',
+                'message'  => $validator->errors()->first()
+            ]);
+        }
+
+        $user = Auth::user();
+
+        if(!$user) {
+            return response()->json([
+                'success' => false,
+                'status' => 'USER_NOT_FOUND',
+                'message' => 'User not found.'
+            ]);
+        }
+
+        if (!Hash::check($request->old_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'status' => 'INVALID_OLD_PASSWORD',
+                'message' => 'Old password does not match.'
+            ]);
+        }
+
+        if ($request->old_password === $request->password) {
+            return response()->json([
+                'success' => false,
+                'status' => 'MATCH_NEW_AND_OLD_PASSWORD',
+                'message' => 'The new password cannot be the same as the old password.'
+            ]);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'Status'  => 'SUCCESSFULLY_CREATED',
+            'message' => 'Password changed successfully.'
+        ]);
+    }
+
+    public function logout(Request $request)
+    {
+        if($request->device_token) {
+            $fcmToken = FcmToken::where('user_id', Auth::id())->where('fcm_token', $request->device_token)->delete();
+        }
+        $request->user()->currentAccessToken()->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'User logged out successfully.'
+        ]);
+    }
 }

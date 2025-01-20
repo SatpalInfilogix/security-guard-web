@@ -28,12 +28,12 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <x-form-input name="first_name" value="{{ old('first_name') }}" label="First Name" placeholder="Enter your First Name"/>
+                                        <x-form-input name="first_name" value="{{ old('first_name') }}" label="First Name" placeholder="Enter your First Name" required="true"/>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <x-form-input name="last_name" value="{{ old('last_name') }}" label="Last Name" placeholder="Enter your Last Name"/>
+                                        <x-form-input name="last_name" value="{{ old('last_name') }}" label="Last Name" placeholder="Enter your Last Name" required="true"/>
                                     </div>
                                 </div>
                             </div>
@@ -41,28 +41,31 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <x-form-input name="email" value="{{ old('email') }}" label="Email" placeholder="Enter your Email"/>
+                                        <x-form-input name="email" value="{{ old('email') }}" label="Email" placeholder="Enter your Email" required="true"/>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <x-form-input type="number" label="Phone Number" name="phone_no" class="form-control" value="{{ old('phone_no')}}" placeholder="Enter your phone number"/>
+                                        <x-form-input type="number" label="Phone Number" name="phone_no" class="form-control" value="{{ old('phone_no')}}" placeholder="Enter your phone number" required="true"/>
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6">
-                                    <label for="role">Role</label>
-                                    <select name="role" id="role" class="form-control">
+                                    <label for="role">Role<span class="text-danger">*</span></label>
+                                    <select name="role" id="role" class="form-control{{ $errors->has('role') ? ' is-invalid' : '' }}">
                                         <option value="" selected disabled>Select Role</option>
                                         @foreach ($roles as $key => $role)
                                             <option value="{{$role->name}}">{{ $role->name }}</option>
                                         @endforeach
                                     </select>
+                                    @error('role')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <x-form-input name="password" type="password" label="Password" placeholder="Enter your password"/><br>
+                                        <x-form-input name="password" type="password" label="Password" placeholder="Enter your password" required="true"/><br>
                                     </div>
                                 </div>
                             </div>

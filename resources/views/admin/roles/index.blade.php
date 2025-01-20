@@ -38,9 +38,9 @@
                                         <td>{{ ++$key }}</td>
                                         <td>{{ ucwords($role->name) }}</td>
                                         <td class="action-buttons">
-                                            <a href="{{ route('roles-and-permissions.edit', $role->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                            <a href="{{ route('roles-and-permissions.edit', $role->id)}}" class="btn btn-primary waves-effect waves-light btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
                                             <button data-source="Role" data-endpoint="{{ route('roles-and-permissions.destroy', $role->id)}}"
-                                                class="delete-btn btn btn-outline-secondary btn-sm edit">
+                                                class="delete-btn btn btn-danger waves-effect waves-light btn-sm edit">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </td>

@@ -38,14 +38,24 @@
                     </a>
                 </li>
                 @endcanany
-                @canany('view user')
-                <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}">
-                    <a href="{{ route('users.index')}}" class="waves-effect">
-                        <i class="bx bx-user"></i>
-                        <span key="t-user">Onboard Admin</span>
+                <li class="{{ Request::segment(2) == 'deductions' ? 'mm-active' : '' }}">
+                    <a href="{{ route('deductions.index')}}" class="waves-effect">
+                        <i class="bx bx-briefcase-alt"></i>
+                        <span key="t-spreadsheet">NST Deduction</span>
                     </a>
                 </li>
-                @endcanany
+                <li class="{{ Request::segment(2) == 'payrolls' ? 'mm-active' : '' }}">
+                    <a href="{{ route('payrolls.index')}}" class="waves-effect">
+                        <i class="bx bx-checkbox-square"></i>
+                        <span key="t-spreadsheet">Payroll</span>
+                    </a>
+                </li>
+                <li class="{{ Request::segment(2) == 'invoices' ? 'mm-active' : '' }}">
+                    <a href="{{ route('invoices.index')}}" class="waves-effect">
+                        <i class="bx bx-selection"></i>
+                        <span key="t-spreadsheet">Invoice</span>
+                    </a>
+                </li>
                 @can('view leaves')
                 <li class="{{ Request::segment(2) == 'leaves' ? 'mm-active' : '' }}">
                     <a href="{{ route('leaves.index')}}" class="waves-effect">
@@ -85,6 +95,12 @@
                     </a>
                 </li>
                 @endcanany
+                <li class="{{ Request::segment(2) == 'fortnight-dates' ? 'mm-active' : '' }}">
+                    <a href="{{ route('fortnight-dates.index')}}" class="waves-effect">
+                        <i class="bx bx-grid-horizontal"></i>
+                        <span key="t-wrench">Fortnight Dates</span>
+                    </a>
+                </li>
                 @can('view public holiday')
                 <li class="{{ Request::segment(2) == 'public-holidays' ? 'mm-active' : '' }}">
                     <a href="{{ route('public-holidays.index')}}" class="waves-effect">
@@ -146,13 +162,18 @@
                 </li>
 
                 @can('view roles & permissions')
-                <li>
+                <li  @class([
+                    'active' => Request::is('roles-and-permissions', 'users/index', 'roles-and-permissions/role-list', 'roles-and-permissions/index'),
+                ])>
                     <a href="javascript: void(0);" class="has-arrow waves-effect">
                         <i class="bx bxs-user-detail"></i>
-                        <span key="t-dashboards">Roles and Permissions</span>
+                        <span key="t-dashboards">User/Roles</span>
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
                         <li><a href="{{ route('roles-and-permissions.role-list') }}" key="t-tui-calendar">Manage Roles</a></li>
+                        @canany('view user')
+                        <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}"><a href="{{ route('users.index')}}" key="t-user">User</a></li>
+                        @endcanany
                         <li><a href="{{ route('roles-and-permissions.index') }}" key="t-full-calendar">Manage Permissions</a></li>
                     </ul>
                 </li>

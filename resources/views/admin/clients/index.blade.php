@@ -27,7 +27,7 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
+                            <table id="datatable" class="client-list table table-bordered dt-responsive  nowrap w-100">
                                 <thead>
                                 <tr>
                                     <th>#</th>
@@ -40,26 +40,7 @@
                                 </thead>
 
                                 <tbody>
-                                @foreach($clients as $key => $client)
-                                <tr>
-                                    <td>{{ ++$key }}</td>
-                                    <td>{{ $client->client_code }}</td>
-                                    <td>{{ $client->client_name }}</td>
-                                    @canany(['edit client', 'delete client'])
-                                    <td class="action-buttons">
-                                        @if(Auth::user()->can('delete client'))
-                                        <a href="{{ route('clients.edit', $client->id)}}" class="btn btn-outline-secondary btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
-                                        @endif
-                                        @if(Auth::user()->can('delete client'))
-                                        <button data-source="Client" data-endpoint="{{ route('clients.destroy', $client->id) }}"
-                                            class="delete-btn btn btn-outline-secondary btn-sm edit">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                        @endif
-                                    </td>
-                                    @endcanany
-                                </tr>
-                                @endforeach
+
                                 </tbody>
                             </table>
                         </div>
@@ -69,5 +50,100 @@
 
         </div> <!-- container-fluid -->
     </div>
+
     <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
+
+    <script>
+        $(document).ready(function() {
+            let clientTable = $('.client-list').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: "{{ route('get-client-list') }}",
+                    type: "POST",
+                    data: function(d) {
+                        d._token = "{{ csrf_token() }}";
+                        return d;
+                    },
+                    dataSrc: function(json) {
+                        return json.data || [];
+                    }
+                },
+                columns: [
+                    { 
+                        data: null, 
+                        render: function(data, type, row, meta) {
+                            return meta.row + 1 + meta.settings._iDisplayStart;
+                        }
+                    },
+                    { data: 'client_code' },
+                    { data: 'client_name' },
+                    {
+                        data: null,
+                        render: function(data, type, row) {
+                            var actions = '<div class="action-buttons">';
+
+                            @can('edit client')
+                                actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/clients') }}/${row.id}/edit">`;
+                                actions += '<i class="fas fa-pencil-alt"></i>';
+                                actions += '</a>';
+                            @endcan
+
+                            @can('delete client')
+                                actions += `<a class="btn btn-danger waves-effect waves-light btn-sm client-delete-btn" href="#" data-source="Client" data-id="${row.id}">`;
+                                actions += '<i class="fas fa-trash-alt"></i>';
+                                actions += '</a>';
+                            @endcan
+
+                            actions += '</div>';
+                            return actions;
+                        }
+                    }
+                ],
+                paging: true,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
+                order: [[0, 'asc']]
+            });
+
+            // Handle Delete button click
+            $(document).on('click', '.client-delete-btn', function() {
+                let source = $(this).data('source');
+                let clientId = $(this).data('id');
+                var deleteApiEndpoint = "{{ route('clients.destroy', '') }}/" + clientId;
+
+                swal({
+                    title: "Are you sure?",
+                    text: `You really want to remove this ${source}?`,
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                }, function(isConfirm) {
+                    if (isConfirm) {
+                        $.ajax({
+                            url: deleteApiEndpoint,
+                            method: 'DELETE',
+                            data: {
+                                '_token': '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if(response.success){
+                                    swal({
+                                        title: "Success!",
+                                        text: response.message,
+                                        type: "success",
+                                        showConfirmButton: false
+                                    }) 
+
+                                    setTimeout(() => {
+                                        location.reload();
+                                    }, 2000);
+                                }
+                            }
+                        })
+                    }
+                });
+            })
+        });
+    </script>
 @endsection

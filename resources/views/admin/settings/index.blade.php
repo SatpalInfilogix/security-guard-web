@@ -32,7 +32,7 @@
                                 <div class="col-md-12">
                                     <div class="mb-3">
                                         <label class="form-label">Logo</label>
-                                        <input type="file" name="logo" id="add-logo" class="form-control">
+                                        <input type="file" name="logo" id="add-logo" class="form-control" accept="image/*">
                                         @if (setting('logo'))
                                             <img src="{{ asset(setting('logo')) }}" id="preview-Img"
                                                 class="img-preview" style="width:200px;">

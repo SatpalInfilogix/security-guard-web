@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Punch;
+use App\Models\PublicHoliday;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use App\Exports\AttendanceExport;
@@ -27,7 +28,7 @@ class AttendanceController extends Controller
         $attendances = Punch::with('user')->latest();
 
         if ($dateRange) {
-            list($startDate, $endDate) = explode(' - ', $dateRange);
+            list($startDate, $endDate) = explode(' to ', $dateRange);
             $startDate = Carbon::parse($startDate)->startOfDay();
             $endDate = Carbon::parse($endDate)->endOfDay();
             $attendances = $attendances->whereBetween('in_time', [$startDate, $endDate]);
@@ -38,6 +39,16 @@ class AttendanceController extends Controller
         }
 
         $attendances = $attendances->get();
+        foreach($attendances as $key => $attendance)
+        {
+            $inTime = Carbon::parse($attendance->in_time);
+            $outTime = Carbon::parse($attendance->out_time);
+            if ($inTime < $outTime) {
+                $workedHours = $inTime->diffInHours($outTime);
+                $loggedHours = $workedHours;
+            }
+            $attendance['total_hours'] = $loggedHours;
+        }
 
         return view('admin.attendance.index', compact('attendances', 'fortnight'));
     }
@@ -112,14 +123,20 @@ class AttendanceController extends Controller
         $dateRange = $request->input('date_range');
 
         if ($dateRange) {
-            list($startDate, $endDate) = explode(' - ', $dateRange);
-            $startDate = Carbon::parse($startDate)->startOfDay();
-            $endDate = Carbon::parse($endDate)->endOfDay();
+            $dateParts = explode(' to ', $dateRange);
+            if (count($dateParts) === 2) { 
+                list($startDate, $endDate) = $dateParts;
+                $startDate = Carbon::parse($startDate)->startOfDay();
+                $endDate = Carbon::parse($endDate)->endOfDay();
+            }
         } else {
             $startDate = Carbon::parse($fortnight->start_date)->startOfDay();
             $endDate = Carbon::parse($fortnight->end_date)->endOfDay();
         }
 
-        return Excel::download(new AttendanceExport($startDate, $endDate), 'attendance-list.csv');
+        $publicHolidays = PublicHoliday::whereBetween('date', [$startDate, $endDate])->pluck('date')->toArray();
+
+
+        return Excel::download(new AttendanceExport($startDate, $endDate, $publicHolidays), 'attendance-list.xlsx');
     }
 }

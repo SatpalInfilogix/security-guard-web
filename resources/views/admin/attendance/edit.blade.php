@@ -43,7 +43,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <x-form-input type="text" class="date-picker-punch-in" name="punch_in" label="Punch In" value="{{ old('punch_in', $attendance->in_time) }}" placeholder="Enter your Punch In" />
+                                        <x-form-input type="text" class="date-picker-punch-in" name="punch_in" label="Punch In" value="{{ old('punch_in', isset($attendance->in_time) ? \Carbon\Carbon::parse($attendance->in_time)->format('d-m-Y H:i:s') : '') }}" placeholder="Enter your Punch In" />
                                     </div>
                                 </div>
                             </div>
@@ -60,7 +60,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <x-form-input type="text" class="date-picker-punch-out" name="punch_out" label="Punch Out" value="{{ old('punch_out', $attendance->out_time) }}" placeholder="Enter your Punch Out" />
+                                        <x-form-input type="text" class="date-picker-punch-out" name="punch_out" label="Punch Out" value="{{ old('punch_out', isset($attendance->out_time) ? \Carbon\Carbon::parse($attendance->out_time)->format('d-m-Y H:i:s') : '') }}" placeholder="Enter your Punch Out" />
                                     </div>
                                 </div>
                                 <div class="col-md-3">
