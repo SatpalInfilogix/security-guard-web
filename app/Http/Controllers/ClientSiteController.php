@@ -81,21 +81,26 @@ class ClientSiteController extends Controller
         if(!Gate::allows('create client site')) {
             abort(403);
         }
+
+
         $request->validate([
-            'client_id'  => 'required',
+            'client'  => 'required',
             'location_code' => 'required|unique:client_sites,location_code',
+            'location'      => 'required',
             'latitude'      => 'required',
             'longitude'     => 'required',
             'radius'        => 'required',
-            'manager_id'    => 'required'
+            'manager'    => 'required'
         ]);
 
+        dd($request->all());
+
         ClientSite::create([
-            'client_id'         => $request->client_id,
+            'client_id'         => $request->client,
             'location_code'     => $request->location_code,
             'parish'            => $request->parish,
             'billing_address'   => $request->billing_address,
-            'manager_id'        => $request->manager_id,
+            'manager_id'        => $request->manager,
             'contact_operation' => $request->contact_operation,
             'telephone_number'  => $request->telephone_number,
             'email'             => $request->email,

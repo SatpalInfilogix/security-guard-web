@@ -2,32 +2,24 @@
     <legend>Basic Details</legend>
     <div class="col-md-4">
         <div class="mb-3">
-            <label for="client_code">Client Code<span class="text-danger">*</span></label>
-            <select name="client_code" id="client_code" @class(["form-control", "is-invalid" => $errors->has('client_code')])">
-                <option value="" selected disabled>Select Client Code</option>
+            <label for="client">Client<span class="text-danger">*</span></label>
+            <select name="client" id="client" @class(["form-control", "is-invalid" => $errors->has('client')])>
+                <option value="" selected disabled>Select Client</option>
                 @foreach($clients as $client)
-                    <option value="{{ $client->id }}" @selected(($clientSite->client_id ?? '') == $client->id)>
-                        {{ $client->client_code }}
+                    <option value="{{ $client->id }}" data-client-code="{{ $client->client_code }}" @selected(($clientSite->client_id ?? '') == $client->id)>
+                        {{ $client->client_name }}
                     </option>
                 @endforeach
             </select>
-            @error('client_code')
+            @error('client')
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <label for="client_id">Client<span class="text-danger">*</span></label>
-            <select name="client_id" id="client_id" class="form-control{{ $errors->has('client_id') ? ' is-invalid' : '' }}">
-                <option value="" selected disabled>Select Client</option>
-                @foreach($clients as $client)
-                    <option value="{{ $client->id }}" @selected(($clientSite->client_id ?? '') == $client->id)>
-                        {{ $client->client_name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('client_id')
+            <x-form-input name="client_code" value="{{ $clientSite->client_code ?? '' }}" label="Client Code" placeholder="Client Code" required="true" readonly />
+            @error('client_code')
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
@@ -46,7 +38,7 @@
         <div class="mb-3">
             @php $sectors = config('clientSite.sectors'); @endphp
             <label for="sector_id">Sector</label>
-            <select name="sector_id" id="sector_id" class="form-control{{ $errors->has('sector_id') ? ' is-invalid' : '' }}">
+            <select name="sector_id" id="sector_id" @class(["form-control", "is-invalid" => $errors->has('sector_id')])>
                 @foreach ($sectors as $key => $sector)
                     <option value="{{ $key }}" @selected(isset($clientSite) && $clientSite->sector_id === $key)>{{ $sector }}</option>
                 @endforeach
@@ -57,7 +49,7 @@
         <div class="mb-3">
             @php $region_codes = config('clientSite.region_code'); @endphp
             <label for="region_code">Region Code</label>
-            <select name="region_code" id="region_code" class="form-control{{ $errors->has('region_code') ? ' is-invalid' : '' }}">
+            <select name="region_code" id="region_code" @class(["form-control", "is-invalid" => $errors->has('region_code')])>
                 @foreach ($region_codes as $key => $region_code)
                     <option value="{{ $key }}" @selected(isset($clientSite) && $clientSite->region_code === $key)>{{ $region_code }}</option>
                 @endforeach
@@ -68,7 +60,7 @@
         <div class="mb-3">
             @php $regions = config('clientSite.region'); @endphp
             <label for="region">Region</label>
-            <select name="region" id="region" class="form-control{{ $errors->has('region') ? ' is-invalid' : '' }}">
+            <select name="region" id="region" @class(["form-control", "is-invalid" => $errors->has('region')])>
                 @foreach ($regions as $key => $region)
                     <option value="{{ $key }}" @selected(isset($clientSite) && $clientSite->region === $key)>{{ $region }}</option>
                 @endforeach
@@ -115,8 +107,8 @@
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <label for="manager_id">Manager<span class="text-danger">*</span></label>
-            <select name="manager_id" id="manager_id" class="form-control{{ $errors->has('manager_id') ? ' is-invalid' : '' }}">
+            <label for="manager">Manager<span class="text-danger">*</span></label>
+            <select name="manager" id="manager" @class(["form-control", "is-invalid" => $errors->has('manager')])>
                 <option value="" selected disabled>Select Manager</option>
                 @foreach($users as $user)
                     <option value="{{ $user->id }}" @selected(($clientSite->manager_id ?? '') == $user->id)>
@@ -124,14 +116,14 @@
                     </option>
                 @endforeach
             </select>
-            @error('manager_id')
+            @error('manager')
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input type="email" name="email" value="{{ $clientSite->email ?? '' }}" label="Manager Email" placeholder="Enter your Manager Email"/>
+            <x-form-input type="manager_email" name="email" value="{{ $clientSite->email ?? '' }}" label="Manager Email" placeholder="Enter Manager Email"/>
         </div>
     </div>
     <div class="col-md-4">
@@ -151,7 +143,7 @@
         <div class="mb-3">
             @php $frequencys = config('clientSite.frequency'); @endphp
             <label for="frequency">Frequency</label>
-            <select name="frequency" id="frequency" class="form-control{{ $errors->has('frequency') ? ' is-invalid' : '' }}">
+            <select name="frequency" id="frequency" @class(["form-control", "is-invalid" => $errors->has('frequency')])>
                 @foreach ($frequencys as $key => $frequency)
                     <option value="{{ $key }}" @selected(($clientSite->frequency ?? '') === $key)>{{ $frequency }}</option>
                 @endforeach
@@ -160,8 +152,8 @@
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <label for="status" class="form-label">Service Status</label>
-            <select name="status" id="service-status" class="form-control">
+            <label for="service_status" class="form-label">Service Status</label>
+            <select name="service_status" id="service_status" class="form-control">
                 <option value="Active" @selected(($clientSite->status ?? '') === 'Active')>Active</option>
                 <option value="Inactive" @selected(($clientSite->status ?? '') === 'Inactive')>Inactive</option>
             </select>
@@ -244,35 +236,69 @@
         </div>
     </div>
 </div>
-<legend>Client Operations Contact</legend>
+<div id="client-operation-contact-container">
+    <legend>Client Operations Contact</legend>
+    <div class="row mb-2" id="client-operation-contact">
+        <div class="col-md-4">
+            <div class="mb-3">
+                <x-form-input name="client_operation_name[]" value="{{ $clientSite->parish ?? '' }}" label="Name" placeholder="Enter name"/>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mb-3">
+                <x-form-input name="client_operation_position[]" value="{{ $clientSite->parish ?? '' }}" label="Position" placeholder="Enter position"/>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mb-3">
+                <x-form-input name="client_operation_email[]" value="{{ $clientSite->parish ?? '' }}" label="Email" placeholder="Enter email"/>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mb-3">
+                <x-form-input name="client_operation_telephone[]" value="{{ $clientSite->parish ?? '' }}" label="Telephone" placeholder="Enter telephone"/>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mb-3">
+                <x-form-input name="client_operation_mobile[]" value="{{ $clientSite->parish ?? '' }}" label="Mobile" placeholder="Enter mobile"/>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <button type="button" class="btn btn-primary mt-4" id="add-operation-contact">Add more contact</button>
+        </div>
+    </div>
+</div>
+
+<legend>Client Accounts Contact</legend>
 <div class="row mb-2">
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="client_operation_name[]" value="{{ $clientSite->parish ?? '' }}" label="Name" placeholder="Enter name"/>
+            <x-form-input name="client_account_name[]" value="{{ $clientSite->parish ?? '' }}" label="Name" placeholder="Enter name"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="client_operation_position[]" value="{{ $clientSite->parish ?? '' }}" label="Position" placeholder="Enter position"/>
+            <x-form-input name="client_account_position[]" value="{{ $clientSite->parish ?? '' }}" label="Position" placeholder="Enter position"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="client_operation_email[]" value="{{ $clientSite->parish ?? '' }}" label="Email" placeholder="Enter email"/>
+            <x-form-input name="client_account_email[]" value="{{ $clientSite->parish ?? '' }}" label="Email" placeholder="Enter email"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="client_operation_telephone[]" value="{{ $clientSite->parish ?? '' }}" label="Telephone" placeholder="Enter telephone"/>
+            <x-form-input name="client_account_telephone[]" value="{{ $clientSite->parish ?? '' }}" label="Telephone" placeholder="Enter telephone"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="client_operation_mobile[]" value="{{ $clientSite->parish ?? '' }}" label="Mobile" placeholder="Enter mobile"/>
+            <x-form-input name="client_account_mobile[]" value="{{ $clientSite->parish ?? '' }}" label="Mobile" placeholder="Enter mobile"/>
         </div>
     </div>
     <div class="col-md-4">
-        <button type="button" class="btn btn-primary mt-4" id="add-operation-contact">Add more contact</button>
+        <button type="button" class="btn btn-primary mt-4" id="add-account-contact">Add more contact</button>
     </div>
 </div>
 
@@ -285,9 +311,26 @@
 <x-include-plugins :plugins="['chosen']"></x-include-plugins>
 <script>
     $(function(){
-        $('#client_id').chosen({
+        $('#client').chosen({
             width: '100%',
             placeholder_text_multiple: 'Select Client'
+        });
+
+        $('#client').change(function(){
+            let clientCode = $('#client option:selected').attr('data-client-code');
+            $('#client_code').val(clientCode);
+        });
+
+        $('#add-operation-contact').click(function(){
+            var newContactRow = $('#client-operation-contact').first().clone();
+            newContactRow.find('input').val('');
+            newContactRow.find('button').toggleClass('btn-primary btn-danger').html('Delete');
+            newContactRow.appendTo('#client-operation-contact-container');
+            console.log('newContactRow',newContactRow)
+
+            newContactRow.find('.remove-contact').click(function(){
+                newContactRow.remove();
+            });
         });
     });
 </script>
