@@ -39,5 +39,14 @@ return [
     'frequency' => [
         1 => 'Weekly',
         2 => 'Fortnightly'
-    ]
+    ],
+
+    'rateMaster' => [
+        1 => 'Unarmed Guard',
+        2 => 'Unarmed + Canine',
+        3 => 'Armed Security',
+        4 => 'Armed Supervisor',
+        5 => 'Unarmed Supervisor',
+        6 => 'Senior Supervisor'
+    ],
 ];
