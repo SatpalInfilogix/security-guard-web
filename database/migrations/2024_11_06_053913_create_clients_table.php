@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('client_name');
             $table->string('nis')->nullable();
             $table->decimal('gct', 15)->nullable();
+            $table->string('frequency')->nullable();
             $table->timestamps();
         });
     }

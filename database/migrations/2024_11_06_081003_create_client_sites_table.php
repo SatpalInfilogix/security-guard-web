@@ -30,7 +30,6 @@ return new class extends Migration
             $table->string('manager_email')->nullable();
             $table->string('supervisor')->nullable();
             $table->string('supervisor_email')->nullable();
-            $table->string('frequency')->nullable();
             $table->enum('status', ['Active', 'Inactive'])->default('Active');
             $table->string('unit_no_client')->nullable();
             $table->string('building_name_client')->nullable();

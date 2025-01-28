@@ -41,7 +41,10 @@ class PublishGuardRoaster extends Command
      */
     public function handle()
     {
+        //To manually execute payroll crons we need to put manual date which will be +6 days from the current fortnights end date.
         $today = Carbon::now()->startOfDay();
+        // $today = Carbon::parse("03-02-2025")->startOfDay(); //--Manual Check
+
         $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();        
         if ($fortnightDays) {
             $endDate = Carbon::parse($fortnightDays->end_date)->startOfDay();
@@ -50,7 +53,7 @@ class PublishGuardRoaster extends Command
             $nextEndDate = $nextStartDate->copy()->addDays(13);
 
             $sixthDay = Carbon::parse($fortnightDays->start_date)->addDays(6);
-            // $sixthDay = Carbon::parse('04-12-2024');
+            // $sixthDay = Carbon::parse("03-02-2025"); //--Manual Check
             $isPublishDate =  Carbon::parse($sixthDay)->addDays(3);
 
             $eightDay = Carbon::parse($fortnightDays->start_date)->addDays(7);
@@ -215,6 +218,10 @@ class PublishGuardRoaster extends Command
                 $overtimeHours = $this->convertToHoursAndMinutes($overtimeMinutes);
                 $publicHolidayHours = $this->convertToHoursAndMinutes($publicHolidayMinutes);
     
+                $normalHoursPayroll = $this->convertToHours($regularMinutes);
+                $overtimePayroll = $this->convertToHours($overtimeMinutes);
+                $publicHolidayPayroll = $this->convertToHours($publicHolidayMinutes);
+
                 // Round to 2 decimal places
                 $regularHours = round($regularHours, 2);
                 $overtimeHours = round($overtimeHours, 2);
@@ -268,6 +275,14 @@ class PublishGuardRoaster extends Command
         $fractionalPart = $remainingMinutes / 60;
     
         return sprintf('%d.%02d', $hours, round($fractionalPart * 100));
+    }
+
+    private function convertToHours($minutes)
+    {
+        $hours = intdiv($minutes, 60);
+        $remainingMinutes = $minutes % 60;
+
+        return sprintf('%d.%02d', $hours, $remainingMinutes);
     }
 
     public function calculatePayrollUserHours($payrollId, $userId, $attendanceDetails, $publicHolidays, $previousStartDate, $previousEndDate)

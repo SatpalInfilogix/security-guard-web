@@ -1,27 +1,39 @@
 <div class="row mb-2">
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="mb-3">
             <input type="hidden" name="client_id" id="client_id" value="{{ $client->id ?? '' }}">
             <x-form-input name="client_name" value="{{ old('client_name', $client->client_name ?? '') }}"
                 label="Client Name" placeholder="Enter your client name" required="true" minlength="3" />
         </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="mb-3">
             <x-form-input name="client_code" value="{{ old('client_code', $client->client_code ?? '') }}"
                 label="Client Code" placeholder="Enter your client code" required="true" readonly />
         </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="mb-3">
             <x-form-input name="nis" value="{{ old('nis', $client->nis ?? '') }}" label="NIS/NHT Number"
                 placeholder="Enter your NIS/NHT Number" />
         </div>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="mb-3">
             <x-form-input type="number" name="gct" value="{{ old('gct', $client->gct ?? '') }}" label="GCT%"
                 placeholder="Enter GCT%" />
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mb-3">
+            @php $frequencys = config('clientSite.frequency'); @endphp
+            <label for="frequency">Frequency</label>
+            <select name="frequency" id="frequency" @class(["form-control", "is-invalid" => $errors->has('frequency')])>
+                <option value="" selected disabled>Select Frequency</option>
+                @foreach ($frequencys as $key => $frequency)
+                    <option value="{{ $key }}" @selected(($client->frequency ?? '') == $key)>{{ $frequency }}</option>
+                @endforeach
+            </select>
         </div>
     </div>
 </div>

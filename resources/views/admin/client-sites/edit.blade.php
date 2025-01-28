@@ -190,18 +190,6 @@
                                 <div class="row mb-2">
                                     <div class="col-md-4">
                                         <div class="mb-3">
-                                            @php $frequencys = config('clientSite.frequency'); @endphp
-                                            <label for="frequency">Frequency</label>
-                                            <select name="frequency" id="frequency" @class(["form-control", "is-invalid" => $errors->has('frequency')])>
-                                                <option value="" selected disabled>Select Frequency</option>
-                                                @foreach ($frequencys as $key => $frequency)
-                                                    <option value="{{ $key }}" @selected(($clientSite->frequency ?? '') == $key)>{{ $frequency }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
                                             <label for="service_status" class="form-label">Service Status</label>
                                             <select name="service_status" id="service_status" class="form-control">
                                                 <option value="Active" @selected(($clientSite->status ?? '') === 'Active')>Active</option>
