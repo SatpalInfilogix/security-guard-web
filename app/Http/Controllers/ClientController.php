@@ -78,7 +78,7 @@ class ClientController extends Controller
             'nis'         => $request->nis,
             'gct'         => $request->gct,
             'frequency'   => $request->frequency,
-
+            'sector_id'   => $request->sector_id,
         ]);
 
         return redirect()->route('clients.index')->with('success', 'Client created successfully.');
@@ -115,6 +115,7 @@ class ClientController extends Controller
             'nis'         => $request->nis,
             'gct'         => $request->gct,
             'frequency'   => $request->frequency,
+            'sector_id'   => $request->sector_id,
         ]);
 
         return redirect()->route('clients.index')->with('success', 'Client updated successfully.');

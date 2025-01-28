@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('client_id')->constrained()->onDelete('cascade');
             $table->string('location_code')->nullable();
             $table->string('location')->nullable();
-            $table->string('sector_id')->nullable();
             $table->string('region_code')->nullable();
             $table->string('region')->nullable();
             $table->string('area_code')->nullable();

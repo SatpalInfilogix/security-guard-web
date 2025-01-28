@@ -26,6 +26,18 @@
     </div>
     <div class="col-md-4">
         <div class="mb-3">
+            @php $sectors = config('clientSite.sectors'); @endphp
+            <label for="sector_id">Sector</label>
+            <select name="sector_id" id="sector_id" @class(["form-control", "is-invalid" => $errors->has('sector_id')])>
+                <option value="" selected disabled>Select Sector</option>
+                @foreach ($sectors as $key => $sector)
+                    <option value="{{ $key }}" @selected(isset($client) && $client->sector_id == $key)>{{ $sector }}</option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mb-3">
             @php $frequencys = config('clientSite.frequency'); @endphp
             <label for="frequency">Frequency</label>
             <select name="frequency" id="frequency" @class(["form-control", "is-invalid" => $errors->has('frequency')])>

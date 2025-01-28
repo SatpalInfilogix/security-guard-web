@@ -72,18 +72,6 @@
                                     </div>
                                     <div class="col-md-4">
                                         <div class="mb-3">
-                                            @php $sectors = config('clientSite.sectors'); @endphp
-                                            <label for="sector_id">Sector</label>
-                                            <select name="sector_id" id="sector_id" @class(["form-control", "is-invalid" => $errors->has('sector_id')])>
-                                                <option value="" selected disabled>Select Sector</option>
-                                                @foreach ($sectors as $key => $sector)
-                                                    <option value="{{ $key }}" @selected(isset($clientSite) && $clientSite->sector_id == $key)>{{ $sector }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
                                             @php $region_codes = config('clientSite.region_code'); @endphp
                                             <label for="region_code">Region Code</label>
                                             <select name="region_code" id="region_code" @class(["form-control", "is-invalid" => $errors->has('region_code')])>

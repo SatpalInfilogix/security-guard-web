@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('nis')->nullable();
             $table->decimal('gct', 15)->nullable();
             $table->string('frequency')->nullable();
+            $table->string('sector_id')->nullable();
             $table->timestamps();
         });
     }
