@@ -152,16 +152,40 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                     ];
                 } else {
                     $existingRoster = GuardRoster::where('guard_id', $row['guard_id'])
-                                            ->where('date', $formattedDate)
-                                            ->where(function($query) use ($time_in, $time_out) {
-                                                $query->whereBetween('start_time', [$time_in, $time_out])
-                                                    ->orWhereBetween('end_time', [$time_in, $time_out])
-                                                    ->orWhere(function($query) use ($time_in, $time_out) {
-                                                        $query->where('start_time', '<=', $time_in)
-                                                            ->where('end_time', '>=', $time_out);
-                                                    });
-                                            })
-                                            ->first();
+                    ->where(function($query) use ($time_in, $time_out, $formattedDate, $end_date) {
+                        if ($formattedDate == $end_date) {
+                            echo"<pre>"; print_r('sdsd');
+                            $query->where('date', '=', $formattedDate)
+                                ->where(function($query) use ($time_in, $time_out) {
+                                    $query->where(function($query) use ($time_in, $time_out) {
+                                        $query->where('start_time', '<', $time_out)
+                                            ->where('end_time', '>', $time_in);
+                                    });
+                                });
+                        } else {
+                            $query->where(function($query) use ($time_in, $time_out, $formattedDate, $end_date) {
+                                $query->where('date', '=', $formattedDate)
+                                    ->whereDate('end_date', '=', $end_date)
+                                    ->where(function($query) use ($time_in, $time_out) {
+                                        $query->where('start_time', '>', $time_out)
+                                            ->where('end_time', '<', $time_in);
+                                    });
+                            });
+                        }
+                    })
+                    ->first();
+
+                    // $existingRoster = GuardRoster::where('guard_id', $row['guard_id'])
+                    //                         ->where('date', $formattedDate)
+                    //                         ->where(function($query) use ($time_in, $time_out) {
+                    //                             $query->whereBetween('start_time', [$time_in, $time_out])
+                    //                                 ->orWhereBetween('end_time', [$time_in, $time_out])
+                    //                                 ->orWhere(function($query) use ($time_in, $time_out) {
+                    //                                     $query->where('start_time', '<=', $time_in)
+                    //                                         ->where('end_time', '>=', $time_out);
+                    //                                 });
+                    //                         })
+                    //                         ->first();
                     if ($existingRoster) {
                     //     $existingRoster->update([
                     //         'guard_type_id'  => $row['guard_type_id'],
