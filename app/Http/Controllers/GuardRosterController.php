@@ -171,19 +171,23 @@ class GuardRosterController extends Controller
         $start_date = Carbon::parse($request->date);
 
         $existingRoster = GuardRoster::where('guard_id', $request->guard_id)->where('date', $request->date)
-                            ->where(function($query) use ($start_time, $end_time, $start_date, $end_date) {
-                                $query->where(function($query) use ($start_time, $end_time, $start_date, $end_date) {
-                                    $query->where('date', '=', $start_date)  // Check the same start date
-                                        ->whereBetween('start_time', [$start_time, $end_time])
-                                        ->orWhereBetween('end_time', [$start_time, $end_time]);
-                                })
-                                ->orWhere(function($query) use ($start_time, $end_time, $start_date, $end_date) {
-                                    $query->where('date', '=', $end_date)  // Check the end date
-                                        ->whereBetween('start_time', [$start_time, $end_time])
-                                        ->orWhereBetween('end_time', [$start_time, $end_time]);
-                                });
+                        ->where(function($query) use ($start_time, $end_time, $start_date, $end_date) {
+                            $query->where(function($query) use ($start_time, $end_time, $start_date, $end_date) {
+                                $query->where('date', '=', $start_date)
+                                    ->where(function($query) use ($start_time, $end_time) {
+                                        $query->where('start_time', '<', $end_time)
+                                            ->where('end_time', '>', $start_time);
+                                    });
                             })
-                            ->first();
+                            ->orWhere(function($query) use ($start_time, $end_time, $start_date, $end_date) {
+                                $query->where('date', '=', $end_date)
+                                    ->where(function($query) use ($start_time, $end_time) {
+                                        $query->where('start_time', '<', $end_time)
+                                            ->where('end_time', '>', $start_time);
+                                    });
+                            });
+                        })
+                        ->first();
     
         if ($existingRoster) {
             return back()->with('error', 'There is already an overlapping guard roster for this client site at this time.');
