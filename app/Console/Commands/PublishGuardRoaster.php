@@ -57,6 +57,7 @@ class PublishGuardRoaster extends Command
             $isPublishDate =  Carbon::parse($sixthDay)->addDays(3);
 
             $eightDay = Carbon::parse($fortnightDays->start_date)->addDays(7);
+            // $eightDay = Carbon::parse("04-02-2025"); //--Manual Check
             if ($eightDay == $today) {
                 $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
                 $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);

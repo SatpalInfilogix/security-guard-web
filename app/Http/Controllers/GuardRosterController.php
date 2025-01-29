@@ -156,21 +156,32 @@ class GuardRosterController extends Controller
             'end_time'       => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
         ]);
 
-        $start_time = trim($request->start_time);
-        $end_time = trim($request->end_time);
+        $startTime = trim($request->start_time);
+        $endTime = trim($request->end_time);
 
-        $start_time = Carbon::createFromFormat('h:iA', $start_time)->format('H:i');
-        $end_time = Carbon::createFromFormat('h:iA', $end_time)->format('H:i');
-        
-        $existingRoster = GuardRoster::where('guard_id', $request->guard_id)
-                            ->where('date', $request->date)
-                            ->where(function($query) use ($start_time, $end_time) {
-                                $query->whereBetween('start_time', [$start_time, $end_time])
-                                    ->orWhereBetween('end_time', [$start_time, $end_time])
-                                    ->orWhere(function($query) use ($start_time, $end_time) {
-                                        $query->where('start_time', '<=', $start_time)
-                                            ->where('end_time', '>=', $end_time);
-                                    });
+        $start_time = Carbon::createFromFormat('h:iA', $startTime)->format('H:i');
+        $end_time = Carbon::createFromFormat('h:iA', $endTime)->format('H:i');
+
+        if ($end_time <= $start_time) {
+            $end_date = Carbon::parse($request->date)->addDay();  // Move to the next day
+        } else {
+            $end_date = Carbon::parse($request->date);
+        }
+
+        $start_date = Carbon::parse($request->date);
+
+        $existingRoster = GuardRoster::where('guard_id', $request->guard_id)->where('date', $request->date)
+                            ->where(function($query) use ($start_time, $end_time, $start_date, $end_date) {
+                                $query->where(function($query) use ($start_time, $end_time, $start_date, $end_date) {
+                                    $query->where('date', '=', $start_date)  // Check the same start date
+                                        ->whereBetween('start_time', [$start_time, $end_time])
+                                        ->orWhereBetween('end_time', [$start_time, $end_time]);
+                                })
+                                ->orWhere(function($query) use ($start_time, $end_time, $start_date, $end_date) {
+                                    $query->where('date', '=', $end_date)  // Check the end date
+                                        ->whereBetween('start_time', [$start_time, $end_time])
+                                        ->orWhereBetween('end_time', [$start_time, $end_time]);
+                                });
                             })
                             ->first();
     
