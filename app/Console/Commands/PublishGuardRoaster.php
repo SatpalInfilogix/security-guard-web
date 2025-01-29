@@ -114,7 +114,8 @@ class PublishGuardRoaster extends Command
                     $this->calculatePayrollUserHours($payrollData->id, $userId, $attendanceDetails, $publicHolidays, $previousStartDate, $previousEndDate);
                 }
             }
-            if ($isPublishDate = $today) {
+
+            if ($isPublishDate == $today) {
                 $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
                 $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
 
@@ -219,10 +220,6 @@ class PublishGuardRoaster extends Command
                 $overtimeHours = $this->convertToHoursAndMinutes($overtimeMinutes);
                 $publicHolidayHours = $this->convertToHoursAndMinutes($publicHolidayMinutes);
     
-                $normalHoursPayroll = $this->convertToHours($regularMinutes);
-                $overtimePayroll = $this->convertToHours($overtimeMinutes);
-                $publicHolidayPayroll = $this->convertToHours($publicHolidayMinutes);
-
                 // Round to 2 decimal places
                 $regularHours = round($regularHours, 2);
                 $overtimeHours = round($overtimeHours, 2);
@@ -276,14 +273,6 @@ class PublishGuardRoaster extends Command
         $fractionalPart = $remainingMinutes / 60;
     
         return sprintf('%d.%02d', $hours, round($fractionalPart * 100));
-    }
-
-    private function convertToHours($minutes)
-    {
-        $hours = intdiv($minutes, 60);
-        $remainingMinutes = $minutes % 60;
-
-        return sprintf('%d.%02d', $hours, $remainingMinutes);
     }
 
     public function calculatePayrollUserHours($payrollId, $userId, $attendanceDetails, $publicHolidays, $previousStartDate, $previousEndDate)

@@ -238,7 +238,7 @@
                         <td>{{ $item->no_of_guards }}</td>
                         <td>{{ $item->guardType->guard_type }}</td>
                         <td>{{ $item->hours_type }}</td>
-                        <td>{{ $item->total_hours }}</td>
+                        <td>{{ convertToHoursAndMinutes($item->total_hours) }}</td>
                         <td>${{ number_format($item->rate, 2) }}</td>
                         <td>${{ number_format($item->invoice_amount, 2) }}</td>
                     </tr>

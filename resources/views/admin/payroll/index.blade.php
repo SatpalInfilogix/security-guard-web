@@ -83,6 +83,12 @@
 
     <script>
         $(document).ready(function() {
+            function convertToHoursAndMinutes(fractionalHours) {
+                var hours = Math.floor(fractionalHours);
+                var minutes = Math.round((fractionalHours - hours) * 60); // Convert the fractional part to minutes
+                return hours + ':' + minutes;
+            }
+
             let payrollTable = $('#payroll-list').DataTable({
                 processing: true,
                 serverSide: true,
@@ -108,9 +114,24 @@
                     { data: 'user.first_name' },
                     { data: 'start_date' },
                     { data: 'end_date' },
-                    { data: 'normal_hours' },
-                    { data: 'overtime' },
-                    { data: 'public_holidays' },
+                    { 
+                        data: 'normal_hours',
+                        render: function(data) {
+                            return convertToHoursAndMinutes(data); // Format normal_hours
+                        }
+                    },
+                    { 
+                        data: 'overtime',
+                        render: function(data) {
+                            return convertToHoursAndMinutes(data); // Format overtime
+                        }
+                    },
+                    { 
+                        data: 'public_holidays',
+                        render: function(data) {
+                            return convertToHoursAndMinutes(data); // Format public_holidays
+                        }
+                    },
                     {
                         data: null,
                         render: function(data, type, row) {

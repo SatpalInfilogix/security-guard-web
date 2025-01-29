@@ -59,7 +59,7 @@
                                         <tr>
                                             <td>Megamart Waterloo (Normal)</td>
                                             <td>Normal</td>
-                                            <td>{{ $payroll->normal_hours }}</td>
+                                            <td>{{ convertToHoursAndMinutes($payroll->normal_hours) }}</td>
                                             <td>-</td>
                                             <td id="normal_hours_rate">{{ $payroll->normal_hours_rate }}</td>
                                             <td>PAYE</td>
@@ -69,7 +69,7 @@
                                         <tr>
                                             <td>Megamart Waterloo (Overtime)</td>
                                             <td>Overtime</td>
-                                            <td>{{ $payroll->overtime }}</td>
+                                            <td>{{ convertToHoursAndMinutes($payroll->overtime) }}</td>
                                             <td>-</td>
                                             <td id="overtime_rate">{{ $payroll->overtime_rate }}</td>
                                             <td>Ed Tax</td>
@@ -80,7 +80,7 @@
                                         <tr>
                                             <td>Megamart Waterloo (Public Holiday)</td>
                                             <td>Public Holiday</td>
-                                            <td>{{ $payroll->public_holidays }}</td>
+                                            <td>{{ convertToHoursAndMinutes($payroll->public_holidays) }}</td>
                                             <td>-</td>
                                             <td id="public_holiday_rate">{{ $payroll->public_holiday_rate }}</td>
                                             <td>NIS</td>

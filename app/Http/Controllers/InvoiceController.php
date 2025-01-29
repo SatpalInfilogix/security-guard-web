@@ -357,11 +357,11 @@ class InvoiceController extends Controller
                         $sheet->setCellValue("E{$row}", $data['guard_type_id_name']);
                         $sheet->setCellValue("F{$row}", 'Normal');
                         $sheet->setCellValue("G{$row}", $data['no_of_guards_normal']);
-                        $sheet->setCellValue("H{$row}", $data['normal_hours_guard'] + $data['overtime_guard']);
+                        $sheet->setCellValue("H{$row}", convertToHoursAndMinutes($data['normal_hours_guard'] + $data['overtime_guard']));
                         $sheet->setCellValue("I{$row}", '$ '.$data['client_rate_normal']);
                         $sheet->setCellValue("J{$row}", '$ '.$normalInvoiceAmount);
                         $sheet->setCellValue("K{$row}", $data['no_of_guards_normal']);
-                        $sheet->setCellValue("L{$row}", $data['normal_hours_guard']);
+                        $sheet->setCellValue("L{$row}", convertToHoursAndMinutes($data['normal_hours_guard']));
                         $sheet->setCellValue("M{$row}", '$ '.$data['rate_normal']);
                         $sheet->setCellValue("N{$row}", '$ '.$normalSalaryPaid);
                         $sheet->setCellValue("O{$row}", '$ '.$normalGrossMargin);
@@ -373,11 +373,11 @@ class InvoiceController extends Controller
 
                         $sheet->setCellValue("F{$row}", 'Time & 1/2');
                         $sheet->setCellValue("G{$row}", 0);
-                        $sheet->setCellValue("H{$row}", 0);
+                        $sheet->setCellValue("H{$row}", '0:0');
                         $sheet->setCellValue("I{$row}", '$ '.$data['client_rate_overtime']);
                         $sheet->setCellValue("J{$row}", '$ '. 0);
                         $sheet->setCellValue("K{$row}", $data['no_of_guards_overtime']);
-                        $sheet->setCellValue("L{$row}", $data['overtime_guard']);
+                        $sheet->setCellValue("L{$row}", convertToHoursAndMinutes($data['overtime_guard']));
                         $sheet->setCellValue("M{$row}", '$ '.$data['rate_overtime']);
                         $sheet->setCellValue("N{$row}", '$ '.$overtimeSalaryPaid);
                         $sheet->setCellValue("O{$row}", '$ '.$overtimeGrossMargin);
@@ -389,11 +389,11 @@ class InvoiceController extends Controller
 
                         $sheet->setCellValue("F{$row}", 'Double');
                         $sheet->setCellValue("G{$row}", $data['no_of_guards_publicHoliday']);
-                        $sheet->setCellValue("H{$row}", $data['double_hours']);
+                        $sheet->setCellValue("H{$row}", convertToHoursAndMinutes($data['double_hours']));
                         $sheet->setCellValue("I{$row}", '$ '.$data['client_rate_holiday']);
                         $sheet->setCellValue("J{$row}", '$ '.$holidayInvoiceAmount);
                         $sheet->setCellValue("K{$row}", $data['no_of_guards_publicHoliday']);
-                        $sheet->setCellValue("L{$row}", $data['double_hours']);
+                        $sheet->setCellValue("L{$row}", convertToHoursAndMinutes($data['double_hours']));
                         $sheet->setCellValue("M{$row}", '$ '.$data['rate_holiday']);
                         $sheet->setCellValue("N{$row}", '$ '.$holidaySalaryPaid);
                         $sheet->setCellValue("O{$row}", '$ '.$holidayGrossMargin);
@@ -418,9 +418,9 @@ class InvoiceController extends Controller
                     }
     
                     $sheet->setCellValue("A{$row}", 'Totals');
-                    $sheet->setCellValue("H{$row}", $siteTotalNormalHours + $siteTotalOvertime + $siteTotalPublicHoliday);
+                    $sheet->setCellValue("H{$row}", convertToHoursAndMinutes($siteTotalNormalHours + $siteTotalOvertime + $siteTotalPublicHoliday));
                     $sheet->setCellValue("J{$row}", '$ '.$siteTotalAmount);
-                    $sheet->setCellValue("L{$row}", $guardTotalHours + $guardTotalOvertime + $guardTotalPublicHoliday);
+                    $sheet->setCellValue("L{$row}", convertToHoursAndMinutes($guardTotalHours + $guardTotalOvertime + $guardTotalPublicHoliday));
                     $sheet->setCellValue("N{$row}", '$ '.$guardSalaryPaid);
                     $sheet->setCellValue("O{$row}", '$ '.$guardGrossMargin);
 
