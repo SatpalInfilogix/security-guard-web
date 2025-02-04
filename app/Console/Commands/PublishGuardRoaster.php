@@ -360,7 +360,7 @@ class PublishGuardRoaster extends Command
                 $employerContributionNht =  $totalGrossSalaryEarned * 0.03;
             }
 
-            $hearttax = $totalGrossSalaryEarned * 0.035;
+            $hearttax = $totalGrossSalaryEarned * 0.03;
         } else {
             $statutoryIncome  = $totalGrossSalaryEarned -  $lessNis - $approvedPensionScheme;
         }
