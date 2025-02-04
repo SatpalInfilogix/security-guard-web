@@ -154,13 +154,20 @@ class SecurityGuardController extends Controller
             'date_of_birth' => [
                 'required',
                 'date',
+                'date_format:d-m-Y',
                 function ($attribute, $value, $fail) {
-                    if (request()->has('date_of_joining') && !empty(request('date_of_joining')) && $value >= request('date_of_joining')) {
-                        $fail('The date of birth must be before the date of joining.');
+                    $dateOfJoining = request()->input('date_of_joining');
+                    if ($dateOfJoining && !empty($dateOfJoining)) {
+                        $dob = \Carbon\Carbon::createFromFormat('d-m-Y', $value);
+                        $joiningDate = \Carbon\Carbon::createFromFormat('d-m-Y', $dateOfJoining);
+                        
+                        if ($dob >= $joiningDate) {
+                            $fail('The date of birth must be before the date of joining.');
+                        }
                     }
                 },
             ],
-            'date_of_joining'=> 'nullable|date',
+            'date_of_joining' => 'nullable|date|date_format:d-m-Y',
             'guard_type_id' => 'required',
             'guard_employee_as_id' => 'required'
         ];
@@ -305,13 +312,20 @@ class SecurityGuardController extends Controller
             'date_of_birth' => [
                 'required',
                 'date',
+                'date_format:d-m-Y',
                 function ($attribute, $value, $fail) {
-                    if (request()->has('date_of_joining') && !empty(request('date_of_joining')) && $value >= request('date_of_joining')) {
-                        $fail('The date of birth must be before the date of joining.');
+                    $dateOfJoining = request()->input('date_of_joining');
+                    if ($dateOfJoining && !empty($dateOfJoining)) {
+                        $dob = \Carbon\Carbon::createFromFormat('d-m-Y', $value);
+                        $joiningDate = \Carbon\Carbon::createFromFormat('d-m-Y', $dateOfJoining);
+                        
+                        if ($dob >= $joiningDate) {
+                            $fail('The date of birth must be before the date of joining.');
+                        }
                     }
                 },
             ],
-            'date_of_joining'=> 'nullable|date',
+            'date_of_joining' => 'nullable|date|date_format:d-m-Y',
             'guard_type_id' => 'required',
             'guard_employee_as_id' => 'required'
         ];
