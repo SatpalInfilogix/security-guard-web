@@ -325,6 +325,7 @@ class PublishGuardRoaster extends Command
             } else {
                 if ($totalNisForCurrentYear < 150000) {
                     $nisDeduction = $totalGrossSalaryEarned * 0.03;
+                    $employerContributionNis = $totalGrossSalaryEarned * 0.03;
                     $remainingNisToReachLimit = 150000 - $totalNisForCurrentYear;
                     if ($nisDeduction > $remainingNisToReachLimit) {
                         $lessNis = $remainingNisToReachLimit;
@@ -333,8 +334,10 @@ class PublishGuardRoaster extends Command
                     }
                 } else {
                     $lessNis = 0;
+                    $employerContributionNis = 0;
                 }
-                $employerContributionNis = $totalGrossSalaryEarned * 0.03;
+                
+                // $employerContributionNis = $totalGrossSalaryEarned * 0.03;
             }
 
             $statutoryIncome  = $totalGrossSalaryEarned -  $lessNis - $approvedPensionScheme;
@@ -351,7 +354,6 @@ class PublishGuardRoaster extends Command
 
             $eduction_tax = $statutoryIncome * 0.0225;
             $employer_contribution = $totalGrossSalaryEarned * 0.035;
-            
             if ($age >= 65) {
                 $nhtDeduction = 0;
                 $employerContributionNht = 0;
@@ -472,13 +474,13 @@ class PublishGuardRoaster extends Command
             'public_holiday_rate' =>  number_format($totalPublicHolidayEarnings, 2, '.',''),
             'gross_salary_earned' => number_format($totalGrossSalaryEarned, 2, '.',''),
             'less_nis' => number_format($nis, 2, '.', ''),
-            'employer_contribution_nis_tax' => number_format($nis + $employerContributionNis, 2, '.', ''),
+            'employer_contribution_nis_tax' => number_format($employerContributionNis, 2, '.', ''),
             'approved_pension_scheme' => number_format($approvedPensionScheme, 2, '.', ''),
             'statutory_income' => number_format($statutoryIncome, 2, '.', ''),
             'education_tax' => number_format($educationTax, 2, '.', ''),
-            'employer_eduction_tax' => number_format($educationTax + $employerEductionTax, 2, '.', ''),
+            'employer_eduction_tax' => number_format($employerEductionTax, 2, '.', ''),
             'nht' => number_format($nht, 2, '.', ''),
-            'employer_contribution_nht_tax' => number_format($nht + $employerContributionNhtTax, 2, '.', ''),
+            'employer_contribution_nht_tax' => number_format($employerContributionNhtTax, 2, '.', ''),
             'paye' => number_format($paye, 2, '.', ''),
             'staff_loan' => number_format($staffLoan, 2, '.', ''),
             'medical_insurance' => number_format($medicalInsurance, 2, '.', ''),

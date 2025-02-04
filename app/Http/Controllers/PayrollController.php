@@ -176,8 +176,8 @@ class PayrollController extends Controller
                 [
                     $payroll->id, $payroll->user->surname, $payroll->user->first_name, $payroll->user->middle_name,
                     $payroll->user->guardAdditionalInformation->trn, $payroll->user->guardAdditionalInformation->nis,
-                    $payroll->gross_salary_earned, 0, $payroll->approved_pension_scheme, 0, $payroll->employer_contribution_nis_tax,
-                    $payroll->employer_contribution_nht_tax, $payroll->employer_eduction_tax, $payroll->paye
+                    $payroll->gross_salary_earned, 0, $payroll->approved_pension_scheme, 0, $payroll->less_nis + $payroll->employer_contribution_nis_tax,
+                    $payroll->nht + $payroll->employer_contribution_nht_tax, $payroll->education_tax + $payroll->employer_eduction_tax, $payroll->paye
                 ],
                 NULL, 'A' . ($key + 2)
             );
