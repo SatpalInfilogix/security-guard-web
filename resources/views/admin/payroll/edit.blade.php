@@ -209,11 +209,11 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td>{{ $total }}</td>
-                                            <td>{{ $payroll->less_nis }}</td>
-                                            <td id="payeTax">{{ $payroll->paye }}</td>
-                                            <td>{{ $payroll->education_tax }}</td>
-                                            <td>{{ $payroll->nht }}</td>
+                                            <td>{{ $payroll->gross_total }}</td>
+                                            <td>{{ $payroll->nis_total }}</td>
+                                            <td id="payeTax">{{ $payroll->paye_tax_total }}</td>
+                                            <td>{{ $payroll->education_tax_total }}</td>
+                                            <td>{{ $payroll->nht_total }}</td>
                                         </tr>
                                     </tbody>
                                 </table>

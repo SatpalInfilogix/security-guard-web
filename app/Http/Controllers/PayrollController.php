@@ -87,6 +87,14 @@ class PayrollController extends Controller
     public function edit(Payroll $payroll)
     {
         $payroll = Payroll::where('id', $payroll->id)->with('user', 'user.guardAdditionalInformation')->first();
+        $fullYearPayroll = Payroll::where('guard_id', $payroll->guard_id)->whereYear('created_at', now()->year)->get();
+
+        $payroll['gross_total'] = $fullYearPayroll->sum('gross_salary_earned');
+        $payroll['nis_total'] = $fullYearPayroll->sum('less_nis');
+        $payroll['paye_tax_total'] = $fullYearPayroll->sum('paye');
+        $payroll['education_tax_total'] = $fullYearPayroll->sum('education_tax');
+        $payroll['nht_total'] = $fullYearPayroll->sum('nht');
+
         $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
         
         return view('admin.payroll.edit', compact('payroll', 'fortnightDayCount'));
