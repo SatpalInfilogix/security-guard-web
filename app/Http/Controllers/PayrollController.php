@@ -17,7 +17,12 @@ class PayrollController extends Controller
 {
     public function index()
     {
-        return view('admin.payroll.index');
+        $today = Carbon::now()->startOfDay();
+        $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+        $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
+        $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
+       
+        return view('admin.payroll.index', compact('previousFortnightEndDate'));
     }
 
     public function getPayroll(Request $request)

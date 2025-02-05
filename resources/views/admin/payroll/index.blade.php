@@ -32,7 +32,7 @@
                     <form method="GET" id="attendance-form">
                         <div class="row">
                             <div class="col-md-3">
-                                <input type="text" id="date" name="date" class="form-control datePicker" value="" placeholder="Select Date Range" autocomplete="off">
+                                <input type="text" id="date" name="date" class="form-control datePicker" value="{{ \Carbon\Carbon::parse($previousFortnightEndDate)->format('Y-m-d') }}" placeholder="Select Date Range" autocomplete="off">
                             </div>
                             <div class="col-md-3">
                                 <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
