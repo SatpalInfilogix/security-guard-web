@@ -44,15 +44,15 @@
                                 <table class="table table-bordered">
                                     <thead>
                                         <tr>
-                                            <th style="width: 25%;">Gross Earnings</th>
-                                            <th style="width: 12%">Rate</th>
+                                            <th style="width: 20%;">Gross Earnings</th>
+                                            <th style="width: 10%">Rate</th>
                                             <th>Units</th>
-                                            <th>Rate per Unit</th>
+                                            <th style="width: 10%;">Rate per Unit</th>
                                             <th>Total</th>
-                                            <th style="width: 15%;">Deductions</th>
-                                            <th>Amount</th>
-                                            <th rowspan="2" class="align-middle text-center">Balance</th>
-                                            <th style="width: 10%;">Employer contribution</th>
+                                            <th style="width: 13%;">Deductions</th>
+                                            <th tyle="width: 5%;">Amount</th>
+                                            <th>Balance</th>
+                                            <th style="width: 15%;">Employer contribution</th>
                                         </tr>
                                     </thead>
                                     <tbody>
