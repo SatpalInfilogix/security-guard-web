@@ -32,7 +32,8 @@
                     <form method="GET" id="attendance-form">
                         <div class="row">
                             <div class="col-md-3">
-                                <input type="text" id="date" name="date" class="form-control datePicker" value="{{ \Carbon\Carbon::parse($previousFortnightEndDate)->format('Y-m-d') }}" placeholder="Select Date Range" autocomplete="off">
+                                <input type="text" name="date" class="form-control" id="date" value="{{ \Carbon\Carbon::parse($previousFortnightStartDate)->format('Y-m-d') }} to {{ \Carbon\Carbon::parse($previousFortnightEndDate)->format('Y-m-d') }}" autocomplete="off">
+                                {{-- <input type="text" id="date" name="date" class="form-control datePicker" value="{{ \Carbon\Carbon::parse($previousFortnightEndDate)->format('Y-m-d') }}" placeholder="Select Date Range" autocomplete="off"> --}}
                             </div>
                             <div class="col-md-3">
                                 <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
@@ -81,9 +82,14 @@
         </div>
     </div>
 
-    <x-include-plugins :plugins="['datePicker','dataTable', 'import']"></x-include-plugins>
+    <x-include-plugins :plugins="['datePicker','dataTable', 'import', 'dateRange']"></x-include-plugins>
     <script>
         $(document).ready(function() {
+            flatpickr("#date", {
+                mode: 'range',
+                showMonths: 2,
+            });
+
             function convertToHoursAndMinutes(fractionalHours) {
                 var hours = Math.floor(fractionalHours);
                 var minutes = Math.round((fractionalHours - hours) * 60); // Convert the fractional part to minutes

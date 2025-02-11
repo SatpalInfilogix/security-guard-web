@@ -26,8 +26,8 @@ class PayrollController extends Controller
         $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
         $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
         $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
-       
-        return view('admin.payroll.index', compact('previousFortnightEndDate'));
+
+        return view('admin.payroll.index', compact('fortnightDays','previousFortnightEndDate', 'previousFortnightStartDate'));
     }
 
     public function getPayroll(Request $request)
@@ -40,8 +40,11 @@ class PayrollController extends Controller
         $payrolls = Payroll::with('user');
         
         if ($request->has('date') && !empty($request->date)) {
-            $searchDate = Carbon::parse($request->date);
-            $payrolls->whereDate('start_date', '<=', $searchDate)->whereDate('end_date', '>=', $searchDate);
+            $searchDate = $request->date;
+            list($startDate, $endDate) = explode(' to ', $searchDate);
+            $startDate = Carbon::parse($startDate)->startOfDay();
+            $endDate = Carbon::parse($endDate)->endOfDay();
+            $payrolls->whereDate('start_date', '<=', $endDate)->whereDate('end_date', '>=', $startDate);
         } else {
             $payrolls->where('start_date', '>=', $previousFortnightStartDate)->whereDate('end_date', '<=', $previousFortnightEndDate);
         }
@@ -178,11 +181,14 @@ class PayrollController extends Controller
 
 
         if ($selectedDate) {
-            $today = Carbon::parse($selectedDate)->startOfDay();
-            $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+            list($startDate, $endDate) = explode(' to ', $selectedDate);
+            $startDate = Carbon::parse($startDate)->startOfDay();
+            $endDate = Carbon::parse($endDate)->endOfDay();
+            
+            $fortnightDays = FortnightDates::whereDate('start_date', '<=', $endDate)->whereDate('end_date', '>=', $startDate)->get();
             if($fortnightDays) {
-                $previousFortnightStartDate = Carbon::parse($fortnightDays->start_date);
-                $previousFortnightEndDate = Carbon::parse($fortnightDays->end_date);
+                $previousFortnightStartDate = Carbon::parse($fortnightDays->first()->start_date);
+                $previousFortnightEndDate = Carbon::parse($fortnightDays->last()->end_date);
             } else {
                 $previousFortnightStartDate = '';
                 $previousFortnightEndDate  = '';
