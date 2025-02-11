@@ -78,6 +78,11 @@ class GuardRosterController extends Controller
             $guardRoasterData->where('client_site_id', $request->client_site_id);
         }
 
+        if ($request->has('date') && !empty($request->date))
+        {
+            $guardRoasterData->where('date', Carbon::parse($request->date));
+        }
+
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
         

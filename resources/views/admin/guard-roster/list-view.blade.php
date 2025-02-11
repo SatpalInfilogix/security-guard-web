@@ -27,6 +27,9 @@
                     </select>
                 </div>
                 <div class="col-md-3">
+                    <input type="text" id="date" name="date" class="form-control datePicker" value="" placeholder="Select Date" autocomplete="off">
+                </div>
+                <div class="col-md-3">
                     <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
                 </div>
             </div>
@@ -56,7 +59,7 @@
     </div>
 </div>
 
-<x-include-plugins :plugins="['sweetAlert', 'chosen']"></x-include-plugins>
+<x-include-plugins :plugins="['datePicker', 'sweetAlert', 'chosen']"></x-include-plugins>
 
 <script>
      $(function(){
@@ -111,6 +114,7 @@
                     d.guard_id = $('[name="guard_id"]').val();
                     d.client_id = $('[name="client_id"]').val();
                     d.client_site_id = $('[name="client_site_id"]').val();
+                    d.date = $('[name="date"]').val();
                     return d;
                 },
                 dataSrc: function(json) {
