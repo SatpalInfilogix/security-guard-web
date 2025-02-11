@@ -57,7 +57,7 @@ class ClientSiteImport implements ToModel, WithHeadingRow
             'manager_email'     => $row['manager_email'],
             'supervisor'        => $row['supervisor'],
             'supervisor_email'  => $row['supervisor_email'],
-            // 'status'            => $row['service_status'],
+            'status'            => $row['status'] ?? 'Active',
             'unit_no_client'    => $row['unit_no_client'],
             'building_name_client' => $row['building_name_client'],
             'street_no_client'  => $row['street_no_client'],

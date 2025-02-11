@@ -52,7 +52,7 @@ class SecurityGuardController extends Controller
         });
 
         if ($request->has('search_emp_code') && !empty($request->search_emp_code)) {
-            $securityGuards->where('id', 'like', '%' . $request->search_emp_code . '%');
+            $securityGuards->where('id', $request->search_emp_code);
         }
     
         if ($request->has('search_name') && !empty($request->search_name)) {

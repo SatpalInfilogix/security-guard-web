@@ -11,7 +11,9 @@
                         <h4 class="mb-sm-0 font-size-18">FAQ</h4>
 
                         <div class="page-title-right">
+                            @can('create faq')
                             <a href="{{ route('faq.create') }}" class="btn btn-primary">Add New FAQ</a>
+                            @endcan
                         </div>
 
                     </div>
@@ -32,7 +34,9 @@
                                     <th>#</th>
                                     <th>Question</th>
                                     <th>Answer</th>
+                                    @canany(['edit faq', 'delete faq'])
                                     <th>Action</th>
+                                    @endcan
                                 </tr>
                                 </thead>
 
@@ -42,13 +46,19 @@
                                     <td>{{ ++$key }}</td>
                                     <td>{{ $faq->question }}</td>
                                     <td>{!! Str::words($faq->answer, 5) !!}</td>
+                                    @canany(['edit faq', 'delete faq'])
                                     <td class="action-buttons">
+                                        @can('edit faq')
                                         <a href="{{ route('faq.edit', $faq->id)}}" class="btn btn-primary waves-effect waves-light btn-sm edit"><i class="fas fa-pencil-alt"></i></a>
+                                        @endcan
+                                        @can('delete faq')
                                         <button data-source="Faq" data-endpoint="{{ route('faq.destroy', $faq->id) }}"
                                             class="delete-btn btn btn-danger waves-effect waves-light btn-sm edit">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
+                                        @endcan
                                     </td>
+                                    @endcan
                                 </tr>
                                 @endforeach
                                 </tbody>

@@ -65,7 +65,9 @@
                                     <th>Normal Hours</th>
                                     <th>Overtime Hours</th>
                                     <th>Public Holiday Hours</th>
+                                    @canany(['edit payroll', 'view payroll'])
                                     <th>Action</th>
+                                    @endcanany
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -80,7 +82,6 @@
     </div>
 
     <x-include-plugins :plugins="['datePicker','dataTable', 'import']"></x-include-plugins>
-
     <script>
         $(document).ready(function() {
             function convertToHoursAndMinutes(fractionalHours) {
@@ -88,6 +89,31 @@
                 var minutes = Math.round((fractionalHours - hours) * 60); // Convert the fractional part to minutes
                 return hours + ':' + minutes;
             }
+
+            let actionColumn = [];
+            @canany(['edit payroll', 'delete payroll'])
+                actionColumn = [{
+                    data: null,
+                    render: function(data, type, row) {
+                        var actions = '<div class="action-buttons">';
+
+                        @can('edit payroll')
+                            actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/payrolls') }}/${row.id}/edit">`;
+                            actions += '<i class="fas fa-pencil-alt"></i>';
+                            actions += '</a>';
+                        @endcan
+
+                        @can('view payroll')
+                            actions += `<a class="btn btn-danger waves-effect waves-light btn-sm edit" href="{{ url('admin/payrolls') }}/${row.id}">`;
+                            actions += '<i class="fas fa-eye"></i>';
+                            actions += '</a>';
+                        @endcan
+
+                        actions += '</div>';
+                        return actions;
+                    }
+                }];
+            @endcanany
 
             let payrollTable = $('#payroll-list').DataTable({
                 processing: true,
@@ -132,22 +158,7 @@
                             return convertToHoursAndMinutes(data); // Format public_holidays
                         }
                     },
-                    {
-                        data: null,
-                        render: function(data, type, row) {
-                            var actions = '<div class="action-buttons">';
-                            if (row.is_publish != 1) {
-                                actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/payrolls') }}/${row.id}/edit">`;
-                                actions += '<i class="fas fa-pencil-alt"></i>';
-                                actions += '</a>';
-                            }
-                            actions += `<a class="btn btn-danger waves-effect waves-light btn-sm edit" href="{{ url('admin/payrolls') }}/${row.id}">`;
-                            actions += '<i class="fas fa-eye"></i>';
-                            actions += '</a>';
-                            actions += '</div>';
-                            return actions;
-                        }
-                    }
+                    ...actionColumn
                 ],
                 paging: true,
                 pageLength: 10,

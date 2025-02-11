@@ -8,6 +8,7 @@ use APp\Models\User;
 use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
 use App\Services\PushNotificationService;
 
 class LeaveController extends Controller
@@ -116,6 +117,7 @@ class LeaveController extends Controller
 
         $leaves = $leaves->skip($start)->take($length)->get();
 
+        // Returning permissions with the response
         $data = [
             'draw' => $request->input('draw'),
             'recordsTotal' => $totalRecords,

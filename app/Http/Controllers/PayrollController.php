@@ -12,11 +12,16 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use App\Imports\PayrollImport;
 use App\Exports\PayrollExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Gate;
 
 class PayrollController extends Controller
 {
     public function index()
     {
+        if(!Gate::allows('view payroll')) {
+            abort(403);
+        }
+
         $today = Carbon::now()->startOfDay();
         $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
         $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
@@ -91,8 +96,12 @@ class PayrollController extends Controller
 
     public function edit(Payroll $payroll)
     {
+        if(!Gate::allows('edit payroll')) {
+            abort(403);
+        }
         $payroll = Payroll::where('id', $payroll->id)->with('user', 'user.guardAdditionalInformation')->first();
-        $fullYearPayroll = Payroll::where('guard_id', $payroll->guard_id)->whereYear('created_at', now()->year)->get();
+        $month = $payroll->end_date;
+        $fullYearPayroll = Payroll::where('guard_id', $payroll->guard_id)->whereDate('end_date', '<=', $month)->whereYear('created_at', now()->year)->orderBy('created_at', 'desc')->get();
 
         $payroll['gross_total'] = $fullYearPayroll->sum('gross_salary_earned');
         $payroll['nis_total'] = $fullYearPayroll->sum('less_nis');
@@ -107,6 +116,9 @@ class PayrollController extends Controller
 
     public function update(Request $request, Payroll $payroll) 
     {
+        if(!Gate::allows('edit payroll')) {
+            abort(403);
+        }
         $payroll->update([
             'paye'              => $request->paye,
             'staff_loan'        => $request->staff_loan,

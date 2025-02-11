@@ -20,7 +20,7 @@
                             <a href="{{ route('export.csv') }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard/Client Ids</a>
                             <a href="{{ url('download-guard-roster-sample') }}"
                                 class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard Roster Sample File</a>
-                            @canany(['create guard roaster'])
+                            @can('create guard roster')
                                 <div class="d-inline-block ">
                                     <form id="importForm" action="{{ route('import.guard-roster') }}" method="POST" enctype="multipart/form-data">
                                         @csrf
@@ -31,7 +31,7 @@
                                     </form>
                                 </div>
                                 <a href="{{ route('guard-rosters.create') }}" class="btn btn-primary">Add New Guard Roster</a>
-                            @endcanany
+                            @endcan
                         </div>
                     </div>
                 </div>

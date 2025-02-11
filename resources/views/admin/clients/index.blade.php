@@ -55,6 +55,31 @@
 
     <script>
         $(document).ready(function() {
+            let actionColumn = [];
+            @canany(['edit client', 'delete client'])
+                actionColumn = [{
+                    data: null,
+                    render: function(data, type, row) {
+                        var actions = '<div class="action-buttons">';
+
+                    @can('edit client')
+                            actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/clients') }}/${row.id}/edit">`;
+                            actions += '<i class="fas fa-pencil-alt"></i>';
+                            actions += '</a>';
+                        @endcan
+
+                        @can('delete client')
+                            actions += `<a class="btn btn-danger waves-effect waves-light btn-sm client-delete-btn" href="#" data-source="Client" data-id="${row.id}">`;
+                            actions += '<i class="fas fa-trash-alt"></i>';
+                            actions += '</a>';
+                        @endcan
+
+                        actions += '</div>';
+                        return actions;
+                    }
+                }];
+            @endcanany
+
             let clientTable = $('.client-list').DataTable({
                 processing: true,
                 serverSide: true,
@@ -78,27 +103,7 @@
                     },
                     { data: 'client_code' },
                     { data: 'client_name' },
-                    {
-                        data: null,
-                        render: function(data, type, row) {
-                            var actions = '<div class="action-buttons">';
-
-                            @can('edit client')
-                                actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/clients') }}/${row.id}/edit">`;
-                                actions += '<i class="fas fa-pencil-alt"></i>';
-                                actions += '</a>';
-                            @endcan
-
-                            @can('delete client')
-                                actions += `<a class="btn btn-danger waves-effect waves-light btn-sm client-delete-btn" href="#" data-source="Client" data-id="${row.id}">`;
-                                actions += '<i class="fas fa-trash-alt"></i>';
-                                actions += '</a>';
-                            @endcan
-
-                            actions += '</div>';
-                            return actions;
-                        }
-                    }
+                    ...actionColumn
                 ],
                 paging: true,
                 pageLength: 10,

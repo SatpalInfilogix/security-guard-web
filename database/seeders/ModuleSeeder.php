@@ -26,8 +26,8 @@ class ModuleSeeder extends Seeder
             'slug' => 'security guards'
         ]);
         Module::create([
-            'name' => 'Guard Roaster',
-            'slug' => 'guard roaster'
+            'name' => 'Guard Roster',
+            'slug' => 'guard roster'
         ]);
         Module::create([
             'name' => 'Attendance',
@@ -52,6 +52,38 @@ class ModuleSeeder extends Seeder
         Module::create([
             'name' => 'Public Holiday',
             'slug' => 'public holiday'
+        ]);
+        Module::create([
+            'name' => 'NST Deduction',
+            'slug' => 'nst deduction',
+        ]);
+        Module::create([
+            'name' => 'Payroll',
+            'slug' => 'payroll',
+        ]);
+        Module::create([
+            'name' => 'Invoice',
+            'slug' => 'invoice',
+        ]);
+        Module::create([
+            'name' => 'FAQ',
+            'slug' => 'faq',
+        ]);
+        Module::create([
+            'name' => 'Site Setting',
+            'slug' => 'site setting',
+        ]);
+        Module::create([
+            'name' => 'Gerenal Setting',
+            'slug' => 'gerenal setting',
+        ]);
+        Module::create([
+            'name' => 'Payment Setting',
+            'slug' => 'payment setting',
+        ]);
+        Module::create([
+            'name' => 'Help Request',
+            'slug' => 'help request',
         ]);
     }
 }

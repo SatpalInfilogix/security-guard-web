@@ -13,7 +13,9 @@
                         <div class="page-title-right">
                             <a href="#" id="exportBtn" class="btn btn-primary"><i class="bx bx-export"></i> Deduction Export</a>
                             {{-- <a href="{{ route('export.deductions') }}" class="btn btn-primary"><i class="bx bx-export"></i> Deduction Export</a> --}}
+                            @can('create nst deduction')
                             <a href="{{ route('deductions.create') }}" class="btn btn-primary">Add New Deduction</a>
+                            @endcan
                         </div>
 
                     </div>

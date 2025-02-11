@@ -116,6 +116,29 @@
     <x-include-plugins :plugins="['dataTable', 'import']"></x-include-plugins>
     <script>
         $(document).ready(function() {
+            let actionColumn = [];
+    
+            @canany(['edit security guards', 'delete security guards'])
+                actionColumn = [{
+                    data: null,
+                    render: function(data, type, row) {
+                        var actions = '<div class="action-buttons">';
+                            @can('edit security guards')
+                                actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/security-guards') }}/${row.id}/edit">`;
+                                actions += '<i class="fas fa-pencil-alt"></i>';
+                                actions += '</a>';
+                            @endcan
+                        if (row.status !== 'Active' || @json(Auth::user()->hasRole('Admin'))) {
+                            @can('delete security guards')
+                                actions += `<a data-source="Security Guard" class="security-guard-delete btn btn-danger waves-effect waves-light btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
+                            @endcan
+                        }
+
+                        actions += '</div>';
+                        return actions;
+                    }
+                }];
+            @endcanany
             let securityGuardTable = $('#security-guard-list').DataTable({
                 processing: true,
                 serverSide: true,
@@ -189,26 +212,7 @@
                             return statusDropdown;
                         }
                     },
-                    {
-                        data: null,
-                        render: function(data, type, row) {
-                            var actions = '<div class="action-buttons">';
-                            
-                            @can('edit security guards')
-                            actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/security-guards') }}/${row.id}/edit">`;
-                            actions += '<i class="fas fa-pencil-alt"></i>';
-                            actions += '</a>';
-                            @endcan
-                            if (row.status !== 'Active' || @json(Auth::user()->hasRole('Admin'))) {
-                                @can('delete security guards')
-                                    actions += `<a data-source="Security Guard" class="security-guard-delete btn btn-danger waves-effect waves-light btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
-                                @endcan
-                            }
-
-                            actions += '</div>';
-                            return actions;
-                        }
-                    }
+                    ...actionColumn
                 ],
                 paging: true,
                 pageLength: 10,

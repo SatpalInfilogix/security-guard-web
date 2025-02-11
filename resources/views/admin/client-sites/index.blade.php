@@ -73,6 +73,31 @@
     <x-include-plugins :plugins="['dataTable', 'import']"></x-include-plugins>
     <script>
          $(document).ready(function() {
+            let actionColumn = [];
+            @canany(['edit client site', 'client site'])
+                actionColumn = [{
+                    data: null,
+                    render: function(data, type, row) {
+                        var actions = '<div class="action-buttons">';
+
+                            @can('edit client site')
+                                actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/client-sites') }}/${row.id}/edit">`;
+                                actions += '<i class="fas fa-pencil-alt"></i>';
+                                actions += '</a>';
+                            @endcan
+
+                            @can('delete client site')
+                                actions += `<a class="btn btn-danger waves-effect waves-light btn-sm clientSite-delete-btn" href="#" data-source="Client site" data-id="${row.id}">`;
+                                actions += '<i class="fas fa-trash-alt"></i>';
+                                actions += '</a>';
+                            @endcan
+
+                        actions += '</div>';
+                        return actions;
+                    }
+                }];
+            @endcanany
+
             let clientTable = $('#client-site-list').DataTable({
                 processing: true,
                 serverSide: true,
@@ -98,27 +123,7 @@
                     { data: 'client.client_name' },
                     { data: 'location_code' },
                     { data: 'location' }, 
-                    {
-                        data: null,
-                        render: function(data, type, row) {
-                            var actions = '<div class="action-buttons">';
-
-                            @can('edit client site')
-                                actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/client-sites') }}/${row.id}/edit">`;
-                                actions += '<i class="fas fa-pencil-alt"></i>';
-                                actions += '</a>';
-                            @endcan
-
-                            @can('delete client site')
-                                actions += `<a class="btn btn-danger waves-effect waves-light btn-sm clientSite-delete-btn" href="#" data-source="Client site" data-id="${row.id}">`;
-                                actions += '<i class="fas fa-trash-alt"></i>';
-                                actions += '</a>';
-                            @endcan
-
-                            actions += '</div>';
-                            return actions;
-                        }
-                    }
+                    ...actionColumn
                 ],
                 paging: true,
                 pageLength: 10,

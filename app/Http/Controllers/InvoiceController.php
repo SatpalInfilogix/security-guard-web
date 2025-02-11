@@ -21,11 +21,15 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use Illuminate\Support\Facades\Gate;
 
 class InvoiceController extends Controller
 {
     public function index()
     {
+        if(!Gate::allows('view invoice')) {
+            abort(403);
+        }
         $clients = Client::latest()->get();
 
         return view('admin.invoices.index', compact('clients'));

@@ -22,14 +22,14 @@
                     </a>
                 </li>
                 @endcanany
-                @can('view guard roaster')
+                @can('view guard roster')
                 <li class="{{ Request::segment(2) == 'guard-rosters' ? 'mm-active' : '' }}">
                     <a href="{{ route('guard-rosters.index')}}" class="waves-effect">
                         <i class="bx bx-hive"></i>
                         <span key="t-spreadsheet">Guard Roster</span>
                     </a>
                 </li>
-                @endcanany
+                @endcan
                 @can('view attendance')
                 <li class="{{ Request::segment(2) == 'attendance' ? 'mm-active' : '' }}">
                     <a href="{{ route('attendance.index')}}" class="waves-effect">
@@ -38,24 +38,30 @@
                     </a>
                 </li>
                 @endcanany
+                @can('view nst deduction')
                 <li class="{{ Request::segment(2) == 'deductions' ? 'mm-active' : '' }}">
                     <a href="{{ route('deductions.index')}}" class="waves-effect">
                         <i class="bx bx-briefcase-alt"></i>
                         <span key="t-spreadsheet">NST Deduction</span>
                     </a>
                 </li>
+                @endcanany
+                @can('view payroll')
                 <li class="{{ Request::segment(2) == 'payrolls' ? 'mm-active' : '' }}">
                     <a href="{{ route('payrolls.index')}}" class="waves-effect">
                         <i class="bx bx-checkbox-square"></i>
                         <span key="t-spreadsheet">Payroll</span>
                     </a>
                 </li>
+                @endcanany
+                @can('view invoice')
                 <li class="{{ Request::segment(2) == 'invoices' ? 'mm-active' : '' }}">
                     <a href="{{ route('invoices.index')}}" class="waves-effect">
                         <i class="bx bx-selection"></i>
                         <span key="t-spreadsheet">Invoice</span>
                     </a>
                 </li>
+                @endcanany
                 @can('view leaves')
                 <li class="{{ Request::segment(2) == 'leaves' ? 'mm-active' : '' }}">
                     <a href="{{ route('leaves.index')}}" class="waves-effect">
@@ -78,7 +84,7 @@
                         <span key="t-user">Client listing</span>
                     </a>
                 </li>
-                @endcanany
+                @endcan
                 @can('view client site')
                 <li class="{{ Request::segment(2) == 'client-sites' ? 'mm-active' : '' }}">
                     <a href="{{ route('client-sites.index')}}" class="waves-effect">
@@ -86,7 +92,7 @@
                         <span key="t-user">Client sites</span>
                     </a>
                 </li>
-                @endcanany
+                @endcan
                 @can('view rate master')
                 <li class="{{ Request::segment(2) == 'rate-master' ? 'mm-active' : '' }}">
                     <a href="{{ route('rate-master.index')}}" class="waves-effect">
@@ -94,7 +100,7 @@
                         <span key="t-receipt">Rate Master</span>
                     </a>
                 </li>
-                @endcanany
+                @endcan
                 <li class="{{ Request::segment(2) == 'fortnight-dates' ? 'mm-active' : '' }}">
                     <a href="{{ route('fortnight-dates.index')}}" class="waves-effect">
                         <i class="bx bx-grid-horizontal"></i>
@@ -108,7 +114,7 @@
                         <span key="t-receipt">Public Holidays</span>
                     </a>
                 </li>
-                @endcanany
+                @endcan
                 {{-- </li>
                 <li>
                     <a href="#" class="waves-effect">
@@ -134,6 +140,7 @@
                         <span key="t-bell">Reports</span>
                     </a>
                 </li> --}}
+                @canany(['view faq', 'view help request'])
                 <li @class([
                     'active' => Request::is('faq', 'help_requests'),
                 ])>
@@ -142,11 +149,16 @@
                         <span key="t-dashboards">Manage Pages</span>
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
+                        @can('view faq')
                         <li><a href="{{ route('faq.index')}}" key="t-tui-calendar">FAQ</a></li>
+                        @endcan
+                        @can('view help request')
                         <li><a href="{{ route('help_requests.index')}}" key="t-tui-calendar">Help Request</a></li>
+                        @endcan
                     </ul>
                 </li>
-
+                @endcanany
+                @canany(['view site setting', 'view gerenal setting', 'view payment setting'])
                 <li @class([
                     'active' => Request::is('settings', 'settings/general-setting', 'settings/payment-setting'),
                 ])>
@@ -155,13 +167,20 @@
                         <span key="t-dashboards">Settings</span>
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
+                        @can('view site setting')
                         <li><a href="{{ route('settings.index')}}" key="t-tui-calendar">Site Settings</a></li>
+                        @endcan
+                        @can('view gerenal setting')
                         <li><a href="{{ route('settings.gerenal-settings')}}" key="t-tui-calendar">Gerenal Settings</a></li>
+                        @endcan
+                        @can('view payment setting')
                         <li><a href="{{ route('settings.payment-settings')}}" key="t-tui-calendar">Payment Settings</a></li>
+                        @endcan
                     </ul>
                 </li>
+                @endcanany
 
-                @can('view roles & permissions')
+                @canany(['view roles & permissions', 'view user'])
                 <li  @class([
                     'active' => Request::is('roles-and-permissions', 'users/index', 'roles-and-permissions/role-list', 'roles-and-permissions/index'),
                 ])>
@@ -170,11 +189,15 @@
                         <span key="t-dashboards">User/Roles</span>
                     </a>
                     <ul class="sub-menu" aria-expanded="false">
+                        @can('view roles & permissions')
                         <li><a href="{{ route('roles-and-permissions.role-list') }}" key="t-tui-calendar">Manage Roles</a></li>
-                        @canany('view user')
+                        @endcan
+                        @can('view user')
                         <li class="{{ Request::segment(2) == 'users' ? 'mm-active' : '' }}"><a href="{{ route('users.index')}}" key="t-user">User</a></li>
-                        @endcanany
+                        @endcan
+                        @can('view roles & permissions')
                         <li><a href="{{ route('roles-and-permissions.index') }}" key="t-full-calendar">Manage Permissions</a></li>
+                        @endcan
                     </ul>
                 </li>
                 @endcanany

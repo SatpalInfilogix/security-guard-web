@@ -22,7 +22,7 @@
                         <div class="row">
                             <div class="col-md-3">
                                 <?php
-                                    $reasons = ['Approve', 'Pending', 'Reject'];
+                                $reasons = ['Approve', 'Pending', 'Reject'];
                                 ?>
                                 <select name="leave_status" id="leave_status" class="form-control">
                                     <option value="" selected disabled>Select status</option>
@@ -43,7 +43,7 @@
             <div class="row">
                 <div class="col-12">
                     <x-error-message :message="$errors->first('message')" />
-                    @if(session('error'))
+                    @if (session('error'))
                         <div class="alert alert-danger">
                             {{ session('error') }}
                         </div>
@@ -59,43 +59,13 @@
                                         <th>Date</th>
                                         <th>Reason</th>
                                         <th>Status</th>
-                                        @canany(['edit leaves', 'delete leaves'])
+                                        @can('delete leaves')
                                         <th>Action</th>
-                                        @endcanany
+                                        @endcan
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {{-- @foreach($leaves as $key => $leave)
-                                        <tr>
-                                            <td>{{ ++$key }}</td>
-                                            <td>{{ optional($leave->user)->first_name .' '. optional($leave->user)->surname }}</td>
-                                            <td>{{ $leave->date }}</td>
-                                            <td>{{ $leave->reason }}</td>
-                                            <td>
-                                                <div class="dropdown">
-                                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="statusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        {{ $leave->status }}
-                                                    </button>
-                                                    <ul class="dropdown-menu" aria-labelledby="statusDropdown">
-                                                        <li><a class="dropdown-item" href="javascript:void(0);" data-status="Approved" data-id="{{ $leave->id }}">Approve</a></li>
-                                                        @if($leave->status !== 'Cancelled')
-                                                            <li><a class="dropdown-item" href="javascript:void(0);" data-status="Rejected" data-id="{{ $leave->id }}">Reject</a></li>
-                                                        @endif
-                                                    </ul>
-                                                </div>
-                                            </td>
-                                            @canany(['edit leaves', 'delete leaves'])
-                                            <td class="action-buttons">
-                                                @if(Auth::user()->can('delete leaves'))
-                                                <button data-source="Leave" data-endpoint="{{ route('leaves.destroy', $leave->id) }}"
-                                                    class="delete-btn btn btn-danger waves-effect waves-light btn-sm edit">
-                                                    <i class="fas fa-trash-alt"></i>
-                                                </button>
-                                                @endif
-                                            </td>
-                                            @endcanany
-                                        </tr>
-                                    @endforeach --}}
+
                                 </tbody>
                             </table>
                         </div>
@@ -127,6 +97,24 @@
     <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
     <script>
         $(document).ready(function() {
+            let actionColumn = [];
+            @can('delete leaves')
+                actionColumn = [{
+                    data: null,
+                    render: function(data, type, row) {
+                        var actions = '<div class="action-buttons">';
+                        actions +=
+                            `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${row.id}">`;
+                        actions += '<i class="fas fa-trash-alt"></i>';
+                        actions += '</a>';
+                        actions += '</div>';
+                        return actions;
+                    }
+                }];
+            @endcan
+
+            console.log('actionColumn',actionColumn)
+
             var table = $('#leaves-list').DataTable({
                 processing: true,
                 serverSide: true,
@@ -138,17 +126,25 @@
                         d.leave_status = $('#leave_status').val();
                         return d;
                     },
+                    dataSrc: function(response) {
+                        return response.data;
+                    }
                 },
-                columns: [
-                    { 
-                        data: null, 
+                columns: [{
+                        data: null,
                         render: function(data, type, row, meta) {
                             return meta.row + 1 + meta.settings._iDisplayStart;
                         }
                     },
-                    { data: 'user.first_name' },
-                    { data: 'date' },
-                    { data: 'reason' },
+                    {
+                        data: 'user.first_name'
+                    },
+                    {
+                        data: 'date'
+                    },
+                    {
+                        data: 'reason'
+                    },
                     {
                         data: null,
                         name: 'status',
@@ -166,21 +162,7 @@
                             `;
                         }
                     },
-                    {
-                    data: null,
-                    render: function(data, type, row) {
-                        var actions = '<div class="action-buttons">';
-                    
-                        @can('delete leaves')
-                            actions += `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${row.id}">`;
-                            actions += '<i class="fas fa-trash-alt"></i>';
-                            actions += '</a>';
-                        @endcan
-
-                        actions += '</div>';
-                        return actions;
-                    }
-                }
+                    ...actionColumn
                 ]
             });
 
@@ -209,13 +191,13 @@
                             '_token': '{{ csrf_token() }}'
                         },
                         success: function(response) {
-                            if(response.success){
+                            if (response.success) {
                                 swal({
                                     title: "Success!",
                                     text: response.message,
                                     type: "success",
                                     showConfirmButton: false
-                                }) 
+                                })
 
                                 setTimeout(() => {
                                     location.reload();
@@ -256,7 +238,7 @@
             $('#confirmReject').on('click', function() {
                 const rejectionReason = $('#rejectionReason').val();
                 const leaveId = $('#leaveId').val();
-                console.log('Leave Id:',leaveId)
+                console.log('Leave Id:', leaveId)
                 if (!rejectionReason) {
                     swal({
                         title: "Error!",

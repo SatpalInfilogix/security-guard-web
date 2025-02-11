@@ -6,16 +6,23 @@ use Illuminate\Http\Request;
 use App\Models\Setting;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Crypt; 
+use Illuminate\Support\Facades\Gate;
 
 class SettingController extends Controller
 {
     public function index()
     {
+        if(!Gate::allows('view site setting')) {
+            abort(403);
+        }
         return view('admin.settings.index');
     }
 
     public function paymentSetting()
     {
+        if(!Gate::allows('view payment setting')) {
+            abort(403);
+        }
         return view('admin.settings.payment-setting');
     }
 
@@ -66,6 +73,9 @@ class SettingController extends Controller
 
     public function generalSettings()
     {
+        if(!Gate::allows('view gerenal setting')) {
+            abort(403);
+        }
         return view('admin.settings.general-settings');
     }
 }

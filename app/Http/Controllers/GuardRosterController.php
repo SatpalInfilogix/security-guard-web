@@ -27,7 +27,7 @@ class GuardRosterController extends Controller
 {
     public function index()
     {
-        if(!Gate::allows('view guard roaster')) {
+        if(!Gate::allows('view guard roster')) {
             abort(403);
         }
 
@@ -124,7 +124,7 @@ class GuardRosterController extends Controller
 
     public function create()
     {
-        if(!Gate::allows('create guard roaster')) {
+        if(!Gate::allows('create guard roster')) {
             abort(403);
         }
 
@@ -142,7 +142,7 @@ class GuardRosterController extends Controller
 
     public function store(Request $request)
     {
-        if(!Gate::allows('create guard roaster')) {
+        if(!Gate::allows('create guard roster')) {
             abort(403);
         }
 
@@ -212,7 +212,7 @@ class GuardRosterController extends Controller
 
     public function edit($id) 
     {
-        if(!Gate::allows('edit guard roaster')) {
+        if(!Gate::allows('edit guard roster')) {
             abort(403);
         }
         $guardRoaster = GuardRoster::where('id', $id)->first();
@@ -242,7 +242,7 @@ class GuardRosterController extends Controller
 
     public function update(Request $request, $id)
     {
-        if(!Gate::allows('edit guard roaster')) {
+        if(!Gate::allows('edit guard roster')) {
             abort(403);
         }
         $request->validate([
@@ -316,7 +316,7 @@ class GuardRosterController extends Controller
 
     public function destroy($id)
     {
-        if(!Gate::allows('delete guard roaster')) {
+        if(!Gate::allows('delete guard roster')) {
             abort(403);
         }
         GuardRoster::where('id', $id)->delete();

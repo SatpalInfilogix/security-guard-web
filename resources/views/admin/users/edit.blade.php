@@ -66,6 +66,11 @@
                                         @enderror
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <x-form-input name="password" type="password" label="Password" placeholder="Enter your password"/><br>
+                                    </div>
+                                </div>
                             </div>
                             <div>
                                 <button type="submit" class="btn btn-primary w-md">Submit</button>

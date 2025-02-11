@@ -13,11 +13,15 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use App\Exports\DeductionsExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Gate;
 
 class DeductionController extends Controller
 {
     public function index()
     {
+        if(!Gate::allows('view nst deduction')) {
+            abort(403);
+        }
         $deductions = Deduction::with('user')->latest()->get();
 
         return view('admin.deductions.index', compact('deductions'));
@@ -82,6 +86,9 @@ class DeductionController extends Controller
 
     public function create()
     {
+        if(!Gate::allows('create nst deduction')) {
+            abort(403);
+        }
         $userRole = Role::where('name', 'Security Guard')->first();
 
         $securityGuards = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
@@ -128,6 +135,9 @@ class DeductionController extends Controller
 
     public function store(Request $request)
     {
+        if(!Gate::allows('create nst deduction')) {
+            abort(403);
+        }
         $request->validate([
             'guard_id'    => 'required|exists:users,id',
             'type'        => 'required|string',
