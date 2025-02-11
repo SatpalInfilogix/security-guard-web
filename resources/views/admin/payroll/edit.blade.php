@@ -10,6 +10,9 @@
                         <h4 class="mb-0 font-size-18">Update Payroll </h4>
 
                         <div class="page-title-right">
+                            {{-- <button class="btn btn-primary" onclick="downloadInvoicePdf({{ $payroll->id }})">
+                                Payslip <i class="fas fa-file-pdf"></i>
+                            </button> --}}
                             <a href="{{ route('payrolls.index') }}" class="btn btn-primary"><i class="bx bx-arrow-back"></i> Back to Payroll</a>
                         </div>
 
@@ -277,6 +280,10 @@
                     }
                 });
             }
+
+            // window.downloadInvoicePdf = function(invoiceId) {
+            //     window.location.href = "{{ route('payroll.download-pdf', ':invoiceId') }}".replace(':invoiceId', invoiceId);
+            // };
         });
     </script>
     

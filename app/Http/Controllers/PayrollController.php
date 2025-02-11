@@ -13,6 +13,8 @@ use App\Imports\PayrollImport;
 use App\Exports\PayrollExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Gate;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class PayrollController extends Controller
 {
@@ -234,5 +236,28 @@ class PayrollController extends Controller
         $import = session('importData'); 
         $export = new PayrollExport($import);
         return Excel::download($export, 'payroll_import_results.csv');
+    }
+
+    public function downloadPdf($payrollId)
+    {
+        $today = Carbon::now()->startOfDay();
+        $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+        $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
+        $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
+        
+        $payroll = Payroll::where('id', $payrollId)->with('user', 'user.guardAdditionalInformation')->where('start_date', '>=', $previousFortnightStartDate)->whereDate('end_date', '<=', $previousFortnightEndDate)->first();
+        $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
+        $pdfOptions = new Options();
+        $pdfOptions->set('isHtml5ParserEnabled', true);
+        $pdfOptions->set('isPhpEnabled', true);
+
+        $dompdf = new Dompdf($pdfOptions);
+        $html = view('admin.payroll.payroll-pdf.payroll', ['payroll' => $payroll])->render();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        // return view('admin.payroll.payroll-pdf.payroll', compact('payroll'));
+        return $dompdf->stream($payroll->user->first_name . '-' . $fortnightDayCount->id . '-' . \Carbon\Carbon::parse($fortnightDays->start_date)->year . '.pdf');
     }
 }

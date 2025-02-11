@@ -136,4 +136,6 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('/invoice/update-status', [InvoiceController::class, 'updateStatus'])->name('invoice.update-status');
     Route::get('/get-client-sites', [InvoiceController::class, 'getClientSites'])->name('get-client-sites');
 
+    Route::get('payroll/{id}/download-pdf', [PayrollController::class, 'downloadPdf'])->name('payroll.download-pdf');
+
 });
