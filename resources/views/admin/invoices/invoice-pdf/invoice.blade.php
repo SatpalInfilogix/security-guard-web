@@ -13,35 +13,10 @@
 
         .container {
             width: 100%;
-            margin: 0 auto;
-            padding: 20px;
         }
 
-        /* Header Section */
         .header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
             background-color: #66a2eb;
-        }
-
-        .header-left {
-            flex: 1;
-            text-align: left;
-        }
-
-        .header-left img {
-            max-height: 80px; /* You can adjust the size of the logo */
-        }
-
-        .header-center {
-            flex: 2;
-            text-align: center;
-        }
-
-        .header-center h3 {
-            margin: 0;
-            font-size: 32px;
         }
 
         .company-info {
@@ -51,24 +26,9 @@
             background-color: #ddebfb;
         }
 
-        .company-info-left,
-        .company-info-center {
-            width: 50%;
-        }
-
-        .company-info-left p,
-        .company-info-center p {
-            margin: 2px 0;
-        }
-
-        .company-info-center {
-            /* text-align: center; */
-            margin-bottom: 29px;
-        }
-
         .company-details, .invoice-details {
             width: 100%;
-            margin-bottom: 30px; /* Adjusted margin for spacing after content */
+            margin-bottom: 30px;
             overflow: hidden;
         }
 
@@ -91,7 +51,7 @@
 
         .table {
             width: 100%;
-            margin-top: 30px; /* Increased margin for better gap */
+            margin-top: 30px;
             border-collapse: collapse;
         }
 
@@ -120,25 +80,24 @@
         }
 
         .company-details {
-            /* padding-top: 100px; */
             background-color: #66a2eb38;
         }
         td.security {
             color: #66a2eb;
         }
         .table tbody tr:nth-child(odd) {
-        background-color: #f9f9f9; /* Light gray for odd rows */
+        background-color: #f9f9f9;
     }
 
     .table tbody tr:nth-child(even) {
-        background-color: #ddebfb; /* White for even rows */
+        background-color: #ddebfb;
     }
 
     .table th {
         background-color: #ddebfb; 
     }
     .table th, .table td {
-        border: none; /* Remove table borders */
+        border: none;
     }
     p.instruction {
         color: #66a2ed;
@@ -147,14 +106,16 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="header-left">
-                <img src="https://guard.vsljamaica.com/uploads/logo/677b7fb67adc6.png" alt="Logo">
-            </div>
-            <div class="header-center">
-                <h3>INVOICE</h3>
-            </div>
-        </div>
+        <table class="header" style="border-collapse: collapse; width: 100%;">
+            <tr>
+                <td style="border: none;">
+                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('assets/logo-admin.png'))) }}" alt="Logo" style="max-height: 50px;">
+                </td>
+                <td style="border: none;">
+                    <h2 style="margin: 0; font-size: 25px;">INVOICE</h2>
+                </td>
+            </tr>
+        </table>
 
         <div class="company-info">
             <table width="100%">

@@ -2,7 +2,7 @@
     <div class="col-md-12">
         <form id="filterForm" method="GET">
             <div class="row">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select name="guard_id" id="guard_id" class="form-control">
                         <option value="" disabled selected>Select Guard</option>
                         @foreach($securityGuards as $securityGuard)
@@ -18,7 +18,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select name="client_site_id" id="client_site_id" class="form-control">
                         <option value="" disabled selected>Select Client Site</option>
                         @foreach($clientSites as $clientSite)
@@ -29,7 +29,7 @@
                 <div class="col-md-3">
                     <input type="text" id="date" name="date" class="form-control datePicker" value="" placeholder="Select Date" autocomplete="off">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
                 </div>
             </div>

@@ -29,6 +29,11 @@
                                         <x-form-input type="number" name="duty_time" value="{{ old('duty_time', setting('duty_time')) }}" label="Duty Time(in hrs)" placeholder="Enter Duty Time" min=0 step="any"/>
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <x-form-input type="number" name="yearly_leaves" value="{{ old('yearly_leaves', setting('yearly_leaves')) }}" label="Yearly Leaves" placeholder="Enter Leaves" min=0 step="any"/>
+                                    </div>
+                                </div>
                             </div>
 
                             <div>
@@ -36,12 +41,9 @@
                             </div>
                         </form>
                     </div>
-                    <!-- end card body -->
                 </div>
-                <!-- end card -->
             </div>
         </div>
-        <!-- end row -->
     </div>
 </div>
 @endsection

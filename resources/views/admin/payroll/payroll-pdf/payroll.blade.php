@@ -13,163 +13,247 @@
 
         .container {
             width: 100%;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* Header Section */
-        .header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            background-color: #66a2eb;
-        }
-
-        .header-left {
-            flex: 1;
-            text-align: left;
-        }
-
-        .header-left img {
-            max-height: 80px; /* You can adjust the size of the logo */
-        }
-
-        .header-center {
-            flex: 2;
-            text-align: center;
-        }
-
-        .header-center h3 {
-            margin: 0;
-            font-size: 32px;
         }
 
         .company-info {
             display: flex;
             justify-content: space-between;
-            margin-top: 10px;
-            background-color: #ddebfb;
         }
 
-        .company-info-left,
-        .company-info-center {
-            width: 50%;
-        }
-
-        .company-info-left p,
-        .company-info-center p {
-            margin: 2px 0;
-        }
-
-        .company-info-center {
-            /* text-align: center; */
-            margin-bottom: 29px;
-        }
-
-        .company-details, .invoice-details {
+        table {
             width: 100%;
-            margin-bottom: 30px; /* Adjusted margin for spacing after content */
-            overflow: hidden;
-        }
-
-        .company-details td, .invoice-details td {
-            padding: 5px 10px;
-        }
-
-        .invoice-details {
-            width: 50%;
-            float: right;
-        }
-
-        .invoice-details td {
-            text-align: right;
-        }
-
-        .clear {
-            clear: both;
-        }
-
-        .table {
-            width: 100%;
-            margin-top: 30px; /* Increased margin for better gap */
             border-collapse: collapse;
+            table-layout: fixed;
         }
-
-        .gct-total {
-            color: #66a2eb;
-        }
-
-        .billed-to {
-            color: #66a2eb;
-        }
-
-        .table, .table th, .table td {
+        th, td {
             border: 1px solid #000;
-        }
-
-        .table th, .table td {
-            padding: 10px;
+            padding: 8px;
             text-align: left;
-        }
-
-        .total {
-            text-align: right;
+            word-wrap: break-word;
+            font-size: 10px;
         }
         th {
-            text-align: left;
+            background-color: #f2f2f2;
         }
-
-        .company-details {
-            /* padding-top: 100px; */
-            background-color: #66a2eb38;
-        }
-        td.security {
-            color: #66a2eb;
-        }
-        .table tbody tr:nth-child(odd) {
-        background-color: #f9f9f9; /* Light gray for odd rows */
-    }
-
-    .table tbody tr:nth-child(even) {
-        background-color: #ddebfb; /* White for even rows */
-    }
-
-    .table th {
-        background-color: #ddebfb; 
-    }
-    .table th, .table td {
-        border: none; /* Remove table borders */
-    }
-    p.instruction {
-        color: #66a2ed;
-    }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="header-left">
-                <img src="https://guard.vsljamaica.com/uploads/logo/677b7fb67adc6.png" alt="Logo">
-            </div>
-            <div class="header-center">
-                <h3>INVOICE</h3>
-            </div>
-        </div>
+        <table style="border-collapse: collapse; width: 100%;">
+            <tr>
+                <td style="border: none;">
+                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('assets/logo-admin.png'))) }}" alt="Logo" style="max-height: 50px;">
+                </td>
+                <td style="border: none;">
+                    <h2 style="margin: 0; font-size: 25px;">Payslip</h2>
+                </td>
+            </tr>
+        </table>
 
         <div class="company-info">
             <table width="100%">
                 <tr>
-                    <td class="security" style="width: 50%; vertical-align: top;">
-                        <h3>Vanguard Security Ltd.</h3>
-                        <p>6 Eastwood Avenue, Kingston 10. Tel: 876-968-2413/4</p>
+                    <td class="security" style="width: 50%; vertical-align: top;  border: 1px solid white;">
+                        <p><strong>Employee Name:</strong> {{ $payroll->user->first_name }} {{ $payroll->user->last_name }}</p>
+                        <p><strong>Department:</strong> N/A</p>
+                        <p><strong>Category:</strong> N/A</p>
                     </td>
-                    <td style="width: 50%; vertical-align: top; text-align: right;">
-                        <p>GCT REG. NO. 000-973-777</p>
-                        <p>Email: <a href="mailto:accounts@vanguard-group.com">accounts@vanguard-group.com</a></p>
+                    <td style="width: 50%; vertical-align: top; text-align: left; border: 1px solid white;">
+                        <p><strong>NIS No: </strong>{{ $payroll->user->guardAdditionalInformation->nis }}</p>
+                        <p><strong>Employee TRN: </strong> {{ $payroll->user->guardAdditionalInformation->trn }}</p>
+                        <p><strong>Payroll Period: </strong> {{ $payroll->start_date }} to {{ $payroll->end_date }}</p>
+                        <p><strong>Payroll No: </strong>{{ $fortnightDayCount->id }}</p>
+                        <p><strong>Date of Processing: </strong>{{ $payroll->created_at->format('d-M-Y') }}</p>
                     </td>
                 </tr>
             </table>
         </div>
+
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th style="width: 18%;">Gross Earnings</th>
+                    <th style="width: 10%">Rate</th>
+                    <th style="width: 8%">Units</th>
+                    <th style="width: 10%;">Rate per Unit</th>
+                    <th style="width: 12%;">Total</th>
+                    <th style="width: 11%;">Deductions</th>
+                    <th style="width: 10%;">Amount</th>
+                    <th style="width: 10%;">Balance</th>
+                    <th style="width: 13%;">Employer contribution</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Megamart Waterloo (Normal)</td>
+                    <td>Normal</td>
+                    <td>{{ convertToHoursAndMinutes($payroll->normal_hours) }}</td>
+                    <td>-</td>
+                    <td>{{ $payroll->normal_hours_rate }}</td>
+                    <td>PAYE</td>
+                    <td>{{ $payroll->paye }}</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Megamart Waterloo (Overtime)</td>
+                    <td>Overtime</td>
+                    <td>{{ convertToHoursAndMinutes($payroll->overtime) }}</td>
+                    <td>-</td>
+                    <td>{{ $payroll->overtime_rate }}</td>
+                    <td>Ed Tax</td>
+                    <td>{{ $payroll->education_tax }}</td>
+                    <td></td>
+                    <td>{{ $payroll->employer_eduction_tax }}</td>
+                </tr>
+                <tr>
+                    <td>Megamart Waterloo (Public Holiday)</td>
+                    <td>Public Holiday</td>
+                    <td>{{ convertToHoursAndMinutes($payroll->public_holidays) }}</td>
+                    <td>-</td>
+                    <td>{{ $payroll->public_holiday_rate }}</td>
+                    <td>NIS</td>
+                    <td>{{ $payroll->less_nis }}</td>
+                    <td></td>
+                    <td>{{ $payroll->employer_contribution_nis_tax }}</td>
+                </tr>
+                <tr>
+                    <td colspan="4"></td>
+                    <td></td>
+                    <td>NHT</td>
+                    <td>{{ $payroll->nht }}</td>
+                    <td></td>
+                    <td>{{$payroll->employer_contribution_nht_tax}}</td>
+                </tr>
+                <tr>
+                    <td colspan="4"></td>
+                    <td></td>
+                    <td>Heart</td>
+                    <td></td>
+                    <td></td>
+                    <td>{{$payroll->heart}}</td>
+                </tr>
+                <tr>
+                    <td colspan="4"></td>
+                    <td></td>
+                    <td>Staff Loan</td>
+                    <td>{{ $payroll->staff_loan }}</td>
+                    <td>{{ number_format($payroll->pending_staff_loan)}}</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="4"></td>
+                    <td></td>
+                    <td>Medical Ins</td>
+                    <td>{{ $payroll->medical_insurance }}</td>
+                    <td>{{ number_format($payroll->pending_medical_insurance)}}</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="4"></td>
+                    <td></td>
+                    <td>Salary Advance</td>
+                    <td>{{ $payroll->salary_advance }}</td>
+                    <td>{{ number_format($payroll->pending_salary_advance)}}</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="4"></td>
+                    <td></td>
+                    <td>Approved Pension</td>
+                    <td>{{ $payroll->approved_pension_scheme }}</td>
+                    <td>{{ number_format($payroll->pending_approved_pension)}}</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="4"></td>
+                    <td></td>
+                    <td>PSRA</td>
+                    <td>{{ $payroll->psra }}</td>
+                    <td>{{ number_format($payroll->pending_psra)}}</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="4"></td>
+                    <td></td>
+                    <td>Bank Loan</td>
+                    <td>{{ $payroll->bank_loan }}</td>
+                    <td>{{ number_format($payroll->pending_bank_loan)}}</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="4"></td>
+                    <td></td>
+                    <td>Garnishment</td>
+                    <td>{{ $payroll->garnishment }}</td>
+                    <td>{{ number_format($payroll->pending_garnishment)}}</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="4"></td>
+                    <td></td>
+                    <td>Damaged Goods</td>
+                    <td>{{ $payroll->damaged_goods }}</td>
+                    <td>{{ number_format($payroll->pending_damaged_goods)}}</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="4"></td>
+                    <td></td>
+                    <td>Missing Goods</td>
+                    <td>{{ $payroll->missing_goods }}</td>
+                    <td>{{ number_format($payroll->pending_missing_goods)}}</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><strong>Total</strong></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    @php
+                        $total = $payroll->normal_hours_rate +  $payroll->overtime_rate +  $payroll->public_holiday_rate ?? 0;
+                        $totalAmount = $payroll->paye +  $payroll->education_tax + $payroll->less_nis + $payroll->nht + $payroll->staff_loan +  $payroll->medical_insurance + $payroll->salary_advance + $payroll->approved_pension_scheme + $payroll->psra + $payroll->bank_loan + $payroll->missing_goods + $payroll->damaged_goods + $payroll->garnishment;
+                    @endphp
+                    <td><strong>{{ $total }}</strong></td>
+                    <td></td>
+                    <td><strong>{{ $totalAmount }}</strong></td>
+                    <td colspan="2"></td>
+                </tr>
+                <tr>
+                    <td colspan="5"></td>
+                    <td>Net Salary</td>
+                    <td>{{ $total - $totalAmount }}</td>
+                    <td colspan="2"></td>
+                </tr>
+                <tr>
+                    <td colspan="5"></td>
+                    <td>BNS Account</td>
+                    <td>{{ $total - $totalAmount }}</td>
+                    <td colspan="2"></td>
+                </tr>
+            </tbody>
+        </table>
+        <p><strong>Year to Date</strong></p>
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th>Gross Earnings</th>
+                    <th>NIS</th>
+                    <th>Tax</th>
+                    <th>Education Tax</th>
+                    <th>NHT</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ $payroll->gross_total }}</td>
+                    <td>{{ $payroll->nis_total }}</td>
+                    <td>{{ $payroll->paye_tax_total }}</td>
+                    <td>{{ $payroll->education_tax_total }}</td>
+                    <td>{{ $payroll->nht_total }}</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </body>
 </html>
