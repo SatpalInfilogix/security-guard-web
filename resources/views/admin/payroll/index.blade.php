@@ -10,6 +10,7 @@
                         <h4 class="mb-sm-0 font-size-18">Payroll</h4>
 
                         <div class="page-title-right">
+                            <a href="javascript:void(0);" id="bulkDownloadBtn" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Bulk Download PDFs</a>
                             <a href="{{ route('payroll-export.csv', ['date' => request('date')] ) }}" id="exportBtn" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> SO1 Report</a>
                             <a href="{{ url('download-payroll-sample') }}"
                             class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Payroll Sample File</a>
@@ -114,12 +115,19 @@
                             actions += '<i class="fas fa-eye"></i>';
                             actions += '</a>';
                         @endcan
+                        actions += `<button class="btn btn-primary btn-sm" onclick="downloadInvoicePdf('${row.id}')">`;
+                        actions += '<i class="fas fa-file-pdf"></i>';
+                        actions += '</button>';
 
                         actions += '</div>';
                         return actions;
                     }
                 }];
             @endcanany
+
+            window.downloadInvoicePdf = function(invoiceId) {
+                window.location.href = "{{ route('payrolls.download-pdf', ':invoiceId') }}".replace(':invoiceId', invoiceId);
+            };
 
             let payrollTable = $('#payroll-list').DataTable({
                 processing: true,
@@ -185,6 +193,13 @@
            /*  $('#date').on('change', function() {
                 payrollTable.ajax.reload();
             }); */
+
+            $('#bulkDownloadBtn').on('click', function() {
+                var selectedDate = $('#date').val();
+                var bulkDownloadUrl = "{{ route('payrolls.bulk-download-pdf', ['date' => '__date__']) }}";
+                bulkDownloadUrl = bulkDownloadUrl.replace('__date__', selectedDate);
+                window.location.href = bulkDownloadUrl;
+            });
         });
     </script>
 @endsection

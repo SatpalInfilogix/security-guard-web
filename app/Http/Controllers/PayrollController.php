@@ -15,6 +15,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Gate;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use ZipArchive;
 
 class PayrollController extends Controller
 {
@@ -115,7 +116,7 @@ class PayrollController extends Controller
         $payroll['nht_total'] = $fullYearPayroll->sum('nht');
 
         $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
-        
+
         return view('admin.payroll.edit', compact('payroll', 'fortnightDayCount'));
     }
 
@@ -240,24 +241,95 @@ class PayrollController extends Controller
 
     public function downloadPdf($payrollId)
     {
-        $today = Carbon::now()->startOfDay();
-        $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
-        $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
-        $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
-        
-        $payroll = Payroll::where('id', $payrollId)->with('user', 'user.guardAdditionalInformation')->where('start_date', '>=', $previousFortnightStartDate)->whereDate('end_date', '<=', $previousFortnightEndDate)->first();
+        $payroll = Payroll::where('id', $payrollId)->with('user', 'user.guardAdditionalInformation')->first();
+        $month = $payroll->end_date;
+        $fullYearPayroll = Payroll::where('guard_id', $payroll->guard_id)->whereDate('end_date', '<=', $month)->whereYear('created_at', now()->year)->orderBy('created_at', 'desc')->get();
+
+        $payroll['gross_total'] = $fullYearPayroll->sum('gross_salary_earned');
+        $payroll['nis_total'] = $fullYearPayroll->sum('less_nis');
+        $payroll['paye_tax_total'] = $fullYearPayroll->sum('paye');
+        $payroll['education_tax_total'] = $fullYearPayroll->sum('education_tax');
+        $payroll['nht_total'] = $fullYearPayroll->sum('nht');
+
         $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
         $pdfOptions = new Options();
         $pdfOptions->set('isHtml5ParserEnabled', true);
         $pdfOptions->set('isPhpEnabled', true);
 
         $dompdf = new Dompdf($pdfOptions);
-        $html = view('admin.payroll.payroll-pdf.payroll', ['payroll' => $payroll])->render();
+        $html = view('admin.payroll.payroll-pdf.payroll', ['payroll' => $payroll, 'fortnightDayCount' => $fortnightDayCount])->render();
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
-        // return view('admin.payroll.payroll-pdf.payroll', compact('payroll'));
-        return $dompdf->stream($payroll->user->first_name . '-' . $fortnightDayCount->id . '-' . \Carbon\Carbon::parse($fortnightDays->start_date)->year . '.pdf');
+        // return view('admin.payroll.payroll-pdf.payroll', compact('payroll', 'fortnightDayCount'));
+        return $dompdf->stream($payroll->user->first_name . '-' . $fortnightDayCount->id . '-' . \Carbon\Carbon::parse($payroll->start_date)->year . '.pdf');
+    }
+
+    public function bulkDownloadPdf(Request $request)
+    {
+        $today = Carbon::now()->startOfDay();
+        $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
+
+        $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
+        $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
+        $payrolls = Payroll::with('user');
+
+        if ($request->has('date') && !empty($request->date)) {
+            $searchDate = $request->date;
+            list($startDate, $endDate) = explode(' to ', $searchDate);
+            $startDate = Carbon::parse($startDate)->startOfDay();
+            $endDate = Carbon::parse($endDate)->endOfDay();
+            $payrolls->whereDate('start_date', '<=', $endDate)->whereDate('end_date', '>=', $startDate);
+        } else {
+            $payrolls->where('start_date', '>=', $previousFortnightStartDate)->whereDate('end_date', '<=', $previousFortnightEndDate);
+        }
+
+        $payrolls = $payrolls->get();
+
+        $tempZipFile = tempnam(sys_get_temp_dir(), 'payrolls-') . '.zip';
+
+        $zip = new ZipArchive();
+        if ($zip->open($tempZipFile, ZipArchive::CREATE) !== TRUE) {
+            return response()->json(['error' => 'Failed to create zip file.'], 500);
+        }
+
+        foreach ($payrolls as $payroll) {
+            $month = $payroll->end_date;
+            $fullYearPayroll = Payroll::where('guard_id', $payroll->guard_id)->whereDate('end_date', '<=', $month)->whereYear('created_at', now()->year)->orderBy('created_at', 'desc')->get();
+
+            $payroll['gross_total'] = $fullYearPayroll->sum('gross_salary_earned');
+            $payroll['nis_total'] = $fullYearPayroll->sum('less_nis');
+            $payroll['paye_tax_total'] = $fullYearPayroll->sum('paye');
+            $payroll['education_tax_total'] = $fullYearPayroll->sum('education_tax');
+            $payroll['nht_total'] = $fullYearPayroll->sum('nht');
+
+            $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
+
+            $html = view('admin.payroll.payroll-pdf.payroll', [
+                'payroll' => $payroll,
+                'fortnightDayCount' => $fortnightDayCount
+            ])->render();
+
+            $options = new Options();
+            $options->set('isHtml5ParserEnabled', true);
+            $options->set('isPhpEnabled', true);
+            $dompdf = new Dompdf($options);
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            $pdfContent = $dompdf->output();
+            $pdfName = $payroll->user->first_name . '-' . $fortnightDayCount->id . '-' . Carbon::parse($payroll->start_date)->year . '.pdf';
+            $zip->addFromString($pdfName, $pdfContent);
+        }
+
+        $zip->close();
+
+        $zipFileContent = file_get_contents($tempZipFile);
+
+        return response($zipFileContent, 200)
+            ->header('Content-Type', 'application/zip')
+            ->header('Content-Disposition', 'attachment; filename="payrolls.zip"')
+            ->header('Content-Length', strlen($zipFileContent));
     }
 }

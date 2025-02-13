@@ -20,6 +20,9 @@ return new class extends Migration
             $table->string('parish')->nullable();
             $table->string('city')->nullable();
             $table->string('postal_code')->nullable();
+            $table->string('personal_email')->nullable();
+            $table->string('work_phone_number')->nullable();
+            $table->string('personal_phone_number')->nullable();
             $table->timestamps();
         });
     }

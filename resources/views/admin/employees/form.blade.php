@@ -57,7 +57,6 @@
             <input class="form-check-input" type="checkbox" id="SwitchCheckSizelg" name="is_statutory"
                 data-on="Statutory" data-off="Non-Statutory" value="0"
                 {{ isset($user) && $user->is_statutory == 0 ? 'checked' : '' }} {{ !isset($user) ? 'checked' : '' }}>
-            <!-- For create page, default to checked -->
         </div>
         <input type="hidden" id="is_statutory" name="is_statutory"
             value="{{ isset($user) ? $user->is_statutory : 0 }}">
@@ -65,11 +64,11 @@
 </div>
 
 <fieldset class="col-md-12 mb-3">
-    <legend>Guard Credentials</legend>
+    <legend>Employee Credentials</legend>
     <div class="row mb-2">
         <div class="col-md-4 mb-3">
             <x-form-input name="trn" value="{{ old('trn', $user->guardAdditionalInformation->trn ?? '') }}"
-                label="Guard's TRN" placeholder="Enter Guard's TRN" oninput="formatInput(this, 'trn')" maxlength="11" />
+                label="Employee TRN" placeholder="Enter Employee TRN" oninput="formatInput(this, 'trn')" maxlength="11" />
         </div>
 
         <div class="col-md-4 mb-3">
@@ -78,16 +77,10 @@
         </div>
 
         <div class="col-md-4 mb-3">
-            <x-form-input name="psra" value="{{ old('psra', $user->guardAdditionalInformation->psra ?? '') }}"
-                label="PSRA Registration No" placeholder="Enter PSRA Registration No"
-                oninput="formatInput(this, 'psra')" maxlength="9" />
-        </div>
-
-        <div class="col-md-4 mb-3">
             <x-form-input name="date_of_joining"
-               value="{{ old('date_of_joining', isset($user) && $user->guardAdditionalInformation && $user->guardAdditionalInformation->date_of_joining ? \Carbon\Carbon::parse($user->guardAdditionalInformation->date_of_joining)->format('d-m-Y') : '') }}"
-                label="Guard's Date of Joining" placeholder="Enter Date of Joining" class="date-picker"
-                type="text" />
+                value="{{ old('date_of_joining',  isset($user) && $user->guardAdditionalInformation ? \Carbon\Carbon::parse($user->guardAdditionalInformation->date_of_joining)->format('d-m-Y') : '') }}"
+                label="Date of Joining" placeholder="Enter Date of Joining" class="date-picker"
+                type="text" required="true"/>
         </div>
 
         <div class="col-md-4 mb-2">
@@ -96,65 +89,33 @@
                 label="Date of Birth" class="date-of-birth" placeholder="Enter Date of Birth" type="text" required="true" />
         </div>
 
-        {{--<div class="col-md-4 mb-3">
-             <x-form-input name="employer_company_name"
-                value="{{ old('employer_company_name', $user->guardAdditionalInformation->employer_company_name ?? '') }}"
-                label="Employer Company Name" placeholder="Enter Employer Company Name" />
-        </div>
-        <div class="col-md-4 mb-3">
-            <x-form-input name="current_rate"
-                value="{{ old('current_rate', $user->guardAdditionalInformation->guards_current_rate ?? '') }}"
-                label="Guard's Current Rate" placeholder="Enter Guard's Current Rate" />
-        </div>
-        <div class="col-md-4 mb-3">
-            <x-form-input name="location_code"
-                value="{{ old('location_code', $user->guardAdditionalInformation->location_code ?? '') }}"
-                label="Location Code" placeholder="Enter Location Code" />
-        </div>
-        <div class="col-md-4 mb-3">
-            <x-form-input name="location_name"
-                value="{{ old('location_name', $user->guardAdditionalInformation->location_name ?? '') }}"
-                label="Location Name" placeholder="Enter Location Name" />
-        </div>
-        <div class="col-md-4 mb-3">
-            <x-form-input name="client_code"
-                value="{{ old('client_code', $user->guardAdditionalInformation->client_code ?? '') }}"
-                label="Client Code" placeholder="Enter Client Code" />
-        </div>
-        <div class="col-md-4 mb-3">
-            <x-form-input name="client_name"
-                value="{{ old('client_name', $user->guardAdditionalInformation->client_name ?? '') }}"
-                label="Client Name" placeholder="Enter Client Name" />
-        </div> --}}
-
-        <div class="col-md-4 mb-3">
-            <label for="guard_employee_as">Guard Employed As<span class="text-danger">*</span></label>
-            <select name="guard_employee_as_id" id="guard_employee_as_id" class="form-control{{ $errors->has('guard_employee_as_id') ? ' is-invalid' : '' }}">
-                <option value="" selected disabled>Select Guard Employed As</option>
-                @foreach ($rateMasters as $rateMaster)
-                    <option value="{{ $rateMaster->id }}" @selected(old('guard_employee_as_id', $user->guardAdditionalInformation->guard_employee_as_id ?? null) == $rateMaster->id)>
-                        {{ $rateMaster->guard_type }}
-                    </option>
-                @endforeach
-            </select>
-            @error('guard_employee_as_id')
-                <span class="invalid-feedback">{{ $message }}</span>
-            @enderror
+        <div class="col-md-4">
+            <div class="mb-3">
+                <x-form-input name="position" value="{{ old('position', $user->guardAdditionalInformation->position ?? '') }}" label="Position" placeholder="Enter Position" type="text"/>
+            </div>
         </div>
 
-        <div class="col-md-4 mb-3">
-            <label for="guard_type">Guard Duty Type<span class="text-danger">*</span></label>
-            <select name="guard_type_id" id="guard_type" class="form-control{{ $errors->has('guard_type_id') ? ' is-invalid' : '' }}">
-                <option value="" selected disabled>Select Guard Type</option>
-                @foreach ($rateMasters as $rateMaster)
-                    <option value="{{ $rateMaster->id }}" @selected(old('guard_type_id', $user->guardAdditionalInformation->guard_type_id ?? null) == $rateMaster->id)>
-                        {{ $rateMaster->guard_type }}
-                    </option>
-                @endforeach
-            </select>
-            @error('guard_type_id')
-                <span class="invalid-feedback">{{ $message }}</span>
-            @enderror
+        <div class="col-md-4">
+            <div class="mb-3">
+                <?php
+                $departmentOptions = ['Admin', 'ALARMS/ TECHNICAL', 'ARMOURED', 'FINANCE', 'HUMAN RESOURCE', 'MARKETING', 'OPERATIONS'];
+                ?>
+                <label for="department">Department </label>
+                <select name="department" id="department" class="form-control">
+                    <option value="" selected disabled>Select Department</option>
+                    @foreach ($departmentOptions as $department)
+                        <option value="{{ $department }}" @selected(old('department', $user->guardAdditionalInformation->department ?? null) == $department)>
+                            {{ $department }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="mb-3">
+                <x-form-input name="location" value="{{ old('location', $user->guardAdditionalInformation->location ?? '') }}" label="Location" placeholder="Enter Location" type="text"/>
+            </div>
         </div>
 
         <div class="col-md-4 mb-3">
@@ -200,8 +161,20 @@
                 placeholder="Enter Postal Code" />
         </div>
         <div class="col-md-4 mb-3">
-            <x-form-input name="email" value="{{ old('email', $user->email ?? '') }}" label="Email"
-                placeholder="Enter Email" />
+            <x-form-input name="email" value="{{ old('email', $user->email ?? '') }}" label="Work Email"
+                placeholder="Enter Work Email" />
+        </div>
+        <div class="col-md-4 mb-3">
+            <x-form-input name="personal_email" value="{{ old('personal_email', $user->email ?? '') }}" label="Personal Email"
+                placeholder="Enter Personal Email" />
+        </div>
+        <div class="col-md-4 mb-3">
+            <x-form-input name="work_phone_number" value="{{ old('work_phone_number', $user->work_phone_number ?? '') }}" label="Work Phone"
+                placeholder="Enter Work Phone" />
+        </div>
+        <div class="col-md-4 mb-3">
+            <x-form-input name="personal_phone" value="{{ old('personal_phone', $user->email ?? '') }}" label="Personal Phone"
+                placeholder="Enter Personal Phone" />
         </div>
     </div>
 </fieldset>
@@ -336,21 +309,6 @@
         </div>
 
         <div class="col-md-4 mb-3">
-            <x-form-input type="file" name="psra_doc" label="PSRA Document" accept="application/pdf"
-                onchange="showLink(this, 'psra_link', 'old_psra_doc')" />
-            @if ($user->userDocuments->psra ?? '')
-                <div class="preview mt-2" id="old_psra_doc">
-                    <label>PSRA Document:</label>
-                    <a href="{{ asset($user->userDocuments->psra) }}" target="_blank">View PSRA Document</a>
-                </div>
-            @endif
-            <div id="psra_link" class="mt-2" style="display:none;">
-                <label>PSRA Document:</label>
-                <a href="#" target="_blank">Preview PSRA Document</a>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
             <x-form-input type="file" name="birth_certificate" label="Birth Certificate" accept="application/pdf"
                 onchange="showLink(this, 'birth_link', 'old_birth_certificate')" />
             @if ($user->userDocuments->birth_certificate ?? '')
@@ -377,18 +335,14 @@
 <x-include-plugins :plugins="['datePicker', 'guardImage']"></x-include-plugins>
 <script>
     function formatInput(input, type) {
-        let value = input.value.replace(/\D/g, ''); // Remove non-digit characters
+        let value = input.value.replace(/\D/g, '');
 
         if (type === 'trn') {
-            // TRN: Format as XXX-XXX-XXX (9 digits)
             if (value.length > 3 && value.length <= 6) {
                 value = value.replace(/(\d{3})(\d{0,3})/, '$1-$2');
             } else if (value.length > 6) {
                 value = value.replace(/(\d{3})(\d{3})(\d{0,3})/, '$1-$2-$3');
             }
-        } else if (type === 'psra') {
-            // PSRA: No special formatting, just remove non-digits
-            value = value.slice(0, 9); // Limit to 9 digits
         }
 
         input.value = value;
@@ -412,20 +366,20 @@
         });
 
         if ($('#SwitchCheckSizelg').prop('checked')) {
-            $('#is_statutory').val('0'); // checked -> 0
+            $('#is_statutory').val('0');
             $('#SwitchCheckSizelg').val('0');
         } else {
-            $('#is_statutory').val('1'); // unchecked -> 1
+            $('#is_statutory').val('1');
             $('#SwitchCheckSizelg').val('1');
 
         }
 
         $('#SwitchCheckSizelg').change(function() {
             if ($(this).prop('checked')) {
-                $('#is_statutory').val('0'); // checked -> 0
+                $('#is_statutory').val('0');
                 $('#SwitchCheckSizelg').val('0');
             } else {
-                $('#is_statutory').val('1'); // unchecked -> 1
+                $('#is_statutory').val('1');
                 $('#SwitchCheckSizelg').val('1');
             }
         });

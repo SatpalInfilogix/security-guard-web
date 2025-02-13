@@ -85,5 +85,9 @@ class ModuleSeeder extends Seeder
             'name' => 'Help Request',
             'slug' => 'help request',
         ]);
+        Module::create([
+            'name' => 'Employee',
+            'slug' => 'employee',
+        ]);
     }
 }

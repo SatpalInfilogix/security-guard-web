@@ -21,7 +21,15 @@
                         <span key="t-spreadsheet">Onboard Guard</span>
                     </a>
                 </li>
-                @endcanany
+                @endcan
+                @can('view employee')
+                <li class="{{ Request::segment(2) == 'employees' ? 'mm-active' : '' }}">
+                    <a href="{{ route('employees.index')}}" class="waves-effect">
+                        <i class="fas fa-user-secret"></i>
+                        <span key="t-spreadsheet">Employee</span>
+                    </a>
+                </li>
+                @endcan
                 @can('view guard roster')
                 <li class="{{ Request::segment(2) == 'guard-rosters' ? 'mm-active' : '' }}">
                     <a href="{{ route('guard-rosters.index')}}" class="waves-effect">

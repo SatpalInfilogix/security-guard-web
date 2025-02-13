@@ -20,6 +20,7 @@ use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\FortnightDatesController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\DeductionController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\InvoiceController;
 
 Route::get('/', function (){
@@ -55,6 +56,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'payrolls'              => PayrollController::class,
             'deductions'            => DeductionController::class,
             'invoices'              => InvoiceController::class,
+            'employees'             => EmployeeController::class
         ]);
 
         Route::get('/payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
@@ -138,4 +140,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
 
     Route::get('payrolls/{id}/download-pdf', [PayrollController::class, 'downloadPdf'])->name('payrolls.download-pdf');
     Route::get('payrolls/bulk-download', [PayrollController::class, 'bulkDownloadPdf'])->name('payrolls.bulk-download-pdf');
+
+    Route::post('get-employee', [EmployeeController::class, 'getEmployee'])->name('get-employee');
+    Route::post('/employees/employee-status', [EmployeeController::class, 'employeeStatus'])->name('employees.employee-status');
 });
