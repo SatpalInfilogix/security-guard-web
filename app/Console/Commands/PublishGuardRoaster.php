@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\Invoice;
 use App\Models\InvoiceDetail;
 use App\Models\RateMaster;
+use App\Models\Leave;
 use Google\Service\Sheets\NumberFormat;
 use Spatie\Permission\Models\Role;
 
@@ -295,6 +296,22 @@ class PublishGuardRoaster extends Command
             $totalNormalEarnings += $detail->normal_hours_rate;
             $totalOvertimeEarnings += $detail->	overtime_rate;
             $totalPublicHolidayEarnings += $detail->public_holiday_rate;
+
+            // $year = Carbon::parse($previousStartDate)->year;
+            // $lastDayOfDecember = Carbon::createFromDate($year, 12, 31);
+            // if ($lastDayOfDecember->between($previousStartDate, $previousEndDate)) {
+            //     $leaves = Leave::where('guard_id', $userId)->where('status', 'Approved')->whereYear('date', $lastDayOfDecember->year)->count();
+            //     $yearlyLeaves = (int) setting('yearly_leaves') ?? 10;
+            //     if($leaves) {
+            //         $leaveCounts = $yearlyLeaves - $leaves;
+            //     } else {
+            //         $leaveCounts = $yearlyLeaves;
+            //     }
+            //     if ($leaves && $leaveCounts > 0) {
+            //         $leaveEarnings = ($leaveCounts * 8) * $detail->normal_hours_rate;
+            //         $totalNormalEarnings += $leaveEarnings;
+            //     }
+            // }
         }
         $totalGrossSalaryEarned = $totalNormalEarnings + $totalOvertimeEarnings + $totalPublicHolidayEarnings;
 

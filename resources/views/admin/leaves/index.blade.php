@@ -238,7 +238,6 @@
             $('#confirmReject').on('click', function() {
                 const rejectionReason = $('#rejectionReason').val();
                 const leaveId = $('#leaveId').val();
-                console.log('Leave Id:', leaveId)
                 if (!rejectionReason) {
                     swal({
                         title: "Error!",
@@ -263,7 +262,6 @@
             });
 
             function updateLeaveStatus(leaveId, newStatus, rejectionReason = null) {
-                console.log('aas', leaveId);
                 $.ajax({
                     url: `/leaves/${leaveId}/update-status`,
                     method: 'POST',
