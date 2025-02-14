@@ -14,6 +14,11 @@ use App\Models\UsersBankDetail;
 use App\Models\UsersKinDetail;
 use App\Models\UsersDocuments;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\EmployeeImport;
+use App\Exports\EmployeeImportExport;
 
 class EmployeeController extends Controller
 {
@@ -449,9 +454,7 @@ class EmployeeController extends Controller
 
     public function generateEmployeeCode()
     {
-        $lastEmployee = User::where('user_code', 'LIKE', 'E%')
-                            ->orderBy('user_code', 'desc')
-                            ->first();
+        $lastEmployee = User::where('user_code', 'LIKE', 'E%')->orderBy('user_code', 'desc')->first();
 
         if ($lastEmployee) {
             $lastCodeNumber = (int) substr($lastEmployee->user_code, 1);
@@ -462,5 +465,136 @@ class EmployeeController extends Controller
         }
     }
 
+    public function downloadPDF(Request $request)
+    {
+        $userRole = Role::where('name', 'Employee')->first();
+        $query = User::whereHas('roles', function ($query) use ($userRole) {
+            $query->where('role_id', $userRole->id);
+        })->with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail','userDocuments'])->latest();
 
+        if ($request->has('search_emp_code') && !empty($request->search_emp_code)) {
+            $query->where('id', $request->search_emp_code);
+        }
+
+        if ($request->has('search_name') && !empty($request->search_name)) {
+            $query->where('first_name', 'like', '%' . $request->search_name . '%');
+        }
+
+        if ($request->has('search_email') && !empty($request->search_email)) {
+            $query->where('email', 'like', '%' . $request->search_email . '%');
+        }
+
+        if ($request->has('search_phone') && !empty($request->search_phone)) {
+            $query->where('phone_number', 'like', '%' . $request->search_phone . '%');
+        }
+
+        if ($request->has('status') && !empty($request->status)) {
+            $query->where('status', $request->status);
+        }
+
+        $securityGuards = $query->get();
+
+        $pdf = PDF::loadView('admin.employees.pdf.employee-pdf', compact('securityGuards'));
+        return $pdf->download('employees_list.pdf');
+    }
+
+    public function exportEmployees()
+    {
+        $userRole = Role::where('name', 'Employee')->first();
+
+        $employees = User::whereHas('roles', function ($query) use ($userRole) {
+            $query->where('role_id', $userRole->id);
+        })->with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail','userDocuments'])->latest()->get();
+
+        $employeeArray = $employees->map(function ($employee) {
+            return [
+                "First Name"            => $employee->first_name,
+                "Middle Name"           => $employee->middle_name,
+                "Surname"               => $employee->surname,
+                "Phone Number"          => $employee->phone_number ?? '',
+                // Additional Detail
+                "Guard's TRN"           => $employee->guardAdditionalInformation->trn ?? '',
+                "NIS/NHT Number"        => $employee->guardAdditionalInformation->nis ?? '',
+                "Guard's Date of Joining" => $employee->guardAdditionalInformation->date_of_joining ? Carbon::parse($employee->guardAdditionalInformation->date_of_joining)->format('d-m-Y') : '',
+                "Date of Birth"         => $employee->guardAdditionalInformation->date_of_birth ? Carbon::parse($employee->guardAdditionalInformation->date_of_birth)->format('d-m-Y') : '',
+                "Position"              => $employee->guardAdditionalInformation->position ?? '',
+                "Department"            => $employee->guardAdditionalInformation->department ?? '',
+                "Location"              => $employee->guardAdditionalInformation->location ?? '',
+                "Date of Separation"    => $employee->guardAdditionalInformation->date_of_seperation ? Carbon::parse($employee->guardAdditionalInformation->date_of_seperation)->format('d-m-Y') : '',
+                // Contact details
+                "Apartment No"          => $employee->contactDetail->apartment_no ?? '',
+                "Building Name"         => $employee->contactDetail->building_name ?? '',
+                "Street Name"           => $employee->contactDetail->street_name ?? '',
+                "Parish"                => $employee->contactDetail->parish ?? '',
+                "City"                  => $employee->contactDetail->city ?? '',
+                "Postal Code"           => $employee->contactDetail->postal_code ?? '',
+                "Email"                 => $employee->email ?? '',
+                'Personal Email'        => $employee->contactDetail->personal_email ?? '',
+                'Work Phone Number'     => $employee->contactDetail->work_phone_number ?? '',
+                'Personal Phone Number'     => $employee->contactDetail->personal_phone_number ?? '',
+                // Bank details
+                "Bank Name"             => $employee->usersBankDetail->bank_name ?? '',
+                "Bank Branch Address"   => $employee->usersBankDetail->bank_branch_address ?? '',
+                "Account Number"        => $employee->usersBankDetail->account_no ?? '',
+                "Account Type"          => $employee->usersBankDetail->account_type ?? '',
+                "Routing Number"        => $employee->usersBankDetail->routing_number ?? '',
+                // Next of Kin details
+                "Kin Surname"           => $employee->usersKinDetail->surname ?? '',
+                "Kin First Name"        => $employee->usersKinDetail->first_name ?? '',
+                "Kin Middle Name"       => $employee->usersKinDetail->middle_name ?? '',
+                "Kin Apartment No"      => $employee->usersKinDetail->apartment_no ?? '',
+                "Kin Building Name"     => $employee->usersKinDetail->building_name ?? '',
+                "Kin Street Name"       => $employee->usersKinDetail->street_name ?? '',
+                "Kin Parish"            => $employee->usersKinDetail->parish ?? '',
+                "Kin City"              => $employee->usersKinDetail->city ?? '',
+                "Kin Postal Code"       => $employee->usersKinDetail->postal_code ?? '',
+                "Kin Email"             => $employee->usersKinDetail->email ?? '',
+                "Kin Phone Number"      => $employee->usersKinDetail->phone_number ?? '',
+            ];
+        })->toArray();
+
+        $headers = [
+            "First Name","Middle Name","Surname","Phone Number","TRN","NIS","Date Of Joining","Date Of Birth",
+            "Position","Department", "Location", "Date Of Separation",
+            "Apartment No","Building Name","Street Name","Parish","City","Postal Code","Email", "Personal Email","Work Phone Number","Personal Phone Number",
+            "Bank Name","Bank Branch Address","Account Number","Account Type","Routing Number","Kin Surname","Kin First Name","Kin Middle Name","Kin Apartment No",
+            "Kin Building Name","Kin Street Name","Kin Parish","Kin City","Kin Postal Code","Kin Email","Kin Phone Number",
+        ];
+
+        array_unshift($employeeArray, $headers);
+
+        $callback = function () use ($employeeArray) {
+            $file = fopen('php://output', 'w');
+            foreach ($employeeArray as $row) {
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        };
+
+        // Return CSV as a response with appropriate headers
+        return response()->stream($callback, Response::HTTP_OK, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="guards.csv"',
+        ]);
+    }
+
+    public function importEmployee(Request $request)
+    {
+        $import = new EmployeeImport;
+        Excel::import($import, $request->file('file'));
+
+        $importedData = $import->getErrors();
+        session()->put('imported_data', $importedData);
+        session()->flash('success', 'Employee imported successfully.');
+        $downloadUrl = route('employees.download');
+
+        return redirect()->route('employees.index')->with('downloadUrl', $downloadUrl);
+    }
+
+    public function exportResultCsv()
+    {
+        $importedData = session()->get('imported_data', []);
+        $export = new EmployeeImportExport($importedData);
+        return Excel::download($export, 'employee_import_results.csv');
+    }
 }

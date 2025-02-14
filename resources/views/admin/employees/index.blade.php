@@ -10,19 +10,19 @@
                         <h4 class="mb-sm-0 font-size-18">Employee</h4>
 
                         <div class="page-title-right">
-                            {{-- <a href="{{ route('security-guards.pdf') }}" class="btn btn-primary"><i class="bx bx-download"></i> Download PDF</a>
-                            <a href="{{ route('export.guards') }}" class="btn btn-primary"><i class="bx bx-export"></i> Security Guard Bulk Export</a>
-                            <a href="{{ url('download-guard-sample') }}"
-                                class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Guard Sample File</a>
+                            <button id="downloadPdfBtn" class="btn btn-primary"><i class="bx bx-download"></i> Download PDF</button>
+                            <a href="{{ route('export.employee') }}" class="btn btn-primary"><i class="bx bx-export"></i> Employee Bulk Export</a>
+                            <a href="{{ url('download-employee-sample') }}"
+                                class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Employee Sample File</a>
                             <div class="d-inline-block me-1">
-                                <form id="importForm" action="{{ route('import.security-guard') }}" method="POST" enctype="multipart/form-data">
+                                <form id="importForm" action="{{ route('import.employee') }}" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     <label for="fileInput" class="btn btn-primary primary-btn btn-md mb-0">
-                                        <i class="bx bx-cloud-download"></i> Import Security Guard
+                                        <i class="bx bx-cloud-download"></i> Import Employee
                                         <input type="file" id="fileInput" name="file" accept=".csv, .xlsx" style="display:none;">
                                     </label>
                                 </form>
-                            </div> --}}
+                            </div>
                             @if(Auth::user()->can('create employee'))
                                 <a href="{{ route('employees.create') }}" class="btn btn-primary">Add New Employee</a>
                             @endif
@@ -32,15 +32,15 @@
             </div>
             <!-- end page title -->
             <div class="row mb-3">
-                {{-- <div class="col-md-12">
+                <div class="col-md-12">
                     <form id="filterForm" method="GET">
                         <div class="row">
                             <div class="col-md-2">
                                 <select name="search_emp_code" class="form-control" id="search_emp_code">
                                     <option value="">Select Employee Code</option>
-                                    @foreach ($securityGuards as $securityGuard)
-                                        @if (!empty($securityGuard->user_code))
-                                            <option value="{{ $securityGuard->id }}">{{ $securityGuard->user_code }}</option>
+                                    @foreach ($employees as $employee)
+                                        @if (!empty($employee->user_code))
+                                            <option value="{{ $employee->id }}">{{ $employee->user_code }}</option>
                                         @endif
                                     @endforeach
                                 </select>
@@ -66,7 +66,7 @@
                             </div>
                         </div>
                     </form>
-                </div> --}}
+                </div>
             </div>
 
             <div class="row">
@@ -147,11 +147,11 @@
                     type: "POST",
                     data: function(d) {
                         d._token = "{{ csrf_token() }}";
-                        // d.search_name = $('#search_name').val();  // Send filter values to the server
-                        // d.search_email = $('#search_email').val();
-                        // d.search_phone = $('#search_phone').val();
-                        // d.search_emp_code = $('#search_emp_code').val();
-                        // d.status = $('#is_status').val();
+                        d.search_name = $('#search_name').val();  // Send filter values to the server
+                        d.search_email = $('#search_email').val();
+                        d.search_phone = $('#search_phone').val();
+                        d.search_emp_code = $('#search_emp_code').val();
+                        d.status = $('#is_status').val();
                         return d;
                     },
                     dataSrc: function(json) {
@@ -289,6 +289,19 @@
                     }
                 })
             })
+
+            $('#downloadPdfBtn').on('click', function() {
+                var filters = {
+                    search_emp_code: $('#search_emp_code').val(),
+                    search_name: $('#search_name').val(),
+                    search_email: $('#search_email').val(),
+                    search_phone: $('#search_phone').val(),
+                    status: $('#is_status').val()
+                };
+
+                var downloadUrl = `{{ route('employees.pdf') }}?` + $.param(filters);
+                window.location.href = downloadUrl;
+            });
         });
     </script>
 @endsection

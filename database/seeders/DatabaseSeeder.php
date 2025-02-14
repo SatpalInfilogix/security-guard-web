@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ModuleSeeder::class,
             RolesAndPermissionsSeeder::class,
-            FortnightSeeder::class
+            FortnightSeeder::class,
+            TwentyTwoDaysCycleSeeder::class,
         ]);
     }
 }

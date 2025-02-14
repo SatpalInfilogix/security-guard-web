@@ -102,6 +102,11 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         return Response::download($file);
     });
 
+    Route::get('download-employee-sample', function() {
+        $file = public_path('assets/sample-employee/employee.csv');
+        return Response::download($file);
+    });
+
     Route::get('/export/csv', [GuardRosterController::class, 'downloadExcel'])->name('export.csv');
     Route::get('export-guards', [SecurityGuardController::class, 'exportGuards'])->name('export.guards');
     Route::get('export-clients', [ClientSiteController::class, 'exportClients'])->name('export.client');
@@ -143,4 +148,8 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
 
     Route::post('get-employee', [EmployeeController::class, 'getEmployee'])->name('get-employee');
     Route::post('/employees/employee-status', [EmployeeController::class, 'employeeStatus'])->name('employees.employee-status');
+    Route::get('employees/pdf', [EmployeeController::class, 'downloadPDF'])->name('employees.pdf');
+    Route::get('export-employee', [EmployeeController::class, 'exportEmployees'])->name('export.employee');
+    Route::post('import-employee', [EmployeeController::class, 'importEmployee'])->name('import.employee');
+    Route::get('/employees/download', [EmployeeController::class, 'exportResultCsv'])->name('employees.download');
 });
