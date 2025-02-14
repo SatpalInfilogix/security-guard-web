@@ -22,6 +22,7 @@ use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\DeductionController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\EmployeeRateMasterController;
 
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');
@@ -56,7 +57,8 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'payrolls'              => PayrollController::class,
             'deductions'            => DeductionController::class,
             'invoices'              => InvoiceController::class,
-            'employees'             => EmployeeController::class
+            'employees'             => EmployeeController::class,
+            'employee-rate-master'  => EmployeeRateMasterController::class,
         ]);
 
         Route::get('/payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');

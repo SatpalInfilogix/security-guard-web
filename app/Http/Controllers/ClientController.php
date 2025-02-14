@@ -84,7 +84,7 @@ class ClientController extends Controller
             'sector_id'   => $request->sector_id,
         ]);
 
-        if($client){
+        if($client && $request->has('guard_type')){
             foreach ($request->guard_type as $index => $rateMasterData) {
                 ClientRateMaster::create([
                     'client_id' => $client->id,

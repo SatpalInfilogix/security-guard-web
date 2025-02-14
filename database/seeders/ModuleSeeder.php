@@ -89,5 +89,9 @@ class ModuleSeeder extends Seeder
             'name' => 'Employee',
             'slug' => 'employee',
         ]);
+        Module::create([
+            'name' => 'Employee Rate Master',
+            'slug' => 'employee rate master',
+        ]);
     }
 }

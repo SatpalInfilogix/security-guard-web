@@ -109,6 +109,14 @@
                     </a>
                 </li>
                 @endcan
+                @can('view employee rate master')
+                <li class="{{ Request::segment(2) == 'employee-rate-master' ? 'mm-active' : '' }}">
+                    <a href="{{ route('employee-rate-master.index')}}" class="waves-effect">
+                        <i class="fas fa-user-secret"></i>
+                        <span key="t-spreadsheet">Employee Rate Master</span>
+                    </a>
+                </li>
+                @endcan
                 <li class="{{ Request::segment(2) == 'fortnight-dates' ? 'mm-active' : '' }}">
                     <a href="{{ route('fortnight-dates.index')}}" class="waves-effect">
                         <i class="bx bx-grid-horizontal"></i>
