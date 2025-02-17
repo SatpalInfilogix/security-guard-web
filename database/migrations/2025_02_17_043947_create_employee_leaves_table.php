@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('reason')->nullable();
             $table->text('description')->nullable();
             $table->string('status')->default('Pending');
-            $table->enum('leave_type', ['Paid', 'Unpaid'])->default('Unpaid');
             $table->text('rejection_reason')->nullable();
             $table->timestamps();
 

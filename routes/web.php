@@ -159,6 +159,5 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
 
     Route::post('get-employee-leaves-list', [EmployeeLeavesController::class, 'getEmployeeLeaves'])->name('get-employee-leaves-list');
     Route::post('employee-leaves/{leaveId}/update-status', [EmployeeLeavesController::class, 'updateLeaveStatus'])->name('employee-leaves.updateStatus');
-    Route::post('update-leave-type/{id}', [EmployeeLeavesController::class, 'updateLeaveType'])->name('update-leave-type');
 
 });
