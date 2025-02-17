@@ -153,4 +153,21 @@ class EmployeeLeavesController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Status updated successfully.']);
     }
+
+    public function updateLeaveType(Request $request, $id) 
+    {
+        $request->validate([
+            'leave_type' => 'required',
+        ]);
+
+        $leave = EmployeeLeave::where('id', $id)->first();
+        if (!$leave) {
+            return response()->json(['success' => false, 'message' => 'Employee Leave record not found.'], 404);
+        }
+
+        $leave->leave_type = $request->leave_type;
+        $leave->save(); 
+
+        return response()->json(['success' => true, 'message' => 'Leave type updated successfully.']);
+    }
 }

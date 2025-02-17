@@ -25,7 +25,7 @@
                 @can('view employee')
                 <li class="{{ Request::segment(2) == 'employees' ? 'mm-active' : '' }}">
                     <a href="{{ route('employees.index')}}" class="waves-effect">
-                        <i class="fas fa-user-secret"></i>
+                        <i class="fas fa-female"></i>
                         <span key="t-spreadsheet">Employee</span>
                     </a>
                 </li>
@@ -81,7 +81,7 @@
                 @can('view employee leaves')
                 <li class="{{ Request::segment(2) == 'employee-leaves' ? 'mm-active' : '' }}">
                     <a href="{{ route('employee-leaves.index')}}" class="waves-effect">
-                        <i class="bx bx-tone"></i>
+                        <i class="bx bx-basket"></i>
                         <span key="t-spreadsheet">Employee Leaves</span>
                     </a>
                 </li>
@@ -120,7 +120,7 @@
                 @can('view employee rate master')
                 <li class="{{ Request::segment(2) == 'employee-rate-master' ? 'mm-active' : '' }}">
                     <a href="{{ route('employee-rate-master.index')}}" class="waves-effect">
-                        <i class="fas fa-user-secret"></i>
+                        <i class="bx bx-bolt-circle"></i>
                         <span key="t-spreadsheet">Employee Rate Master</span>
                     </a>
                 </li>

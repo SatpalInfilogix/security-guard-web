@@ -61,6 +61,7 @@
                                         <th>Date</th>
                                         <th>Reason</th>
                                         <th>Status</th>
+                                        <th>Leave Type</th>
                                         @can('delete employee leaves')
                                         <th>Action</th>
                                         @endcan
@@ -157,8 +158,25 @@
                                         ${row.status}
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="statusDropdown">
-                                        <li><a class="dropdown-item" href="javascript:void(0);" data-status="Approved" data-id="${row.id}">Approve</a></li>
-                                        ${row.status !== 'Cancelled' ? `<li><a class="dropdown-item" href="javascript:void(0);" data-status="Rejected" data-id="${row.id}">Reject</a></li>` : ''}
+                                        <li><a class="dropdown-item leave-status" href="javascript:void(0);" data-status="Approved" data-id="${row.id}">Approve</a></li>
+                                        ${row.status !== 'Cancelled' ? `<li><a class="dropdown-item leave-status" href="javascript:void(0);" data-status="Rejected" data-id="${row.id}">Reject</a></li>` : ''}
+                                    </ul>
+                                </div>
+                            `;
+                        }
+                    },
+                    {
+                        data: null,
+                        name: 'leave_type',
+                        render: function(data, type, row) {
+                            return `
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary btn-sm" type="button" id="leaveDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        ${row.leave_type}
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="leaveDropdown">
+                                        <li><a class="dropdown-item leave-type" href="javascript:void(0);" data-leave-type="Paid" data-id="${row.id}">Paid</a></li>
+                                        <li><a class="dropdown-item leave-type" href="javascript:void(0);" data-leave-type="Unpaid" data-id="${row.id}">Unpaid</a></li>
                                     </ul>
                                 </div>
                             `;
@@ -213,7 +231,7 @@
 
         $(document).ready(function() {
             let leaveId = null;
-            $(document).on('click', '.dropdown-item', function() {
+            $(document).on('click', '.leave-status', function() {
                 const newStatus = $(this).data('status');
                 const leaveId = $(this).data('id');
                 const statusButton = $(this).closest('tr').find('.dropdown-toggle');
@@ -295,6 +313,52 @@
                     },
                 });
             }
+
+            $(document).on('click', '.leave-type', function() {
+                var leaveId = $(this).data('id');
+                var newLeaveType = $(this).data('leave-type');
+                var updateApiEndpoint = "{{ route('update-leave-type', '') }}/" + leaveId;
+
+                swal({
+                        title: "Are you sure?",
+                        text: `You are about to change the status to "${newLeaveType}". Do you want to proceed?`,
+                        type: "warning",
+                        showCancelButton: true,
+                        closeOnConfirm: false,
+                    }, function(isConfirm) {
+                        if (isConfirm) {
+                            $.ajax({
+                                url: updateApiEndpoint,
+                                method: 'POST',
+                                data: {
+                                    leave_type: newLeaveType,
+                                    _token: '{{ csrf_token() }}'
+                                },
+                                success: function(response) {
+                                    if (response.success) {
+                                        swal({
+                                            title: "Success!",
+                                            text: "Leave Type updated successfully.",
+                                            type: "success",
+                                            showConfirmButton: false
+                                        });
+            
+                                        setTimeout(() => {
+                                            location.reload();
+                                        }, 2000);
+                                    } else {
+                                        swal({
+                                            title: "Error!",
+                                            text: "There was an issue updating the leave type. Please try again.",
+                                            type: "error",
+                                            showConfirmButton: true
+                                        });
+                                    }
+                                }
+                            });
+                        }
+                    });
+            });
         });
     </script>
 @endsection
