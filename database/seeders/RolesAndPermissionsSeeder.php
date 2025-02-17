@@ -37,6 +37,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'view help request', 'create help request', 'edit help request', 'delete help request',
             'view employee', 'create employee', 'edit employee', 'delete employee',
             'view employee rate master', 'create employee rate master', 'edit employee rate master', 'delete employee rate master',
+            'view employee leaves', 'create employee leaves', 'edit employee leaves', 'delete employee leaves',
+            'view employee payroll', 'create employee payroll', 'edit employee payroll', 'delete employee payroll',
         ];
 
         foreach ($permissions as $permission) {

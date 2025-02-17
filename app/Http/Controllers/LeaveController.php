@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Leave;
-use APp\Models\User;
+use App\Models\User;
 use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Gate;
@@ -130,6 +130,9 @@ class LeaveController extends Controller
 
     public function create()
     {
+        if(!Gate::allows('create leaves')) {
+            abort(403);
+        }
         $userRole = Role::where('name', 'Security Guard')->first();
 
         $securityGuards = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
@@ -141,6 +144,9 @@ class LeaveController extends Controller
 
     public function store(Request $request)
     {
+        if(!Gate::allows('create leaves')) {
+            abort(403);
+        }
         $request->validate([
             'guard_id'       => 'required',
             'start_date' => 'required|date',

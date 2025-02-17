@@ -61,7 +61,7 @@
                         <span key="t-spreadsheet">Payroll</span>
                     </a>
                 </li>
-                @endcanany
+                @endcan
                 @can('view invoice')
                 <li class="{{ Request::segment(2) == 'invoices' ? 'mm-active' : '' }}">
                     <a href="{{ route('invoices.index')}}" class="waves-effect">
@@ -69,7 +69,7 @@
                         <span key="t-spreadsheet">Invoice</span>
                     </a>
                 </li>
-                @endcanany
+                @endcan
                 @can('view leaves')
                 <li class="{{ Request::segment(2) == 'leaves' ? 'mm-active' : '' }}">
                     <a href="{{ route('leaves.index')}}" class="waves-effect">
@@ -77,7 +77,15 @@
                         <span key="t-spreadsheet">Leaves</span>
                     </a>
                 </li>
-                @endcanany
+                @endcan
+                @can('view employee leaves')
+                <li class="{{ Request::segment(2) == 'employee-leaves' ? 'mm-active' : '' }}">
+                    <a href="{{ route('employee-leaves.index')}}" class="waves-effect">
+                        <i class="bx bx-tone"></i>
+                        <span key="t-spreadsheet">Employee Leaves</span>
+                    </a>
+                </li>
+                @endcan
                 {{--<li {{ Request::segment(2) == 'calendar-management' ? 'mm-active' : '' }}>
                     <a href="{{ route('calendar.management') }}" class="waves-effect">
                         <i class="bx bx-calendar"></i>

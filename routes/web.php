@@ -23,6 +23,7 @@ use App\Http\Controllers\DeductionController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\EmployeeRateMasterController;
+use App\Http\Controllers\EmployeeLeavesController;
 
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');
@@ -59,6 +60,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'invoices'              => InvoiceController::class,
             'employees'             => EmployeeController::class,
             'employee-rate-master'  => EmployeeRateMasterController::class,
+            'employee-leaves'       => EmployeeLeavesController::class,
         ]);
 
         Route::get('/payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
@@ -154,4 +156,8 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('export-employee', [EmployeeController::class, 'exportEmployees'])->name('export.employee');
     Route::post('import-employee', [EmployeeController::class, 'importEmployee'])->name('import.employee');
     Route::get('/employees/download', [EmployeeController::class, 'exportResultCsv'])->name('employees.download');
+
+    Route::post('get-employee-leaves-list', [EmployeeLeavesController::class, 'getEmployeeLeaves'])->name('get-employee-leaves-list');
+    Route::post('employee-leaves/{leaveId}/update-status', [EmployeeLeavesController::class, 'updateLeaveStatus'])->name('employee-leaves.updateStatus');
+
 });

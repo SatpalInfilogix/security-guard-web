@@ -8,11 +8,11 @@
             <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0 font-size-18">Leaves</h4>
+                        <h4 class="mb-sm-0 font-size-18">Employee Leaves</h4>
 
                         <div class="page-title-right">
-                            @if(Auth::user()->can('create leaves'))
-                            <a href="{{ route('leaves.create') }}" class="btn btn-primary">Add New Leave</a>
+                            @if(Auth::user()->can('create employee leaves'))
+                            <a href="{{ route('employee-leaves.create') }}" class="btn btn-primary">Add New Employee Leave</a>
                             @endif
                         </div>
                     </div>
@@ -27,7 +27,7 @@
                                 $reasons = ['Approve', 'Pending', 'Reject'];
                                 ?>
                                 <select name="leave_status" id="leave_status" class="form-control">
-                                    <option value="" selected disabled>Select status</option>
+                                    <option value="" selected>Select status</option>
                                     @foreach ($reasons as $reason)
                                         <option value="{{ $reason }}" {{ old('reason') }}>{{ $reason }}</option>
                                     @endforeach
@@ -57,11 +57,11 @@
                                 <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>Guard Name</th>
+                                        <th>Employee Name</th>
                                         <th>Date</th>
                                         <th>Reason</th>
                                         <th>Status</th>
-                                        @can('delete leaves')
+                                        @can('delete employee leaves')
                                         <th>Action</th>
                                         @endcan
                                     </tr>
@@ -100,7 +100,7 @@
     <script>
         $(document).ready(function() {
             let actionColumn = [];
-            @can('delete leaves')
+            @can('delete employee leaves')
                 actionColumn = [{
                     data: null,
                     render: function(data, type, row) {
@@ -121,7 +121,7 @@
                 processing: true,
                 serverSide: true,
                 ajax: {
-                    url: "{{ route('get-leaves-list') }}",
+                    url: "{{ route('get-employee-leaves-list') }}",
                     type: "POST",
                     data: function(d) {
                         d._token = "{{ csrf_token() }}";
@@ -176,7 +176,7 @@
         $(document).on('click', '.leave-delete-btn', function() {
             let source = $(this).data('source');
             let leaveId = $(this).data('id');
-            var deleteApiEndpoint = "{{ route('leaves.destroy', '') }}/" + leaveId;
+            var deleteApiEndpoint = "{{ route('employee-leaves.destroy', '') }}/" + leaveId;
 
             swal({
                 title: "Are you sure?",
@@ -265,7 +265,7 @@
 
             function updateLeaveStatus(leaveId, newStatus, rejectionReason = null) {
                 $.ajax({
-                    url: `/leaves/${leaveId}/update-status`,
+                    url: `/employee-leaves/${leaveId}/update-status`,
                     method: 'POST',
                     data: {
                         status: newStatus,
