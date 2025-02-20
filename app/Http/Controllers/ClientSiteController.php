@@ -7,6 +7,8 @@ use App\Imports\ClientSiteImport;
 use Illuminate\Http\Request;
 use App\Models\ClientSite;
 use App\Models\Client;
+use App\Models\ClientOperation;
+use App\Models\ClientAccount;
 use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Role;
 use App\Models\User;
@@ -35,10 +37,10 @@ class ClientSiteController extends Controller
             $searchValue = $request->search['value'];
             $clientSites->where(function($query) use ($searchValue) {
                 $query->where('location_code', 'like', '%' . $searchValue . '%')
-                    ->orWhere('parish', 'like', '%' . $searchValue . '%')
-                    ->orWhere('email', 'like', '%' . $searchValue . '%')
+                    ->orWhere('location', 'like', '%' . $searchValue . '%')
                     ->orWhereHas('client', function($q) use ($searchValue) {
                         $q->where('client_name', 'like', '%' . $searchValue . '%');
+                        $q->orWhere('client_code', 'like', '%' . $searchValue . '%');
                     });
             });
         }
@@ -82,9 +84,9 @@ class ClientSiteController extends Controller
             abort(403);
         }
 
-
         $request->validate([
-            'client'  => 'required',
+            'client'       => 'required',
+            'client_code'  => 'required',
             'location_code' => 'required|unique:client_sites,location_code',
             'location'      => 'required',
             'latitude'      => 'required',
@@ -93,31 +95,63 @@ class ClientSiteController extends Controller
             'manager'    => 'required'
         ]);
 
-        dd($request->all());
-
-        ClientSite::create([
+        $clientSite = ClientSite::create([
             'client_id'         => $request->client,
             'location_code'     => $request->location_code,
-            'parish'            => $request->parish,
-            'billing_address'   => $request->billing_address,
-            'manager_id'        => $request->manager,
-            'contact_operation' => $request->contact_operation,
-            'telephone_number'  => $request->telephone_number,
-            'email'             => $request->email,
-            'invoice_recipient_main' => $request->invoice_recipient_main,
-            'invoice_recipient_copy' => $request->invoice_recipient_copy,
-            'account_payable_contact_name' => $request->account_payable_contact_name,
-            'email_2'           => $request->email_2,
-            'number'            => $request->number,
-            'number_2'          => $request->number_2,
-            'account_payable_contact_email' => $request->account_payable_contact_email,
-            'email_3'           => $request->email_3,
-            'telephone_number_2'=> $request->telephone_number_2,
-            'status'            => $request->status,
+            'location'          => $request->location,
+            'region_code'       => $request->region_code,
+            'region'            => $request->region,
+            'area_code'         => $request->area_code,
+            'area'              => $request->area,
             'latitude'          => $request->latitude,
             'longitude'         => $request->longitude,
-            'radius'            => $request->radius
+            'radius'            => $request->radius,
+            'sr_manager'        => $request->sr_manager,
+            'sr_manager_email'  => $request->sr_manager_email,
+            'manager_id'        => $request->manager,
+            'manager_email'     => $request->email,
+            'supervisor'        => $request->supervisor,
+            'supervisor_email'  => $request->supervisor_email,
+            'status'            => $request->service_status,
+            'unit_no_client'    => $request->client_address_unit_no,
+            'building_name_client' => $request->client_address_building_name,
+            'street_no_client'  => $request->client_address_street_no,
+            'street_road_client' => $request->client_address_street_road,
+            'parish_client'     => $request->client_address_parish,
+            'country_client'    => $request->client_address_country,
+            'postal_code_client' => $request->client_address_postal_code,
+            'unit_no_location'  => $request->location_address_unit_no,
+            'building_name_location' => $request->location_address_building_name,
+            'street_no_location' => $request->location_address_street_no,
+            'street_road_location' => $request->location_address_street_road,
+            'parish_location'   => $request->location_address_parish,
+            'country_location'  => $request->location_address_country,
+            'postal_code_location' => $request->location_address_postal_code,
         ]);
+
+        if ($clientSite) {
+            foreach ($request->client_operation_name as $index => $name) {
+                ClientOperation::create([
+                    'client_site_id' => $clientSite->id,
+                    'name' => $name,
+                    'position' => $request->client_operation_position[$index],
+                    'email' => $request->client_operation_email[$index],
+                    'telephone_number' => $request->client_operation_telephone[$index],
+                    'mobile' => $request->client_operation_mobile[$index],
+                ]);
+            }
+
+            foreach ($request->client_account_name as $index => $name) {
+                ClientAccount::create([
+                    'client_site_id' => $clientSite->id,
+                    'name' => $name,
+                    'position' => $request->client_account_position[$index],
+                    'email' => $request->client_account_email[$index],
+                    'telephone_number' => $request->client_account_telephone[$index],
+                    'mobile' => $request->client_account_mobile[$index],
+                ]);
+            }
+        }
 
         return redirect()->route('client-sites.index')->with('success', 'Client Site created successfully.');
     }
@@ -132,12 +166,13 @@ class ClientSiteController extends Controller
         if(!Gate::allows('edit client site')) {
             abort(403);
         }
+
+        $clientSite =ClientSite::with('client', 'clientAccount', 'clientOperation')->where('id', $clientSite->id)->first();
         $clients = Client::latest()->get();
         $userRole = Role::where('name', 'General Manager')->first();
         $users = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         })->latest()->get();
-
         return view('admin.client-sites.edit', compact('clients', 'clientSite', 'users'));
     }
 
@@ -146,38 +181,78 @@ class ClientSiteController extends Controller
         if(!Gate::allows('edit client site')) {
             abort(403);
         }
+
         $request->validate([
-            'client_id'  => 'required',
+            'client'        => 'required',
+            'client_code'   => 'required',
             'location_code' => 'required|unique:client_sites,location_code,' . $clientSite->id,
+            'location'      => 'required',
             'latitude'      => 'required',
             'longitude'     => 'required',
             'radius'        => 'required',
-            'manager_id'    => 'required'
+            'manager'       => 'required'
         ]);
 
         $clientSite->update([
-            'client_id'         => $request->client_id,
+            'client_id'         => $request->client,
             'location_code'     => $request->location_code,
-            'parish'            => $request->parish,
-            'billing_address'   => $request->billing_address,
-            'manager_id'        => $request->manager_id,
-            'contact_operation' => $request->contact_operation,
-            'telephone_number'  => $request->telephone_number,
-            'email'             => $request->email,
-            'invoice_recipient_main' => $request->invoice_recipient_main,
-            'invoice_recipient_copy' => $request->invoice_recipient_copy,
-            'account_payable_contact_name' => $request->account_payable_contact_name,
-            'email_2'           => $request->email_2,
-            'number'            => $request->number,
-            'number_2'          => $request->number_2,
-            'account_payable_contact_email' => $request->account_payable_contact_email,
-            'email_3'          => $request->email_3,
-            'telephone_number_2'=> $request->telephone_number_2,
-            'status'            => $request->status,
+            'location'          => $request->location,
+            'region_code'       => $request->region_code,
+            'region'            => $request->region,
+            'area_code'         => $request->area_code,
+            'area'              => $request->area,
             'latitude'          => $request->latitude,
             'longitude'         => $request->longitude,
-            'radius'            => $request->radius
+            'radius'            => $request->radius,
+            'sr_manager'        => $request->sr_manager,
+            'sr_manager_email'  => $request->sr_manager_email,
+            'manager_id'        => $request->manager,
+            'manager_email'     => $request->email,
+            'supervisor'        => $request->supervisor,
+            'supervisor_email'  => $request->supervisor_email,
+            'status'            => $request->service_status,
+            'unit_no_client'    => $request->client_address_unit_no,
+            'building_name_client' => $request->client_address_building_name,
+            'street_no_client'      => $request->client_address_street_no,
+            'street_road_client'    => $request->client_address_street_road,
+            'parish_client'         => $request->client_address_parish,
+            'country_client'        => $request->client_address_country,
+            'postal_code_client'    => $request->client_address_postal_code,
+            'unit_no_location'      => $request->location_address_unit_no,
+            'building_name_location' => $request->location_address_building_name,
+            'street_no_location'    => $request->location_address_street_no,
+            'street_road_location'  => $request->location_address_street_road,
+            'parish_location'       => $request->location_address_parish,
+            'country_location'      => $request->location_address_country,
+            'postal_code_location'  => $request->location_address_postal_code,
         ]);
+
+        if ($request->has('client_operation_name') && is_array($request->client_operation_name)) {
+            $clientSite->clientOperation()->delete();
+            foreach ($request->client_operation_name as $index => $name) {
+                ClientOperation::create([
+                    'client_site_id' => $clientSite->id,
+                    'name' => $name,
+                    'position' => $request->client_operation_position[$index],
+                    'email' => $request->client_operation_email[$index],
+                    'telephone_number' => $request->client_operation_telephone[$index],
+                    'mobile' => $request->client_operation_mobile[$index],
+                ]);
+            }
+        }
+        if ($request->has('client_account_name') && is_array($request->client_account_name)) {
+            $clientSite->clientAccount()->delete();
+            foreach ($request->client_account_name as $index => $name) {
+                ClientAccount::create([
+                    'client_site_id' => $clientSite->id,
+                    'name' => $name,
+                    'position' => $request->client_account_position[$index],
+                    'email' => $request->client_account_email[$index],
+                    'telephone_number' => $request->client_account_telephone[$index],
+                    'mobile' => $request->client_account_mobile[$index],
+                ]);
+            }
+        }
 
         return redirect()->route('client-sites.index')->with('success', 'Client Site updated successfully.');
     }

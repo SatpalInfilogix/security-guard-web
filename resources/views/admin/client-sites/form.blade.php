@@ -18,7 +18,7 @@
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="client_code" value="{{ $clientSite->client_code ?? '' }}" label="Client Code" placeholder="Client Code" required="true" readonly />
+            <x-form-input name="client_code" value="{{ $clientSite->client->client_code ?? '' }}" label="Client Code" placeholder="Client Code" required="true" readonly />
             @error('client_code')
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
@@ -36,22 +36,12 @@
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            @php $sectors = config('clientSite.sectors'); @endphp
-            <label for="sector_id">Sector</label>
-            <select name="sector_id" id="sector_id" @class(["form-control", "is-invalid" => $errors->has('sector_id')])>
-                @foreach ($sectors as $key => $sector)
-                    <option value="{{ $key }}" @selected(isset($clientSite) && $clientSite->sector_id === $key)>{{ $sector }}</option>
-                @endforeach
-            </select>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="mb-3">
             @php $region_codes = config('clientSite.region_code'); @endphp
             <label for="region_code">Region Code</label>
             <select name="region_code" id="region_code" @class(["form-control", "is-invalid" => $errors->has('region_code')])>
+                <option value="" selected disabled>Select Region Code</option>
                 @foreach ($region_codes as $key => $region_code)
-                    <option value="{{ $key }}" @selected(isset($clientSite) && $clientSite->region_code === $key)>{{ $region_code }}</option>
+                    <option value="{{ $key }}" @selected(isset($clientSite) && $clientSite->region_code == $key)>{{ $region_code }}</option>
                 @endforeach
             </select>
         </div>
@@ -61,8 +51,9 @@
             @php $regions = config('clientSite.region'); @endphp
             <label for="region">Region</label>
             <select name="region" id="region" @class(["form-control", "is-invalid" => $errors->has('region')])>
+                <option value="" selected disabled>Select Region</option>
                 @foreach ($regions as $key => $region)
-                    <option value="{{ $key }}" @selected(isset($clientSite) && $clientSite->region === $key)>{{ $region }}</option>
+                    <option value="{{ $key }}" @selected(isset($clientSite) && $clientSite->region == $key)>{{ $region }}</option>
                 @endforeach
             </select>
         </div>
@@ -141,17 +132,6 @@
 <div class="row mb-2">
     <div class="col-md-4">
         <div class="mb-3">
-            @php $frequencys = config('clientSite.frequency'); @endphp
-            <label for="frequency">Frequency</label>
-            <select name="frequency" id="frequency" @class(["form-control", "is-invalid" => $errors->has('frequency')])>
-                @foreach ($frequencys as $key => $frequency)
-                    <option value="{{ $key }}" @selected(($clientSite->frequency ?? '') === $key)>{{ $frequency }}</option>
-                @endforeach
-            </select>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="mb-3">
             <label for="service_status" class="form-label">Service Status</label>
             <select name="service_status" id="service_status" class="form-control">
                 <option value="Active" @selected(($clientSite->status ?? '') === 'Active')>Active</option>
@@ -159,42 +139,54 @@
             </select>
         </div>
     </div>
+    {{-- <div class="col-md-4">
+        <div class="mb-3">
+            @php $rates = config('clientSite.rateMaster'); @endphp
+            <label for="rates">Rate</label>
+            <select name="rates" id="rates" @class(["form-control", "is-invalid" => $errors->has('rates')])>
+                <option value="" selected disabled>Select Rate</option>
+                @foreach ($rates as $key => $rate)
+                    <option value="{{ $key }}" @selected(($clientSite->rate ?? '') === $key)>{{ $rate }}</option>
+                @endforeach
+            </select>
+        </div>
+    </div> --}}
 </div>
 <legend>Client Address</legend>
 <div class="row mb-2">
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="client_address_unit_no" value="{{ $clientSite->unit_no ?? '' }}" label="Unit No" placeholder="Enter Unit No"/>
+            <x-form-input name="client_address_unit_no" value="{{ $clientSite->unit_no_client ?? '' }}" label="Unit No" placeholder="Enter Unit No"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="client_address_building_name" value="{{ $clientSite->building_name ?? '' }}" label="Building Name" placeholder="Enter Building Name"/>
+            <x-form-input name="client_address_building_name" value="{{ $clientSite->building_name_client ?? '' }}" label="Building Name" placeholder="Enter Building Name"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="client_address_street_no" value="{{ $clientSite->street_no ?? '' }}" label="Sreet No" placeholder="Enter Sreet No"/>
+            <x-form-input name="client_address_street_no" value="{{ $clientSite->street_no_client ?? '' }}" label="Sreet No" placeholder="Enter Sreet No"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="client_address_street_road" value="{{ $clientSite->street_road ?? '' }}" label="Street Road" placeholder="Enter Street Road"/>
+            <x-form-input name="client_address_street_road" value="{{ $clientSite->street_road_client ?? '' }}" label="Street Road" placeholder="Enter Street Road"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="client_address_parish" value="{{ $clientSite->parish ?? '' }}" label="Parish" placeholder="Enter your parish"/>
+            <x-form-input name="client_address_parish" value="{{ $clientSite->parish_client ?? '' }}" label="Parish" placeholder="Enter your parish"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="client_address_country" value="{{ $clientSite->country ?? '' }}" label="Country" placeholder="Enter Country"/>
+            <x-form-input name="client_address_country" value="{{ $clientSite->country_client ?? '' }}" label="Country" placeholder="Enter Country"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="client_address_postal_code" value="{{ $clientSite->postal_code ?? '' }}" label="Postal Code" placeholder="Enter Postal Code"/>
+            <x-form-input name="client_address_postal_code" value="{{ $clientSite->postal_code_client ?? '' }}" label="Postal Code" placeholder="Enter Postal Code"/>
         </div>
     </div>
 </div>
@@ -202,103 +194,162 @@
 <div class="row mb-2">
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="location_address_unit_no" value="{{ $clientSite->unit_no ?? '' }}" label="Unit No" placeholder="Enter Unit No"/>
+            <x-form-input name="location_address_unit_no" value="{{ $clientSite->unit_no_location ?? '' }}" label="Unit No" placeholder="Enter Unit No"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="location_address_building_name" value="{{ $clientSite->building_name ?? '' }}" label="Building Name" placeholder="Enter Building Name"/>
+            <x-form-input name="location_address_building_name" value="{{ $clientSite->building_name_location ?? '' }}" label="Building Name" placeholder="Enter Building Name"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="location_address_street_no" value="{{ $clientSite->street_no ?? '' }}" label="Sreet No" placeholder="Enter Sreet No"/>
+            <x-form-input name="location_address_street_no" value="{{ $clientSite->street_no_location ?? '' }}" label="Sreet No" placeholder="Enter Sreet No"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="location_address_street_road" value="{{ $clientSite->street_road ?? '' }}" label="Street Road" placeholder="Enter Street Road"/>
+            <x-form-input name="location_address_street_road" value="{{ $clientSite->street_road_location ?? '' }}" label="Street Road" placeholder="Enter Street Road"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="location_address_parish" value="{{ $clientSite->parish ?? '' }}" label="Parish" placeholder="Enter your parish"/>
+            <x-form-input name="location_address_parish" value="{{ $clientSite->parish_location ?? '' }}" label="Parish" placeholder="Enter your parish"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="location_address_country" value="{{ $clientSite->country ?? '' }}" label="Country" placeholder="Enter Country"/>
+            <x-form-input name="location_address_country" value="{{ $clientSite->country_location ?? '' }}" label="Country" placeholder="Enter Country"/>
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="location_address_postal_code" value="{{ $clientSite->postal_code ?? '' }}" label="Postal Code" placeholder="Enter Postal Code"/>
+            <x-form-input name="location_address_postal_code" value="{{ $clientSite->postal_code_location ?? '' }}" label="Postal Code" placeholder="Enter Postal Code"/>
         </div>
     </div>
 </div>
 <div id="client-operation-contact-container">
     <legend>Client Operations Contact</legend>
     <div class="row mb-2" id="client-operation-contact">
-        <div class="col-md-4">
-            <div class="mb-3">
-                <x-form-input name="client_operation_name[]" value="{{ $clientSite->parish ?? '' }}" label="Name" placeholder="Enter name"/>
+    
+        @if(isset($clientSite->clientOperation) && $clientSite->clientOperation->count() > 0)
+            @foreach($clientSite->clientOperation as $operationContact)
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_operation_name[]" value="{{ $operationContact->name }}" label="Name" placeholder="Enter name"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_operation_position[]" value="{{ $operationContact->position }}" label="Position" placeholder="Enter position"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_operation_email[]" value="{{ $operationContact->email }}" label="Email" placeholder="Enter email"/>
+                        </div>
+                    </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_operation_telephone[]" value="{{ $operationContact->telephone_number }}" label="Telephone" placeholder="Enter telephone"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_operation_mobile[]" value="{{ $operationContact->mobile }}" label="Mobile" placeholder="Enter mobile"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-danger mt-4" id="remove-contact">Delete</button>
+                </div>
+            @endforeach
+        @else
+            <div class="col-md-4 mb-3">
+                <x-form-input name="client_operation_name[]" value="" label="Name" placeholder="Enter name"/>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="mb-3">
-                <x-form-input name="client_operation_position[]" value="{{ $clientSite->parish ?? '' }}" label="Position" placeholder="Enter position"/>
+            <div class="col-md-4 mb-3">
+                <x-form-input name="client_operation_position[]" value="" label="Position" placeholder="Enter position"/>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="mb-3">
-                <x-form-input name="client_operation_email[]" value="{{ $clientSite->parish ?? '' }}" label="Email" placeholder="Enter email"/>
+            <div class="col-md-4 mb-3">
+                <x-form-input name="client_operation_email[]" value="" label="Email" placeholder="Enter email"/>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="mb-3">
-                <x-form-input name="client_operation_telephone[]" value="{{ $clientSite->parish ?? '' }}" label="Telephone" placeholder="Enter telephone"/>
+            <div class="col-md-4 mb-3">
+                <x-form-input name="client_operation_telephone[]" value="" label="Telephone" placeholder="Enter telephone"/>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="mb-3">
-                <x-form-input name="client_operation_mobile[]" value="{{ $clientSite->parish ?? '' }}" label="Mobile" placeholder="Enter mobile"/>
+            <div class="col-md-4 mb-3">
+                <x-form-input name="client_operation_mobile[]" value="" label="Mobile" placeholder="Enter mobile"/>
             </div>
-        </div>
-        <div class="col-md-4">
-            <button type="button" class="btn btn-primary mt-4" id="add-operation-contact">Add more contact</button>
-        </div>
+            <div class="col-md-4 mb-3">
+                <button type="button" class="btn btn-primary mt-4" id="add-operation-contact">Add more contact</button>
+            </div>
+        @endif
     </div>
 </div>
 
-<legend>Client Accounts Contact</legend>
-<div class="row mb-2">
-    <div class="col-md-4">
-        <div class="mb-3">
-            <x-form-input name="client_account_name[]" value="{{ $clientSite->parish ?? '' }}" label="Name" placeholder="Enter name"/>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="mb-3">
-            <x-form-input name="client_account_position[]" value="{{ $clientSite->parish ?? '' }}" label="Position" placeholder="Enter position"/>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="mb-3">
-            <x-form-input name="client_account_email[]" value="{{ $clientSite->parish ?? '' }}" label="Email" placeholder="Enter email"/>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="mb-3">
-            <x-form-input name="client_account_telephone[]" value="{{ $clientSite->parish ?? '' }}" label="Telephone" placeholder="Enter telephone"/>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="mb-3">
-            <x-form-input name="client_account_mobile[]" value="{{ $clientSite->parish ?? '' }}" label="Mobile" placeholder="Enter mobile"/>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <button type="button" class="btn btn-primary mt-4" id="add-account-contact">Add more contact</button>
+<div id="client-account-contact-container">
+    <legend>Client Accounts Contact</legend>
+    <div class="row mb-2" id="client-account-contact">
+        @if(isset($clientSite->clientAccount) && $clientSite->clientAccount->count() > 0)
+            @foreach($clientSite->clientAccount as $accountContact)
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_account_name[]" value="{{ $accountContact->name ?? '' }}" label="Name" placeholder="Enter name"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_account_position[]" value="{{ $accountContact->position ?? '' }}" label="Position" placeholder="Enter position"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_account_email[]" value="{{ $accountContact->email ?? '' }}" label="Email" placeholder="Enter email"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_account_telephone[]" value="{{ $accountContact->telephone_number ?? '' }}" label="Telephone" placeholder="Enter telephone"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_account_mobile[]" value="{{ $accountContact->mobile ?? '' }}" label="Mobile" placeholder="Enter mobile"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-danger mt-4" id="remove-account">Delete</button>
+                </div>
+                @endforeach
+            @else
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_account_name[]" value="" label="Name" placeholder="Enter name"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_account_position[]" value="" label="Position" placeholder="Enter position"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_account_email[]" value="" label="Email" placeholder="Enter email"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_account_telephone[]" value="" label="Telephone" placeholder="Enter telephone"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <x-form-input name="client_account_mobile[]" value="" label="Mobile" placeholder="Enter mobile"/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-primary mt-4" id="add-account-contact">Add more contact</button>
+                </div>
+            @endif
     </div>
 </div>
 
@@ -324,12 +375,24 @@
         $('#add-operation-contact').click(function(){
             var newContactRow = $('#client-operation-contact').first().clone();
             newContactRow.find('input').val('');
-            newContactRow.find('button').toggleClass('btn-primary btn-danger').html('Delete');
+            newContactRow.find('button').toggleClass('btn-primary btn-danger').html('Delete').addClass('remove-contact');
             newContactRow.appendTo('#client-operation-contact-container');
             console.log('newContactRow',newContactRow)
 
             newContactRow.find('.remove-contact').click(function(){
                 newContactRow.remove();
+            });
+        });
+
+        $('#add-account-contact').click(function(){
+            var newAccountRow = $('#client-account-contact').first().clone();
+            newAccountRow.find('input').val('');
+            newAccountRow.find('button').toggleClass('btn-primary btn-danger').html('Delete').addClass('remove-account');
+            newAccountRow.appendTo('#client-account-contact-container');
+            console.log('newContactRow',newAccountRow)
+
+            newAccountRow.find('.remove-account').click(function(){
+                newAccountRow.remove();
             });
         });
     });

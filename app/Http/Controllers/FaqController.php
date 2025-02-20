@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Faq;
+use Illuminate\Support\Facades\Gate;
 
 class FaqController extends Controller
 {
     public function index()
     {
+        if(!Gate::allows('view faq')) {
+            abort(403);
+        }
         $faqs = Faq::latest()->get();
 
         return view('admin.faq.index', compact('faqs'));
@@ -16,11 +20,17 @@ class FaqController extends Controller
 
     public function create()
     {
+        if(!Gate::allows('create faq')) {
+            abort(403);
+        }
         return view('admin.faq.create');
     }
 
     public function store(Request $request)
     {
+        if(!Gate::allows('create faq')) {
+            abort(403);
+        }
         $request->validate([
             'question' => 'required',
             'answer'   => 'required',
@@ -41,6 +51,9 @@ class FaqController extends Controller
 
     public function edit($id)
     {
+        if(!Gate::allows('edit faq')) {
+            abort(403);
+        }
         $faq = Faq::where('id', $id)->first();
 
         return view('admin.faq.edit', compact('faq'));
@@ -48,6 +61,9 @@ class FaqController extends Controller
 
     public function update(Request $request, $id)
     {
+        if(!Gate::allows('edit faq')) {
+            abort(403);
+        }
         $request->validate([
             'question' => 'required',
             'answer'   => 'required',
@@ -64,6 +80,9 @@ class FaqController extends Controller
 
     public function destroy(string $id)
     {
+        if(!Gate::allows('delete faq')) {
+            abort(403);
+        }
         $faq = Faq::where('id', $id)->delete();
 
         return response()->json([

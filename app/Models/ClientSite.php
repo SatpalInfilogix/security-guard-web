@@ -14,4 +14,14 @@ class ClientSite extends Model
     {
         return $this->belongsTo(Client::class);
     }
+
+    public function clientAccount()
+    {
+        return $this->hasMany(ClientAccount::class, 'client_site_id');
+    }
+
+    public function clientOperation()
+    {
+        return $this->hasMany(ClientOperation::class, 'client_site_id');
+    }
 }

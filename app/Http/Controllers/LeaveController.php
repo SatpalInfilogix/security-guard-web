@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Leave;
-use APp\Models\User;
+use App\Models\User;
 use Carbon\Carbon;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Auth;
 use App\Services\PushNotificationService;
 
 class LeaveController extends Controller
@@ -116,6 +117,7 @@ class LeaveController extends Controller
 
         $leaves = $leaves->skip($start)->take($length)->get();
 
+        // Returning permissions with the response
         $data = [
             'draw' => $request->input('draw'),
             'recordsTotal' => $totalRecords,
@@ -128,6 +130,9 @@ class LeaveController extends Controller
 
     public function create()
     {
+        if(!Gate::allows('create leaves')) {
+            abort(403);
+        }
         $userRole = Role::where('name', 'Security Guard')->first();
 
         $securityGuards = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
@@ -139,6 +144,9 @@ class LeaveController extends Controller
 
     public function store(Request $request)
     {
+        if(!Gate::allows('create leaves')) {
+            abort(403);
+        }
         $request->validate([
             'guard_id'       => 'required',
             'start_date' => 'required|date',

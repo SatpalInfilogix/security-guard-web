@@ -27,7 +27,7 @@ class GuardRosterController extends Controller
 {
     public function index()
     {
-        if(!Gate::allows('view guard roaster')) {
+        if(!Gate::allows('view guard roster')) {
             abort(403);
         }
 
@@ -78,6 +78,11 @@ class GuardRosterController extends Controller
             $guardRoasterData->where('client_site_id', $request->client_site_id);
         }
 
+        if ($request->has('date') && !empty($request->date))
+        {
+            $guardRoasterData->where('date', Carbon::parse($request->date));
+        }
+
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
         
@@ -124,7 +129,7 @@ class GuardRosterController extends Controller
 
     public function create()
     {
-        if(!Gate::allows('create guard roaster')) {
+        if(!Gate::allows('create guard roster')) {
             abort(403);
         }
 
@@ -142,7 +147,7 @@ class GuardRosterController extends Controller
 
     public function store(Request $request)
     {
-        if(!Gate::allows('create guard roaster')) {
+        if(!Gate::allows('create guard roster')) {
             abort(403);
         }
 
@@ -156,24 +161,38 @@ class GuardRosterController extends Controller
             'end_time'       => ['required', 'regex:/^(0[1-9]|1[0-2]):([0-5][0-9])( ?[APap][Mm])$/'],
         ]);
 
-        $start_time = trim($request->start_time);
-        $end_time = trim($request->end_time);
+        $startTime = trim($request->start_time);
+        $endTime = trim($request->end_time);
 
-        $start_time = Carbon::createFromFormat('h:iA', $start_time)->format('H:i');
-        $end_time = Carbon::createFromFormat('h:iA', $end_time)->format('H:i');
-        
+        $start_time = Carbon::createFromFormat('h:iA', $startTime)->format('H:i');
+        $end_time = Carbon::createFromFormat('h:iA', $endTime)->format('H:i');
+
+        $start_date = Carbon::parse($request->date);
+        $end_date = Carbon::parse($request->end_date);
+
         $existingRoster = GuardRoster::where('guard_id', $request->guard_id)
-                            ->where('date', $request->date)
-                            ->where(function($query) use ($start_time, $end_time) {
-                                $query->whereBetween('start_time', [$start_time, $end_time])
-                                    ->orWhereBetween('end_time', [$start_time, $end_time])
-                                    ->orWhere(function($query) use ($start_time, $end_time) {
-                                        $query->where('start_time', '<=', $start_time)
-                                            ->where('end_time', '>=', $end_time);
+                    ->where(function($query) use ($start_time, $end_time, $start_date, $end_date) {
+                        if ($start_date == $end_date) {
+                            $query->where('date', '=', $start_date)
+                                ->where(function($query) use ($start_time, $end_time) {
+                                    $query->where(function($query) use ($start_time, $end_time) {
+                                        $query->where('start_time', '<', $end_time)
+                                            ->where('end_time', '>', $start_time);
                                     });
-                            })
-                            ->first();
-    
+                                });
+                        } else {
+                            $query->where(function($query) use ($start_time, $end_time, $start_date, $end_date) {
+                                $query->where('date', '=', $start_date)
+                                    ->where('end_date', '=', $end_date)
+                                    ->where(function($query) use ($start_time, $end_time) {
+                                        $query->where('start_time', '>', $end_time)
+                                            ->where('end_time', '<', $start_time);
+                                    });
+                            });
+                        }
+                    })
+                    ->first();
+
         if ($existingRoster) {
             return back()->with('error', 'There is already an overlapping guard roster for this client site at this time.');
         }
@@ -198,7 +217,7 @@ class GuardRosterController extends Controller
 
     public function edit($id) 
     {
-        if(!Gate::allows('edit guard roaster')) {
+        if(!Gate::allows('edit guard roster')) {
             abort(403);
         }
         $guardRoaster = GuardRoster::where('id', $id)->first();
@@ -228,7 +247,7 @@ class GuardRosterController extends Controller
 
     public function update(Request $request, $id)
     {
-        if(!Gate::allows('edit guard roaster')) {
+        if(!Gate::allows('edit guard roster')) {
             abort(403);
         }
         $request->validate([
@@ -302,7 +321,7 @@ class GuardRosterController extends Controller
 
     public function destroy($id)
     {
-        if(!Gate::allows('delete guard roaster')) {
+        if(!Gate::allows('delete guard roster')) {
             abort(403);
         }
         GuardRoster::where('id', $id)->delete();

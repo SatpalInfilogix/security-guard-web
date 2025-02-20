@@ -24,7 +24,7 @@
         }
 
         .header img {
-            width: 100px; /* Adjust the logo size */
+            width: 200px;
             margin-bottom: 10px;
         }
 
@@ -75,13 +75,11 @@
 <body>
 
     <div class="container">
-        <!-- Header with logo and title -->
         <div class="header">
-            <img src="path_to_your_logo.png" alt="Company Logo"> <!-- Replace with the actual path to your logo -->
+            <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('assets/logo-admin.png'))) }}" alt="Logo">
             <h1>Security Guards List</h1>
         </div>
 
-        <!-- Table containing security guard information -->
         <table>
             <thead>
                 <tr>

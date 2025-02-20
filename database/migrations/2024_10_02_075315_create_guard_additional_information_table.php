@@ -27,6 +27,9 @@ return new class extends Migration
             $table->string('client_name')->nullable(); */
             $table->unsignedBigInteger('guard_type_id')->nullable();
             $table->unsignedBigInteger('guard_employee_as_id')->nullable();
+            $table->string('position')->nullable();
+            $table->string('department')->nullable();
+            $table->string('location')->nullable();
             $table->date('date_of_seperation')->nullable();
 
             $table->timestamps();

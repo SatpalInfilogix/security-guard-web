@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Client;
+use App\Models\RateMaster;
+use App\Models\ClientRateMaster;
 use Illuminate\Support\Facades\Gate;
 
 class ClientController extends Controller
@@ -57,8 +59,9 @@ class ClientController extends Controller
         if(!Gate::allows('create client')) {
             abort(403);
         }
+        $rateMasters = RateMaster::all();
 
-        return view('admin.clients.create');
+        return view('admin.clients.create', compact('rateMasters'));
     }
 
     public function store(Request $request)
@@ -72,12 +75,30 @@ class ClientController extends Controller
             'client_code' => 'required|unique:clients,client_code',
         ]);
 
-        Client::create([
+        $client = Client::create([
             'client_name' => $request->client_name,
             'client_code' => $request->client_code,
             'nis'         => $request->nis,
-            'gct'         => $request->gct
+            'gct'         => $request->gct,
+            'frequency'   => $request->frequency,
+            'sector_id'   => $request->sector_id,
         ]);
+
+        if($client && $request->has('guard_type')){
+            foreach ($request->guard_type as $index => $rateMasterData) {
+                ClientRateMaster::create([
+                    'client_id' => $client->id,
+                    'guard_type' => $rateMasterData,
+                    'regular_rate' => $request->regular_rate[$index],
+                    'laundry_allowance' => $request->laundry_allowance[$index],
+                    'canine_premium' => $request->canine_premium[$index] ?? null,
+                    'fire_arm_premium' => $request->fire_arm_premium[$index] ?? null,
+                    'gross_hourly_rate' => $request->gross_hourly_rate[$index] ?? null,
+                    'overtime_rate' => $request->overtime_rate[$index] ?? null,
+                    'holiday_rate' => $request->holiday_rate[$index] ?? null,
+                ]);
+            }
+        }
 
         return redirect()->route('clients.index')->with('success', 'Client created successfully.');
     }
@@ -93,7 +114,12 @@ class ClientController extends Controller
             abort(403);
         }
 
-        return view('admin.clients.edit', compact('client'));
+        $rateMasters = ClientRateMaster::where('client_id', $client->id)->get();
+        if($rateMasters->isEmpty()) {
+            $rateMasters = RateMaster::all();
+        }
+
+        return view('admin.clients.edit', compact('client', 'rateMasters'));
     }
 
     public function update(Request $request, Client $client)
@@ -111,8 +137,39 @@ class ClientController extends Controller
             'client_name' => $request->client_name,
             'client_code' => $request->client_code,
             'nis'         => $request->nis,
-            'gct'         => $request->gct
+            'gct'         => $request->gct,
+            'frequency'   => $request->frequency,
+            'sector_id'   => $request->sector_id,
         ]);
+
+        if($client) {
+            foreach ($request->guard_type as $index => $rateMasterData) {
+                $rateMaster = ClientRateMaster::where('client_id', $client->id)->where('guard_type', $rateMasterData)->first();
+                if ($rateMaster) { 
+                    $rateMaster->update([
+                        'regular_rate' => $request->regular_rate[$index],
+                        'laundry_allowance' => $request->laundry_allowance[$index],
+                        'canine_premium' => $request->canine_premium[$index] ?? null,
+                        'fire_arm_premium' => $request->fire_arm_premium[$index] ?? null,
+                        'gross_hourly_rate' => $request->gross_hourly_rate[$index] ?? null,
+                        'overtime_rate' => $request->overtime_rate[$index] ?? null,
+                        'holiday_rate' => $request->holiday_rate[$index] ?? null,
+                    ]);
+                } else {
+                    ClientRateMaster::create([
+                        'client_id' => $client->id,
+                        'guard_type' => $rateMasterData,
+                        'regular_rate' => $request->regular_rate[$index],
+                        'laundry_allowance' => $request->laundry_allowance[$index],
+                        'canine_premium' => $request->canine_premium[$index] ?? null,
+                        'fire_arm_premium' => $request->fire_arm_premium[$index] ?? null,
+                        'gross_hourly_rate' => $request->gross_hourly_rate[$index] ?? null,
+                        'overtime_rate' => $request->overtime_rate[$index] ?? null,
+                        'holiday_rate' => $request->holiday_rate[$index] ?? null,
+                    ]);
+                }
+            }
+        }
 
         return redirect()->route('clients.index')->with('success', 'Client updated successfully.');
     }

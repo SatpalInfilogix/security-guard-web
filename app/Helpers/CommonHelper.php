@@ -24,3 +24,11 @@ if(!function_exists('setting')) {
         return $value;
     }
 }
+
+if (!function_exists('convertToHoursAndMinutes')) {
+    function convertToHoursAndMinutes($fractionalHours) {
+        $hours = floor($fractionalHours);
+        $minutes = round(($fractionalHours - $hours) * 60);
+        return $hours . ':' . $minutes;
+    }
+}

@@ -20,13 +20,25 @@ class RolesAndPermissionsSeeder extends Seeder
             'view user', 'create user', 'edit user', 'delete user',
             'view roles & permissions', 'create roles & permissions', 'edit roles & permissions', 'delete roles & permissions',
             'view security guards', 'create security guards', 'edit security guards', 'delete security guards',
-            'view guard roaster', 'create guard roaster', 'edit guard roaster', 'delete guard roaster',
+            'view guard roster', 'create guard roster', 'edit guard roster', 'delete guard roster',
             'view attendance', 'create attendance', 'edit attendance', 'delete attendance',
             'view leaves', 'create leaves', 'edit leaves', 'delete leaves',
             'view rate master', 'create rate master', 'edit rate master', 'delete rate master',
             'view client', 'create client', 'edit client', 'delete client',
             'view client site', 'create client site', 'edit client site', 'delete client site',
-            'view public holiday', 'create public holiday', 'edit public holiday', 'delete public holiday'
+            'view public holiday', 'create public holiday', 'edit public holiday', 'delete public holiday',
+            'view payroll', 'create payroll', 'edit payroll', 'delete payroll',
+            'view nst deduction', 'create nst deduction', 'edit nst deduction', 'delete nst deduction',
+            'view invoice', 'create invoice', 'edit invoice', 'delete invoice',
+            'view faq', 'create faq', 'edit faq', 'delete faq',
+            'view site setting', 'create site setting', 'edit site setting', 'delete site setting',
+            'view gerenal setting', 'create gerenal setting', 'edit gerenal setting', 'delete gerenal setting',
+            'view payment setting', 'create payment setting', 'edit payment setting', 'delete payment setting',
+            'view help request', 'create help request', 'edit help request', 'delete help request',
+            'view employee', 'create employee', 'edit employee', 'delete employee',
+            'view employee rate master', 'create employee rate master', 'edit employee rate master', 'delete employee rate master',
+            'view employee leaves', 'create employee leaves', 'edit employee leaves', 'delete employee leaves',
+            'view employee payroll', 'create employee payroll', 'edit employee payroll', 'delete employee payroll',
         ];
 
         foreach ($permissions as $permission) {
@@ -35,11 +47,11 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $roles = [
             'Admin' => Permission::all(),
-            'General Manager'       => ['view guard roaster', 'create guard roaster', 'edit guard roaster'],
-            'Manager Operations'    => ['view guard roaster', 'create guard roaster', 'edit guard roaster'],
-            'Asst Mgr Operations'   => ['view guard roaster', 'create guard roaster', 'edit guard roaster'],
-            'Sr. Supervisor'        => ['view guard roaster'],
-            'Supervisor'            => ['view guard roaster'],
+            'General Manager'       => ['view guard roster', 'create guard roster', 'edit guard roster'],
+            'Manager Operations'    => ['view guard roster', 'create guard roster', 'edit guard roster'],
+            'Asst Mgr Operations'   => ['view guard roster', 'create guard roster', 'edit guard roster'],
+            'Sr. Supervisor'        => ['view guard roster'],
+            'Supervisor'            => ['view guard roster'],
         ];
 
         foreach ($roles as $roleName => $permissions) {

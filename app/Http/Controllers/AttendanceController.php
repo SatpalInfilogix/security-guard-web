@@ -44,8 +44,16 @@ class AttendanceController extends Controller
             $inTime = Carbon::parse($attendance->in_time);
             $outTime = Carbon::parse($attendance->out_time);
             if ($inTime < $outTime) {
-                $workedHours = $inTime->diffInHours($outTime);
-                $loggedHours = $workedHours;
+                // $workedHours = $inTime->diffInHours($outTime);
+                //$loggedHours = $workedHours;
+                $diff = $inTime->diff($outTime);
+
+                $workedHours = $diff->h; // Hours part
+                $workedMinutes = $diff->i; // Minutes part
+
+                $loggedHours = $workedHours .'.'. $workedMinutes;
+            } else {
+                $loggedHours = 'N/A';  // If no valid out time or invalid time order
             }
             $attendance['total_hours'] = $loggedHours;
         }

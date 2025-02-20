@@ -9,3 +9,4 @@ use Illuminate\Support\Facades\Schedule;
 // })->purpose('Display an inspiring quote')->hourly();
 
 Schedule::command('publish:guard-roaster')->daily();
+Schedule::command('publish:employee-payroll')->daily();

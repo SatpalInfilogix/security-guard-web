@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\Invoice;
 use App\Models\InvoiceDetail;
 use App\Models\RateMaster;
+use App\Models\Leave;
 use Google\Service\Sheets\NumberFormat;
 use Spatie\Permission\Models\Role;
 
@@ -41,7 +42,10 @@ class PublishGuardRoaster extends Command
      */
     public function handle()
     {
+        //To manually execute payroll crons we need to put manual date which will be +6 days from the current fortnights end date.
         $today = Carbon::now()->startOfDay();
+        // $today = Carbon::parse("03-02-2025")->startOfDay(); //--Manual Check
+
         $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();        
         if ($fortnightDays) {
             $endDate = Carbon::parse($fortnightDays->end_date)->startOfDay();
@@ -50,10 +54,11 @@ class PublishGuardRoaster extends Command
             $nextEndDate = $nextStartDate->copy()->addDays(13);
 
             $sixthDay = Carbon::parse($fortnightDays->start_date)->addDays(6);
-            // $sixthDay = Carbon::parse('04-12-2024');
+            // $sixthDay = Carbon::parse("03-02-2025"); //--Manual Check
             $isPublishDate =  Carbon::parse($sixthDay)->addDays(3);
 
             $eightDay = Carbon::parse($fortnightDays->start_date)->addDays(7);
+            // $eightDay = Carbon::parse("04-02-2025"); //--Manual Check
             if ($eightDay == $today) {
                 $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
                 $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
@@ -110,7 +115,8 @@ class PublishGuardRoaster extends Command
                     $this->calculatePayrollUserHours($payrollData->id, $userId, $attendanceDetails, $publicHolidays, $previousStartDate, $previousEndDate);
                 }
             }
-            if ($isPublishDate = $today) {
+
+            if ($isPublishDate == $today) {
                 $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
                 $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
 
@@ -290,6 +296,22 @@ class PublishGuardRoaster extends Command
             $totalNormalEarnings += $detail->normal_hours_rate;
             $totalOvertimeEarnings += $detail->	overtime_rate;
             $totalPublicHolidayEarnings += $detail->public_holiday_rate;
+
+            // $year = Carbon::parse($previousStartDate)->year;
+            // $lastDayOfDecember = Carbon::createFromDate($year, 12, 31);
+            // if ($lastDayOfDecember->between($previousStartDate, $previousEndDate)) {
+            //     $leaves = Leave::where('guard_id', $userId)->where('status', 'Approved')->whereYear('date', $lastDayOfDecember->year)->count();
+            //     $yearlyLeaves = (int) setting('yearly_leaves') ?? 10;
+            //     if($leaves) {
+            //         $leaveCounts = $yearlyLeaves - $leaves;
+            //     } else {
+            //         $leaveCounts = $yearlyLeaves;
+            //     }
+            //     if ($leaves && $leaveCounts > 0) {
+            //         $leaveEarnings = ($leaveCounts * 8) * $detail->normal_hours_rate;
+            //         $totalNormalEarnings += $leaveEarnings;
+            //     }
+            // }
         }
         $totalGrossSalaryEarned = $totalNormalEarnings + $totalOvertimeEarnings + $totalPublicHolidayEarnings;
 
@@ -320,6 +342,7 @@ class PublishGuardRoaster extends Command
             } else {
                 if ($totalNisForCurrentYear < 150000) {
                     $nisDeduction = $totalGrossSalaryEarned * 0.03;
+                    $employerContributionNis = $totalGrossSalaryEarned * 0.03;
                     $remainingNisToReachLimit = 150000 - $totalNisForCurrentYear;
                     if ($nisDeduction > $remainingNisToReachLimit) {
                         $lessNis = $remainingNisToReachLimit;
@@ -328,8 +351,10 @@ class PublishGuardRoaster extends Command
                     }
                 } else {
                     $lessNis = 0;
+                    $employerContributionNis = 0;
                 }
-                $employerContributionNis = $totalGrossSalaryEarned * 0.03;
+                
+                // $employerContributionNis = $totalGrossSalaryEarned * 0.03;
             }
 
             $statutoryIncome  = $totalGrossSalaryEarned -  $lessNis - $approvedPensionScheme;
@@ -346,7 +371,6 @@ class PublishGuardRoaster extends Command
 
             $eduction_tax = $statutoryIncome * 0.0225;
             $employer_contribution = $totalGrossSalaryEarned * 0.035;
-            
             if ($age >= 65) {
                 $nhtDeduction = 0;
                 $employerContributionNht = 0;
@@ -355,7 +379,7 @@ class PublishGuardRoaster extends Command
                 $employerContributionNht =  $totalGrossSalaryEarned * 0.03;
             }
 
-            $hearttax = $totalGrossSalaryEarned * 0.035;
+            $hearttax = $totalGrossSalaryEarned * 0.03;
         } else {
             $statutoryIncome  = $totalGrossSalaryEarned -  $lessNis - $approvedPensionScheme;
         }
@@ -467,13 +491,13 @@ class PublishGuardRoaster extends Command
             'public_holiday_rate' =>  number_format($totalPublicHolidayEarnings, 2, '.',''),
             'gross_salary_earned' => number_format($totalGrossSalaryEarned, 2, '.',''),
             'less_nis' => number_format($nis, 2, '.', ''),
-            'employer_contribution_nis_tax' => number_format($nis + $employerContributionNis, 2, '.', ''),
+            'employer_contribution_nis_tax' => number_format($employerContributionNis, 2, '.', ''),
             'approved_pension_scheme' => number_format($approvedPensionScheme, 2, '.', ''),
             'statutory_income' => number_format($statutoryIncome, 2, '.', ''),
             'education_tax' => number_format($educationTax, 2, '.', ''),
-            'employer_eduction_tax' => number_format($educationTax + $employerEductionTax, 2, '.', ''),
+            'employer_eduction_tax' => number_format($employerEductionTax, 2, '.', ''),
             'nht' => number_format($nht, 2, '.', ''),
-            'employer_contribution_nht_tax' => number_format($nht + $employerContributionNhtTax, 2, '.', ''),
+            'employer_contribution_nht_tax' => number_format($employerContributionNhtTax, 2, '.', ''),
             'paye' => number_format($paye, 2, '.', ''),
             'staff_loan' => number_format($staffLoan, 2, '.', ''),
             'medical_insurance' => number_format($medicalInsurance, 2, '.', ''),

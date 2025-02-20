@@ -20,7 +20,10 @@ use App\Http\Controllers\LeaveController;
 use App\Http\Controllers\FortnightDatesController;
 use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\DeductionController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\EmployeeRateMasterController;
+use App\Http\Controllers\EmployeeLeavesController;
 
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');
@@ -55,6 +58,9 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'payrolls'              => PayrollController::class,
             'deductions'            => DeductionController::class,
             'invoices'              => InvoiceController::class,
+            'employees'             => EmployeeController::class,
+            'employee-rate-master'  => EmployeeRateMasterController::class,
+            'employee-leaves'       => EmployeeLeavesController::class,
         ]);
 
         Route::get('/payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
@@ -100,6 +106,11 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         return Response::download($file);
     });
 
+    Route::get('download-employee-sample', function() {
+        $file = public_path('assets/sample-employee/employee.csv');
+        return Response::download($file);
+    });
+
     Route::get('/export/csv', [GuardRosterController::class, 'downloadExcel'])->name('export.csv');
     Route::get('export-guards', [SecurityGuardController::class, 'exportGuards'])->name('export.guards');
     Route::get('export-clients', [ClientSiteController::class, 'exportClients'])->name('export.client');
@@ -135,5 +146,18 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('/export-csv', [InvoiceController::class, 'exportCsv'])->name('invoice.export-csv');
     Route::post('/invoice/update-status', [InvoiceController::class, 'updateStatus'])->name('invoice.update-status');
     Route::get('/get-client-sites', [InvoiceController::class, 'getClientSites'])->name('get-client-sites');
+
+    Route::get('payrolls/{id}/download-pdf', [PayrollController::class, 'downloadPdf'])->name('payrolls.download-pdf');
+    Route::get('payrolls/bulk-download', [PayrollController::class, 'bulkDownloadPdf'])->name('payrolls.bulk-download-pdf');
+
+    Route::post('get-employee', [EmployeeController::class, 'getEmployee'])->name('get-employee');
+    Route::post('/employees/employee-status', [EmployeeController::class, 'employeeStatus'])->name('employees.employee-status');
+    Route::get('employees/pdf', [EmployeeController::class, 'downloadPDF'])->name('employees.pdf');
+    Route::get('export-employee', [EmployeeController::class, 'exportEmployees'])->name('export.employee');
+    Route::post('import-employee', [EmployeeController::class, 'importEmployee'])->name('import.employee');
+    Route::get('/employees/download', [EmployeeController::class, 'exportResultCsv'])->name('employees.download');
+
+    Route::post('get-employee-leaves-list', [EmployeeLeavesController::class, 'getEmployeeLeaves'])->name('get-employee-leaves-list');
+    Route::post('employee-leaves/{leaveId}/update-status', [EmployeeLeavesController::class, 'updateLeaveStatus'])->name('employee-leaves.updateStatus');
 
 });

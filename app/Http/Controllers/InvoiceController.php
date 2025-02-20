@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceDetail;
 use App\Models\Client;
 use App\Models\ClientSite;
+use App\Models\ClientRateMaster;
 use Barryvdh\DomPDF\Facade\PDF;
 use App\Models\PayrollDetail;
 use App\Models\FortnightDates;
@@ -20,11 +21,15 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use Illuminate\Support\Facades\Gate;
 
 class InvoiceController extends Controller
 {
     public function index()
     {
+        if(!Gate::allows('view invoice')) {
+            abort(403);
+        }
         $clients = Client::latest()->get();
 
         return view('admin.invoices.index', compact('clients'));
@@ -224,6 +229,7 @@ class InvoiceController extends Controller
 
                         $invoice = Invoice::whereDate('start_date', $startDate)->where('end_date', $endDate)->where('client_site_id', $clientSiteId)->first();
                         $rate = RateMaster::find($guardGroup->first()->guard_type_id);
+                        $clientRateMaster = ClientRateMaster::where('client_id', $clientId)->where('guard_type', $rate->guard_type)->first();
                             return [
                             'invoice_number'                =>$invoice->invoice_code,
                             'invoice_date'                  =>$invoice->invoice_date,
@@ -239,6 +245,9 @@ class InvoiceController extends Controller
                             'rate_normal'                   => $rate ? $rate->gross_hourly_rate : 0,
                             'rate_overtime'                 => $rate ? $rate->overtime_rate : 0,
                             'rate_holiday'                  => $rate ? $rate->holiday_rate : 0,
+                            'client_rate_normal'            => $clientRateMaster ? $clientRateMaster->gross_hourly_rate : 0,
+                            'client_rate_overtime'          => $clientRateMaster ? $clientRateMaster->overtime_rate : 0,
+                            'client_rate_holiday'           => $clientRateMaster ? $clientRateMaster->holiday_rate : 0,
                         ];
                     });
                 });
@@ -341,7 +350,7 @@ class InvoiceController extends Controller
                     $guardGrossMargin = 0;
 
                     foreach ($siteData as $data) {
-                        $normalInvoiceAmount = ($data['normal_hours_guard'] + $data['overtime_guard']) * $data['rate_normal'];
+                        $normalInvoiceAmount = ($data['normal_hours_guard'] + $data['overtime_guard']) * $data['client_rate_normal'];
                         $normalSalaryPaid = $data['normal_hours_guard'] * $data['rate_normal'];
                         $normalGrossMargin = $normalInvoiceAmount - $normalSalaryPaid;
 
@@ -352,11 +361,11 @@ class InvoiceController extends Controller
                         $sheet->setCellValue("E{$row}", $data['guard_type_id_name']);
                         $sheet->setCellValue("F{$row}", 'Normal');
                         $sheet->setCellValue("G{$row}", $data['no_of_guards_normal']);
-                        $sheet->setCellValue("H{$row}", $data['normal_hours_guard'] + $data['overtime_guard']);
-                        $sheet->setCellValue("I{$row}", '$ '.$data['rate_normal']);
+                        $sheet->setCellValue("H{$row}", convertToHoursAndMinutes($data['normal_hours_guard'] + $data['overtime_guard']));
+                        $sheet->setCellValue("I{$row}", '$ '.$data['client_rate_normal']);
                         $sheet->setCellValue("J{$row}", '$ '.$normalInvoiceAmount);
                         $sheet->setCellValue("K{$row}", $data['no_of_guards_normal']);
-                        $sheet->setCellValue("L{$row}", $data['normal_hours_guard']);
+                        $sheet->setCellValue("L{$row}", convertToHoursAndMinutes($data['normal_hours_guard']));
                         $sheet->setCellValue("M{$row}", '$ '.$data['rate_normal']);
                         $sheet->setCellValue("N{$row}", '$ '.$normalSalaryPaid);
                         $sheet->setCellValue("O{$row}", '$ '.$normalGrossMargin);
@@ -368,27 +377,27 @@ class InvoiceController extends Controller
 
                         $sheet->setCellValue("F{$row}", 'Time & 1/2');
                         $sheet->setCellValue("G{$row}", 0);
-                        $sheet->setCellValue("H{$row}", 0);
-                        $sheet->setCellValue("I{$row}", '$ '.$data['rate_overtime']);
+                        $sheet->setCellValue("H{$row}", '0:0');
+                        $sheet->setCellValue("I{$row}", '$ '.$data['client_rate_overtime']);
                         $sheet->setCellValue("J{$row}", '$ '. 0);
                         $sheet->setCellValue("K{$row}", $data['no_of_guards_overtime']);
-                        $sheet->setCellValue("L{$row}", $data['overtime_guard']);
+                        $sheet->setCellValue("L{$row}", convertToHoursAndMinutes($data['overtime_guard']));
                         $sheet->setCellValue("M{$row}", '$ '.$data['rate_overtime']);
                         $sheet->setCellValue("N{$row}", '$ '.$overtimeSalaryPaid);
                         $sheet->setCellValue("O{$row}", '$ '.$overtimeGrossMargin);
                         $row++;
 
-                        $holidayInvoiceAmount = $data['double_hours'] * $data['rate_holiday'];
+                        $holidayInvoiceAmount = $data['double_hours'] * $data['client_rate_holiday'];
                         $holidaySalaryPaid = $data['double_hours'] * $data['rate_holiday'];
                         $holidayGrossMargin = $holidayInvoiceAmount - $holidaySalaryPaid;
 
                         $sheet->setCellValue("F{$row}", 'Double');
                         $sheet->setCellValue("G{$row}", $data['no_of_guards_publicHoliday']);
-                        $sheet->setCellValue("H{$row}", $data['double_hours']);
-                        $sheet->setCellValue("I{$row}", '$ '.$data['rate_holiday']);
+                        $sheet->setCellValue("H{$row}", convertToHoursAndMinutes($data['double_hours']));
+                        $sheet->setCellValue("I{$row}", '$ '.$data['client_rate_holiday']);
                         $sheet->setCellValue("J{$row}", '$ '.$holidayInvoiceAmount);
                         $sheet->setCellValue("K{$row}", $data['no_of_guards_publicHoliday']);
-                        $sheet->setCellValue("L{$row}", $data['double_hours']);
+                        $sheet->setCellValue("L{$row}", convertToHoursAndMinutes($data['double_hours']));
                         $sheet->setCellValue("M{$row}", '$ '.$data['rate_holiday']);
                         $sheet->setCellValue("N{$row}", '$ '.$holidaySalaryPaid);
                         $sheet->setCellValue("O{$row}", '$ '.$holidayGrossMargin);
@@ -413,9 +422,9 @@ class InvoiceController extends Controller
                     }
     
                     $sheet->setCellValue("A{$row}", 'Totals');
-                    $sheet->setCellValue("H{$row}", $siteTotalNormalHours + $siteTotalOvertime + $siteTotalPublicHoliday);
+                    $sheet->setCellValue("H{$row}", convertToHoursAndMinutes($siteTotalNormalHours + $siteTotalOvertime + $siteTotalPublicHoliday));
                     $sheet->setCellValue("J{$row}", '$ '.$siteTotalAmount);
-                    $sheet->setCellValue("L{$row}", $guardTotalHours + $guardTotalOvertime + $guardTotalPublicHoliday);
+                    $sheet->setCellValue("L{$row}", convertToHoursAndMinutes($guardTotalHours + $guardTotalOvertime + $guardTotalPublicHoliday));
                     $sheet->setCellValue("N{$row}", '$ '.$guardSalaryPaid);
                     $sheet->setCellValue("O{$row}", '$ '.$guardGrossMargin);
 

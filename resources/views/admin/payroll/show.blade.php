@@ -71,9 +71,9 @@
                                             <td>{{ ++$key }}
                                             <td>{{ $payrollDetail->user->first_name }}</td>
                                             <td>{{ $payrollDetail->date }}</td>
-                                            <td>{{ $payrollDetail->normal_hours }}</td>
-                                            <td>{{ $payrollDetail->overtime }}</td>
-                                            <td>{{ $payrollDetail->public_holiday }}</td>
+                                            <td>{{ convertToHoursAndMinutes($payrollDetail->normal_hours) }}</td>
+                                            <td>{{ convertToHoursAndMinutes($payrollDetail->overtime) }}</td>
+                                            <td>{{ convertToHoursAndMinutes($payrollDetail->public_holiday) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

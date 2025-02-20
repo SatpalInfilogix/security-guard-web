@@ -85,14 +85,14 @@
 
         <div class="col-md-4 mb-3">
             <x-form-input name="date_of_joining"
-                value="{{ old('date_of_joining', $user->guardAdditionalInformation->date_of_joining ?? '') }}"
+               value="{{ old('date_of_joining', isset($user) && $user->guardAdditionalInformation && $user->guardAdditionalInformation->date_of_joining ? \Carbon\Carbon::parse($user->guardAdditionalInformation->date_of_joining)->format('d-m-Y') : '') }}"
                 label="Guard's Date of Joining" placeholder="Enter Date of Joining" class="date-picker"
                 type="text" />
         </div>
 
         <div class="col-md-4 mb-2">
             <x-form-input name="date_of_birth"
-                value="{{ old('date_of_birth', $user->guardAdditionalInformation->date_of_birth ?? '') }}"
+                value="{{ old('date_of_birth', isset($user) && $user->guardAdditionalInformation ? \Carbon\Carbon::parse($user->guardAdditionalInformation->date_of_birth)->format('d-m-Y') : '') }}"
                 label="Date of Birth" class="date-of-birth" placeholder="Enter Date of Birth" type="text" required="true" />
         </div>
 
@@ -159,7 +159,7 @@
 
         <div class="col-md-4 mb-3">
             <x-form-input name="date_of_seperation"
-                value="{{ old('date_of_seperation', $user->guardAdditionalInformation->date_of_seperation ?? '') }}"
+                value="{{ old('date_of_seperation', isset($user) && $user->guardAdditionalInformation && $user->guardAdditionalInformation->date_of_seperation ? \Carbon\Carbon::parse($user->guardAdditionalInformation->date_of_seperation)->format('d-m-Y') : '') }}"
                 label="Date of Separation" class="date_of_separation" placeholder="Enter Date of Separation"
                 type="text" />
         </div>

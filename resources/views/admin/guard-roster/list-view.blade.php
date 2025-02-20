@@ -2,7 +2,7 @@
     <div class="col-md-12">
         <form id="filterForm" method="GET">
             <div class="row">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select name="guard_id" id="guard_id" class="form-control">
                         <option value="" disabled selected>Select Guard</option>
                         @foreach($securityGuards as $securityGuard)
@@ -18,7 +18,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select name="client_site_id" id="client_site_id" class="form-control">
                         <option value="" disabled selected>Select Client Site</option>
                         @foreach($clientSites as $clientSite)
@@ -27,6 +27,9 @@
                     </select>
                 </div>
                 <div class="col-md-3">
+                    <input type="text" id="date" name="date" class="form-control datePicker" value="" placeholder="Select Date" autocomplete="off">
+                </div>
+                <div class="col-md-2">
                     <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
                 </div>
             </div>
@@ -45,7 +48,7 @@
                     <th>Date</th>
                     <th>Start Time</th>
                     <th>End Time</th>
-                    @canany(['edit guard roaster', 'delete guard roaster'])
+                    @canany(['edit guard roster', 'delete guard roster'])
                     <th>Action</th>
                     @endcanany
                 </tr>
@@ -56,7 +59,7 @@
     </div>
 </div>
 
-<x-include-plugins :plugins="['sweetAlert', 'chosen']"></x-include-plugins>
+<x-include-plugins :plugins="['datePicker', 'sweetAlert', 'chosen']"></x-include-plugins>
 
 <script>
      $(function(){
@@ -74,6 +77,32 @@
         });
     });
     $(document).ready(function() {
+        let actionColumn = [];
+
+        @canany(['edit guard roster', 'delete guard roster'])
+            actionColumn = [{
+                data: null,
+                render: function(data, type, row) {
+                    var actions = '<div class="action-buttons">';
+
+                   @can('edit guard roster')
+                        actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/guard-rosters') }}/${row.id}/edit">`;
+                        actions += '<i class="fas fa-pencil-alt"></i>';
+                        actions += '</a>';
+                    @endcan
+
+                    @can('delete guard roster')
+                        actions += `<a data-source="Guard Roster" class="guard-delete-btn btn btn-danger waves-effect waves-light btn-sm" href="#" data-id="${row.id}">`;
+                        actions += '<i class="fas fa-trash-alt"></i>';
+                        actions += '</a>';
+                    @endcan
+
+                    actions += '</div>';
+                    return actions;
+                }
+            }];
+        @endcanany
+
         let guardRoasterTable = $('#list-view').DataTable({
             processing: true,
             serverSide: true,
@@ -85,6 +114,7 @@
                     d.guard_id = $('[name="guard_id"]').val();
                     d.client_id = $('[name="client_id"]').val();
                     d.client_site_id = $('[name="client_site_id"]').val();
+                    d.date = $('[name="date"]').val();
                     return d;
                 },
                 dataSrc: function(json) {
@@ -120,25 +150,7 @@
                         return '';
                     }
                 },
-                {
-                    data: null,
-                    render: function(data, type, row) {
-                        var actions = '<div class="action-buttons">';
-                        
-                        @can('edit guard roaster')
-                        actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/guard-rosters') }}/${row.id}/edit">`;
-                        actions += '<i class="fas fa-pencil-alt"></i>';
-                        actions += '</a>';
-                        @endcan
-
-                        @can('delete guard roaster')
-                            actions += `<a data-source="Guard Roster" class="guard-delete-btn btn btn-danger waves-effect waves-light btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
-                        @endcan
-
-                        actions += '</div>';
-                        return actions;
-                    }
-                }
+                ...actionColumn
             ],
             paging: true,
             pageLength: 10,

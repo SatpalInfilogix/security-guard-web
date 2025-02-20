@@ -49,10 +49,10 @@
                                 <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>Client Code</th>
                                     <th>Client Name</th>
                                     <th>Location Code</th>
-                                    <th>Parish</th>
-                                    <th>Email</th>
+                                    <th>Location</th>
                                     @canany(['edit client site', 'delete client site'])
                                     <th>Action</th>
                                     @endcanany
@@ -73,6 +73,31 @@
     <x-include-plugins :plugins="['dataTable', 'import']"></x-include-plugins>
     <script>
          $(document).ready(function() {
+            let actionColumn = [];
+            @canany(['edit client site', 'client site'])
+                actionColumn = [{
+                    data: null,
+                    render: function(data, type, row) {
+                        var actions = '<div class="action-buttons">';
+
+                            @can('edit client site')
+                                actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/client-sites') }}/${row.id}/edit">`;
+                                actions += '<i class="fas fa-pencil-alt"></i>';
+                                actions += '</a>';
+                            @endcan
+
+                            @can('delete client site')
+                                actions += `<a class="btn btn-danger waves-effect waves-light btn-sm clientSite-delete-btn" href="#" data-source="Client site" data-id="${row.id}">`;
+                                actions += '<i class="fas fa-trash-alt"></i>';
+                                actions += '</a>';
+                            @endcan
+
+                        actions += '</div>';
+                        return actions;
+                    }
+                }];
+            @endcanany
+
             let clientTable = $('#client-site-list').DataTable({
                 processing: true,
                 serverSide: true,
@@ -94,31 +119,11 @@
                             return meta.row + 1 + meta.settings._iDisplayStart;
                         }
                     },
+                    { data: 'client.client_code' },
                     { data: 'client.client_name' },
                     { data: 'location_code' },
-                    { data: 'parish' },
-                    { data: 'email' }, 
-                    {
-                        data: null,
-                        render: function(data, type, row) {
-                            var actions = '<div class="action-buttons">';
-
-                            @can('edit client site')
-                                actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/client-sites') }}/${row.id}/edit">`;
-                                actions += '<i class="fas fa-pencil-alt"></i>';
-                                actions += '</a>';
-                            @endcan
-
-                            @can('delete client site')
-                                actions += `<a class="btn btn-danger waves-effect waves-light btn-sm clientSite-delete-btn" href="#" data-source="Client site" data-id="${row.id}">`;
-                                actions += '<i class="fas fa-trash-alt"></i>';
-                                actions += '</a>';
-                            @endcan
-
-                            actions += '</div>';
-                            return actions;
-                        }
-                    }
+                    { data: 'location' }, 
+                    ...actionColumn
                 ],
                 paging: true,
                 pageLength: 10,

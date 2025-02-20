@@ -10,6 +10,9 @@
                         <h4 class="mb-0 font-size-18">Update Payroll </h4>
 
                         <div class="page-title-right">
+                            <button class="btn btn-primary" onclick="downloadInvoicePdf({{ $payroll->id }})">
+                                Payslip <i class="fas fa-file-pdf"></i>
+                            </button>
                             <a href="{{ route('payrolls.index') }}" class="btn btn-primary"><i class="bx bx-arrow-back"></i> Back to Payroll</a>
                         </div>
 
@@ -35,7 +38,7 @@
                                     <h6><strong>Employee TRN: </strong> {{ $payroll->user->guardAdditionalInformation->trn }}</h6>
                                     <h6><strong>Payroll Period: </strong> {{ $payroll->start_date }} to {{ $payroll->end_date }}</h6>
                                     <h6><strong>Payroll No: </strong>{{ $fortnightDayCount->id }}</h6>
-                                    <h6><strong>Date of Processing: </strong> 2-Feb-25</h6>
+                                    <h6><strong>Date of Processing: </strong>{{$payroll->created_at->format('d-M-Y')}}</h6>
                                 </div>
                             </div>
 
@@ -44,22 +47,22 @@
                                 <table class="table table-bordered">
                                     <thead>
                                         <tr>
-                                            <th style="width: 25%;">Gross Earnings</th>
-                                            <th style="width: 12%">Rate</th>
+                                            <th style="width: 20%;">Gross Earnings</th>
+                                            <th style="width: 10%">Rate</th>
                                             <th>Units</th>
-                                            <th>Rate per Unit</th>
+                                            <th style="width: 10%;">Rate per Unit</th>
                                             <th>Total</th>
-                                            <th style="width: 15%;">Deductions</th>
-                                            <th>Amount</th>
-                                            <th rowspan="2" class="align-middle text-center">Balance</th>
-                                            <th style="width: 10%;">Employer contribution</th>
+                                            <th style="width: 13%;">Deductions</th>
+                                            <th tyle="width: 5%;">Amount</th>
+                                            <th>Balance</th>
+                                            <th style="width: 15%;">Employer contribution</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr>
                                             <td>Megamart Waterloo (Normal)</td>
                                             <td>Normal</td>
-                                            <td>{{ $payroll->normal_hours }}</td>
+                                            <td>{{ convertToHoursAndMinutes($payroll->normal_hours) }}</td>
                                             <td>-</td>
                                             <td id="normal_hours_rate">{{ $payroll->normal_hours_rate }}</td>
                                             <td>PAYE</td>
@@ -69,7 +72,7 @@
                                         <tr>
                                             <td>Megamart Waterloo (Overtime)</td>
                                             <td>Overtime</td>
-                                            <td>{{ $payroll->overtime }}</td>
+                                            <td>{{ convertToHoursAndMinutes($payroll->overtime) }}</td>
                                             <td>-</td>
                                             <td id="overtime_rate">{{ $payroll->overtime_rate }}</td>
                                             <td>Ed Tax</td>
@@ -80,7 +83,7 @@
                                         <tr>
                                             <td>Megamart Waterloo (Public Holiday)</td>
                                             <td>Public Holiday</td>
-                                            <td>{{ $payroll->public_holidays }}</td>
+                                            <td>{{ convertToHoursAndMinutes($payroll->public_holidays) }}</td>
                                             <td>-</td>
                                             <td id="public_holiday_rate">{{ $payroll->public_holiday_rate }}</td>
                                             <td>NIS</td>
@@ -209,11 +212,11 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td>{{ $total }}</td>
-                                            <td>{{ $payroll->less_nis }}</td>
-                                            <td id="payeTax">{{ $payroll->paye }}</td>
-                                            <td>{{ $payroll->education_tax }}</td>
-                                            <td>{{ $payroll->nht }}</td>
+                                            <td>{{ $payroll->gross_total }}</td>
+                                            <td>{{ $payroll->nis_total }}</td>
+                                            <td id="payeTax">{{ $payroll->paye_tax_total }}</td>
+                                            <td>{{ $payroll->education_tax_total }}</td>
+                                            <td>{{ $payroll->nht_total }}</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -277,9 +280,10 @@
                     }
                 });
             }
+
+            window.downloadInvoicePdf = function(invoiceId) {
+                window.location.href = "{{ route('payrolls.download-pdf', ':invoiceId') }}".replace(':invoiceId', invoiceId);
+            };
         });
     </script>
-    
-    
-    
 @endsection
