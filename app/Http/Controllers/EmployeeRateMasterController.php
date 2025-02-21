@@ -45,8 +45,9 @@ class EmployeeRateMasterController extends Controller
         ]);
 
         EmployeeRateMaster::create([
-            'employee_id' => $request->employee_id,
-            'gross_salary' => $request->gross_salary,
+            'employee_id'    => $request->employee_id,
+            'gross_salary'   => $request->gross_salary,
+            'monthly_income' => $request->monthly_income,
         ]);
 
         return redirect()->route('employee-rate-master.index')->with('success', 'Employee Rate Master created successfully.');
@@ -79,8 +80,10 @@ class EmployeeRateMasterController extends Controller
         ]);
 
         EmployeeRateMaster::where('id', $id)->update([
-            'employee_id' => $request->employee_id,
-            'gross_salary' => $request->gross_salary,
+            'employee_id'    => $request->employee_id,
+            'gross_salary'   => $request->gross_salary,
+            'monthly_income' => $request->monthly_income,
+
         ]);
 
         return redirect()->route('employee-rate-master.index')->with('success', 'Employee Rate Master updated successfully.');
