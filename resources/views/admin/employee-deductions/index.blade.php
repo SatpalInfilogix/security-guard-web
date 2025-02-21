@@ -144,7 +144,7 @@
             let searchDocumentDate = $('#search_document_date').val();
             let searchPeriodDate = $('#search_period_date').val();
 
-            let exportUrl = "{{ route('export.deductions') }}";
+            let exportUrl = "{{ route('export.employee-deductions') }}";
             exportUrl += `?search_name=${encodeURIComponent(searchName)}`;
             exportUrl += `&search_type=${encodeURIComponent(searchType)}`;
             exportUrl += `&search_document_date=${encodeURIComponent(searchDocumentDate)}`;

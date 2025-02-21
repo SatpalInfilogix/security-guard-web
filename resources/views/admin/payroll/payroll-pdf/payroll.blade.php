@@ -72,15 +72,15 @@
         <table width="100%">
             <thead>
                 <tr>
-                    <th style="width: 18%;">Gross Earnings</th>
-                    <th style="width: 10%">Rate</th>
+                    <th style="width: 25%;">Gross Earnings</th>
+                    <th style="width: 11%">Rate</th>
                     <th style="width: 8%">Units</th>
-                    <th style="width: 10%;">Rate per Unit</th>
+                    <th style="width: 12%;">Rate per Unit</th>
                     <th style="width: 12%;">Total</th>
-                    <th style="width: 11%;">Deductions</th>
+                    <th style="width: 15%;">Deductions</th>
                     <th style="width: 10%;">Amount</th>
-                    <th style="width: 10%;">Balance</th>
-                    <th style="width: 13%;">Employer contribution</th>
+                    <th style="width: 8%;">Balance</th>
+                    {{-- <th style="width: 13%;">Employer contribution</th> --}}
                 </tr>
             </thead>
             <tbody>
@@ -93,7 +93,7 @@
                     <td>PAYE</td>
                     <td>{{ $payroll->paye }}</td>
                     <td></td>
-                    <td></td>
+                    {{-- <td></td> --}}
                 </tr>
                 <tr>
                     <td>Megamart Waterloo (Overtime)</td>
@@ -104,7 +104,7 @@
                     <td>Ed Tax</td>
                     <td>{{ $payroll->education_tax }}</td>
                     <td></td>
-                    <td>{{ $payroll->employer_eduction_tax }}</td>
+                    {{-- <td>{{ $payroll->employer_eduction_tax }}</td> --}}
                 </tr>
                 <tr>
                     <td>Megamart Waterloo (Public Holiday)</td>
@@ -115,7 +115,7 @@
                     <td>NIS</td>
                     <td>{{ $payroll->less_nis }}</td>
                     <td></td>
-                    <td>{{ $payroll->employer_contribution_nis_tax }}</td>
+                    {{-- <td>{{ $payroll->employer_contribution_nis_tax }}</td> --}}
                 </tr>
                 <tr>
                     <td colspan="4"></td>
@@ -123,7 +123,7 @@
                     <td>NHT</td>
                     <td>{{ $payroll->nht }}</td>
                     <td></td>
-                    <td>{{$payroll->employer_contribution_nht_tax}}</td>
+                    {{-- <td>{{$payroll->employer_contribution_nht_tax}}</td> --}}
                 </tr>
                 <tr>
                     <td colspan="4"></td>
@@ -131,7 +131,7 @@
                     <td>Heart</td>
                     <td></td>
                     <td></td>
-                    <td>{{$payroll->heart}}</td>
+                    {{-- <td>{{$payroll->heart}}</td> --}}
                 </tr>
                 <tr>
                     <td colspan="4"></td>
@@ -139,7 +139,7 @@
                     <td>Staff Loan</td>
                     <td>{{ $payroll->staff_loan }}</td>
                     <td>{{ number_format($payroll->pending_staff_loan)}}</td>
-                    <td></td>
+                    {{-- <td></td> --}}
                 </tr>
                 <tr>
                     <td colspan="4"></td>
@@ -147,7 +147,7 @@
                     <td>Medical Ins</td>
                     <td>{{ $payroll->medical_insurance }}</td>
                     <td>{{ number_format($payroll->pending_medical_insurance)}}</td>
-                    <td></td>
+                    {{-- <td></td> --}}
                 </tr>
                 <tr>
                     <td colspan="4"></td>
@@ -155,7 +155,7 @@
                     <td>Salary Advance</td>
                     <td>{{ $payroll->salary_advance }}</td>
                     <td>{{ number_format($payroll->pending_salary_advance)}}</td>
-                    <td></td>
+                    {{-- <td></td> --}}
                 </tr>
                 <tr>
                     <td colspan="4"></td>
@@ -163,7 +163,7 @@
                     <td>Approved Pension</td>
                     <td>{{ $payroll->approved_pension_scheme }}</td>
                     <td>{{ number_format($payroll->pending_approved_pension)}}</td>
-                    <td></td>
+                    {{-- <td></td> --}}
                 </tr>
                 <tr>
                     <td colspan="4"></td>
@@ -171,7 +171,7 @@
                     <td>PSRA</td>
                     <td>{{ $payroll->psra }}</td>
                     <td>{{ number_format($payroll->pending_psra)}}</td>
-                    <td></td>
+                    {{-- <td></td> --}}
                 </tr>
                 <tr>
                     <td colspan="4"></td>
@@ -179,7 +179,7 @@
                     <td>Bank Loan</td>
                     <td>{{ $payroll->bank_loan }}</td>
                     <td>{{ number_format($payroll->pending_bank_loan)}}</td>
-                    <td></td>
+                    {{-- <td></td> --}}
                 </tr>
                 <tr>
                     <td colspan="4"></td>
@@ -187,7 +187,7 @@
                     <td>Garnishment</td>
                     <td>{{ $payroll->garnishment }}</td>
                     <td>{{ number_format($payroll->pending_garnishment)}}</td>
-                    <td></td>
+                    {{-- <td></td> --}}
                 </tr>
                 <tr>
                     <td colspan="4"></td>
@@ -195,7 +195,7 @@
                     <td>Damaged Goods</td>
                     <td>{{ $payroll->damaged_goods }}</td>
                     <td>{{ number_format($payroll->pending_damaged_goods)}}</td>
-                    <td></td>
+                    {{-- <td></td> --}}
                 </tr>
                 <tr>
                     <td colspan="4"></td>
@@ -203,7 +203,7 @@
                     <td>Missing Goods</td>
                     <td>{{ $payroll->missing_goods }}</td>
                     <td>{{ number_format($payroll->pending_missing_goods)}}</td>
-                    <td></td>
+                    {{-- <td></td> --}}
                 </tr>
                 <tr>
                     <td><strong>Total</strong></td>
@@ -217,19 +217,19 @@
                     <td><strong>{{ $total }}</strong></td>
                     <td></td>
                     <td><strong>{{ $totalAmount }}</strong></td>
-                    <td colspan="2"></td>
+                    <td></td>
                 </tr>
                 <tr>
                     <td colspan="5"></td>
                     <td>Net Salary</td>
                     <td>{{ $total - $totalAmount }}</td>
-                    <td colspan="2"></td>
+                    <td></td>
                 </tr>
                 <tr>
                     <td colspan="5"></td>
                     <td>BNS Account</td>
                     <td>{{ $total - $totalAmount }}</td>
-                    <td colspan="2"></td>
+                    <td></td>
                 </tr>
             </tbody>
         </table>
