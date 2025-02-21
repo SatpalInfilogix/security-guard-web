@@ -39,7 +39,8 @@ class PublishEmployeePayroll extends Command
 
         if($employees) {
             foreach ($employees as $employee) {
-                $today = Carbon::parse('11-03-2025')->startOfDay();
+                $today = Carbon::now()->startOfDay();
+                // $today = Carbon::parse('11-03-2025')->startOfDay();
                 $twentyTwoDay = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
                 if ($twentyTwoDay) {
                     $endDate = Carbon::parse($twentyTwoDay->end_date)->startOfDay();
