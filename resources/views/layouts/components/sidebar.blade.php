@@ -62,6 +62,12 @@
                     </a>
                 </li>
                 @endcan
+                <li class="{{ Request::segment(2) == 'employee-payroll' ? 'mm-active' : '' }}">
+                    <a href="{{ route('employee-payroll.index')}}" class="waves-effect">
+                        <i class="bx bx-checkbox-square"></i>
+                        <span key="t-spreadsheet">Employee Payroll</span>
+                    </a>
+                </li>
                 @can('view invoice')
                 <li class="{{ Request::segment(2) == 'invoices' ? 'mm-active' : '' }}">
                     <a href="{{ route('invoices.index')}}" class="waves-effect">

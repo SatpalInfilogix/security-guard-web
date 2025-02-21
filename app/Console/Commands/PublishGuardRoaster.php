@@ -278,7 +278,7 @@ class PublishGuardRoaster extends Command
 
     public function calculatePayrollUserHours($payrollId, $userId, $attendanceDetails, $publicHolidays, $previousStartDate, $previousEndDate)
     {
-        $payrollDetails = PayrollDetail::where('payroll_id', $payrollId)->where('guard_id', $userId)->whereBetween('date', [$previousStartDate, $previousEndDate])->get();
+        $payrollDetails = PayrollDetail::with('guardType')->where('payroll_id', $payrollId)->where('guard_id', $userId)->whereBetween('date', [$previousStartDate, $previousEndDate])->get();
 
         $totalNormalHours = 0;
         $totalOvertimeHours = 0;
@@ -296,23 +296,21 @@ class PublishGuardRoaster extends Command
             $totalNormalEarnings += $detail->normal_hours_rate;
             $totalOvertimeEarnings += $detail->	overtime_rate;
             $totalPublicHolidayEarnings += $detail->public_holiday_rate;
-
-            // $year = Carbon::parse($previousStartDate)->year;
-            // $lastDayOfDecember = Carbon::createFromDate($year, 12, 31);
-            // if ($lastDayOfDecember->between($previousStartDate, $previousEndDate)) {
-            //     $leaves = Leave::where('guard_id', $userId)->where('status', 'Approved')->whereYear('date', $lastDayOfDecember->year)->count();
-            //     $yearlyLeaves = (int) setting('yearly_leaves') ?? 10;
-            //     if($leaves) {
-            //         $leaveCounts = $yearlyLeaves - $leaves;
-            //     } else {
-            //         $leaveCounts = $yearlyLeaves;
-            //     }
-            //     if ($leaves && $leaveCounts > 0) {
-            //         $leaveEarnings = ($leaveCounts * 8) * $detail->normal_hours_rate;
-            //         $totalNormalEarnings += $leaveEarnings;
-            //     }
-            // }
         }
+
+        // list($leavePaid, $leaveNotPaid, $paidLeaveBalance) = $this->calculateLeaveDetails($userId, $previousStartDate, $previousEndDate);
+        
+        // if ($leavePaid > 0) {
+        //     $totalNormalEarnings += (($leavePaid * 8) * $detail->guardType->gross_hourly_rate);
+        // }
+    
+        // if ($leaveNotPaid > 0) {
+        //     $totalNormalEarnings -= (($leaveNotPaid * 8) * $detail->guardType->gross_hourly_rate);
+        // }
+    
+        // if ($paidLeaveBalance > 0) {
+        //     $totalNormalEarnings += (($paidLeaveBalance * 8) * $detail->guardType->gross_hourly_rate);
+        // }
         $totalGrossSalaryEarned = $totalNormalEarnings + $totalOvertimeEarnings + $totalPublicHolidayEarnings;
 
         $approvedPensionScheme = 0;
@@ -520,6 +518,52 @@ class PublishGuardRoaster extends Command
             'pending_missing_goods' => number_format($pendingMissingGoods, 2, '.', ''),
             'pending_damaged_goods' => number_format($pendingDamagedGoods, 2, '.', ''),
         ]);
+    }
+
+    protected function calculateLeaveDetails($userId, $previousStartDate, $previousEndDate)
+    {
+        $leavePaid = 0;
+        $leaveNotPaid = 0;
+
+        $paidLeaveBalance = 0;
+        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?? 10;
+
+        $year = Carbon::parse($previousStartDate)->year;
+        $lastDayOfDecember = Carbon::createFromDate($year, 12, 31);
+        $leavesQuery = Leave::where('guard_id', $userId)->where('status', 'Approved');
+        $leavesCountInDecember = $leavesQuery->whereYear('date', $lastDayOfDecember->year)->count();
+        if ($lastDayOfDecember->between($previousStartDate, $previousEndDate)) {
+            $paidLeaveBalance = max(0, $paidLeaveBalanceLimit - $leavesCountInDecember);
+        }
+
+        $leavesCount = $leavesQuery->whereBetween('date', [$previousStartDate, $previousEndDate])->count();
+        if ($leavesCount > 0) {
+            $approvedLeaves = Leave::where('guard_id', $userId)->where('status', 'Approved')->whereDate('date', '<', $previousStartDate)->count();
+            $totalApprovedLeaves = $leavesCount + $approvedLeaves;
+            if ($totalApprovedLeaves > $paidLeaveBalanceLimit) {
+                $excessLeaves = max(0, $totalApprovedLeaves - $paidLeaveBalanceLimit);
+
+                if ($excessLeaves > 0) {
+                    if ($leavesCount > $excessLeaves) {
+                        $leaveNotPaid = $excessLeaves;
+                        $leavePaid = max(0, $leavesCount - $leaveNotPaid);
+                    } else {
+                        $leaveNotPaid = $leavesCount;
+                        $leavePaid = 0;
+                    }
+                } else {
+                    $leaveNotPaid = 0;
+                    $leavePaid = $leavesCount;
+                }
+
+            } else {
+                $leavePaid = $leavesCount;
+                $leaveNotPaid = 0;
+            }
+        }
+
+
+        return [$leavePaid, $leaveNotPaid, $paidLeaveBalance];
     }
 
     private function generateInvoice($payrollDetails, $startDate, $endDate)
