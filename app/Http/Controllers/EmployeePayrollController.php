@@ -17,7 +17,7 @@ class EmployeePayrollController extends Controller
 {
     public function index()
     {
-        if(!Gate::allows('view payroll')) {
+        if(!Gate::allows('view employee payroll')) {
             abort(403);
         }
 
@@ -82,7 +82,7 @@ class EmployeePayrollController extends Controller
 
     public function edit(EmployeePayroll $employeePayroll)
     {
-        if(!Gate::allows('edit payroll')) {
+        if(!Gate::allows('edit employee payroll')) {
             abort(403);
         }
         $employeePayroll = EmployeePayroll::where('id', $employeePayroll->id)->with('user', 'user.guardAdditionalInformation')->first();

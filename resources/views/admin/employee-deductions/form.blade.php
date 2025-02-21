@@ -1,16 +1,16 @@
 <div class="row mb-2">
     <div class="col-md-4">
         <div class="mb-3">
-            <label for="guard_id">Guard<span class="text-danger">*</span></label>
-            <select name="guard_id" id="guard_id" class="form-control{{ $errors->has('guard_id') ? ' is-invalid' : '' }}">
-                <option value="" disabled selected>Select Guard</option>
-                @foreach($securityGuards as $securityGuard)
-                    <option value="{{ $securityGuard->id }}">
-                        {{ $securityGuard->first_name .' '.$securityGuard->sure_name }}
+            <label for="employee_id">Employee<span class="text-danger">*</span></label>
+            <select name="employee_id" id="employee_id" class="form-control{{ $errors->has('employee_id') ? ' is-invalid' : '' }}">
+                <option value="" disabled selected>Select Employee</option>
+                @foreach($employees as $employee)
+                    <option value="{{ $employee->id }}">
+                        {{ $employee->first_name .' '.$employee->sure_name }}
                     </option>
                 @endforeach
             </select>
-            @error('guard_id')
+            @error('employee_id')
                 <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
@@ -83,7 +83,7 @@ $(document).ready(function() {
 
         if (date) {
             $.ajax({
-                url: '/get-end-date',
+                url: '/get-employee-end-date',
                 method: 'GET',
                 data: {
                     date: date,

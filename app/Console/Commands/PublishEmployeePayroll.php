@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Models\EmployeeDeduction;
+use App\Models\EmployeeDeductionDetail;
 use App\Models\EmployeeLeave;
 use App\Models\EmployeeRateMaster;
 use App\Models\User;
@@ -39,8 +41,8 @@ class PublishEmployeePayroll extends Command
 
         if($employees) {
             foreach ($employees as $employee) {
-                $today = Carbon::now()->startOfDay();
-                // $today = Carbon::parse('11-03-2025')->startOfDay();
+                // $today = Carbon::now()->startOfDay();
+                $today = Carbon::parse('17-02-2025')->startOfDay(); //--Manual Check
                 $twentyTwoDay = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
                 if ($twentyTwoDay) {
                     $endDate = Carbon::parse($twentyTwoDay->end_date)->startOfDay();
@@ -64,34 +66,60 @@ class PublishEmployeePayroll extends Command
                             $payroll = EmployeePayroll::where('employee_id', $employee->id)->whereDate('start_date', $previousStartDate)->whereDate('end_date', $previousEndDate)->first();
                             if(!$payroll) {
                                 $employeeRateMaster = EmployeeRateMaster::where('employee_id', $employee->id)->first();
-                                $yearlySalary = $employeeRateMaster->gross_salary;
-                                $daySalary = ($yearlySalary / 12) / 22;
+                                if($employeeRateMaster) {
+                                    $yearlySalary = $employeeRateMaster->gross_salary;
+                                    $daySalary = ($yearlySalary / 12) / 22;
 
-                                //===== Employee Leaves Calculation =====
-                                list($leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary) = $this->calculateLeaveDetails($normalDays, $employee, $previousStartDate, $previousEndDate, $daySalary);
-                                //===== End Leaves Calculation =====
+                                    //===== Employee Leaves Calculation =====
+                                    list($leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary) = $this->calculateLeaveDetails($normalDays, $employee, $previousStartDate, $previousEndDate, $daySalary);
+                                    //===== End Leaves Calculation =====
 
-                                //===== Employee Payroll Calculation =====
-                                $payrollData = $this->calculateEmployeePayroll($employee, $previousStartDate, $previousEndDate, $grossSalary);
-                                // ========End Payroll Calculation ========
+                                    //===== Employee Payroll Statutory Calculation =====
+                                    $payrollStatutoryData = $this->calculateEmployeePayrollStatutory($employee, $previousStartDate, $previousEndDate, $grossSalary);
+                                    // ========End Payroll Statutory Calculation ========
+                                    
+                                    //===== Employee Payroll Non Statutory Calculation =====
+                                    list($totalDeductions, $pendingAmounts) = $this->calculateNonStatutoryDeductions($employee, $previousStartDate, $previousEndDate);
+                                    //===== End Employee Payroll Non Statutory Calculation =====
 
-                                $payrollData = array_merge($payrollData, [
-                                    'employee_id' => $employee->id,
-                                    'start_date' => $previousStartDate,
-                                    'end_date' => $previousEndDate,
-                                    'normal_days' => $normalDays,
-                                    'leave_paid' => $leavePaid,
-                                    'leave_not_paid' => $leaveNotPaid,
-                                    'pending_leave_balance' => $paidLeaveBalance,
-                                    'day_salary' => $daySalary,
-                                    'gross_salary' => $grossSalary,
-                                    'is_publish' => 0,
-                                ]);
-                        
-                                if (EmployeePayroll::create($payrollData)) {
-                                    echo "Employee payroll created successfully";
+
+                                    $payrollData = array_merge($payrollStatutoryData, [
+                                        'employee_id' => $employee->id,
+                                        'start_date' => $previousStartDate,
+                                        'end_date' => $previousEndDate,
+                                        'normal_days' => $normalDays,
+                                        'leave_paid' => $leavePaid,
+                                        'leave_not_paid' => $leaveNotPaid,
+                                        'pending_leave_balance' => $paidLeaveBalance,
+                                        'day_salary' => $daySalary,
+                                        'gross_salary' => $grossSalary,
+                                        'staff_loan' => $totalDeductions['Staff Loan'],
+                                        'medical_insurance' => $totalDeductions['Medical Ins'],
+                                        'salary_advance' => $totalDeductions['Salary Advance'],
+                                        'psra' => $totalDeductions['PSRA'],
+                                        'bank_loan' => $totalDeductions['Bank Loan'],
+                                        'pending_staff_loan' => $pendingAmounts['Staff Loan'],
+                                        'pending_medical_insurance' => $pendingAmounts['Medical Ins'],
+                                        'pending_salary_advance' => $pendingAmounts['Salary Advance'],
+                                        'pending_psra' => $pendingAmounts['PSRA'],
+                                        'pending_bank_loan' => $pendingAmounts['Bank Loan'],
+                                        'pending_approved_pension' => $pendingAmounts['Approved Pension'],
+                                        'garnishment' => $totalDeductions['Garnishment'],
+                                        'missing_goods' => $totalDeductions['Missing Goods'],
+                                        'damaged_goods' => $totalDeductions['Damaged Goods'],
+                                        'pending_garnishment' => $pendingAmounts['Garnishment'],
+                                        'pending_missing_goods' => $pendingAmounts['Missing Goods'],
+                                        'pending_damaged_goods' => $pendingAmounts['Damaged Goods'],
+                                        'is_publish' => 0,
+                                    ]);
+                            
+                                    if (EmployeePayroll::create($payrollData)) {
+                                        echo "Employee payroll created successfully";
+                                    } else {
+                                        echo "Employee payroll not created";
+                                    }
                                 } else {
-                                    echo "Employee payroll not created";
+                                    echo "Employee ratemaster not created";
                                 }
                             } else {
                                 echo "Employee payroll already created";
@@ -158,7 +186,7 @@ class PublishEmployeePayroll extends Command
         return [$leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary];
     }
 
-    public function calculateEmployeePayroll($employee, $previousStartDate, $previousEndDate, $grossSalary)
+    public function calculateEmployeePayrollStatutory($employee, $previousStartDate, $previousEndDate, $grossSalary)
     {
         $approvedPensionScheme = 0;
         $userData = User::with('guardAdditionalInformation')->where('id', $employee->id)->first();
@@ -241,4 +269,59 @@ class PublishEmployeePayroll extends Command
         ];
     }
 
+    private function calculateNonStatutoryDeductions($employee, $previousStartDate, $previousEndDate)
+    {
+        // Deduction types
+        $deductionTypes = [
+            'Staff Loan' => 'pending_staff_loan',
+            'Medical Ins' => 'pending_medical_insurance',
+            'Salary Advance' => 'pending_salary_advance',
+            'PSRA' => 'pending_psra',
+            'Bank Loan' => 'pending_bank_loan',
+            'Approved Pension' => 'pending_approved_pension',
+            'Garnishment' => 'pending_garnishment',
+            'Missing Goods' => 'pending_missing_goods',
+            'Damaged Goods' => 'pending_damaged_goods',
+        ];
+
+        // Initialize deduction arrays
+        $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
+        $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
+
+        // Check if employee is statutory or non-statutory
+        if ($employee->is_statutory == 1) {
+            // Statutory employee logic
+            foreach ($deductionTypes as $deductionType => $pendingField) {
+                $deductionRecords = EmployeeDeduction::where('employee_id', $employee->id)
+                    ->where('type', $deductionType)
+                    ->whereDate('start_date', '<=', $previousEndDate)
+                    ->whereDate('end_date', '>=', $previousStartDate)
+                    ->get();
+
+                foreach ($deductionRecords as $deduction) {
+                    if ($deduction->start_date <= $previousEndDate && $deduction->end_date >= $previousStartDate) {
+                        $totalDeductions[$deductionType] = $deduction->one_installment;
+                        $pendingBalance = $deduction->pending_balance - $deduction->one_installment;
+                        $pendingAmounts[$deductionType] = $deduction->pending_balance - $deduction->one_installment;
+                        $deduction->update(['pending_balance' => $pendingBalance]);
+
+                        EmployeeDeductionDetail::create([
+                            'employee_id' => $employee->id,
+                            'deduction_id' => $deduction->id,
+                            'deduction_date' => Carbon::now(),
+                            'amount_deducted' => $deduction->one_installment,
+                            'balance' => $pendingBalance
+                        ]);
+                    }
+                }
+            }
+        } else {
+            // Non-statutory employee logic (No deductions)
+            $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
+            $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
+        }
+
+        // Return total deductions and pending amounts
+        return [$totalDeductions, $pendingAmounts];
+    }
 }

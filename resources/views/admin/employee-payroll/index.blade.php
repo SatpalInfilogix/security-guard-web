@@ -56,7 +56,7 @@
                                     <th>Normal Days</th>
                                     <th>Paid Leaves</th>
                                     <th>Unpaid Leaves</th>
-                                    @canany(['edit payroll'])
+                                    @canany(['edit employee payroll'])
                                     <th>Action</th>
                                     @endcanany
                                 </tr>
@@ -81,13 +81,13 @@
             });
 
             let actionColumn = [];
-            @canany(['edit payroll', 'delete payroll'])
+            @canany(['edit employee payroll'])
                 actionColumn = [{
                     data: null,
                     render: function(data, type, row) {
                         var actions = '<div class="action-buttons">';
 
-                        @can('edit payroll')
+                        @can('edit employee payroll')
                             actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/employee-payroll') }}/${row.id}/edit">`;
                             actions += '<i class="fas fa-pencil-alt"></i>';
                             actions += '</a>';
