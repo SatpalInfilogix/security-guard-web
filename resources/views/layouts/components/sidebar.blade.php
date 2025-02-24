@@ -157,6 +157,12 @@
                     </a>
                 </li>
                 @endcan
+                <li class="{{ Request::segment(2) == 'twenty-two-days-interval' ? 'mm-active' : '' }}">
+                    <a href="{{ route('get-interval')}}" class="waves-effect">
+                        <i class="bx bx-grid-horizontal"></i>
+                        <span key="t-spreadsheet">Twenty Two Days Interval</span>
+                    </a>
+                </li>
                 @endcanany
                 <li class="menu-title" key="t-menu">Other</li>        
                 @canany(['view faq', 'view help request'])

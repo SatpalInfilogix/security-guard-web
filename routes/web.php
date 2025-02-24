@@ -76,6 +76,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::view('/calendar-management','admin.calendar-management.index')->name('calendar.management');
        
         Route::post('/generate-client-code', [ClientController::class, 'generateClientCode'])->name('generate.client.code');
+        Route::get('/twenty-two-days-interval', [FortnightDatesController::class, 'listingTwentyTwoDays'])->name('get-interval');
     });
 
     Route::get('/get-client-sites/{clientId}', [GuardRosterController::class, 'getClientSites']);
