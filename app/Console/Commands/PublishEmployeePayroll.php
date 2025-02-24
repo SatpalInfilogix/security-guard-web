@@ -71,11 +71,11 @@ class PublishEmployeePayroll extends Command
                                     $daySalary = ($yearlySalary / 12) / 22;
 
                                     //===== Employee Leaves Calculation =====
-                                    list($leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary) = $this->calculateLeaveDetails($normalDays, $employee, $previousStartDate, $previousEndDate, $daySalary);
+                                    list($leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary, $pendingLeaveAmount, $normalDaysSalary) = $this->calculateLeaveDetails($normalDays, $employee, $previousStartDate, $previousEndDate, $daySalary);
                                     //===== End Leaves Calculation =====
 
                                     //===== Employee Payroll Statutory Calculation =====
-                                    $payrollStatutoryData = $this->calculateEmployeePayrollStatutory($employee, $previousStartDate, $previousEndDate, $grossSalary);
+                                    $payrollStatutoryData = $this->calculateEmployeePayrollStatutory($employee, $previousStartDate, $previousEndDate, $grossSalary, $daySalary);
                                     // ========End Payroll Statutory Calculation ========
                                     
                                     //===== Employee Payroll Non Statutory Calculation =====
@@ -92,6 +92,8 @@ class PublishEmployeePayroll extends Command
                                         'leave_not_paid' => $leaveNotPaid,
                                         'pending_leave_balance' => $paidLeaveBalance,
                                         'day_salary' => $daySalary,
+                                        'normal_salary' => $normalDaysSalary,
+                                        'pending_leave_amount' => $pendingLeaveAmount,
                                         'gross_salary' => $grossSalary,
                                         'staff_loan' => $totalDeductions['Staff Loan'],
                                         'medical_insurance' => $totalDeductions['Medical Ins'],
@@ -181,12 +183,15 @@ class PublishEmployeePayroll extends Command
             }
         }
 
+        $pendingLeaveAmount = $paidLeaveBalance * $daySalary;
+        $normalDaysSalary = $grossSalary;
+
         $grossSalary += $paidLeaveBalance * $daySalary;
 
-        return [$leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary];
+        return [$leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary, $pendingLeaveAmount, $normalDaysSalary];
     }
 
-    public function calculateEmployeePayrollStatutory($employee, $previousStartDate, $previousEndDate, $grossSalary)
+    public function calculateEmployeePayrollStatutory($employee, $previousStartDate, $previousEndDate, $grossSalary, $daySalary)
     {
         $approvedPensionScheme = 0;
         $userData = User::with('guardAdditionalInformation')->where('id', $employee->id)->first();
@@ -209,22 +214,37 @@ class PublishEmployeePayroll extends Command
         if($userData->is_statutory == 0) {
             $totalNisForCurrentYear = $fullYearNis->sum('nis');
 
-            if ($age >= 70) {
+            // if ($age >= 70) {
+            //     $nis = 0;
+            //     $employerContributionNis = 0;
+            // } else {
+            //     if ($totalNisForCurrentYear < 150000) {
+            //         $nisDeduction = $grossSalary * 0.03;
+            //         $employerContributionNis = $grossSalary * 0.03;
+            //         $remainingNisToReachLimit = 150000 - $totalNisForCurrentYear;
+            //         if ($nisDeduction > $remainingNisToReachLimit) {
+            //             $nis = $remainingNisToReachLimit;
+            //         } else {
+            //             $nis = $nisDeduction;
+            //         }
+            //     } else {
+            //         $nis = 0;
+            //         $employerContributionNis = 0;
+            //     }
+            // }
+
+            if($age >= 70) {
                 $nis = 0;
                 $employerContributionNis = 0;
             } else {
-                if ($totalNisForCurrentYear < 150000) {
-                    $nisDeduction = $grossSalary * 0.03;
-                    $employerContributionNis = $grossSalary * 0.03;
-                    $remainingNisToReachLimit = 150000 - $totalNisForCurrentYear;
-                    if ($nisDeduction > $remainingNisToReachLimit) {
-                        $nis = $remainingNisToReachLimit;
-                    } else {
-                        $nis = $nisDeduction;
-                    }
+                $nisDeduction = $grossSalary * 0.03;
+                $nisThreshold  = 150000 / 12;
+                if($nisDeduction > $nisThreshold) {
+                    $nis = $nisThreshold;
+                    $employerContributionNis = $nisThreshold;
                 } else {
-                    $nis = 0;
-                    $employerContributionNis = 0;
+                    $nis = $daySalary * 0.03;
+                    $employerContributionNis = $daySalary * 0.03;
                 }
             }
 
@@ -236,8 +256,9 @@ class PublishEmployeePayroll extends Command
                 $payeData = $statutoryIncome - 141674;
                 $payeIncome = $payeData * 0.25;
             } elseif($statutoryIncome > 500000.00) {
-                $payeData = $statutoryIncome - 500000.00;
-                $payeIncome = $payeData * 0.30;
+                $payeData = ($statutoryIncome - 500000.00) * 0.30;
+                $payeeThreshold = (500000.00 - 141674.00) * 0.25;
+                $payeIncome = $payeData + $payeeThreshold;
             }
 
             $eduction_tax = $statutoryIncome * 0.0225;

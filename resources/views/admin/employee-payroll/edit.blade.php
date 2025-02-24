@@ -62,7 +62,7 @@
                                             <td>Gross Earnings</td>
                                             <td>{{ $employeePayroll->day_salary }}</td>
                                             <td>{{ $employeePayroll->normal_days - $employeePayroll->leave_not_paid }}</td>
-                                            <td>{{ $employeePayroll->gross_salary }}</td>
+                                            <td>{{ $employeePayroll->normal_salary }}</td>
                                             <td>PAYE</td>
                                             <td><input type="text" class="form-control editable" id="paye" value="{{ $employeePayroll->paye }}"></td>
                                             <td></td>
@@ -91,8 +91,15 @@
                                             {{-- <td id="public_holiday_rate">{{ $employeePayroll->public_holiday_rate }}</td> --}}
                                         </tr>
                                         <tr>
-                                            <td colspan="3"></td>
-                                            <td></td>
+                                            @if($employeePayroll->pending_leave_balance > 0)
+                                                <td>Pending Balance</td>
+                                                <td></td>
+                                                <td>{{ $employeePayroll->pending_leave_balance }}</td>
+                                                <td>{{ $employeePayroll->pending_leave_amount }}</td>
+                                            @else
+                                                <td colspan="3"></td> <!-- Optionally, you can display a message if the balance is 0 or less -->
+                                                <td></td>
+                                            @endif
                                             <td>NHT</td>
                                             <td id="nht">{{ $employeePayroll->nht }}</td>
                                             <td></td>

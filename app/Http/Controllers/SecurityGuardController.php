@@ -11,6 +11,7 @@ use App\Models\UsersBankDetail;
 use App\Models\UsersKinDetail;
 use App\Models\UsersDocuments;
 use App\Models\RateMaster;
+use App\Models\Leave;
 use Spatie\Permission\Models\Role;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\SecurityGuardImport;
@@ -91,6 +92,14 @@ class SecurityGuardController extends Controller
                                          ->take($length)
                                          ->get();
     
+        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?? 10;
+        $currentYear = now()->year;
+        foreach($securityGuards as $guard)
+        {
+            $approvedLeaves = Leave::where('guard_id', $guard->id)->where('status', 'Approved')->whereYear('date', $currentYear)->count();
+            $guard['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
+        }
+
         $data = [
             'draw' => $request->input('draw'),
             'recordsTotal' => User::whereHas('roles', function ($query) use ($userRole) {

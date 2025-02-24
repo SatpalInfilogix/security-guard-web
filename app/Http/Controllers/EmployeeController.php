@@ -19,6 +19,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\EmployeeImport;
 use App\Exports\EmployeeImportExport;
+use App\Models\EmployeeLeave;
 
 class EmployeeController extends Controller
 {
@@ -86,6 +87,14 @@ class EmployeeController extends Controller
                                          ->skip($start) 
                                          ->take($length)
                                          ->get();
+
+        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?? 10;
+        $currentYear = now()->year;
+        foreach($securityGuards as $employee)
+        {
+            $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved')->whereYear('date', $currentYear)->count();
+            $employee['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
+        }
     
         $data = [
             'draw' => $request->input('draw'),

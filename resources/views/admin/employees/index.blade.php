@@ -96,6 +96,7 @@
                                     <th>Middle Name</th>
                                     <th>Surname</th>
                                     <th>Phone number</th>
+                                    <th>Leave Balance</th>
                                     <th>Status</th>
                                     @canany(['edit employee', 'delete employee'])
                                     <th>Action</th>
@@ -170,6 +171,7 @@
                     { data: 'middle_name' },
                     { data: 'surname' },
                     { data: 'phone_number' },
+                    { data: 'pendingLeaveBalance' },
                     {
                         data: 'status',
                         render: function(data, type, row) {

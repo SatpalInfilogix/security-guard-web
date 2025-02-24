@@ -87,7 +87,7 @@
                     <td>Gross Earnings</td>
                     <td>{{ $employeePayroll->day_salary }}</td>
                     <td>{{ $employeePayroll->normal_days - $employeePayroll->leave_not_paid }}</td>
-                    <td>{{ $employeePayroll->gross_salary }}</td>
+                    <td>{{ $employeePayroll->normal_salary }}</td>
                     <td>PAYE</td>
                     <td>{{ $employeePayroll->paye }}</td>
                     <td></td>
@@ -114,8 +114,15 @@
                     <td>{{ $employeePayroll->employer_contribution_nis_tax }}</td>
                 </tr>
                 <tr>
-                    <td colspan="3"></td>
-                    <td></td>
+                    @if($employeePayroll->pending_leave_balance > 0)
+                        <td>Pending Balance</td>
+                        <td></td>
+                        <td>{{ $employeePayroll->pending_leave_balance }}</td>
+                        <td>{{ $employeePayroll->pending_leave_amount }}</td>
+                    @else
+                        <td colspan="3"></td>
+                        <td></td>
+                    @endif
                     <td>NHT</td>
                     <td>{{ $employeePayroll->nht }}</td>
                     <td></td>
