@@ -352,7 +352,7 @@ class SecurityGuardController extends Controller
         $user->middle_name  = $request->middle_name;
         $user->email        = $request->email;
         $user->phone_number = $request->phone_number;
-        $user->status       = $request->user_status ?? 'Inactive';
+        $user->status       = $request->user_status ?? $user->status;
         $user->is_statutory = $request->is_statutory;
 
         if ($request->filled('password')) {
