@@ -298,23 +298,23 @@ class PublishGuardRoaster extends Command
             $totalPublicHolidayEarnings += $detail->public_holiday_rate;
         }
 
-        // list($leavePaid, $leaveNotPaid, $paidLeaveBalance) = $this->calculateLeaveDetails($userId, $previousStartDate, $previousEndDate);
-        
-        // if ($leavePaid > 0) {
-        //     $totalNormalEarnings += (($leavePaid * 8) * $detail->guardType->gross_hourly_rate);
-        // }
+        $userData = User::with('guardAdditionalInformation', 'guardAdditionalInformation.rateMaster')->where('id', $userId)->first();        
+        list($leavePaid, $leaveNotPaid, $paidLeaveBalance) = $this->calculateLeaveDetails($userId, $previousStartDate, $previousEndDate);
+
+        if ($leavePaid > 0) {
+            $totalNormalEarnings += (($leavePaid * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate );
+        }
     
-        // if ($leaveNotPaid > 0) {
-        //     $totalNormalEarnings -= (($leaveNotPaid * 8) * $detail->guardType->gross_hourly_rate);
-        // }
+        if ($leaveNotPaid > 0) {
+            $totalNormalEarnings -= (($leaveNotPaid * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate );
+        }
     
-        // if ($paidLeaveBalance > 0) {
-        //     $totalNormalEarnings += (($paidLeaveBalance * 8) * $detail->guardType->gross_hourly_rate);
-        // }
+        if ($paidLeaveBalance > 0) {
+            $totalNormalEarnings += (($paidLeaveBalance * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate );
+        }
         $totalGrossSalaryEarned = $totalNormalEarnings + $totalOvertimeEarnings + $totalPublicHolidayEarnings;
 
         $approvedPensionScheme = 0;
-        $userData = User::with('guardAdditionalInformation')->where('id', $userId)->first();
         $dateOfBirth = $userData->guardAdditionalInformation->date_of_birth;
         $birthDate = Carbon::parse($dateOfBirth);
         $age = $birthDate->age;
