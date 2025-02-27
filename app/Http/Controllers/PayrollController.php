@@ -253,7 +253,8 @@ class PayrollController extends Controller
         $payroll['nht_total'] = $fullYearPayroll->sum('nht');
 
         $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
-        $approvedLeaves = Leave::where('guard_id', $payroll->guard_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->count();
+        $currentYear = now()->year;
+        $approvedLeaves = Leave::where('guard_id', $payroll->guard_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->count();
         $payroll['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
 
         $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
@@ -310,7 +311,8 @@ class PayrollController extends Controller
             $payroll['nht_total'] = $fullYearPayroll->sum('nht');
 
             $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
-            $approvedLeaves = Leave::where('guard_id', $payroll->guard_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->count();
+            $currentYear = now()->year;
+            $approvedLeaves = Leave::where('guard_id', $payroll->guard_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->count();
             $payroll['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
 
             $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();

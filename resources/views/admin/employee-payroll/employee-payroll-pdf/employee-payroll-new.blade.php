@@ -143,7 +143,6 @@
             <th>Total (JMD)</th>
             <td></td>
             <td></td>
-            <td></td>
             @php
                 $total = $employeePayroll->gross_salary ?? 0;
                 $totalAmount = $employeePayroll->paye +  $employeePayroll->education_tax + $employeePayroll->less_nis + $employeePayroll->nht + $employeePayroll->staff_loan +  $employeePayroll->medical_insurance + $employeePayroll->salary_advance + $employeePayroll->approved_pension_scheme + $employeePayroll->psra + $employeePayroll->bank_loan + $employeePayroll->missing_goods + $employeePayroll->damaged_goods + $employeePayroll->garnishment;
@@ -152,15 +151,16 @@
             <td></td>
             <td>{{ $totalAmount }}</td>
             <td></td>
+            <td></td>
         </tr>
         <tr>
             <td></td>
             <td></td>
             <td></td>
             <td></td>
-            <td></td>
             <th>Net Salary (JMD)</th>
             <td>{{ $total - $totalAmount }}</td>
+            <td></td>
             <td></td>
         </tr>
     </table>

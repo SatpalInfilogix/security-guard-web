@@ -140,7 +140,8 @@ class EmployeePayrollController extends Controller
             $payroll['nht_total'] = $fullYearPayroll->sum('nht');
 
             $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
-            $approvedLeaves = EmployeeLeave::where('employee_id', $payroll->employee_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->count();
+            $currentYear = now()->year;
+            $approvedLeaves = EmployeeLeave::where('employee_id', $payroll->employee_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->count();
             $payroll['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
 
             $fortnightDayCount = TwentyTwoDayInterval::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
@@ -188,7 +189,8 @@ class EmployeePayrollController extends Controller
         $payroll['nht_total'] = $fullYearPayroll->sum('nht');
 
         $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
-        $approvedLeaves = EmployeeLeave::where('employee_id', $payroll->employee_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->count();
+        $currentYear = now()->year;
+        $approvedLeaves = EmployeeLeave::where('employee_id', $payroll->employee_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->count();
         $payroll['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
 
         $fortnightDayCount = TwentyTwoDayInterval::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
