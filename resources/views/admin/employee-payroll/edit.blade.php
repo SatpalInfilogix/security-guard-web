@@ -47,14 +47,14 @@
                                 <table class="table table-bordered">
                                     <thead>
                                         <tr>
-                                            <th>Earnings</th>
-                                            <th>Monthly Salary</th>
-                                            <th>Units</th>
-                                            <th>Total Salary</th>
-                                            <th>Deductions</th>
-                                            <th>Amount</th>
-                                            <th>Balance</th>
-                                            <th>Employer contribution</th>
+                                            <th style="width: 14%;">Earnings</th>
+                                            <th style="width: 13%;">Monthly Salary</th>
+                                            <th style="width: 3%;">Units</th>
+                                            <th style="width: 11%;">Total Salary</th>
+                                            <th style="width: 15%;">Deductions</th>
+                                            <th style="width: 15%;">Amount</th>
+                                            <th style="width: 10%;">Balance</th>
+                                            <th style="width: 18%;">Employer contribution</th>
                                         </tr>
                                     </thead>
                                     <tbody>

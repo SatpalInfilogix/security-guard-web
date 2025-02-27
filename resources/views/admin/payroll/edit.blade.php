@@ -31,7 +31,7 @@
                                 <div class="col-md-6">
                                     <h6><strong>Employee Name: </strong> {{ $payroll->user->first_name }} {{ $payroll->user->last_name }}</h6>
                                     <h6><strong>Department: </strong> N/A</h6>
-                                    <h6><strong>Category: </strong> N/A</h6>
+                                    <h6><strong>Category: </strong>{{ $payroll->user->guardAdditionalInformation->rateMaster->guard_type }}</h6>
                                 </div>
                                 <div class="col-md-6 text-md-right">
                                     <h6><strong>NIS No: </strong>{{ $payroll->user->guardAdditionalInformation->nis }}</h6>
@@ -49,8 +49,8 @@
                                         <tr>
                                             <th style="width: 17%;">Gross Earnings</th>
                                             <th style="width: 9%">Rate</th>
-                                            <th style="width: 5%">Units</th>
-                                            <th style="width: 12%;">Rate per Unit</th>
+                                            <th style="width: 4%">Units</th>
+                                            <th style="width: 13%;">Rate per Unit</th>
                                             <th style="width: 11%">Total</th>
                                             <th style="width: 15%;">Deductions</th>
                                             <th style="width: 5%;">Amount</th>

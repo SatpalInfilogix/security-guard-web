@@ -39,7 +39,7 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="col-md-3"><strong>Category</strong></div>
-                                <div class="col-md-3">N/A</div>
+                                <div class="col-md-3">{{ $payroll->user->guardAdditionalInformation->rateMaster->guard_type }}</div>
                                 <div class="col-md-3"><strong>Payroll Period</strong></div>
                                 <div class="col-md-3">{{$payroll->start_date}} to {{$payroll->end_date}}</div>
                             </div>
@@ -47,7 +47,7 @@
                                 <div class="col-md-3"><strong>Payroll No</strong></div>
                                 <div class="col-md-3">{{ $fortnightDayCount->id }}</div>
                                 <div class="col-md-3"><strong>Date of Processing</strong></div>
-                                <div class="col-md-3">N/A</div>
+                                <div class="col-md-3">{{$payroll->created_at->format('d-M-Y')}}</div>
                             </div>
                         </div>
                     </div>
