@@ -92,7 +92,7 @@ class SecurityGuardController extends Controller
                                          ->take($length)
                                          ->get();
     
-        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?? 10;
+        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
         $currentYear = now()->year;
         foreach($securityGuards as $guard)
         {

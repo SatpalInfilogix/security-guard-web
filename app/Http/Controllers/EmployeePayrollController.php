@@ -159,6 +159,9 @@ class EmployeePayrollController extends Controller
 
         $zip->close();
 
+        if (!file_exists($tempZipFile)) {
+            return response()->json(['error' => 'Employee Payroll data not exixt.'], 500);
+        }
         $zipFileContent = file_get_contents($tempZipFile);
 
         return response($zipFileContent, 200)

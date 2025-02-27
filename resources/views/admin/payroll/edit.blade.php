@@ -47,15 +47,15 @@
                                 <table class="table table-bordered">
                                     <thead>
                                         <tr>
-                                            <th style="width: 20%;">Gross Earnings</th>
-                                            <th style="width: 10%">Rate</th>
-                                            <th>Units</th>
-                                            <th style="width: 10%;">Rate per Unit</th>
-                                            <th>Total</th>
-                                            <th style="width: 13%;">Deductions</th>
-                                            <th tyle="width: 5%;">Amount</th>
-                                            <th>Balance</th>
-                                            <th style="width: 15%;">Employer contribution</th>
+                                            <th style="width: 17%;">Gross Earnings</th>
+                                            <th style="width: 9%">Rate</th>
+                                            <th style="width: 5%">Units</th>
+                                            <th style="width: 12%;">Rate per Unit</th>
+                                            <th style="width: 11%">Total</th>
+                                            <th style="width: 15%;">Deductions</th>
+                                            <th style="width: 5%;">Amount</th>
+                                            <th style="width: 6%">Balance</th>
+                                            <th style="width: 20%;">Employer contribution</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -82,7 +82,7 @@
                                         </tr>
                                         <tr>
                                             <td>Megamart Waterloo (Public Holiday)</td>
-                                            <td>Public Holiday</td>
+                                            <td>Double</td>
                                             <td>{{ convertToHoursAndMinutes($payroll->public_holidays) }}</td>
                                             <td>-</td>
                                             <td id="public_holiday_rate">{{ $payroll->public_holiday_rate }}</td>
@@ -92,8 +92,16 @@
                                             <td>{{ $payroll->employer_contribution_nis_tax }}</td>
                                         </tr>
                                         <tr>
-                                            <td colspan="4"></td>
+                                            @if($payroll->pending_leave_balance > 0)
                                             <td></td>
+                                            <td>Leave Bal.</td>
+                                            <td>{{ $payroll->pending_leave_balance }} D</td>
+                                            <td>-</td>
+                                            <td>{{ $payroll->pending_leaves_amount }}</td>
+                                            @else
+                                                <td colspan="4"></td>
+                                                <td></td>
+                                            @endif
                                             <td>NHT</td>
                                             <td id="nht">{{ $payroll->nht }}</td>
                                             <td></td>
@@ -176,22 +184,21 @@
                                             <td></td>
                                             <td></td>
                                             @php
-                                                $total = $payroll->normal_hours_rate +  $payroll->overtime_rate +  $payroll->public_holiday_rate ?? 0;
                                                 $totalAmount = $payroll->paye +  $payroll->education_tax + $payroll->less_nis + $payroll->nht + $payroll->staff_loan +  $payroll->medical_insurance + $payroll->salary_advance + $payroll->approved_pension_scheme + $payroll->psra + $payroll->bank_loan + $payroll->missing_goods + $payroll->damaged_goods + $payroll->garnishment;
                                             @endphp
-                                            <td><strong>{{ $total }}</strong></td>
+                                            <td><strong>{{ $payroll->gross_salary_earned }}</strong></td>
                                             <td></td>
                                             <td><strong id="totalDeductions">{{ $totalAmount }}</strong></td>
                                         </tr>
                                         <tr>
                                             <td colspan="5"></td>
                                             <td>Net Salary</td>
-                                            <td id="netSalary">{{ $total - $totalAmount }}</td>
+                                            <td id="netSalary">{{ $payroll->gross_salary_earned - $totalAmount }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="5"></td>
                                             <td>BNS Account</td>
-                                            <td id="bnsAccount">{{ $total - $totalAmount }}</td>
+                                            <td id="bnsAccount">{{ $payroll->gross_salary_earned - $totalAmount }}</td>
                                         </tr>
                                     </tbody>
                                 </table>

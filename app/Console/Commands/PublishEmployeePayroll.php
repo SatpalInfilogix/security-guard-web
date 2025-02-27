@@ -146,7 +146,7 @@ class PublishEmployeePayroll extends Command
         $grossSalary = $normalDays * $daySalary;
 
         $paidLeaveBalance = 0;
-        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?? 10;
+        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
 
         $year = Carbon::parse($previousStartDate)->year;
         $lastDayOfDecember = Carbon::createFromDate($year, 12, 31);

@@ -196,6 +196,10 @@ class PublishGuardRoaster extends Command
                 $inTime = Carbon::parse($attendanceForDay['in_time']);
                 $outTime = Carbon::parse($attendanceForDay['out_time']);
                 $workedMinutes = $inTime->diffInMinutes($outTime);
+
+                if ($workedMinutes >= 465 && $workedMinutes <= $regularWorkingHoursPerDay) { // 465 is less than 15 min
+                    $workedMinutes = $regularWorkingHoursPerDay; // Count as 480 if between 465 and 480
+                }
                 
                 $regularMinutes = 0;
                 $overtimeMinutes = 0;
@@ -279,7 +283,6 @@ class PublishGuardRoaster extends Command
     public function calculatePayrollUserHours($payrollId, $userId, $attendanceDetails, $publicHolidays, $previousStartDate, $previousEndDate)
     {
         $payrollDetails = PayrollDetail::with('guardType')->where('payroll_id', $payrollId)->where('guard_id', $userId)->whereBetween('date', [$previousStartDate, $previousEndDate])->get();
-
         $totalNormalHours = 0;
         $totalOvertimeHours = 0;
         $totalPublicHoliday = 0;
@@ -300,19 +303,24 @@ class PublishGuardRoaster extends Command
 
         $userData = User::with('guardAdditionalInformation', 'guardAdditionalInformation.rateMaster')->where('id', $userId)->first();        
         list($leavePaid, $leaveNotPaid, $paidLeaveBalance) = $this->calculateLeaveDetails($userId, $previousStartDate, $previousEndDate);
-
+        $pendingLeaveAmount = 0;
+        $paidLeaveAmount = 0;
+        $notPaidLeaveAmount = 0;
         if ($leavePaid > 0) {
+            $totalNormalHours += $leavePaid * 8;
             $totalNormalEarnings += (($leavePaid * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate );
         }
-    
         if ($leaveNotPaid > 0) {
+            $totalNormalHours -= $leaveNotPaid * 8;
             $totalNormalEarnings -= (($leaveNotPaid * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate );
         }
-    
         if ($paidLeaveBalance > 0) {
-            $totalNormalEarnings += (($paidLeaveBalance * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate );
+            $pendingLeaveAmount += (($paidLeaveBalance * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate );
         }
-        $totalGrossSalaryEarned = $totalNormalEarnings + $totalOvertimeEarnings + $totalPublicHolidayEarnings;
+
+        $leavesAmount = $pendingLeaveAmount;
+
+        $totalGrossSalaryEarned = $totalNormalEarnings + $leavesAmount + $totalOvertimeEarnings + $totalPublicHolidayEarnings;
 
         $approvedPensionScheme = 0;
         $dateOfBirth = $userData->guardAdditionalInformation->date_of_birth;
@@ -333,7 +341,6 @@ class PublishGuardRoaster extends Command
 
         if($userData->is_statutory == 0) {
             $totalNisForCurrentYear = $fullYearNis->sum('less_nis');
-            
             if ($age >= 70) {
                 $lessNis = 0;
                 $employerContributionNis = 0;
@@ -351,7 +358,6 @@ class PublishGuardRoaster extends Command
                     $lessNis = 0;
                     $employerContributionNis = 0;
                 }
-                
                 // $employerContributionNis = $totalGrossSalaryEarned * 0.03;
             }
 
@@ -399,11 +405,8 @@ class PublishGuardRoaster extends Command
             $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
 
             foreach ($deductionTypes as $deductionType => $pendingField) {
-                $deductionRecords = Deduction::where('guard_id', $userId)
-                    ->where('type', $deductionType)
-                    ->whereDate('start_date', '<=', $previousEndDate)
-                    ->whereDate('end_date', '>=', $previousStartDate)
-                    ->get();
+                $deductionRecords = Deduction::where('guard_id', $userId)->where('type', $deductionType)
+                    ->whereDate('start_date', '<=', $previousEndDate)->whereDate('end_date', '>=', $previousStartDate)->get();
 
                 foreach ($deductionRecords as $deduction) {
                     if ($deduction->start_date <= $previousEndDate && $deduction->end_date >= $previousStartDate) {
@@ -425,7 +428,6 @@ class PublishGuardRoaster extends Command
                 }
             }
 
-            // Extract the deduction amounts
             $staffLoan = $totalDeductions['Staff Loan'];
             $medicalInsurance = $totalDeductions['Medical Ins'];
             $salaryAdvance = $totalDeductions['Salary Advance'];
@@ -436,7 +438,6 @@ class PublishGuardRoaster extends Command
             $missingGoods  = $totalDeductions['Missing Goods'];
             $damagedGoods = $totalDeductions['Damaged Goods'];
 
-            // Extract the pending deduction amounts
             $pendingStaffLoan = $pendingAmounts['Staff Loan'];
             $pendingMedicalInsurance = $pendingAmounts['Medical Ins'];
             $pendingSalaryAdvance = $pendingAmounts['Salary Advance'];
@@ -446,9 +447,7 @@ class PublishGuardRoaster extends Command
             $pendingGarnishment = $pendingAmounts['Garnishment'];
             $pendingMissingGoods = $pendingAmounts['Missing Goods'];
             $pendingDamagedGoods = $pendingAmounts['Damaged Goods'];
-
         } else {
-            // Non-statutory employees
             $staffLoan = 0;
             $medicalInsurance = 0;
             $salaryAdvance = 0;
@@ -459,7 +458,6 @@ class PublishGuardRoaster extends Command
             $missingGoods = 0;
             $damagedGoods = 0;
 
-            // Pending deductions
             $pendingStaffLoan = 0;
             $pendingMedicalInsurance = 0;
             $pendingSalaryAdvance = 0;
@@ -470,17 +468,15 @@ class PublishGuardRoaster extends Command
             $pendingMissingGoods = 0;
             $pendingDamagedGoods = 0;
         }
-
-        $educationTax          = $eduction_tax;
-        $employerEductionTax   = $employer_contribution;
-        $nht                   = $nhtDeduction;
-        $employerContributionNhtTax = $employerContributionNht;
-        $paye                  = $payeIncome;
-        $heart                 = $hearttax;
-        $nis                   = $lessNis;
         $threshold             = 0;
 
         $payroll = Payroll::where('id', $payrollId)->update([
+            'leave_paid'            => $leavePaid,
+            'leave_not_paid'        => $leaveNotPaid,
+            'pending_leave_balance' => $paidLeaveBalance,
+            'paid_leaves_amount'    => $paidLeaveAmount,
+            'not_paid_leaves_amount'=> $notPaidLeaveAmount,
+            'pending_leaves_amount' => $pendingLeaveAmount,
             'normal_hours' => $totalNormalHours,
             'overtime' => $totalOvertimeHours,
             'public_holidays' => $totalPublicHoliday,
@@ -488,15 +484,15 @@ class PublishGuardRoaster extends Command
             'overtime_rate' =>  number_format($totalOvertimeEarnings, 2, '.',''),
             'public_holiday_rate' =>  number_format($totalPublicHolidayEarnings, 2, '.',''),
             'gross_salary_earned' => number_format($totalGrossSalaryEarned, 2, '.',''),
-            'less_nis' => number_format($nis, 2, '.', ''),
+            'less_nis' => number_format($lessNis, 2, '.', ''),
             'employer_contribution_nis_tax' => number_format($employerContributionNis, 2, '.', ''),
             'approved_pension_scheme' => number_format($approvedPensionScheme, 2, '.', ''),
             'statutory_income' => number_format($statutoryIncome, 2, '.', ''),
-            'education_tax' => number_format($educationTax, 2, '.', ''),
-            'employer_eduction_tax' => number_format($employerEductionTax, 2, '.', ''),
-            'nht' => number_format($nht, 2, '.', ''),
-            'employer_contribution_nht_tax' => number_format($employerContributionNhtTax, 2, '.', ''),
-            'paye' => number_format($paye, 2, '.', ''),
+            'education_tax' => number_format($eduction_tax, 2, '.', ''),
+            'employer_eduction_tax' => number_format($employer_contribution, 2, '.', ''),
+            'nht' => number_format($nhtDeduction, 2, '.', ''),
+            'employer_contribution_nht_tax' => number_format($employerContributionNht, 2, '.', ''),
+            'paye' => number_format($payeIncome, 2, '.', ''),
             'staff_loan' => number_format($staffLoan, 2, '.', ''),
             'medical_insurance' => number_format($medicalInsurance, 2, '.', ''),
             'salary_advance' => number_format($salaryAdvance, 2, '.', ''),
@@ -504,7 +500,7 @@ class PublishGuardRoaster extends Command
             'bank_loan' => number_format($bankLoan, 2, '.', ''),
             // 'approved_pension' => number_format($approvedPension, 2, '.', ''),
             'threshold' => number_format($threshold, 2, '.', ''),
-            'heart' => number_format($heart, 2, '.', ''),
+            'heart' => number_format($hearttax, 2, '.', ''),
             'pending_staff_loan' => number_format($pendingStaffLoan, 2, '.', ''),
             'pending_medical_insurance' => number_format($pendingMedicalInsurance, 2, '.', ''),
             'pending_salary_advance' => number_format($pendingSalaryAdvance, 2, '.', ''),
@@ -526,8 +522,7 @@ class PublishGuardRoaster extends Command
         $leaveNotPaid = 0;
 
         $paidLeaveBalance = 0;
-        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?? 10;
-
+        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
         $year = Carbon::parse($previousStartDate)->year;
         $lastDayOfDecember = Carbon::createFromDate($year, 12, 31);
         $leavesQuery = Leave::where('guard_id', $userId)->where('status', 'Approved');
