@@ -144,8 +144,8 @@
             <td></td>
             <td></td>
             @php
-            $totalAmount = $payroll->paye +  $payroll->education_tax + $payroll->less_nis + $payroll->nht + $payroll->staff_loan +  $payroll->medical_insurance;
-        @endphp
+                $totalAmount = $payroll->paye +  $payroll->education_tax + $payroll->less_nis + $payroll->nht + $payroll->staff_loan +  $payroll->medical_insurance + $payroll->salary_advance + $payroll->approved_pension_scheme + $payroll->psra + $payroll->bank_loan + $payroll->missing_goods + $payroll->damaged_goods + $payroll->garnishment;
+            @endphp
             <td>{{ $payroll->gross_salary_earned }}</td>
             <td></td>
             <td>{{ $totalAmount }}</td>

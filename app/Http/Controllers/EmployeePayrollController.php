@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EmployeeLeave;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Carbon\Carbon;
@@ -138,9 +139,13 @@ class EmployeePayrollController extends Controller
             $payroll['education_tax_total'] = $fullYearPayroll->sum('education_tax');
             $payroll['nht_total'] = $fullYearPayroll->sum('nht');
 
+            $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
+            $approvedLeaves = EmployeeLeave::where('employee_id', $payroll->employee_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->count();
+            $payroll['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
+
             $fortnightDayCount = TwentyTwoDayInterval::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
 
-            $html = view('admin.employee-payroll.employee-payroll-pdf.employee-payroll', [
+            $html = view('admin.employee-payroll.employee-payroll-pdf.employee-payroll-new', [
                 'employeePayroll' => $payroll,
                 'fortnightDayCount' => $fortnightDayCount
             ])->render();
@@ -182,13 +187,17 @@ class EmployeePayrollController extends Controller
         $payroll['education_tax_total'] = $fullYearPayroll->sum('education_tax');
         $payroll['nht_total'] = $fullYearPayroll->sum('nht');
 
+        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
+        $approvedLeaves = EmployeeLeave::where('employee_id', $payroll->employee_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->count();
+        $payroll['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
+
         $fortnightDayCount = TwentyTwoDayInterval::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
         $pdfOptions = new Options();
         $pdfOptions->set('isHtml5ParserEnabled', true);
         $pdfOptions->set('isPhpEnabled', true);
 
         $dompdf = new Dompdf($pdfOptions);
-        $html = view('admin.employee-payroll.employee-payroll-pdf.employee-payroll', ['employeePayroll' => $payroll, 'fortnightDayCount' => $fortnightDayCount])->render();
+        $html = view('admin.employee-payroll.employee-payroll-pdf.employee-payroll-new', ['employeePayroll' => $payroll, 'fortnightDayCount' => $fortnightDayCount])->render();
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
