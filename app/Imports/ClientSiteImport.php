@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use Spatie\Permission\Models\Role;
 
 class ClientSiteImport implements ToModel, WithHeadingRow
 {
@@ -20,13 +21,28 @@ class ClientSiteImport implements ToModel, WithHeadingRow
         $this->rowIndex++;
 
         $validator = Validator::make($row, [
-            'client_id'       => 'required',
+            'client_id'       => 'required|exists:clients,id',
             'location'        => 'required',
             'location_code'   => 'required|unique:client_sites,location_code',
             'latitude'        => 'required',
             'longitude'       => 'required',
             'radius'          => 'required',
-            'manager_id'      => 'required'
+            'manager_id'      => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    $generalManagerRole = Role::where('name', 'General Manager')->first();
+
+                    if ($generalManagerRole) {
+                        $generalManager = $generalManagerRole->users()->where('id', $value)->first();
+
+                        if (!$generalManager) {
+                            $fail('The selected manager_id must belong to a General Manager.');
+                        }
+                    } else {
+                        $fail('General Manager role not found.');
+                    }
+                }
+            ],
         ]);
 
         if ($validator->fails()) {
