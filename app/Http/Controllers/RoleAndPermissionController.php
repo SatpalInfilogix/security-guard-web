@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Models\Module;
+use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 
 
@@ -74,7 +75,13 @@ class RoleAndPermissionController extends Controller
     public function show(string $id)
     {
         $roles = Role::where('name', '!=', 'Admin')->get();
-        return view('admin.roles.index', compact('roles'));
+
+        $assignedRoleIds = Role::whereHas('users')->pluck('id');
+        $specificRoles = Role::whereIn('name', ['Employee', 'Security Guard', 'Manager Operations', 'General Manager'])->pluck('id');
+        $mergedRoleIds = $assignedRoleIds->merge($specificRoles);
+        $uniqueRoleIds = $mergedRoleIds->unique()->values();
+
+        return view('admin.roles.index', compact('roles', 'uniqueRoleIds'));
     }
 
     /**
