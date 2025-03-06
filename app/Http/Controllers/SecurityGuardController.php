@@ -33,7 +33,7 @@ class SecurityGuardController extends Controller
             abort(403);
         }
 
-        $userRole = Role::where('name', 'Security Guard')->first();
+        $userRole = Role::where('id', 3)->first();
 
         $query = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -46,7 +46,7 @@ class SecurityGuardController extends Controller
 
     public function getSecurityGuard(Request $request)
     {
-        $userRole = Role::where('name', 'Security Guard')->first();
+        $userRole = Role::where('id', 3)->first();
     
         $securityGuards = User::with('userDocuments')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -459,7 +459,7 @@ class SecurityGuardController extends Controller
 
     public function exportGuards()
     {
-        $userRole = Role::where('name', 'Security Guard')->first();
+        $userRole = Role::where('id', 3)->first();
 
         $guards = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -572,7 +572,7 @@ class SecurityGuardController extends Controller
 
     public function downloadPDF()
     {
-        $userRole = Role::where('name', 'Security Guard')->first();
+        $userRole = Role::where('id', 3)->first();
 
         $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);

@@ -70,12 +70,17 @@ class ClientSiteController extends Controller
             abort(403);
         }
         $clients = Client::latest()->get();
-        $userRole = Role::where('name', 'General Manager')->first();
+        $srManager = Role::where('id', 7)->first();
+        $userManagers = User::whereHas('roles', function ($query) use ($srManager) {
+            $query->where('role_id', $srManager->id);
+        })->latest()->get();
+
+        $userRole = Role::where('id', 4)->first();
         $users = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         })->latest()->get();
 
-        return view('admin.client-sites.create', compact('clients', 'users'));
+        return view('admin.client-sites.create', compact('clients', 'users', 'userManagers'));
     }
 
     public function store(Request $request)
@@ -106,7 +111,7 @@ class ClientSiteController extends Controller
             'latitude'          => $request->latitude,
             'longitude'         => $request->longitude,
             'radius'            => $request->radius,
-            'sr_manager'        => $request->sr_manager,
+            'sr_manager_id'     => $request->sr_manager_id,
             'sr_manager_email'  => $request->sr_manager_email,
             'manager_id'        => $request->manager,
             'manager_email'     => $request->email,
@@ -169,11 +174,16 @@ class ClientSiteController extends Controller
 
         $clientSite =ClientSite::with('client', 'clientAccount', 'clientOperation')->where('id', $clientSite->id)->first();
         $clients = Client::latest()->get();
-        $userRole = Role::where('name', 'General Manager')->first();
+        $srManager = Role::where('id', 7)->first();
+        $userManagers = User::whereHas('roles', function ($query) use ($srManager) {
+            $query->where('role_id', $srManager->id);
+        })->latest()->get();
+        
+        $userRole = Role::where('id', 4)->first();
         $users = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         })->latest()->get();
-        return view('admin.client-sites.edit', compact('clients', 'clientSite', 'users'));
+        return view('admin.client-sites.edit', compact('clients', 'clientSite', 'users', 'userManagers'));
     }
 
     public function update(Request $request, ClientSite $clientSite)
@@ -204,7 +214,7 @@ class ClientSiteController extends Controller
             'latitude'          => $request->latitude,
             'longitude'         => $request->longitude,
             'radius'            => $request->radius,
-            'sr_manager'        => $request->sr_manager,
+            'sr_manager_id'     => $request->sr_manager_id,
             'sr_manager_email'  => $request->sr_manager_email,
             'manager_id'        => $request->manager,
             'manager_email'     => $request->email,
@@ -318,7 +328,7 @@ class ClientSiteController extends Controller
         $sheet->fromArray($headers, NULL, 'A1');
 
         $users = User::whereHas('roles', function ($query) {
-            $query->where('name', 'General Manager');
+            $query->where('id', 4);
         })->get();
 
         foreach ($users as $key => $user) {

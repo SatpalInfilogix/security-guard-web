@@ -25,7 +25,7 @@ class EmployeeRateMasterController extends Controller
         if(!Gate::allows('create employee rate master')) {
             abort(403);
         }
-        $userRole = Role::where('name', 'Employee')->first();
+        $userRole = Role::where('id', 9)->first();
 
         $employees = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -58,7 +58,7 @@ class EmployeeRateMasterController extends Controller
         if(!Gate::allows('edit employee rate master')) {
             abort(403);
         }
-        $userRole = Role::where('name', 'Employee')->first();
+        $userRole = Role::where('id', 9)->first();
 
         $employees = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);

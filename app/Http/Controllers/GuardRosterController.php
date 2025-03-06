@@ -37,7 +37,7 @@ class GuardRosterController extends Controller
             $fortnight = null;
         }
 
-        $userRole = Role::where('name', 'Security Guard')->first();
+        $userRole = Role::where('id', 3)->first();
 
         $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -133,7 +133,7 @@ class GuardRosterController extends Controller
             abort(403);
         }
 
-        $userRole = Role::where('name', 'Security Guard')->first();
+        $userRole = Role::where('id', 3)->first();
 
         $securityGuards = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -221,7 +221,7 @@ class GuardRosterController extends Controller
             abort(403);
         }
         $guardRoaster = GuardRoster::where('id', $id)->first();
-        $userRole = Role::where('name', 'Security Guard')->first();
+        $userRole = Role::where('id', 3)->first();
         $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         })->where('status', 'Active')->latest()->get();
@@ -408,7 +408,7 @@ class GuardRosterController extends Controller
         $sheet->fromArray($headers, NULL, 'A1');
 
         $users = User::whereHas('roles', function ($query) {
-            $query->where('name', 'Security Guard');
+            $query->where('id', 3);
         })->with('guardAdditionalInformation', 'usersBankDetail', 'usersKinDetail', 'userDocuments', 'contactDetail')->get();
 
         foreach ($users as $key => $user) {
@@ -490,82 +490,6 @@ class GuardRosterController extends Controller
 
         return response()->json($leaves);
     }
-
-    // public function getGuardRosters(Request $request)
-    // {
-    //     $today = Carbon::now();
-    //     $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
-
-    //     if (!$fortnight) {
-    //         return response()->json([
-    //             'data' => [],
-    //             'recordsTotal' => 0,
-    //             'recordsFiltered' => 0
-    //         ]);
-    //     }
-
-    //     $query = GuardRoster::with('user', 'client', 'clientSite')
-    //         ->whereBetween('date', [$fortnight->start_date, $fortnight->end_date]);
-
-    //     $userId = Auth::id();
-    //     if (Auth::user()->hasRole('Manager Operations')) {
-    //         $query->whereHas('clientSite', function ($query) use ($userId) {
-    //             $query->where('manager_id', $userId);
-    //         });
-    //     }
-
-    //     if ($request->has('search') && !empty($request->search['value'])) {
-    //         $searchValue = $request->search['value'];
-    //         $query->where(function($query) use ($searchValue) {
-    //             $query->whereHas('user', function($query) use ($searchValue) {
-    //                 $query->where('first_name', 'like', '%' . $searchValue . '%');
-    //             })
-    //             ->orWhereHas('client', function($query) use ($searchValue) {
-    //                 $query->where('client_name', 'like', '%' . $searchValue . '%');
-    //             })
-    //             ->orWhereHas('clientSite', function($query) use ($searchValue) {
-    //                 $query->where('location_Code', 'like', '%' . $searchValue . '%');
-    //             });
-    //         });
-    //     }
-
-    //     $totalRecords = $query->count();
-
-    //     // $perPage = $request->input('length', 10);
-    //     // $currentPage = (int)($request->input('start', 0) / $perPage);
-    //     // $guardRoasters = $query->skip($currentPage * $perPage)->take($perPage)->get()
-    //     $guardRoasters = $query->get()
-    //         ->groupBy(function($item) {
-    //             return $item->user->first_name .'-'. $item->client_site_id;
-    //         });
-
-    //     $formattedGuardRoasters = $guardRoasters->map(function ($items) {
-    //         $firstItem = $items->first();
-    //         $dates = $items->pluck('date')->implode(', ');
-            
-    //         $time_in_out = $items->map(function ($item) {
-    //             return [
-    //                 'date' => $item->date,
-    //                 'time_in' => \Carbon\Carbon::parse($item->start_time)->format('h:iA'),
-    //                 'time_out' => \Carbon\Carbon::parse($item->end_time)->format('h:iA') 
-    //             ];
-    //         });
-
-    //         return [
-    //             'guard_name' => $firstItem->user->first_name . ' ' . optional($firstItem->user)->surname,
-    //             'location_code' => $firstItem->clientSite->location_code,
-    //             'client_name' => $firstItem->client->client_name,
-    //             'time_in_out' => $time_in_out,
-    //         ];
-    //     });
-
-    //     return response()->json([
-    //         'draw' => intval($request->input('draw')),
-    //         'recordsTotal' => $totalRecords,
-    //         'recordsFiltered' => $totalRecords,
-    //         'data' => $formattedGuardRoasters
-    //     ]);
-    // }
 
     public function getGuardRosters(Request $request)
     {

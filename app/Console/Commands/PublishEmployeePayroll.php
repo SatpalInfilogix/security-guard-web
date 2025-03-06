@@ -34,7 +34,7 @@ class PublishEmployeePayroll extends Command
      */
     public function handle()
     {
-        $userRole = Role::where('name', 'Employee')->first();
+        $userRole = Role::where('id', 9)->first();
         $employees = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         })->with('guardAdditionalInformation')->latest()->get();

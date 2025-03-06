@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\ClientSite;
 use App\Models\ClientOperation;
 use App\Models\ClientAccount;
+use App\Models\User;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Facades\Validator;
@@ -30,19 +31,41 @@ class ClientSiteImport implements ToModel, WithHeadingRow
             'manager_id'      => [
                 'required',
                 function ($attribute, $value, $fail) {
-                    $generalManagerRole = Role::where('name', 'General Manager')->first();
+                    $generalManagerRole = Role::find(4);
 
-                    if ($generalManagerRole) {
-                        $generalManager = $generalManagerRole->users()->where('id', $value)->first();
+                    if (!$generalManagerRole) {
+                        return $fail('General Manager role not found.');
+                    }
 
-                        if (!$generalManager) {
-                            $fail('The selected manager_id must belong to a General Manager.');
-                        }
-                    } else {
-                        $fail('General Manager role not found.');
+                    $generalManager = User::where('id', $value)
+                        ->whereHas('roles', function ($query) use ($generalManagerRole) {
+                            $query->where('role_id', $generalManagerRole->id);
+                        })
+                        ->exists();
+
+                    if (!$generalManager) {
+                        return $fail('The selected manager_id must belong to a General Manager.');
                     }
                 }
             ],
+            'sr_manager_id' => [
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    $srManagerRole = Role::where('id', 7)->first();
+
+                    if ($srManagerRole) {
+                        $srManager = User::where('id', $value)->whereHas('roles', function ($query) use ($srManagerRole) {
+                            $query->where('role_id', $srManagerRole->id);
+                        })->find($value);
+
+                        if (!$srManager) {
+                            $fail('The selected sr_manager_id not belong to a Sr Manager.');
+                        }
+                    } else {
+                        $fail('Sr Manager role not found.');
+                    }
+                }
+            ]
         ]);
 
         if ($validator->fails()) {
@@ -67,7 +90,7 @@ class ClientSiteImport implements ToModel, WithHeadingRow
             'latitude'          => $row['latitude'],
             'longitude'         => $row['longitude'],
             'radius'            => $row['radius'],
-            'sr_manager'        => $row['sr_manager'],
+            'sr_manager_id'     => $row['sr_manager_id'],
             'sr_manager_email'  => $row['sr_manager_email'],
             'manager_id'        => $row['manager_id'],
             'manager_email'     => $row['manager_email'],

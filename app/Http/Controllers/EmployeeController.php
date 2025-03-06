@@ -29,7 +29,7 @@ class EmployeeController extends Controller
             abort(403);
         }
 
-        $userRole = Role::where('name', 'Employee')->first();
+        $userRole = Role::where('id', 9)->first();
 
         $query = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -42,7 +42,7 @@ class EmployeeController extends Controller
 
     public function getEmployee(Request $request)
     {
-        $userRole = Role::where('name', 'Employee')->first();
+        $userRole = Role::where('id', 9)->first();
     
         $securityGuards = User::with('userDocuments')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -476,7 +476,7 @@ class EmployeeController extends Controller
 
     public function downloadPDF(Request $request)
     {
-        $userRole = Role::where('name', 'Employee')->first();
+        $userRole = Role::where('id', 9)->first();
         $query = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         })->with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail','userDocuments'])->latest();
@@ -509,7 +509,7 @@ class EmployeeController extends Controller
 
     public function exportEmployees()
     {
-        $userRole = Role::where('name', 'Employee')->first();
+        $userRole = Role::where('id', 9)->first();
 
         $employees = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
