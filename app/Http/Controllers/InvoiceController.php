@@ -136,7 +136,7 @@ class InvoiceController extends Controller
         $pdfOptions->set('isPhpEnabled', true);
 
         $dompdf = new Dompdf($pdfOptions);
-        $html = view('admin.invoices.invoice-pdf.invoice', ['invoice' => $invoice, 'invoicesList' => $invoicesList])->render();
+        $html = view('admin.invoices.invoice-pdf.invoice-new', ['invoice' => $invoice, 'invoicesList' => $invoicesList])->render();
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
