@@ -60,6 +60,18 @@ class AttendanceController extends Controller
 
         return view('admin.attendance.index', compact('attendances', 'fortnight'));
     }
+    private function parseDate($date)
+    {
+        if (empty($date)) {
+            return null; 
+        }
+
+        try {
+            return Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d H:i:s');
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 
     public function edit($id)
     {
@@ -81,14 +93,14 @@ class AttendanceController extends Controller
             abort(403);
         }
         $request->validate([
-            'punch_in'    => 'required',
-            'punch_out'   => 'required'
+            'punch_in' => 'required|date',
+            'punch_out' => 'required|date|after:punch_in'
         ]);
 
         $attendance = Punch::where('id', $id)->first();
         $attendance->update([
-            'in_time'   => $request->punch_in,
-            'out_time'  => $request->punch_out
+            'in_time'   => $this->parseDate($request->punch_in),
+            'out_time'  => $this->parseDate($request->punch_out)
         ]);
 
         return redirect()->route('attendance.index')->with('success', 'Attendance updated successfully.');
