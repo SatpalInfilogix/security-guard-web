@@ -25,7 +25,7 @@ class EmployeePayrollController extends Controller
         $today = Carbon::now()->startOfDay();
         $twentyTwoDays = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
         $previousEndDate = Carbon::parse($twentyTwoDays->start_date)->subDay();
-        $previousStartDate = $previousEndDate->copy()->subDays(21);
+        $previousStartDate = Carbon::parse($previousEndDate)->startOfMonth();
 
         return view('admin.employee-payroll.index', compact('twentyTwoDays','previousEndDate', 'previousStartDate'));
     }
@@ -36,7 +36,8 @@ class EmployeePayrollController extends Controller
         $twentyTwoDays = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
 
         $previousEndDate = Carbon::parse($twentyTwoDays->start_date)->subDay();
-        $previousStartDate = $previousEndDate->copy()->subDays(21);
+        $previousStartDate = Carbon::parse($previousEndDate)->startOfMonth();
+
         $employeePayrolls = EmployeePayroll::with('user');
         
         if ($request->has('date') && !empty($request->date)) {
@@ -107,7 +108,8 @@ class EmployeePayrollController extends Controller
         $twentyTwoDays = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
 
         $previousEndDate = Carbon::parse($twentyTwoDays->start_date)->subDay();
-        $previousStartDate = $previousEndDate->copy()->subDays(21);
+        $previousStartDate = Carbon::parse($previousEndDate)->startOfMonth();
+
         $payrolls = EmployeePayroll::with('user');
 
         if ($request->has('date') && !empty($request->date)) {
@@ -271,7 +273,7 @@ class EmployeePayrollController extends Controller
             
             $twentyTwoDays = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
             $previousEndDate = Carbon::parse($twentyTwoDays->start_date)->subDay();
-            $previousStartDate = $previousEndDate->copy()->subDays(21);
+            $previousStartDate = Carbon::parse($previousEndDate)->startOfMonth();
         }
 
         $Payrolls = EmployeePayroll::with('user', 'user.guardAdditionalInformation')->where('start_date', '>=', $previousStartDate)->whereDate('end_date', '<=', $previousEndDate)->get();

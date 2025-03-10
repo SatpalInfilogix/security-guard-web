@@ -41,29 +41,55 @@ class PublishEmployeePayroll extends Command
 
         if($employees) {
             foreach ($employees as $employee) {
-                // $today = Carbon::now()->startOfDay();
-                $today = Carbon::parse('17-02-2025')->startOfDay(); //--Manual Check
+                $today = Carbon::now()->startOfDay();
+                // $today = Carbon::parse('23-12-2025')->startOfDay(); //--Manual Check
                 $twentyTwoDay = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
                 if ($twentyTwoDay) {
                     $endDate = Carbon::parse($twentyTwoDay->end_date)->startOfDay();
                     $startDate = Carbon::parse($twentyTwoDay->start_date)->startOfDay();
-                    
-                    if ($startDate == $today) {
-                        $previousEndDate = Carbon::parse($twentyTwoDay->start_date)->subDay();
-                        $previousStartDate = $previousEndDate->copy()->subDays(21);
+
+                    if ($today->month == 12) {
+                        $previousEndDate = Carbon::create(2025, 12, 13);
+                    } else {
+                        $previousEndDate = Carbon::parse($startDate)->addDays(22);  // Payroll generates 23-day period
+                    }
+                    $previousStartDate = $startDate;
+                    if ($previousEndDate == $today) {
                         $joiningDate = Carbon::parse($employee->guardAdditionalInformation->date_of_joining);
-                       
                         $startDateForEmployee = $joiningDate > $previousStartDate ? $joiningDate : $previousStartDate;
-                    
-                        if ($startDateForEmployee->greaterThan($previousEndDate)) {
+                        $leavingDateOfEmployee = Carbon::parse($employee->guardAdditionalInformation->date_of_seperation) ?? '';
+                        if ($startDateForEmployee->greaterThan($endDate)) {
                             $normalDays = 0;
                         } else {
-                            $normalDays = $startDateForEmployee->diffInDays($previousEndDate) + 1;
+                            if ($joiningDate <= $previousStartDate) {
+                                $normalDays = 22;
+                                $workingDays = 0;
+                                if ($leavingDateOfEmployee && $leavingDateOfEmployee->greaterThanOrEqualTo($previousStartDate) && $leavingDateOfEmployee->lessThanOrEqualTo($endDate)) {
+                                    $endDate = $leavingDateOfEmployee;
+                                    while ($previousStartDate <= $endDate) {
+                                        if ($previousStartDate->dayOfWeek != Carbon::SATURDAY && $previousStartDate->dayOfWeek != Carbon::SUNDAY) {
+                                            $workingDays++;
+                                        }
+                                        $previousStartDate->addDay();
+                                    }
+                                    $normalDays = $workingDays;
+                                }
+                            } else {
+                                $workingDays = 0;
+                                $currentDate = $startDateForEmployee;
+                                while ($currentDate <= $endDate) {
+                                    if ($currentDate->dayOfWeek != Carbon::SATURDAY && $currentDate->dayOfWeek != Carbon::SUNDAY) {
+                                        $workingDays++;
+                                    }
+                                    $currentDate->addDay();
+                                }
+                                $normalDays = $workingDays;
+                            }
                         }
 
                         if($normalDays > 0)
                         {
-                            $payroll = EmployeePayroll::where('employee_id', $employee->id)->whereDate('start_date', $previousStartDate)->whereDate('end_date', $previousEndDate)->first();
+                            $payroll = EmployeePayroll::where('employee_id', $employee->id)->whereDate('start_date', $previousStartDate)->whereDate('end_date', $endDate)->first();
                             if(!$payroll) {
                                 $employeeRateMaster = EmployeeRateMaster::where('employee_id', $employee->id)->first();
                                 if($employeeRateMaster) {
@@ -71,22 +97,21 @@ class PublishEmployeePayroll extends Command
                                     $daySalary = ($yearlySalary / 12) / 22;
 
                                     //===== Employee Leaves Calculation =====
-                                    list($leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary, $pendingLeaveAmount, $normalDaysSalary) = $this->calculateLeaveDetails($normalDays, $employee, $previousStartDate, $previousEndDate, $daySalary);
+                                    list($leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary, $pendingLeaveAmount, $normalDaysSalary) = $this->calculateLeaveDetails($normalDays, $employee, $previousStartDate, $endDate, $daySalary);
                                     //===== End Leaves Calculation =====
 
                                     //===== Employee Payroll Statutory Calculation =====
-                                    $payrollStatutoryData = $this->calculateEmployeePayrollStatutory($employee, $previousStartDate, $previousEndDate, $grossSalary, $daySalary);
+                                    $payrollStatutoryData = $this->calculateEmployeePayrollStatutory($employee, $previousStartDate, $endDate, $grossSalary, $daySalary);
                                     // ========End Payroll Statutory Calculation ========
                                     
                                     //===== Employee Payroll Non Statutory Calculation =====
-                                    list($totalDeductions, $pendingAmounts) = $this->calculateNonStatutoryDeductions($employee, $previousStartDate, $previousEndDate);
+                                    list($totalDeductions, $pendingAmounts) = $this->calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate);
                                     //===== End Employee Payroll Non Statutory Calculation =====
-
 
                                     $payrollData = array_merge($payrollStatutoryData, [
                                         'employee_id' => $employee->id,
                                         'start_date' => $previousStartDate,
-                                        'end_date' => $previousEndDate,
+                                        'end_date' => $endDate,
                                         'normal_days' => $normalDays,
                                         'leave_paid' => $leavePaid,
                                         'leave_not_paid' => $leaveNotPaid,
@@ -139,7 +164,7 @@ class PublishEmployeePayroll extends Command
         }
     }
 
-    protected function calculateLeaveDetails($normalDays, $employee, $previousStartDate, $previousEndDate, $daySalary)
+    protected function calculateLeaveDetails($normalDays, $employee, $previousStartDate, $endDate, $daySalary)
     {
         $leavePaid = 0;
         $leaveNotPaid = 0;
@@ -152,11 +177,11 @@ class PublishEmployeePayroll extends Command
         $lastDayOfDecember = Carbon::createFromDate($year, 12, 31);
         $leavesQuery = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved');
         $leavesCountInDecember = $leavesQuery->whereYear('date', $lastDayOfDecember->year)->count();
-        if ($lastDayOfDecember->between($previousStartDate, $previousEndDate)) {
+        if ($lastDayOfDecember->between($previousStartDate, $endDate)) {
             $paidLeaveBalance = max(0, $paidLeaveBalanceLimit - $leavesCountInDecember);
         }
 
-        $leavesCount = $leavesQuery->whereBetween('date', [$previousStartDate, $previousEndDate])->count();
+        $leavesCount = $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])->count();
         if ($leavesCount > 0) {
             $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved')->whereDate('date', '<', $previousStartDate)->count();
             $totalApprovedLeaves = $leavesCount + $approvedLeaves;
@@ -191,7 +216,7 @@ class PublishEmployeePayroll extends Command
         return [$leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary, $pendingLeaveAmount, $normalDaysSalary];
     }
 
-    public function calculateEmployeePayrollStatutory($employee, $previousStartDate, $previousEndDate, $grossSalary, $daySalary)
+    public function calculateEmployeePayrollStatutory($employee, $previousStartDate, $endDate, $grossSalary, $daySalary)
     {
         $approvedPensionScheme = 0;
         $userData = User::with('guardAdditionalInformation')->where('id', $employee->id)->first();
@@ -290,7 +315,7 @@ class PublishEmployeePayroll extends Command
         ];
     }
 
-    private function calculateNonStatutoryDeductions($employee, $previousStartDate, $previousEndDate)
+    private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)
     {
         // Deduction types
         $deductionTypes = [
@@ -315,12 +340,12 @@ class PublishEmployeePayroll extends Command
             foreach ($deductionTypes as $deductionType => $pendingField) {
                 $deductionRecords = EmployeeDeduction::where('employee_id', $employee->id)
                     ->where('type', $deductionType)
-                    ->whereDate('start_date', '<=', $previousEndDate)
+                    ->whereDate('start_date', '<=', $endDate)
                     ->whereDate('end_date', '>=', $previousStartDate)
                     ->get();
 
                 foreach ($deductionRecords as $deduction) {
-                    if ($deduction->start_date <= $previousEndDate && $deduction->end_date >= $previousStartDate) {
+                    if ($deduction->start_date <= $endDate && $deduction->end_date >= $previousStartDate) {
                         $totalDeductions[$deductionType] = $deduction->one_installment;
                         $pendingBalance = $deduction->pending_balance - $deduction->one_installment;
                         $pendingAmounts[$deductionType] = $deduction->pending_balance - $deduction->one_installment;
