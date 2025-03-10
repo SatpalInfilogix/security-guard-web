@@ -21,6 +21,8 @@ return new class extends Migration
             $table->decimal('leave_not_paid', 20, 1)->nullable();
             $table->decimal('pending_leave_balance', 20, 1)->nullable();
             $table->decimal('day_salary', 20, 3)->nullable();
+            $table->decimal('normal_salary', 20, 3)->nullable();
+            $table->decimal('pending_leave_amount', 20, 3)->nullable();
             $table->decimal('gross_salary', 20, 3)->nullable();
             $table->decimal('paye', 20, 3)->nullable();
             $table->decimal('education_tax', 20, 3)->nullable();

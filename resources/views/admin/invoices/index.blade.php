@@ -21,7 +21,7 @@
                 <div class="col-md-12">
                     <form id="filterForm" method="GET">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <select name="client_id[]" id="client_id" class="form-control" multiple>
                                     @foreach($clients as $client)
                                         <option value="{{ $client->id }}">{{ $client->client_name }}</option>
@@ -35,7 +35,7 @@
                                     @endforeach --}}
                                 </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <input type="text" id="date" name="date" class="form-control datePicker" value="" placeholder="Select Date Range" autocomplete="off">
                             </div>
                             <div class="col-md-3">
@@ -45,7 +45,7 @@
                                 <option value="Unpaid">Unpaid</option>
                             </select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
                             </div>
                         </div>

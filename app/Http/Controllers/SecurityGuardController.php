@@ -11,6 +11,7 @@ use App\Models\UsersBankDetail;
 use App\Models\UsersKinDetail;
 use App\Models\UsersDocuments;
 use App\Models\RateMaster;
+use App\Models\Leave;
 use Spatie\Permission\Models\Role;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\SecurityGuardImport;
@@ -32,7 +33,7 @@ class SecurityGuardController extends Controller
             abort(403);
         }
 
-        $userRole = Role::where('name', 'Security Guard')->first();
+        $userRole = Role::where('id', 3)->first();
 
         $query = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -45,7 +46,7 @@ class SecurityGuardController extends Controller
 
     public function getSecurityGuard(Request $request)
     {
-        $userRole = Role::where('name', 'Security Guard')->first();
+        $userRole = Role::where('id', 3)->first();
     
         $securityGuards = User::with('userDocuments')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -91,6 +92,14 @@ class SecurityGuardController extends Controller
                                          ->take($length)
                                          ->get();
     
+        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
+        $currentYear = now()->year;
+        foreach($securityGuards as $guard)
+        {
+            $approvedLeaves = Leave::where('guard_id', $guard->id)->where('status', 'Approved')->whereYear('date', $currentYear)->count();
+            $guard['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
+        }
+
         $data = [
             'draw' => $request->input('draw'),
             'recordsTotal' => User::whereHas('roles', function ($query) use ($userRole) {
@@ -343,7 +352,7 @@ class SecurityGuardController extends Controller
         $user->middle_name  = $request->middle_name;
         $user->email        = $request->email;
         $user->phone_number = $request->phone_number;
-        $user->status       = $request->user_status ?? 'Inactive';
+        $user->status       = $request->user_status ?? $user->status;
         $user->is_statutory = $request->is_statutory;
 
         if ($request->filled('password')) {
@@ -450,7 +459,7 @@ class SecurityGuardController extends Controller
 
     public function exportGuards()
     {
-        $userRole = Role::where('name', 'Security Guard')->first();
+        $userRole = Role::where('id', 3)->first();
 
         $guards = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -563,7 +572,7 @@ class SecurityGuardController extends Controller
 
     public function downloadPDF()
     {
-        $userRole = Role::where('name', 'Security Guard')->first();
+        $userRole = Role::where('id', 3)->first();
 
         $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);

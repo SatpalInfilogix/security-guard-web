@@ -19,6 +19,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\EmployeeImport;
 use App\Exports\EmployeeImportExport;
+use App\Models\EmployeeLeave;
 
 class EmployeeController extends Controller
 {
@@ -28,7 +29,7 @@ class EmployeeController extends Controller
             abort(403);
         }
 
-        $userRole = Role::where('name', 'Employee')->first();
+        $userRole = Role::where('id', 9)->first();
 
         $query = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -41,7 +42,7 @@ class EmployeeController extends Controller
 
     public function getEmployee(Request $request)
     {
-        $userRole = Role::where('name', 'Employee')->first();
+        $userRole = Role::where('id', 9)->first();
     
         $securityGuards = User::with('userDocuments')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -86,6 +87,14 @@ class EmployeeController extends Controller
                                          ->skip($start) 
                                          ->take($length)
                                          ->get();
+
+        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
+        $currentYear = now()->year;
+        foreach($securityGuards as $employee)
+        {
+            $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved')->whereYear('date', $currentYear)->count();
+            $employee['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
+        }
     
         $data = [
             'draw' => $request->input('draw'),
@@ -326,7 +335,7 @@ class EmployeeController extends Controller
         $user->middle_name  = $request->middle_name;
         $user->email        = $request->email;
         $user->phone_number = $request->phone_number;
-        $user->status       = $request->user_status ?? 'Inactive';
+        $user->status       = $request->user_status ?? $user->status;
         $user->is_statutory = $request->is_statutory;
 
         if ($request->filled('password')) {
@@ -467,7 +476,7 @@ class EmployeeController extends Controller
 
     public function downloadPDF(Request $request)
     {
-        $userRole = Role::where('name', 'Employee')->first();
+        $userRole = Role::where('id', 9)->first();
         $query = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         })->with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail','userDocuments'])->latest();
@@ -500,7 +509,7 @@ class EmployeeController extends Controller
 
     public function exportEmployees()
     {
-        $userRole = Role::where('name', 'Employee')->first();
+        $userRole = Role::where('id', 9)->first();
 
         $employees = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);

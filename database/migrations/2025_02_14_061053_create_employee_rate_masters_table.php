@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('employee_id');
             $table->decimal('gross_salary',15,2)->nullable();
+            $table->decimal('monthly_income', 15,2)->nullable();
 
             $table->timestamps();
         });

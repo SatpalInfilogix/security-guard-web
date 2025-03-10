@@ -25,7 +25,7 @@ class EmployeeRateMasterController extends Controller
         if(!Gate::allows('create employee rate master')) {
             abort(403);
         }
-        $userRole = Role::where('name', 'Employee')->first();
+        $userRole = Role::where('id', 9)->first();
 
         $employees = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -45,8 +45,9 @@ class EmployeeRateMasterController extends Controller
         ]);
 
         EmployeeRateMaster::create([
-            'employee_id' => $request->employee_id,
-            'gross_salary' => $request->gross_salary,
+            'employee_id'    => $request->employee_id,
+            'gross_salary'   => $request->gross_salary,
+            'monthly_income' => $request->monthly_income,
         ]);
 
         return redirect()->route('employee-rate-master.index')->with('success', 'Employee Rate Master created successfully.');
@@ -57,7 +58,7 @@ class EmployeeRateMasterController extends Controller
         if(!Gate::allows('edit employee rate master')) {
             abort(403);
         }
-        $userRole = Role::where('name', 'Employee')->first();
+        $userRole = Role::where('id', 9)->first();
 
         $employees = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
@@ -79,8 +80,10 @@ class EmployeeRateMasterController extends Controller
         ]);
 
         EmployeeRateMaster::where('id', $id)->update([
-            'employee_id' => $request->employee_id,
-            'gross_salary' => $request->gross_salary,
+            'employee_id'    => $request->employee_id,
+            'gross_salary'   => $request->gross_salary,
+            'monthly_income' => $request->monthly_income,
+
         ]);
 
         return redirect()->route('employee-rate-master.index')->with('success', 'Employee Rate Master updated successfully.');

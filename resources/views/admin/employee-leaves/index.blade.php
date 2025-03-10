@@ -61,7 +61,6 @@
                                         <th>Date</th>
                                         <th>Reason</th>
                                         <th>Status</th>
-                                        <th>Leave Type</th>
                                         @can('delete employee leaves')
                                         <th>Action</th>
                                         @endcan

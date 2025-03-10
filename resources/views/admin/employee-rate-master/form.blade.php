@@ -26,6 +26,12 @@
             <x-form-input id="gross_salary" name="gross_salary" value="{{ $rateMaster->gross_salary ?? '' }}" label="Gross Salary" placeholder="Enter Gross Salary" type="number" step="any" min="0" required="true"/>
         </div>
     </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <x-form-input id="monthly_income" name="monthly_income" value="{{ $rateMaster->monthly_income ?? '' }}" label="Monthly Income" placeholder="Monthly Income" type="number" step="any" min="0" readonly />
+        </div>
+    </div>
+    
 </div>
 
 <div class="row mb-2">
@@ -46,6 +52,18 @@
             var selectedOption = $('#employee_id').find('option:selected');
             var employeeName = selectedOption.data('name');
             $('#name').val(employeeName);
+        }
+
+        $('#gross_salary').on('input', function() {
+            var grossSalary = parseFloat($(this).val()) || 0;
+            var monthlyIncome = grossSalary / 12;
+            $('#monthly_income').val(monthlyIncome.toFixed(2));
+        });
+
+        if ($('#gross_salary').val() != "") {
+            var grossSalary = parseFloat($('#gross_salary').val()) || 0;
+            var monthlyIncome = grossSalary / 12;
+            $('#monthly_income').val(monthlyIncome.toFixed(2));
         }
     });
 </script>

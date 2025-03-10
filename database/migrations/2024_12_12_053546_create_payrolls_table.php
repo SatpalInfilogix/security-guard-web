@@ -22,6 +22,12 @@ return new class extends Migration
             $table->decimal('normal_hours_rate', 10, 2)->nullable();
             $table->decimal('overtime_rate', 10, 2)->nullable();
             $table->decimal('public_holiday_rate', 10, 2)->nullable();
+            $table->decimal('leave_paid', 20, 1)->nullable();
+            $table->decimal('leave_not_paid', 20, 1)->nullable();
+            $table->integer('pending_leave_balance')->nullable();
+            $table->decimal('paid_leaves_amount', 20, 2)->nullable();
+            $table->decimal('not_paid_leaves_amount', 20, 2)->nullable();
+            $table->decimal('pending_leaves_amount', 20, 2)->nullable();
             $table->decimal('gross_salary_earned', 15, 2)->nullable();
             $table->decimal('less_nis', 10, 2)->nullable();
             $table->decimal('employer_contribution_nis_tax', 10, 2)->nullable();

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\FortnightDates;
 use App\Models\PayrollDetail;
+use App\Models\Leave;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use App\Imports\PayrollImport;
@@ -251,13 +252,18 @@ class PayrollController extends Controller
         $payroll['education_tax_total'] = $fullYearPayroll->sum('education_tax');
         $payroll['nht_total'] = $fullYearPayroll->sum('nht');
 
+        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
+        $currentYear = now()->year;
+        $approvedLeaves = Leave::where('guard_id', $payroll->guard_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->count();
+        $payroll['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
+
         $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
         $pdfOptions = new Options();
         $pdfOptions->set('isHtml5ParserEnabled', true);
         $pdfOptions->set('isPhpEnabled', true);
 
         $dompdf = new Dompdf($pdfOptions);
-        $html = view('admin.payroll.payroll-pdf.payroll', ['payroll' => $payroll, 'fortnightDayCount' => $fortnightDayCount])->render();
+        $html = view('admin.payroll.payroll-pdf.new-payroll', ['payroll' => $payroll, 'fortnightDayCount' => $fortnightDayCount])->render();
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
@@ -304,9 +310,14 @@ class PayrollController extends Controller
             $payroll['education_tax_total'] = $fullYearPayroll->sum('education_tax');
             $payroll['nht_total'] = $fullYearPayroll->sum('nht');
 
+            $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
+            $currentYear = now()->year;
+            $approvedLeaves = Leave::where('guard_id', $payroll->guard_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->count();
+            $payroll['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
+
             $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
 
-            $html = view('admin.payroll.payroll-pdf.payroll', [
+            $html = view('admin.payroll.payroll-pdf.new-payroll', [
                 'payroll' => $payroll,
                 'fortnightDayCount' => $fortnightDayCount
             ])->render();
@@ -325,6 +336,10 @@ class PayrollController extends Controller
 
         $zip->close();
 
+        if (!file_exists($tempZipFile)) {
+            return response()->json(['error' => 'Payroll data not exixt.'], 500);
+        }
+        
         $zipFileContent = file_get_contents($tempZipFile);
 
         return response($zipFileContent, 200)

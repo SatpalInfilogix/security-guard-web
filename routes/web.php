@@ -24,6 +24,8 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\EmployeeRateMasterController;
 use App\Http\Controllers\EmployeeLeavesController;
+use App\Http\Controllers\EmployeePayrollController;
+use App\Http\Controllers\EmployeeDeductionController;
 
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');
@@ -61,6 +63,8 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'employees'             => EmployeeController::class,
             'employee-rate-master'  => EmployeeRateMasterController::class,
             'employee-leaves'       => EmployeeLeavesController::class,
+            'employee-payroll'      => EmployeePayrollController::class,
+            'employee-deductions'   => EmployeeDeductionController::class,
         ]);
 
         Route::get('/payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
@@ -72,6 +76,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::view('/calendar-management','admin.calendar-management.index')->name('calendar.management');
        
         Route::post('/generate-client-code', [ClientController::class, 'generateClientCode'])->name('generate.client.code');
+        Route::get('/twenty-two-days-interval', [FortnightDatesController::class, 'listingTwentyTwoDays'])->name('get-interval');
     });
 
     Route::get('/get-client-sites/{clientId}', [GuardRosterController::class, 'getClientSites']);
@@ -160,4 +165,12 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('get-employee-leaves-list', [EmployeeLeavesController::class, 'getEmployeeLeaves'])->name('get-employee-leaves-list');
     Route::post('employee-leaves/{leaveId}/update-status', [EmployeeLeavesController::class, 'updateLeaveStatus'])->name('employee-leaves.updateStatus');
 
+    Route::post('get-employee-payroll-list', [EmployeePayrollController::class, 'getEmployeePayroll'])->name('get-employee-payroll-list');
+    Route::get('employee-payroll/bulk-download', [EmployeePayrollController::class, 'bulkDownloadPdf'])->name('employee-payroll.bulk-download-pdf');
+    Route::get('employee-payroll/{id}/download-pdf', [EmployeePayrollController::class, 'downloadPdf'])->name('employee-payroll.download-pdf');
+    Route::get('/employee-payroll-export/csv', [EmployeePayrollController::class, 'employeePayrollExport'])->name('employee-payroll-export.csv');
+
+    Route::get('/get-employee-end-date', [EmployeeDeductionController::class, 'getEndDate'])->name('get-employee-end-date');
+    Route::post('get-employee-deductions-list', [EmployeeDeductionController::class, 'getDeductionsData'])->name('get-employee-deductions-list');
+    Route::get('export-employee-deduction', [EmployeeDeductionController::class, 'exportEmployeeDeduction'])->name('export.employee-deductions');
 });

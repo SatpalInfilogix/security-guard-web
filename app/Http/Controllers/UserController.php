@@ -16,7 +16,7 @@ class UserController extends Controller
         if(!Gate::allows('view user')) {
             abort(403);
         }
-        $excludedRoles = Role::whereIn('name', ['Security Guard'])->pluck('id');
+        $excludedRoles = [3, 9];
 
         $users = User::whereDoesntHave('roles', function ($query) use ($excludedRoles) {
             $query->whereIn('role_id', $excludedRoles);

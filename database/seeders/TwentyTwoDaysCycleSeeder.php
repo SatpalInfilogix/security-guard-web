@@ -14,19 +14,23 @@ class TwentyTwoDaysCycleSeeder extends Seeder
      */
     public function run(): void
     {
-        $startDate = Carbon::now();
+        $currentYear = Carbon::now()->year;
+        $years = [$currentYear, $currentYear + 1];
+        $months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
 
-        $endDate = $startDate->copy()->addYear();
+        foreach ($years as $year) {
+            foreach ($months as $index => $month) {
+                $startDate = Carbon::create($year, $index + 1, 1);
+                $endDate = $startDate->copy()->endOfMonth();
 
-        while ($startDate->lessThanOrEqualTo($endDate)) {
-            $intervalEndDate = $startDate->copy()->addDays(21);
-
-            TwentyTwoDayInterval::create([
-                'start_date' => $startDate->format('Y-m-d'),
-                'end_date' => $intervalEndDate->format('Y-m-d'),
-            ]);
-
-            $startDate = $intervalEndDate->copy()->addDay();
+                TwentyTwoDayInterval::create([
+                    'start_date' => $startDate->toDateString(),
+                    'end_date' => $endDate->toDateString(),
+                ]);
+            }
         }
     }
 }

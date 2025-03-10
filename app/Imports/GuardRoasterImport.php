@@ -54,7 +54,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                 continue;
             }
 
-            $userRole = Role::where('name', 'Security Guard')->first();
+            $userRole = Role::where('id', 3)->first();
 
             $guard = User::whereHas('roles', function ($query) use ($userRole) {
                 $query->where('role_id', $userRole->id);

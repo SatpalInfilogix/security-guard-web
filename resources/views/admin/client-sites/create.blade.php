@@ -124,7 +124,18 @@
                                 <div class="row mb-2">
                                     <div class="col-md-4">
                                         <div class="mb-3">
-                                            <x-form-input name="sr_manager" value="{{ $clientSite->sr_manager ?? '' }}" label="Sr Manager" placeholder="Enter Sr Manager"/>
+                                            <label for="manager">Sr Manager</label>
+                                            <select name="sr_manager_id" id="sr_manager_id" @class(["form-control", "is-invalid" => $errors->has('sr_manager_id')])>
+                                                <option value="" selected disabled>Select Sr Manager</option>
+                                                @foreach($userManagers as $userManager)
+                                                    <option value="{{ $userManager->id }}" @selected(($clientSite->sr_manager_id ?? '') == $userManager->id)>
+                                                        {{ $userManager->first_name . ' '.$userManager->last_name }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('sr_manager_id')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
                                         </div>
                                     </div>
                                     <div class="col-md-4">

@@ -64,7 +64,7 @@ class PunchController extends Controller
             'time' => 'required|date_format:Y-m-d H:i:s',
         ];
 
-        $today = Carbon::now();
+        $today = Carbon::parse($request->time);
         // $start_time = carbon::parse($request->time)->format('H:i:s');
         // echo"<pre>"; print_r($start_time); die();
         // $todaysDuty = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', $today)->first();

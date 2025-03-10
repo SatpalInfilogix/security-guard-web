@@ -22,14 +22,7 @@
                     </a>
                 </li>
                 @endcan
-                @can('view employee')
-                <li class="{{ Request::segment(2) == 'employees' ? 'mm-active' : '' }}">
-                    <a href="{{ route('employees.index')}}" class="waves-effect">
-                        <i class="fas fa-female"></i>
-                        <span key="t-spreadsheet">Employee</span>
-                    </a>
-                </li>
-                @endcan
+               
                 @can('view guard roster')
                 <li class="{{ Request::segment(2) == 'guard-rosters' ? 'mm-active' : '' }}">
                     <a href="{{ route('guard-rosters.index')}}" class="waves-effect">
@@ -78,14 +71,6 @@
                     </a>
                 </li>
                 @endcan
-                @can('view employee leaves')
-                <li class="{{ Request::segment(2) == 'employee-leaves' ? 'mm-active' : '' }}">
-                    <a href="{{ route('employee-leaves.index')}}" class="waves-effect">
-                        <i class="bx bx-basket"></i>
-                        <span key="t-spreadsheet">Employee Leaves</span>
-                    </a>
-                </li>
-                @endcan
                 {{--<li {{ Request::segment(2) == 'calendar-management' ? 'mm-active' : '' }}>
                     <a href="{{ route('calendar.management') }}" class="waves-effect">
                         <i class="bx bx-calendar"></i>
@@ -117,14 +102,6 @@
                     </a>
                 </li>
                 @endcan
-                @can('view employee rate master')
-                <li class="{{ Request::segment(2) == 'employee-rate-master' ? 'mm-active' : '' }}">
-                    <a href="{{ route('employee-rate-master.index')}}" class="waves-effect">
-                        <i class="bx bx-bolt-circle"></i>
-                        <span key="t-spreadsheet">Employee Rate Master</span>
-                    </a>
-                </li>
-                @endcan
                 <li class="{{ Request::segment(2) == 'fortnight-dates' ? 'mm-active' : '' }}">
                     <a href="{{ route('fortnight-dates.index')}}" class="waves-effect">
                         <i class="bx bx-grid-horizontal"></i>
@@ -139,31 +116,55 @@
                     </a>
                 </li>
                 @endcan
-                {{-- </li>
-                <li>
-                    <a href="#" class="waves-effect">
-                        <i class="bx bx-globe"></i>
-                        <span key="t-globe">Location Tracking</span>
+
+                @canany(['view employee', 'view employee rate master', 'view employee leaves', 'view employee payroll'])
+                <li class="menu-title" key="t-menu">Employee</li>
+                @can('view employee')
+                <li class="{{ Request::segment(2) == 'employees' ? 'mm-active' : '' }}">
+                    <a href="{{ route('employees.index')}}" class="waves-effect">
+                        <i class="fas fa-female"></i>
+                        <span key="t-spreadsheet">Employee</span>
                     </a>
                 </li>
-                <li>
-                    <a href="#" class="waves-effect">
-                        <i class="bx bx-wrench"></i>
-                        <span key="t-wrench">Site Management</span>
+                @endcan       
+                @can('view employee rate master')
+                <li class="{{ Request::segment(2) == 'employee-rate-master' ? 'mm-active' : '' }}">
+                    <a href="{{ route('employee-rate-master.index')}}" class="waves-effect">
+                        <i class="bx bx-bolt-circle"></i>
+                        <span key="t-spreadsheet">Employee Rate Master</span>
                     </a>
                 </li>
-                <li>
-                    <a href="#" class="waves-effect">
-                        <i class="bx bx-bell"></i>
-                        <span key="t-bell">Enquiries</span>
+                @endcan
+                <li class="{{ Request::segment(2) == 'employee-deductions' ? 'mm-active' : '' }}">
+                    <a href="{{ route('employee-deductions.index')}}" class="waves-effect">
+                        <i class="bx bx-briefcase-alt"></i>
+                        <span key="t-spreadsheet">Employee Deduction</span>
                     </a>
                 </li>
-                <li>
-                    <a href="#" class="waves-effect">
-                        <i class="bx bx-detail"></i>
-                        <span key="t-bell">Reports</span>
+                @can('view employee leaves')
+                <li class="{{ Request::segment(2) == 'employee-leaves' ? 'mm-active' : '' }}">
+                    <a href="{{ route('employee-leaves.index')}}" class="waves-effect">
+                        <i class="bx bx-basket"></i>
+                        <span key="t-spreadsheet">Employee Leaves</span>
                     </a>
-                </li> --}}
+                </li>
+                @endcan
+                @can('view employee payroll')
+                <li class="{{ Request::segment(2) == 'employee-payroll' ? 'mm-active' : '' }}">
+                    <a href="{{ route('employee-payroll.index')}}" class="waves-effect">
+                        <i class="bx bx-checkbox-square"></i>
+                        <span key="t-spreadsheet">Employee Payroll</span>
+                    </a>
+                </li>
+                @endcan
+                <li class="{{ Request::segment(2) == 'twenty-two-days-interval' ? 'mm-active' : '' }}">
+                    <a href="{{ route('get-interval')}}" class="waves-effect">
+                        <i class="bx bx-grid-horizontal"></i>
+                        <span key="t-spreadsheet">Twenty Two Days Interval</span>
+                    </a>
+                </li>
+                @endcanany
+                <li class="menu-title" key="t-menu">Other</li>        
                 @canany(['view faq', 'view help request'])
                 <li @class([
                     'active' => Request::is('faq', 'help_requests'),

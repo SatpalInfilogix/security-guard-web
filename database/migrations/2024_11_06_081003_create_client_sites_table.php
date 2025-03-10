@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('latitude', 100)->nullable();
             $table->string('longitude', 100)->nullable();
             $table->string('radius', 75)->nullable();
-            $table->string('sr_manager')->nullable();
+            $table->unsignedBigInteger('sr_manager_id')->nullable();
             $table->string('sr_manager_email')->nullable();
             $table->unsignedBigInteger('manager_id')->nullable();
             $table->string('manager_email')->nullable();
@@ -47,6 +47,7 @@ return new class extends Migration
             $table->timestamps();
             
             $table->foreign('manager_id')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('sr_manager_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 

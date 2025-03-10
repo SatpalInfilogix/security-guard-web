@@ -5,7 +5,7 @@
             <select name="guard_id" id="guard_id" class="form-control{{ $errors->has('guard_id') ? ' is-invalid' : '' }}">
                 <option value="" disabled selected>Select Guard</option>
                 @foreach($securityGuards as $securityGuard)
-                    <option value="{{ $securityGuard->id }}" @selected(isset($deduction->guard_id) && $guardRoaster->guard_id == $securityGuard->id)>
+                    <option value="{{ $securityGuard->id }}">
                         {{ $securityGuard->first_name .' '.$securityGuard->sure_name }}
                     </option>
                 @endforeach

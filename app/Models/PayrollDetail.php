@@ -13,4 +13,9 @@ class PayrollDetail extends Model
     {
         return $this->belongsTo(User::class, 'guard_id');
     }
+
+    public function guardType()
+    {
+        return $this->belongsTo(RateMaster::class, 'guard_type_id');
+    }
 }
