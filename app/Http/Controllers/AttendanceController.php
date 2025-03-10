@@ -67,7 +67,7 @@ class AttendanceController extends Controller
         }
 
         try {
-            return Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d H:i:s');
+            return Carbon::createFromFormat('d-m-Y H:i:s', $date)->format('Y-m-d H:i:s');
         } catch (\Exception $e) {
             return null;
         }
