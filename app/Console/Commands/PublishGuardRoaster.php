@@ -214,22 +214,29 @@ class PublishGuardRoaster extends Command
                 if ($workedMinutes >= 465 && $workedMinutes <= $regularWorkingHoursPerDay) {
                     $workedMinutes = $regularWorkingHoursPerDay;
                 }
-                $regularMinutes = 0;
-                $overtimeMinutes = 0;
-                $publicHolidayMinutes = 0;
-                
-                $isPublicHoliday = in_array($attendanceDate, $publicHolidays);
-                
-                if ($isPublicHoliday) {
-                    $publicHolidayMinutes = $workedMinutes;
+
+                $dayOfWeek = Carbon::parse($attendanceDate)->dayOfWeek;
+                if ($dayOfWeek == Carbon::SATURDAY || $dayOfWeek == Carbon::SUNDAY) {
+                    $regularMinutes = 0;
+                    $overtimeMinutes = $workedMinutes;
+                    $publicHolidayMinutes = 0;
                 } else {
-                    $remainingNormalMinutes = max(0, $weekllyHourlyMin - ($weeklyPreviousRecords * 60));
+                    $regularMinutes = 0;
+                    $overtimeMinutes = 0;
+                    $publicHolidayMinutes = 0;
                     
-                    if ($workedMinutes <= $remainingNormalMinutes) {
-                        $regularMinutes = $workedMinutes;
+                    $isPublicHoliday = in_array($attendanceDate, $publicHolidays);
+                    
+                    if ($isPublicHoliday) {
+                        $publicHolidayMinutes = $workedMinutes;
                     } else {
-                        $regularMinutes = $remainingNormalMinutes;
-                        $overtimeMinutes = $workedMinutes - $remainingNormalMinutes;
+                        $remainingNormalMinutes = max(0, $weekllyHourlyMin - ($weeklyPreviousRecords * 60));
+                        if ($workedMinutes <= $remainingNormalMinutes) {
+                            $regularMinutes = $workedMinutes;
+                        } else {
+                            $regularMinutes = $remainingNormalMinutes;
+                            $overtimeMinutes = $workedMinutes - $remainingNormalMinutes;
+                        }
                     }
                 }
     

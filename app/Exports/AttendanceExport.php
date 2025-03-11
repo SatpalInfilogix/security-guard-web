@@ -23,72 +23,174 @@ class AttendanceExport implements  WithCustomCsvSettings, WithStyles
         $this->publicHolidays = $publicHolidays;
     }
 
+    // public function attendanceData()
+    // {
+    //     $attendances = Punch::with('user')
+    //         ->whereBetween('in_time', [$this->startDate, $this->endDate])
+    //         ->get();
+
+    //     $userAttendances = $attendances->groupBy(function ($attendance) {
+    //         return $attendance->user->id;
+    //     });
+
+    //     $attendanceData = [];
+    //     // Accumulated totals for all users
+    //     $totalNormalHoursAllUsers = 0;
+    //     $totalOvertimeMinutesAllUsers = 0;  // Track overtime in minutes
+    //     $totalDoubleTimeHoursAllUsers = 0;
+
+    //     foreach ($userAttendances as $userId => $attendanceGroup) {
+    //         $user = $attendanceGroup->first()->user;
+    //         $attendanceRow = [
+    //             $user->first_name . ' ' . $user->surname,
+    //         ];
+
+    //         $totalNormalHours = 0;
+    //         $totalOvertimeMinutes = 0;  // Track overtime minutes
+    //         $totalDoubleTimeHours = 0;
+    //         $remarks = '';
+
+    //         $dateRange = $this->getDateRange();
+    //         foreach ($dateRange as $day) {
+    //             $attendanceForDay = $attendanceGroup->firstWhere(function ($attendance) use ($day) {
+    //                 return Carbon::parse($attendance->in_time)->isSameDay(Carbon::parse($day));
+    //             });
+
+    //             if ($attendanceForDay) {
+    //                 $inTime = Carbon::parse($attendanceForDay->in_time);
+    //                 $outTime = Carbon::parse($attendanceForDay->out_time);
+
+    //                 if ($inTime && $outTime) {
+    //                     // Total minutes worked
+    //                     $totalMinutes = $inTime->diffInMinutes($outTime);
+    //                     $hoursWorked = floor($totalMinutes / 60);
+    //                     $minutesWorked = $totalMinutes % 60;
+    //                     $totalWorkedTime = $hoursWorked . 'h ' . $minutesWorked . 'm';
+
+    //                     // Add worked time to row
+    //                     $attendanceRow[] = $inTime->format('h:i A');
+    //                     $attendanceRow[] = $outTime->format('h:i A');
+    //                     $attendanceRow[] = $totalWorkedTime;
+
+    //                     // If it's a public holiday, count double time hours
+    //                     if (in_array($day, $this->publicHolidays)) {
+    //                         $totalDoubleTimeHours += $hoursWorked;
+    //                     } else {
+    //                         // Normal hours calculation
+    //                         if ($hoursWorked <= 8) {
+    //                             $totalNormalHours += $hoursWorked; // normal hours within 8 hours
+    //                         } else {
+    //                             $totalNormalHours += 8; // cap normal hours at 8
+    //                             // Overtime calculation in minutes
+    //                             $overtimeMinutes = $totalMinutes - (8 * 60); // Calculate the overtime minutes
+    //                             $totalOvertimeMinutes += $overtimeMinutes;  // Add overtime minutes
+    //                         }
+    //                     }
+
+    //                     // Remarks
+    //                     $remarks .= 'Attendance; ';
+    //                 }
+    //             } else {
+    //                 $attendanceRow[] = '';
+    //                 $attendanceRow[] = '';
+    //                 $attendanceRow[] = '';
+    //             }
+    //         }
+
+    //         // Convert total overtime minutes to hours and minutes
+    //         $overtimeHours = floor($totalOvertimeMinutes / 60);
+    //         $overtimeMinutes = $totalOvertimeMinutes % 60;
+
+    //         // Add the totals for the current user
+    //         $attendanceRow[] = $totalNormalHours . 'h';
+    //         $attendanceRow[] = $overtimeHours . 'h ' . $overtimeMinutes . 'm';  // Overtime in "h m" format
+    //         $attendanceRow[] = $totalDoubleTimeHours . 'h';
+    //         $attendanceRow[] = $remarks;
+
+    //         // Accumulate totals for all users
+    //         $totalNormalHoursAllUsers += $totalNormalHours;
+    //         $totalOvertimeMinutesAllUsers += $totalOvertimeMinutes;
+    //         $totalDoubleTimeHoursAllUsers += $totalDoubleTimeHours;
+
+    //         // Add this user’s row to the attendance data
+    //         $attendanceData[] = $attendanceRow;
+    //     }
+
+    //     // Return the collection without the total row at the end
+    //     return collect($attendanceData);
+    // }
+
     public function attendanceData()
     {
         $attendances = Punch::with('user')
             ->whereBetween('in_time', [$this->startDate, $this->endDate])
             ->get();
-
+    
         $userAttendances = $attendances->groupBy(function ($attendance) {
             return $attendance->user->id;
         });
-
+    
         $attendanceData = [];
-        // Accumulated totals for all users
         $totalNormalHoursAllUsers = 0;
-        $totalOvertimeMinutesAllUsers = 0;  // Track overtime in minutes
+        $totalOvertimeMinutesAllUsers = 0;
         $totalDoubleTimeHoursAllUsers = 0;
-
+    
         foreach ($userAttendances as $userId => $attendanceGroup) {
             $user = $attendanceGroup->first()->user;
             $attendanceRow = [
                 $user->first_name . ' ' . $user->surname,
             ];
-
+    
             $totalNormalHours = 0;
-            $totalOvertimeMinutes = 0;  // Track overtime minutes
+            $totalOvertimeMinutes = 0;
             $totalDoubleTimeHours = 0;
-            $remarks = '';
-
             $dateRange = $this->getDateRange();
             foreach ($dateRange as $day) {
-                $attendanceForDay = $attendanceGroup->firstWhere(function ($attendance) use ($day) {
+                $attendanceForDay = $attendanceGroup->filter(function ($attendance) use ($day) {
                     return Carbon::parse($attendance->in_time)->isSameDay(Carbon::parse($day));
                 });
-
-                if ($attendanceForDay) {
-                    $inTime = Carbon::parse($attendanceForDay->in_time);
-                    $outTime = Carbon::parse($attendanceForDay->out_time);
-
-                    if ($inTime && $outTime) {
-                        // Total minutes worked
-                        $totalMinutes = $inTime->diffInMinutes($outTime);
-                        $hoursWorked = floor($totalMinutes / 60);
-                        $minutesWorked = $totalMinutes % 60;
-                        $totalWorkedTime = $hoursWorked . 'h ' . $minutesWorked . 'm';
-
-                        // Add worked time to row
-                        $attendanceRow[] = $inTime->format('h:i A');
-                        $attendanceRow[] = $outTime->format('h:i A');
-                        $attendanceRow[] = $totalWorkedTime;
-
-                        // If it's a public holiday, count double time hours
-                        if (in_array($day, $this->publicHolidays)) {
-                            $totalDoubleTimeHours += $hoursWorked;
+    
+                $timeInList = [];
+                $timeOutList = [];
+                $workedTimeList = [];
+                $totalWorkedMinutes = 0;
+                
+                if ($attendanceForDay->isNotEmpty()) {
+                    foreach ($attendanceForDay as $attendance) {
+                        $inTime = Carbon::parse($attendance->in_time);
+                        $outTime = Carbon::parse($attendance->out_time);
+    
+                        $timeInList[] = $inTime->format('h:i A');
+                        $timeOutList[] = $outTime->format('h:i A');
+                        
+                        $workedMinutes = $inTime->diffInMinutes($outTime);
+                        $workedHours = floor($workedMinutes / 60);
+                        $remainingMinutes = $workedMinutes % 60;
+                        $workedTime = $workedHours . 'h ' . $remainingMinutes . 'm';
+    
+                        $workedTimeList[] = $workedTime;
+    
+                        $totalWorkedMinutes += $workedMinutes;
+                    }
+    
+                    $hoursWorked = floor($totalWorkedMinutes / 60);
+                    $minutesWorked = $totalWorkedMinutes % 60;
+                    $totalWorkedTimeForDay = $hoursWorked . 'h ' . $minutesWorked . 'm';
+    
+                    $attendanceRow[] = implode(', ', $timeInList);
+                    $attendanceRow[] = implode(', ', $timeOutList);
+                    $attendanceRow[] = implode(', ', $workedTimeList);
+    
+                    if (in_array($day, $this->publicHolidays)) {
+                        $totalDoubleTimeHours += $hoursWorked;
+                    } else {
+                        if ($hoursWorked <= 8) {
+                            $totalNormalHours += $hoursWorked;
                         } else {
-                            // Normal hours calculation
-                            if ($hoursWorked <= 8) {
-                                $totalNormalHours += $hoursWorked; // normal hours within 8 hours
-                            } else {
-                                $totalNormalHours += 8; // cap normal hours at 8
-                                // Overtime calculation in minutes
-                                $overtimeMinutes = $totalMinutes - (8 * 60); // Calculate the overtime minutes
-                                $totalOvertimeMinutes += $overtimeMinutes;  // Add overtime minutes
-                            }
+                            $totalNormalHours += 8;
+                            $overtimeMinutes = $totalWorkedMinutes - (8 * 60);
+                            $totalOvertimeMinutes += $overtimeMinutes;
                         }
-
-                        // Remarks
-                        $remarks .= 'Attendance; ';
                     }
                 } else {
                     $attendanceRow[] = '';
@@ -97,26 +199,24 @@ class AttendanceExport implements  WithCustomCsvSettings, WithStyles
                 }
             }
 
-            // Convert total overtime minutes to hours and minutes
             $overtimeHours = floor($totalOvertimeMinutes / 60);
             $overtimeMinutes = $totalOvertimeMinutes % 60;
 
-            // Add the totals for the current user
             $attendanceRow[] = $totalNormalHours . 'h';
-            $attendanceRow[] = $overtimeHours . 'h ' . $overtimeMinutes . 'm';  // Overtime in "h m" format
+            $attendanceRow[] = $overtimeHours . 'h ' . $overtimeMinutes . 'm';
             $attendanceRow[] = $totalDoubleTimeHours . 'h';
-            $attendanceRow[] = $remarks;
+            $attendanceRow[] = 'Attendance;';
 
-            // Accumulate totals for all users
             $totalNormalHoursAllUsers += $totalNormalHours;
             $totalOvertimeMinutesAllUsers += $totalOvertimeMinutes;
             $totalDoubleTimeHoursAllUsers += $totalDoubleTimeHours;
 
-            // Add this user’s row to the attendance data
             $attendanceData[] = $attendanceRow;
         }
 
-        // Return the collection without the total row at the end
+        $totalOvertimeHoursAllUsers = floor($totalOvertimeMinutesAllUsers / 60);
+        $totalOvertimeMinutesAllUsers = $totalOvertimeMinutesAllUsers % 60;
+
         return collect($attendanceData);
     }
 
