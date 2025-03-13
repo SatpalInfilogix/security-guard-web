@@ -247,9 +247,9 @@ class PublishGuardRoaster extends Command
                 $overtimeHours = $this->convertToHoursAndMinutes($overtimeMinutes);
                 $publicHolidayHours = $this->convertToHoursAndMinutes($publicHolidayMinutes);
     
-                $regularHours = round($regularHours, 2);
-                $overtimeHours = round($overtimeHours, 2);
-                $publicHolidayHours = round($publicHolidayHours, 2);
+                $regularHours = round((float)$regularHours, 2);
+                $overtimeHours = round((float)$overtimeHours, 2);
+                $publicHolidayHours = round((float)$publicHolidayHours, 2);
     
                 $normalRate = $attendanceForDay['gross_hourly_rate'];
                 $overtimeRate = $attendanceForDay['overtime_rate'];
