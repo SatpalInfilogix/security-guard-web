@@ -49,7 +49,8 @@ class PublishEmployeePayroll extends Command
                     $startDate = Carbon::parse($twentyTwoDay->start_date)->startOfDay();
 
                     if ($today->month == 12) {
-                        $previousEndDate = Carbon::create(2025, 12, 13);
+                        $year = Carbon::parse($today)->year;
+                        $previousEndDate = Carbon::create($year, 12, 13);
                     } else {
                         $previousEndDate = Carbon::parse($startDate)->addDays(22);  // Payroll generates 23-day period
                     }
@@ -362,12 +363,10 @@ class PublishEmployeePayroll extends Command
                 }
             }
         } else {
-            // Non-statutory employee logic (No deductions)
             $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
             $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
         }
 
-        // Return total deductions and pending amounts
         return [$totalDeductions, $pendingAmounts];
     }
 }
