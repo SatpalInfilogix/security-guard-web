@@ -111,8 +111,8 @@ class PublishEmployeePayroll extends Command
 
                                     $payrollData = array_merge($payrollStatutoryData, [
                                         'employee_id' => $employee->id,
-                                        'start_date' => $previousStartDate,
-                                        'end_date' => $endDate,
+                                        'start_date' => Carbon::parse($twentyTwoDay->start_date)->startOfDay(),
+                                        'end_date' => Carbon::parse($twentyTwoDay->end_date)->startOfDay(),
                                         'normal_days' => $normalDays,
                                         'leave_paid' => $leavePaid,
                                         'leave_not_paid' => $leaveNotPaid,
