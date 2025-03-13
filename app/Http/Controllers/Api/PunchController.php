@@ -236,6 +236,15 @@ class PunchController extends Controller
                 $todaysDuty = $todaysDuties->first();
                 $guard_type_id = $todaysDuty->guard_type_id;
                 $client_site_id = $todaysDuty->client_site_id;
+                $duty_start_time = Carbon::parse($todaysDuty->start_time);
+                if ($requestTime < $duty_start_time) {
+                    $timeDifference = 0;
+                } else {
+                    $timeDifference = $duty_start_time->diffInMinutes($requestTime);
+                    if ($timeDifference > 15) {
+                        $timeDifference = 0;
+                    }
+                }
             } else {
                 $todaysDuty = null;
                 foreach($todaysDuties as $duty) {
@@ -244,8 +253,18 @@ class PunchController extends Controller
                     if ($action === 'in') {
                         if ($requestTime->equalTo($duty_start_time) || $requestTime->lessThan($duty_start_time) || $requestTime->between($duty_start_time, $duty_end_time)) {
                             $todaysDuty = $duty;
+
                             $guard_type_id = $duty->guard_type_id;
                             $client_site_id = $duty->client_site_id;
+
+                            $timeDifference = $duty_start_time->diffInMinutes($requestTime);
+                            if ($requestTime < $duty_start_time) {
+                                $timeDifference = 0;
+                            } else {
+                                if ($timeDifference > 15) {
+                                    $timeDifference = 0;
+                                }
+                            }
                             break;
                         }
                     }
@@ -263,8 +282,8 @@ class PunchController extends Controller
                     ], 400);
                 }
 
-                $guard_type_id = $todaysDuty->guard_type_id;
-                $client_site_id = $todaysDuty->client_site_id;
+                // $guard_type_id = $todaysDuty->guard_type_id;
+                // $client_site_id = $todaysDuty->client_site_id;
             }
 
             $clientLat = $todaysDuty->clientSite->latitude;
@@ -362,7 +381,8 @@ class PunchController extends Controller
                     'fire_arm_premium'  => $rateMaster->fire_arm_premium ?? 0,
                     'gross_hourly_rate' => $rateMaster->gross_hourly_rate ?? 0,
                     'overtime_rate'     => $rateMaster->overtime_rate ?? 0,
-                    'holiday_rate'      => $rateMaster->holiday_rate ?? 0
+                    'holiday_rate'      => $rateMaster->holiday_rate ?? 0,
+                    'late_min'          => $timeDifference
                 ]);
 
                 return $this->createResponse(true, 'Punch created successfully.', $punchIn);

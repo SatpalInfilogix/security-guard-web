@@ -49,7 +49,8 @@ class PublishEmployeePayroll extends Command
                     $startDate = Carbon::parse($twentyTwoDay->start_date)->startOfDay();
 
                     if ($today->month == 12) {
-                        $previousEndDate = Carbon::create(2025, 12, 13);
+                        $year = Carbon::parse($today)->year;
+                        $previousEndDate = Carbon::create($year, 12, 13);
                     } else {
                         $previousEndDate = Carbon::parse($startDate)->addDays(22);  // Payroll generates 23-day period
                     }
@@ -57,7 +58,10 @@ class PublishEmployeePayroll extends Command
                     if ($previousEndDate == $today) {
                         $joiningDate = Carbon::parse($employee->guardAdditionalInformation->date_of_joining);
                         $startDateForEmployee = $joiningDate > $previousStartDate ? $joiningDate : $previousStartDate;
-                        $leavingDateOfEmployee = Carbon::parse($employee->guardAdditionalInformation->date_of_seperation) ?? '';
+                        $leavingDateOfEmployee = $employee->guardAdditionalInformation->date_of_seperation ? Carbon::parse($employee->guardAdditionalInformation->date_of_seperation) : null;
+                        if ($leavingDateOfEmployee && $leavingDateOfEmployee->month < $today->month) {
+                            continue;
+                        }
                         if ($startDateForEmployee->greaterThan($endDate)) {
                             $normalDays = 0;
                         } else {
@@ -110,8 +114,8 @@ class PublishEmployeePayroll extends Command
 
                                     $payrollData = array_merge($payrollStatutoryData, [
                                         'employee_id' => $employee->id,
-                                        'start_date' => $previousStartDate,
-                                        'end_date' => $endDate,
+                                        'start_date' => Carbon::parse($twentyTwoDay->start_date)->startOfDay(),
+                                        'end_date' => Carbon::parse($twentyTwoDay->end_date)->startOfDay(),
                                         'normal_days' => $normalDays,
                                         'leave_paid' => $leavePaid,
                                         'leave_not_paid' => $leaveNotPaid,
@@ -362,12 +366,10 @@ class PublishEmployeePayroll extends Command
                 }
             }
         } else {
-            // Non-statutory employee logic (No deductions)
             $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
             $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
         }
 
-        // Return total deductions and pending amounts
         return [$totalDeductions, $pendingAmounts];
     }
 }
