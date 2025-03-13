@@ -58,7 +58,7 @@ class PublishEmployeePayroll extends Command
                     if ($previousEndDate == $today) {
                         $joiningDate = Carbon::parse($employee->guardAdditionalInformation->date_of_joining);
                         $startDateForEmployee = $joiningDate > $previousStartDate ? $joiningDate : $previousStartDate;
-                        $leavingDateOfEmployee = Carbon::parse($employee->guardAdditionalInformation->date_of_seperation) ?? '';
+                        $leavingDateOfEmployee = $employee->guardAdditionalInformation->date_of_seperation ? Carbon::parse($employee->guardAdditionalInformation->date_of_seperation) : null;
                         if ($startDateForEmployee->greaterThan($endDate)) {
                             $normalDays = 0;
                         } else {
