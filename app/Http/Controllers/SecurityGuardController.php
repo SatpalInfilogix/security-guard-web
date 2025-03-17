@@ -96,7 +96,10 @@ class SecurityGuardController extends Controller
         $currentYear = now()->year;
         foreach($securityGuards as $guard)
         {
-            $approvedLeaves = Leave::where('guard_id', $guard->id)->where('status', 'Approved')->whereYear('date', $currentYear)->count();
+            $approvedLeaves = Leave::where('guard_id', $guard->id)->where('status', 'Approved')->whereYear('date', $currentYear)->get()
+                                    ->sum(function ($leave) {
+                                        return ($leave->type == 'Half Day') ? 0.5 : 1;
+                                    });
             $guard['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
         }
 

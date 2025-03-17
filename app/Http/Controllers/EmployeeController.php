@@ -92,7 +92,10 @@ class EmployeeController extends Controller
         $currentYear = now()->year;
         foreach($securityGuards as $employee)
         {
-            $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved')->whereYear('date', $currentYear)->count();
+            $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved')->whereYear('date', $currentYear)->get()
+                                            ->sum(function ($leave) {
+                                                return ($leave->type == 'Half Day') ? 0.5 : 1;
+                                            });
             $employee['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
         }
     

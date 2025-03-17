@@ -70,11 +70,12 @@ class PublishEmployeePayroll extends Command
                                 $workingDays = 0;
                                 if ($leavingDateOfEmployee && $leavingDateOfEmployee->greaterThanOrEqualTo($previousStartDate) && $leavingDateOfEmployee->lessThanOrEqualTo($endDate)) {
                                     $endDate = $leavingDateOfEmployee;
-                                    while ($previousStartDate <= $endDate) {
-                                        if ($previousStartDate->dayOfWeek != Carbon::SATURDAY && $previousStartDate->dayOfWeek != Carbon::SUNDAY) {
+                                    $currentDate = $previousStartDate->copy();
+                                    while ($currentDate <= $endDate) {
+                                        if ($currentDate->dayOfWeek != Carbon::SATURDAY && $currentDate->dayOfWeek != Carbon::SUNDAY) {
                                             $workingDays++;
                                         }
-                                        $previousStartDate->addDay();
+                                        $currentDate->addDay();
                                     }
                                     $normalDays = $workingDays;
                                 }
@@ -178,16 +179,28 @@ class PublishEmployeePayroll extends Command
         $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
 
         $year = Carbon::parse($previousStartDate)->year;
-        $lastDayOfDecember = Carbon::createFromDate($year, 12, 31);
+        $lastDayOfDecember = Carbon::createFromDate($year, 12, 13);
         $leavesQuery = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved');
-        $leavesCountInDecember = $leavesQuery->whereYear('date', $lastDayOfDecember->year)->count();
+        $leavesCountInDecember = $leavesQuery->whereYear('date', $lastDayOfDecember->year)->get()
+                                            ->sum(function ($leave) {
+                                                return ($leave->type == 'Half Day') ? 0.5 : 1;
+                                            });
+        // $leavesCountInDecember = $leavesQuery->whereYear('date', $lastDayOfDecember->year)->count();
         if ($lastDayOfDecember->between($previousStartDate, $endDate)) {
             $paidLeaveBalance = max(0, $paidLeaveBalanceLimit - $leavesCountInDecember);
         }
+        $leavesCount =  $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])->get()
+                                    ->sum(function ($leave) {
+                                        return ($leave->type == 'Half Day') ? 0.5 : 1;
+                                    });
 
-        $leavesCount = $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])->count();
+        // $leavesCount = $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])->count();
         if ($leavesCount > 0) {
-            $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved')->whereDate('date', '<', $previousStartDate)->count();
+            $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved')->whereDate('date', '<', $previousStartDate)->get()
+                                            ->sum(function ($leave) {
+                                                return ($leave->type == 'Half Day') ? 0.5 : 1;
+                                            });
+            // $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved')->whereDate('date', '<', $previousStartDate)->count();
             $totalApprovedLeaves = $leavesCount + $approvedLeaves;
             if ($totalApprovedLeaves > $paidLeaveBalanceLimit) {
                 $excessLeaves = max(0, $totalApprovedLeaves - $paidLeaveBalanceLimit);
