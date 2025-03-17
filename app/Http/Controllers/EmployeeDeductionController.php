@@ -99,7 +99,7 @@ class EmployeeDeductionController extends Controller
         $date = Carbon::parse($request->date);
         $noOfPayrolls = $request->no_of_payroll ?? 1;
         $fortnightStart = TwentyTwoDayInterval::where('start_date', '<=', $date)->orderBy('start_date', 'desc')->first();
-        $nextFortnightDate = Carbon::parse($fortnightStart->start_date)->addDays(14);
+        $nextFortnightDate = Carbon::parse($fortnightStart->end_date)->addDay();
         $fortnights  = TwentyTwoDayInterval::where('start_date', '>=', $nextFortnightDate)->orderBy('start_date', 'asc')->limit($noOfPayrolls)->get();
 
         if (!$fortnightStart) {
