@@ -393,7 +393,7 @@ class PublishGuardRoaster extends Command
             $statutoryIncome  = $totalGrossSalaryEarned -  $lessNis - $approvedPensionScheme;
         }
 
-        if ($userData->is_statutory == 1) {
+        // if ($userData->is_statutory == 1) {
             $deductionTypes = [
                 'Staff Loan'        => 'pending_staff_loan',
                 'Medical Ins'       => 'pending_medical_insurance',
@@ -452,7 +452,7 @@ class PublishGuardRoaster extends Command
             $pendingGarnishment = $pendingAmounts['Garnishment'];
             $pendingMissingGoods = $pendingAmounts['Missing Goods'];
             $pendingDamagedGoods = $pendingAmounts['Damaged Goods'];
-        }
+        // }
         $threshold             = 0;
 
         $payroll = Payroll::where('id', $payrollId)->update([

@@ -339,7 +339,7 @@ class PublishEmployeePayroll extends Command
         $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
 
         // Check if employee is statutory or non-statutory
-        if ($employee->is_statutory == 1) {
+        // if ($employee->is_statutory == 1) {
             // Statutory employee logic
             foreach ($deductionTypes as $deductionType => $pendingField) {
                 $deductionRecords = EmployeeDeduction::where('employee_id', $employee->id)
@@ -365,10 +365,10 @@ class PublishEmployeePayroll extends Command
                     }
                 }
             }
-        } else {
-            $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
-            $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
-        }
+        // } else {
+        //     $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
+        //     $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
+        // }
 
         return [$totalDeductions, $pendingAmounts];
     }

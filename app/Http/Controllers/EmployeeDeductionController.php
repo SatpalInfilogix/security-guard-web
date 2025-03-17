@@ -85,7 +85,7 @@ class EmployeeDeductionController extends Controller
 
         $employees = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
-        })->where('status', 'Active')->where('is_statutory', 1)->latest()->get();
+        })->where('status', 'Active')->latest()->get();
        
         return view('admin.employee-deductions.create', compact('employees'));
     }
