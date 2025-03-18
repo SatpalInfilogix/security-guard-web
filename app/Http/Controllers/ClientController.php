@@ -196,8 +196,7 @@ class ClientController extends Controller
 
         $baseCode = substr($clientCode, 0, -3);
         $clientId = $request->input('client_id');
-
-        if ($clientId) {
+        if ($clientCode) {
             $existingClient = Client::where('client_code', $clientCode)->where('id', '!=', $clientId)->first();
         } else {
             $existingClient = Client::where('client_name', $clientName)->orderBy('created_at', 'desc') ->first();
