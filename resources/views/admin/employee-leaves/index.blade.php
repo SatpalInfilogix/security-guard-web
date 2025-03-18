@@ -59,6 +59,7 @@
                                         <th>#</th>
                                         <th>Employee Name</th>
                                         <th>Date</th>
+                                        <th>Type</th>
                                         <th>Reason</th>
                                         <th>Status</th>
                                         @can('delete employee leaves')
@@ -143,6 +144,9 @@
                     },
                     {
                         data: 'date'
+                    },
+                     {
+                        data: 'type'
                     },
                     {
                         data: 'reason'

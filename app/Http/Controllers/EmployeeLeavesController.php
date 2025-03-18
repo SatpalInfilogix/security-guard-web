@@ -45,6 +45,7 @@ class EmployeeLeavesController extends Controller
             $searchValue = $request->search['value'];
             $leaves->where(function($query) use ($searchValue) {
                 $query->where('date', 'like', '%' . $searchValue . '%')
+                    ->orWhere('type', 'like', '%' . $searchValue . '%')
                     ->orWhere('reason', 'like', '%' . $searchValue . '%')
                     ->orWhereHas('user', function($q) use ($searchValue) {
                         $q->where('first_name', 'like', '%' . $searchValue . '%');
@@ -102,6 +103,7 @@ class EmployeeLeavesController extends Controller
                 EmployeeLeave::create([
                     'employee_id' => $request->employee_id,
                     'date'        => $date,
+                    'type'        => $request->type,
                     'reason'      => $request->reason,
                     'description' => $request->description,
                 ]);

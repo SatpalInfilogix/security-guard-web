@@ -34,6 +34,7 @@ return new class extends Migration
             $table->decimal('gross_hourly_rate')->nullable();
             $table->decimal('overtime_rate')->nullable();
             $table->decimal('holiday_rate')->nullable();
+            $table->decimal('late_min', 11,1)->default(0);
             $table->timestamps();
 
             $table->index(['in_time']);

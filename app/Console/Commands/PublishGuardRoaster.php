@@ -87,7 +87,7 @@ class PublishGuardRoaster extends Command
                 $previousStartDate = $previousFortnightStartDate->format('Y-m-d');
                 $previousEndDate = $previousFortnightEndDate->format('Y-m-d');
                 $attendances = Punch::with('user')->whereDate('in_time', '>=', $previousStartDate)->whereDate('in_time', '<=', $previousEndDate)
-                                    ->select('id', 'user_id', 'guard_type_id', 'client_site_id', 'in_time', 'out_time', 'regular_rate', 'laundry_allowance', 'canine_premium', 'fire_arm_premium', 'gross_hourly_rate', 'overtime_rate', 'holiday_rate')->get();
+                                    ->select('id', 'user_id', 'guard_type_id', 'client_site_id', 'in_time', 'out_time', 'regular_rate', 'laundry_allowance', 'canine_premium', 'fire_arm_premium', 'gross_hourly_rate', 'overtime_rate', 'holiday_rate', 'late_min')->get();
                 
                 $groupedAttendances = $attendances->groupBy('user_id');
 
@@ -208,12 +208,15 @@ class PublishGuardRoaster extends Command
                 $inTime = Carbon::parse($attendanceForDay['in_time']);
                 $outTime = Carbon::parse($attendanceForDay['out_time']);
                 $workedMinutes = $inTime->diffInMinutes($outTime);
-                
-                $regularWorkingHoursPerDay = 8 * 60;
-                $weekllyHourlyMin = 40 * 60;
-                if ($workedMinutes >= 465 && $workedMinutes <= $regularWorkingHoursPerDay) {
-                    $workedMinutes = $regularWorkingHoursPerDay;
+                if($attendanceForDay['late_min'] != 0) {
+                    $workedMinutes = $workedMinutes + $attendanceForDay['late_min'];
                 }
+
+                $weekllyHourlyMin = 40 * 60;
+                // $regularWorkingHoursPerDay = 8 * 60;
+                // if ($workedMinutes >= 465 && $workedMinutes <= $regularWorkingHoursPerDay) {
+                //     $workedMinutes = $regularWorkingHoursPerDay;
+                // }
 
                 $dayOfWeek = Carbon::parse($attendanceDate)->dayOfWeek;
                 if ($dayOfWeek == Carbon::SATURDAY || $dayOfWeek == Carbon::SUNDAY) {
@@ -244,9 +247,9 @@ class PublishGuardRoaster extends Command
                 $overtimeHours = $this->convertToHoursAndMinutes($overtimeMinutes);
                 $publicHolidayHours = $this->convertToHoursAndMinutes($publicHolidayMinutes);
     
-                $regularHours = round($regularHours, 2);
-                $overtimeHours = round($overtimeHours, 2);
-                $publicHolidayHours = round($publicHolidayHours, 2);
+                $regularHours = round((float)$regularHours, 2);
+                $overtimeHours = round((float)$overtimeHours, 2);
+                $publicHolidayHours = round((float)$publicHolidayHours, 2);
     
                 $normalRate = $attendanceForDay['gross_hourly_rate'];
                 $overtimeRate = $attendanceForDay['overtime_rate'];
@@ -390,7 +393,7 @@ class PublishGuardRoaster extends Command
             $statutoryIncome  = $totalGrossSalaryEarned -  $lessNis - $approvedPensionScheme;
         }
 
-        if ($userData->is_statutory == 1) {
+        // if ($userData->is_statutory == 1) {
             $deductionTypes = [
                 'Staff Loan'        => 'pending_staff_loan',
                 'Medical Ins'       => 'pending_medical_insurance',
@@ -449,7 +452,7 @@ class PublishGuardRoaster extends Command
             $pendingGarnishment = $pendingAmounts['Garnishment'];
             $pendingMissingGoods = $pendingAmounts['Missing Goods'];
             $pendingDamagedGoods = $pendingAmounts['Damaged Goods'];
-        }
+        // }
         $threshold             = 0;
 
         $payroll = Payroll::where('id', $payrollId)->update([

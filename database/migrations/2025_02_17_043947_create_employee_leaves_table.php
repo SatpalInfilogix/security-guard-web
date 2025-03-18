@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('employee_id')->index();
             $table->date('date');
+            $table->string('type')->default('Full Day');
             $table->string('reason')->nullable();
             $table->text('description')->nullable();
             $table->string('status')->default('Pending');
