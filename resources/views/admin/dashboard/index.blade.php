@@ -97,7 +97,7 @@
                     <!-- end row -->
                 </div>
 
-                <div class="row mb-3">
+                {{-- <div class="row mb-3">
                     <div class="col-md-12">
                         <form method="GET" id="attendance-form">
                             <div class="row">
@@ -150,7 +150,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
             </div> <!-- container-fluid -->
         </div>
     </div>
