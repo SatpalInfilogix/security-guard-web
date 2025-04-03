@@ -85,7 +85,7 @@ class EmployeeImport implements ToModel, WithHeadingRow
 
          // Update or create related data
          $user->guardAdditionalInformation()->updateOrCreate([], [
-            'trn'                 => $row["trn"] ?? NULL,
+            'trn'                 => $this->trnFormat($row["trn"]) ?? NULL,
             'nis'                 => $row["nis"] ?? NULL,
             'date_of_joining'     => $this->parseDate($row["date_of_joining"] ?? null),
             'date_of_birth'       => $this->parseDate($row["date_of_birth"] ?? null),
@@ -169,6 +169,11 @@ class EmployeeImport implements ToModel, WithHeadingRow
     public function getErrors()
     {
         return $this->errors;
+    }
+    public function trnFormat($trn){
+        $new =  str_replace('-','',$trn);
+        $formatted = chunk_split($new, 3, '-');
+        return $formatted = rtrim($formatted, '-'); 
     }
 }
 

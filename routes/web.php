@@ -26,6 +26,7 @@ use App\Http\Controllers\EmployeeRateMasterController;
 use App\Http\Controllers\EmployeeLeavesController;
 use App\Http\Controllers\EmployeePayrollController;
 use App\Http\Controllers\EmployeeDeductionController;
+use Illuminate\Support\Facades\Response;
 
 Route::get('/', function (){
     return redirect()->route('admin.dashboard.index');

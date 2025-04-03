@@ -533,7 +533,7 @@ class EmployeeController extends Controller
                 "Surname"               => $employee->surname,
                 "Phone Number"          => $employee->phone_number ?? '',
                 // Additional Detail
-                "Guard's TRN"           => $employee->guardAdditionalInformation->trn ?? '',
+                "Guard's TRN"           => $this->trnFormat($employee->guardAdditionalInformation->trn) ?? '',
                 "NIS/NHT Number"        => $employee->guardAdditionalInformation->nis ?? '',
                 "Guard's Date of Joining" => $employee->guardAdditionalInformation->date_of_joining ? Carbon::parse($employee->guardAdditionalInformation->date_of_joining)->format('d-m-Y') : '',
                 "Date of Birth"         => $employee->guardAdditionalInformation->date_of_birth ? Carbon::parse($employee->guardAdditionalInformation->date_of_birth)->format('d-m-Y') : '',
@@ -649,5 +649,11 @@ class EmployeeController extends Controller
         $importedData = session()->get('imported_data', []);
         $export = new EmployeeImportExport($importedData);
         return Excel::download($export, 'employee_import_results.csv');
+    }
+
+    public function trnFormat($trn){
+        $new =  str_replace('-','',$trn);
+        $formatted = chunk_split($new, 3, '-');
+        return $formatted = rtrim($formatted, '-'); 
     }
 }
