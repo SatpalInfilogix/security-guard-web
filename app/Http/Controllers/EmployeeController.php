@@ -77,8 +77,8 @@ class EmployeeController extends Controller
             $securityGuards->where(function ($query) use ($searchValue) {
                 $query->where('user_code', 'like', '%' . $searchValue . '%')
                     ->orWhere('first_name', 'like', '%' . $searchValue . '%')
-                    ->orWhere('middle_name', 'like', '%' . $searchValue . '%') 
-                    ->orWhere('surname', 'like', '%' . $searchValue . '%') 
+                    ->orWhere('middle_name', 'like', '%' . $searchValue . '%')
+                    ->orWhere('surname', 'like', '%' . $searchValue . '%')
                     ->orWhere('email', 'like', '%' . $searchValue . '%')
                     ->orWhere('phone_number', 'like', '%' . $searchValue . '%');
             });
@@ -221,9 +221,8 @@ class EmployeeController extends Controller
                     'postal_code'   => $request->postal_code,
                     'personal_email' => $request->personal_email,
                     'work_phone_number' => $request->work_phone_number,
-                    'personal_phone_number' => $request->personal_phone
+                    'personal_phone_number' => $request->personal_phone_number
                 ]);
-
                 UsersBankDetail::create([
                     'user_id'               => $user->id,
                     'bank_name'             => $request->bank_name,
@@ -380,7 +379,7 @@ class EmployeeController extends Controller
                 'postal_code'           => $request->postal_code,
                 'personal_email'        => $request->personal_email,
                 'work_phone_number'     => $request->work_phone_number,
-                'personal_phone_number' => $request->personal_phone
+                'personal_phone_number' => $request->personal_phone_number
             ]
         );
 

@@ -165,15 +165,15 @@
                 placeholder="Enter Work Email" />
         </div>
         <div class="col-md-4 mb-3">
-            <x-form-input name="personal_email" value="{{ old('personal_email', $user->email ?? '') }}" label="Personal Email"
+            <x-form-input name="personal_email" value="{{ old('personal_email', $user->contactDetail->personal_email ?? '') }}" label="Personal Email"
                 placeholder="Enter Personal Email" />
         </div>
         <div class="col-md-4 mb-3">
-            <x-form-input name="work_phone_number" value="{{ old('work_phone_number', $user->work_phone_number ?? '') }}" label="Work Phone"
+            <x-form-input name="work_phone_number" value="{{ old('work_phone_number', $user->contactDetail->work_phone_number ?? '') }}" label="Work Phone"
                 placeholder="Enter Work Phone" />
         </div>
         <div class="col-md-4 mb-3">
-            <x-form-input name="personal_phone" value="{{ old('personal_phone', $user->email ?? '') }}" label="Personal Phone"
+            <x-form-input name="personal_phone_number" value="{{ old('personal_phone_number', $user->contactDetail->personal_phone_number ?? '') }}" label="Personal Phone"
                 placeholder="Enter Personal Phone" />
         </div>
     </div>
