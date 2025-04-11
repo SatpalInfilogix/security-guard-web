@@ -137,6 +137,7 @@ class EmployeeDeductionController extends Controller
             'document_date' => 'required|date',
             'start_date'    => 'required|date',
             'end_date'      => 'required|date|after_or_equal:start_date',
+            'employee_document' => 'nullable',
         ]);
 
         $noOfPayrolls = $request->no_of_payroll ?? 1;
@@ -158,6 +159,13 @@ class EmployeeDeductionController extends Controller
             return redirect()->route('employee-deductions.index')->with('error', 'A deduction of this type already exists for this employee.');
         }
 
+        $employeeDocumentPath = null;
+        if ($request->hasFile('employee_document')) {
+            $file = $request->file('employee_document');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $employeeDocumentPath = $file->storeAs('employee_documents', $filename, 'public');
+        }
+
         EmployeeDeduction::create([
             'employee_id'  => $request->employee_id,
             'type'         => $request->type,
@@ -167,7 +175,8 @@ class EmployeeDeductionController extends Controller
             'start_date'   => $this->parseDate($request->start_date),
             'end_date'     => $this->parseDate($request->end_date),
             'one_installment' => $oneInstallment,
-            'pending_balance' => $request->amount
+            'pending_balance' => $request->amount,
+            'employee_document'   => $employeeDocumentPath,
         ]);
 
         return redirect()->route('employee-deductions.index')->with('success', 'Employee Deduction created successfully.');

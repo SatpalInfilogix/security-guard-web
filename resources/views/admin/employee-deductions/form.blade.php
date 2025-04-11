@@ -55,6 +55,9 @@
     <div class="col-md-4 mb-3">
         <x-form-input name="end_date" value="{{ old('end_date', $deduction->end_date ?? '') }}" label="End Date" placeholder="Enter your End Date" class="date-picker-guard" type="text" required="true" />
     </div>
+    <div class="col-md-4 mb-3">
+        <x-form-input name="employee_document" value="" label="Upload Document" placeholder="Select your document" class="form-control" type="file" />
+    </div>
 </div>
 
 <div class="row mb-2">
