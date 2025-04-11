@@ -5,13 +5,13 @@
             <select name="employee_id" id="employee_id" class="form-control{{ $errors->has('employee_id') ? ' is-invalid' : '' }}">
                 <option value="" disabled selected>Select Employee</option>
                 @foreach($employees as $employee)
-                    <option value="{{ $employee->id }}">
-                        {{ $employee->first_name .' '.$employee->sure_name }}
-                    </option>
+                <option value="{{ $employee->id }}">
+                    {{'#'.$employee->user_code .' '.$employee->first_name .' '.$employee->surname }}
+                </option>
                 @endforeach
             </select>
             @error('employee_id')
-                <span class="invalid-feedback">{{ $message }}</span>
+            <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
     </div>
@@ -21,29 +21,27 @@
             <select name="type" id="type" class="form-control{{ $errors->has('type') ? ' is-invalid' : '' }}">
                 <option value="" disabled selected>Select Type</option>
                 @php
-                    $types = ['Staff Loan', 'Salary Advance', 'Medical Ins', 'PSRA', 'Garnishment', 'Missing Goods', 'Damaged Goods', 'Bank Loan', 'Approved Pension'];    
+                $types = ['Staff Loan', 'Salary Advance', 'Medical Ins', 'PSRA', 'Garnishment', 'Missing Goods', 'Damaged Goods', 'Bank Loan', 'Approved Pension'];
                 @endphp
                 @foreach($types as $type)
-                    <option value="{{ $type }}" @selected(isset($deduction->type) && $deduction->type == $type)>
-                        {{ $type }}
-                    </option>
+                <option value="{{ $type }}" @selected(isset($deduction->type) && $deduction->type == $type)>
+                    {{ $type }}
+                </option>
                 @endforeach
             </select>
             @error('type')
-                <span class="invalid-feedback">{{ $message }}</span>
+            <span class="invalid-feedback">{{ $message }}</span>
             @enderror
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="amount" value="{{ old('amount', $deduction->amount ?? '') }}" label="Amount"
-                placeholder="Amount" type="number" required="true" />
+            <x-form-input name="amount" value="{{ old('amount', $deduction->amount ?? '') }}" label="Amount" placeholder="Amount" type="number" required="true" />
         </div>
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="no_of_payroll" value="{{ old('no_of_payroll', $deduction->no_of_payroll ?? '') }}" label="No Of Deduction"
-                placeholder="No Of Deduction" type="number"/>
+            <x-form-input name="no_of_payroll" value="{{ old('no_of_payroll', $deduction->no_of_payroll ?? '') }}" label="No Of Deduction" placeholder="No Of Deduction" type="number" />
         </div>
     </div>
 
@@ -68,39 +66,43 @@
 <x-include-plugins :plugins="['datePicker']"></x-include-plugins>
 
 <script>
-$(document).ready(function() {
-    $('#document_date').on('change', function() {
-        triggerEndDateCalculation();
-    });
+    $(document).ready(function() {
+        $('#document_date').on('change', function() {
+            triggerEndDateCalculation();
+        });
 
-    $('#no_of_payroll').on('keyup', function() {
-        triggerEndDateCalculation();
-    });
+        $('#employee_id').select2({
+            placeholder: "Select Employee"
+            , allowClear: true
+        });
 
-    function triggerEndDateCalculation() {
-        var date = $('#document_date').val();
-        var noOfPayrolls = $('#no_of_payroll').val();
+        $('#no_of_payroll').on('keyup', function() {
+            triggerEndDateCalculation();
+        });
 
-        if (date) {
-            $.ajax({
-                url: '/get-employee-end-date',
-                method: 'GET',
-                data: {
-                    date: date,
-                    no_of_payroll: noOfPayrolls
-                },
-                success: function(response) {
-                    if (response.end_date) {
-                        $('#start_date').val(response.start_date);
-                        $('#end_date').val(response.end_date);
-                    } else {
-                        alert('End date could not be calculated.');
+        function triggerEndDateCalculation() {
+            var date = $('#document_date').val();
+            var noOfPayrolls = $('#no_of_payroll').val();
+
+            if (date) {
+                $.ajax({
+                    url: '/get-employee-end-date'
+                    , method: 'GET'
+                    , data: {
+                        date: date
+                        , no_of_payroll: noOfPayrolls
                     }
-                },
-            });
+                    , success: function(response) {
+                        if (response.end_date) {
+                            $('#start_date').val(response.start_date);
+                            $('#end_date').val(response.end_date);
+                        } else {
+                            alert('End date could not be calculated.');
+                        }
+                    }
+                , });
+            }
         }
-    }
-});
-
+    });
 
 </script>

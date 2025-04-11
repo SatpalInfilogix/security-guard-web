@@ -2,9 +2,9 @@
 $site_name= DB::table('settings')->where('key','site_name')->first();
 if($site_name)
 {
-    $site_name = $site_name->value;}
+$site_name = $site_name->value;}
 else{
-    $site_name = '';
+$site_name = '';
 }
 @endphp
 <!doctype html>
@@ -21,10 +21,12 @@ else{
     <link href="{{ asset('assets/css/sweetalert.css') }}" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/icons.min.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="{{ asset('assets/css/app.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
     <script src="{{ asset('assets/libs/jquery/jquery.min.js') }}"></script>
-   
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     @stack('styles')
 </head>
 
@@ -122,34 +124,34 @@ else{
     <script src="{{ asset('assets/js/pages/sweet-alerts.init.js')}}"></script>
     @stack('scripts')
     <script>
-        $(function() {            
+        $(function() {
             $('.delete-btn').click(function() {
                 let source = $(this).data('source');
                 let deleteApiEndpoint = $(this).data('endpoint');
-    
+
                 swal({
-                    title: "Are you sure?",
-                    text: `You really want to remove this ${source}?`,
-                    type: "warning",
-                    showCancelButton: true,
-                    closeOnConfirm: false,
-                }, function(isConfirm) {
+                    title: "Are you sure?"
+                    , text: `You really want to remove this ${source}?`
+                    , type: "warning"
+                    , showCancelButton: true
+                    , closeOnConfirm: false
+                , }, function(isConfirm) {
                     if (isConfirm) {
                         $.ajax({
-                            url: deleteApiEndpoint,
-                            method: 'DELETE',
-                            data: {
+                            url: deleteApiEndpoint
+                            , method: 'DELETE'
+                            , data: {
                                 '_token': '{{ csrf_token() }}'
-                            },
-                            success: function(response) {
-                                if(response.success){
+                            }
+                            , success: function(response) {
+                                if (response.success) {
                                     swal({
-                                        title: "Success!",
-                                        text: response.message,
-                                        type: "success",
-                                        showConfirmButton: false
-                                    }) 
-    
+                                        title: "Success!"
+                                        , text: response.message
+                                        , type: "success"
+                                        , showConfirmButton: false
+                                    })
+
                                     setTimeout(() => {
                                         location.reload();
                                     }, 2000);
@@ -160,6 +162,7 @@ else{
                 });
             })
         })
+
     </script>
 </body>
 </html>
