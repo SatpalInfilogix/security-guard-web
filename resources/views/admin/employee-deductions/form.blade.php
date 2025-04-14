@@ -3,10 +3,13 @@
         <div class="mb-3">
             <label for="employee_id">Employee<span class="text-danger">*</span></label>
             <select name="employee_id" id="employee_id" class="form-control{{ $errors->has('employee_id') ? ' is-invalid' : '' }}">
-                <option value="" disabled selected>Select Employee</option>
+                @php
+                $selectedEmployeeId = old('employee_id', $deduction->employee_id ?? '');
+                @endphp
+                <option value="" disabled {{ $selectedEmployeeId == '' ? 'selected' : '' }}>Select Employee</option>
                 @foreach($employees as $employee)
-                <option value="{{ $employee->id }}">
-                    {{'#'.$employee->user_code .' '.$employee->first_name .' '.$employee->surname }}
+                <option value="{{ $employee->id }}" {{ (string)$selectedEmployeeId === (string)$employee->id ? 'selected' : '' }}>
+                    {{ '#' . $employee->user_code . ' ' . $employee->first_name . ' ' . $employee->surname }}
                 </option>
                 @endforeach
             </select>
@@ -19,12 +22,13 @@
         <div class="mb-3">
             <label for="type">Non Stat Deduction<span class="text-danger">*</span></label>
             <select name="type" id="type" class="form-control{{ $errors->has('type') ? ' is-invalid' : '' }}">
-                <option value="" disabled selected>Select Type</option>
                 @php
                 $types = ['Staff Loan', 'Salary Advance', 'Medical Ins', 'PSRA', 'Garnishment', 'Missing Goods', 'Damaged Goods', 'Bank Loan', 'Approved Pension'];
+                $selectedType = old('type', $deduction->type ?? '');
                 @endphp
+                <option value="" disabled {{ $selectedType == '' ? 'selected' : '' }}>Select Type</option>
                 @foreach($types as $type)
-                <option value="{{ $type }}" @selected(isset($deduction->type) && $deduction->type == $type)>
+                <option value="{{ $type }}" {{ $selectedType == $type ? 'selected' : '' }}>
                     {{ $type }}
                 </option>
                 @endforeach

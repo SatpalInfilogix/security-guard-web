@@ -197,8 +197,8 @@ class EmployeeDeductionController extends Controller
             'amount'            => 'required|numeric|min:0',
             'document_date'     => 'required|date',
             'start_date'        => 'required|date',
-            'end_date'          => 'nullable|date|after_or_equal:start_date', 
-            'no_of_payroll'     => 'nullable|integer|min:1',                  
+            'end_date'          => 'nullable|date|after_or_equal:start_date',
+            'no_of_payroll'     => 'nullable|integer|min:1',
             'employee_document' => 'nullable',
         ]);
 
@@ -239,7 +239,7 @@ class EmployeeDeductionController extends Controller
             'employee_id'     => $request->employee_id,
             'type'            => $request->type,
             'amount'          => $request->amount,
-            'no_of_payroll'   => $noOfPayrolls,                        
+            'no_of_payroll'   => $noOfPayrolls,
             'document_date'   => $request->document_date,
             'start_date'      => $this->parseDate($request->start_date),
             'end_date'        => $this->parseDate($request->end_date),
@@ -252,6 +252,98 @@ class EmployeeDeductionController extends Controller
             ->with('success', 'Employee Deduction created successfully.');
     }
 
+    public function edit($id)
+    {
+        if (!Gate::allows('edit nst deduction')) {
+            abort(403);
+        }
+
+        $deduction = EmployeeDeduction::findOrFail($id);
+
+        $userRole = Role::where('id', 9)->first();
+
+        $employees = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
+            $query->where('role_id', $userRole->id);
+        })->where('status', 'Active')->latest()->get();
+
+        return view('admin.employee-deductions.edit', compact('deduction', 'employees'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        if (!Gate::allows('edit nst deduction')) {
+            abort(403);
+        }
+
+        $deduction = EmployeeDeduction::findOrFail($id);
+
+        $request->validate([
+            'employee_id'       => 'required|exists:users,id',
+            'type'              => 'required|string',
+            'amount'            => 'required|numeric|min:0',
+            'document_date'     => 'required|date',
+            'start_date'        => 'required|date',
+            'end_date'          => 'nullable|date|after_or_equal:start_date',
+            'no_of_payroll'     => 'nullable|integer|min:1',
+            'employee_document' => 'nullable',
+        ]);
+
+        $noOfPayrolls = $request->no_of_payroll;
+        $oneInstallment = $noOfPayrolls ? ($request->amount / $noOfPayrolls) : $request->amount;
+
+        $existingDeductionQuery = EmployeeDeduction::where('employee_id', $request->employee_id)
+            ->where('type', $request->type)
+            ->where('id', '!=', $deduction->id);
+
+        if ($request->filled('end_date')) {
+            $existingDeductionQuery->where(function ($query) use ($request) {
+                $query->whereBetween('start_date', [$this->parseDate($request->start_date), $this->parseDate($request->end_date)])
+                    ->orWhereBetween('end_date', [$this->parseDate($request->start_date), $this->parseDate($request->end_date)])
+                    ->orWhere(function ($query) use ($request) {
+                        $query->where('start_date', '<=', $this->parseDate($request->start_date))
+                            ->where('end_date', '>=', $this->parseDate($request->end_date));
+                    });
+            });
+        }
+
+        $existingDeduction = $existingDeductionQuery->exists();
+
+        if ($existingDeduction) {
+            return redirect()->route('employee-deductions.index')
+                ->with('error', 'A deduction of this type already exists for this employee in the given date range.');
+        }
+
+        $employeeDocumentPath = $deduction->employee_document;
+        if ($request->hasFile('employee_document')) {
+            $file = $request->file('employee_document');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $employeeDocumentPath = $file->storeAs('employee_documents', $filename, 'public');
+        }
+
+        $deduction->update([
+            'employee_id'     => $request->employee_id,
+            'type'            => $request->type,
+            'amount'          => $request->amount,
+            'no_of_payroll'   => $noOfPayrolls,
+            'document_date'   => $request->document_date,
+            'start_date'      => $this->parseDate($request->start_date),
+            'end_date'        => $this->parseDate($request->end_date),
+            'one_installment' => $oneInstallment,
+            'pending_balance' => $request->amount,
+            'employee_document' => $employeeDocumentPath,
+        ]);
+
+        return redirect()->route('employee-deductions.index')
+            ->with('success', 'Employee Deduction updated successfully.');
+    }
+
+    public function destroy($id)
+    {
+        $deduction = EmployeeDeduction::findOrFail($id);
+        $deduction->delete();
+
+        return response()->json(['success' => true]);
+    }
 
     public function exportEmployeeDeduction(Request $request)
     {
