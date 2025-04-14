@@ -45,9 +45,9 @@
                                 @foreach($employeeRateMasters as $key => $rateMaster)
                                 <tr>
                                     <td>{{ ++$key }}</td>
-                                    <td>{{ $rateMaster->user->user_code }}</td>
-                                    <td>{{ $rateMaster->user->first_name}}</td>
-                                    <td>${{ $rateMaster->gross_salary}}</td>
+                                    <td>{{ $rateMaster->user->user_code ?? 'N/A' }}</td>
+                                    <td>{{ $rateMaster->user->first_name ?? 'N/A'}}</td>
+                                    <td>${{ $rateMaster->gross_salary ?? ''}}</td>
                                     @canany(['edit employee rate master', 'delete employee rate master'])
                                     <td class="action-buttons">
                                         @if(Auth::user()->can('edit employee rate master'))

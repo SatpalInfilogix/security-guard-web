@@ -39,7 +39,7 @@ class PublishEmployeePayroll extends Command
             $query->where('role_id', $userRole->id);
         })->with('guardAdditionalInformation')->latest()->get();
 
-        if($employees) {
+        if ($employees) {
             foreach ($employees as $employee) {
                 $today = Carbon::now()->startOfDay();
                 // $today = Carbon::parse('23-12-2025')->startOfDay(); //--Manual Check
@@ -92,12 +92,11 @@ class PublishEmployeePayroll extends Command
                             }
                         }
 
-                        if($normalDays > 0)
-                        {
+                        if ($normalDays > 0) {
                             $payroll = EmployeePayroll::where('employee_id', $employee->id)->whereDate('start_date', $previousStartDate)->whereDate('end_date', $endDate)->first();
-                            if(!$payroll) {
+                            if (!$payroll) {
                                 $employeeRateMaster = EmployeeRateMaster::where('employee_id', $employee->id)->first();
-                                if($employeeRateMaster) {
+                                if ($employeeRateMaster) {
                                     $yearlySalary = $employeeRateMaster->gross_salary;
                                     $daySalary = ($yearlySalary / 12) / 22;
 
@@ -108,7 +107,7 @@ class PublishEmployeePayroll extends Command
                                     //===== Employee Payroll Statutory Calculation =====
                                     $payrollStatutoryData = $this->calculateEmployeePayrollStatutory($employee, $previousStartDate, $endDate, $grossSalary, $daySalary);
                                     // ========End Payroll Statutory Calculation ========
-                                    
+
                                     //===== Employee Payroll Non Statutory Calculation =====
                                     list($totalDeductions, $pendingAmounts) = $this->calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate);
                                     //===== End Employee Payroll Non Statutory Calculation =====
@@ -144,7 +143,7 @@ class PublishEmployeePayroll extends Command
                                         'pending_damaged_goods' => $pendingAmounts['Damaged Goods'],
                                         'is_publish' => 0,
                                     ]);
-                            
+
                                     if (EmployeePayroll::create($payrollData)) {
                                         echo "Employee payroll created successfully";
                                     } else {
@@ -182,24 +181,24 @@ class PublishEmployeePayroll extends Command
         $lastDayOfDecember = Carbon::createFromDate($year, 12, 13);
         $leavesQuery = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved');
         $leavesCountInDecember = $leavesQuery->whereYear('date', $lastDayOfDecember->year)->get()
-                                            ->sum(function ($leave) {
-                                                return ($leave->type == 'Half Day') ? 0.5 : 1;
-                                            });
+            ->sum(function ($leave) {
+                return ($leave->type == 'Half Day') ? 0.5 : 1;
+            });
         // $leavesCountInDecember = $leavesQuery->whereYear('date', $lastDayOfDecember->year)->count();
         if ($lastDayOfDecember->between($previousStartDate, $endDate)) {
             $paidLeaveBalance = max(0, $paidLeaveBalanceLimit - $leavesCountInDecember);
         }
         $leavesCount =  $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])->get()
-                                    ->sum(function ($leave) {
-                                        return ($leave->type == 'Half Day') ? 0.5 : 1;
-                                    });
+            ->sum(function ($leave) {
+                return ($leave->type == 'Half Day') ? 0.5 : 1;
+            });
 
         // $leavesCount = $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])->count();
         if ($leavesCount > 0) {
             $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved')->whereDate('date', '<', $previousStartDate)->get()
-                                            ->sum(function ($leave) {
-                                                return ($leave->type == 'Half Day') ? 0.5 : 1;
-                                            });
+                ->sum(function ($leave) {
+                    return ($leave->type == 'Half Day') ? 0.5 : 1;
+                });
             // $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved')->whereDate('date', '<', $previousStartDate)->count();
             $totalApprovedLeaves = $leavesCount + $approvedLeaves;
             if ($totalApprovedLeaves > $paidLeaveBalanceLimit) {
@@ -253,7 +252,7 @@ class PublishEmployeePayroll extends Command
         $nis = 0;
         $employerContributionNis = 0;
 
-        if($userData->is_statutory == 0) {
+        if ($userData->is_statutory == 0) {
             $totalNisForCurrentYear = $fullYearNis->sum('nis');
 
             // if ($age >= 70) {
@@ -275,13 +274,13 @@ class PublishEmployeePayroll extends Command
             //     }
             // }
 
-            if($age >= 70) {
+            if ($age >= 70) {
                 $nis = 0;
                 $employerContributionNis = 0;
             } else {
                 $nisDeduction = $grossSalary * 0.03;
                 $nisThreshold  = 150000 / 12;
-                if($nisDeduction > $nisThreshold) {
+                if ($nisDeduction > $nisThreshold) {
                     $nis = $nisThreshold;
                     $employerContributionNis = $nisThreshold;
                 } else {
@@ -297,7 +296,7 @@ class PublishEmployeePayroll extends Command
             } elseif ($statutoryIncome > 141674 && $statutoryIncome <= 500000.00) {
                 $payeData = $statutoryIncome - 141674;
                 $payeIncome = $payeData * 0.25;
-            } elseif($statutoryIncome > 500000.00) {
+            } elseif ($statutoryIncome > 500000.00) {
                 $payeData = ($statutoryIncome - 500000.00) * 0.30;
                 $payeeThreshold = (500000.00 - 141674.00) * 0.25;
                 $payeIncome = $payeData + $payeeThreshold;
@@ -334,7 +333,6 @@ class PublishEmployeePayroll extends Command
 
     private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)
     {
-        // Deduction types
         $deductionTypes = [
             'Staff Loan' => 'pending_staff_loan',
             'Medical Ins' => 'pending_medical_insurance',
@@ -347,42 +345,118 @@ class PublishEmployeePayroll extends Command
             'Damaged Goods' => 'pending_damaged_goods',
         ];
 
-        // Initialize deduction arrays
         $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
         $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
 
-        // Check if employee is statutory or non-statutory
-        // if ($employee->is_statutory == 1) {
-            // Statutory employee logic
-            foreach ($deductionTypes as $deductionType => $pendingField) {
-                $deductionRecords = EmployeeDeduction::where('employee_id', $employee->id)
-                    ->where('type', $deductionType)
-                    ->whereDate('start_date', '<=', $endDate)
-                    ->whereDate('end_date', '>=', $previousStartDate)
-                    ->get();
+        foreach ($deductionTypes as $deductionType => $pendingField) {
+            $deductionRecords = EmployeeDeduction::where('employee_id', $employee->id)
+                ->where('type', $deductionType)
+                ->where(function ($query) use ($previousStartDate, $endDate) {
+                    $query->where(function ($q) use ($previousStartDate, $endDate) {
+                        $q->whereDate('start_date', '<=', $endDate)
+                            ->whereDate('end_date', '>=', $previousStartDate);
+                    })
+                        ->orWhere(function ($q) use ($endDate) {
+                            $q->whereNull('end_date')->whereDate('start_date', '<=', $endDate);
+                        });
+                })
+                ->get();
 
-                foreach ($deductionRecords as $deduction) {
-                    if ($deduction->start_date <= $endDate && $deduction->end_date >= $previousStartDate) {
-                        $totalDeductions[$deductionType] = $deduction->one_installment;
-                        $pendingBalance = $deduction->pending_balance - $deduction->one_installment;
-                        $pendingAmounts[$deductionType] = $deduction->pending_balance - $deduction->one_installment;
+            foreach ($deductionRecords as $deduction) {
+                if ($deduction->end_date !== null) {
+                    if (
+                        $deduction->start_date <= $endDate &&
+                        $deduction->end_date >= $previousStartDate &&
+                        $deduction->pending_balance > 0
+                    ) {
+                        $deductAmount = min($deduction->one_installment, $deduction->pending_balance);
+                        $pendingBalance = $deduction->pending_balance - $deductAmount;
+
+                        $totalDeductions[$deductionType] = $deductAmount;
+                        $pendingAmounts[$deductionType] = $pendingBalance;
+
                         $deduction->update(['pending_balance' => $pendingBalance]);
 
                         EmployeeDeductionDetail::create([
                             'employee_id' => $employee->id,
                             'deduction_id' => $deduction->id,
                             'deduction_date' => Carbon::now(),
-                            'amount_deducted' => $deduction->one_installment,
+                            'amount_deducted' => $deductAmount,
                             'balance' => $pendingBalance
                         ]);
                     }
+                } else {
+                    $deductAmount = $deduction->one_installment;
+
+                    $totalDeductions[$deductionType] = $deductAmount;
+                    $pendingAmounts[$deductionType] = $deduction->pending_balance; 
+
+                    EmployeeDeductionDetail::create([
+                        'employee_id' => $employee->id,
+                        'deduction_id' => $deduction->id,
+                        'deduction_date' => Carbon::now(),
+                        'amount_deducted' => $deductAmount,
+                        'balance' => $deduction->pending_balance 
+                    ]);
                 }
             }
-        // } else {
-        //     $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
-        //     $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
-        // }
+        }
 
         return [$totalDeductions, $pendingAmounts];
     }
+
+
+    // private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)
+    // {
+    //     // Deduction types
+    //     $deductionTypes = [
+    //         'Staff Loan' => 'pending_staff_loan',
+    //         'Medical Ins' => 'pending_medical_insurance',
+    //         'Salary Advance' => 'pending_salary_advance',
+    //         'PSRA' => 'pending_psra',
+    //         'Bank Loan' => 'pending_bank_loan',
+    //         'Approved Pension' => 'pending_approved_pension',
+    //         'Garnishment' => 'pending_garnishment',
+    //         'Missing Goods' => 'pending_missing_goods',
+    //         'Damaged Goods' => 'pending_damaged_goods',
+    //     ];
+
+    //     // Initialize deduction arrays
+    //     $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
+    //     $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
+
+    //     // Check if employee is statutory or non-statutory
+    //     // if ($employee->is_statutory == 1) {
+    //         // Statutory employee logic
+    //         foreach ($deductionTypes as $deductionType => $pendingField) {
+    //             $deductionRecords = EmployeeDeduction::where('employee_id', $employee->id)
+    //                 ->where('type', $deductionType)
+    //                 ->whereDate('start_date', '<=', $endDate)
+    //                 ->whereDate('end_date', '>=', $previousStartDate)
+    //                 ->get();
+
+    //             foreach ($deductionRecords as $deduction) {
+    //                 if ($deduction->start_date <= $endDate && $deduction->end_date >= $previousStartDate) {
+    //                     $totalDeductions[$deductionType] = $deduction->one_installment;
+    //                     $pendingBalance = $deduction->pending_balance - $deduction->one_installment;
+    //                     $pendingAmounts[$deductionType] = $deduction->pending_balance - $deduction->one_installment;
+    //                     $deduction->update(['pending_balance' => $pendingBalance]);
+
+    //                     EmployeeDeductionDetail::create([
+    //                         'employee_id' => $employee->id,
+    //                         'deduction_id' => $deduction->id,
+    //                         'deduction_date' => Carbon::now(),
+    //                         'amount_deducted' => $deduction->one_installment,
+    //                         'balance' => $pendingBalance
+    //                     ]);
+    //                 }
+    //             }
+    //         }
+    //     // } else {
+    //     //     $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
+    //     //     $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
+    //     // }
+
+    //     return [$totalDeductions, $pendingAmounts];
+    // }
 }

@@ -144,11 +144,12 @@ class DeductionController extends Controller
             'amount'      => 'required|numeric|min:0',
             'document_date' => 'required|date',
             'start_date'  => 'required|date',
-            'end_date'    => 'required|date|after_or_equal:start_date',
-            'guard_document' => 'nullable',
+            'end_date'        => 'nullable|date|after_or_equal:start_date',
+            'no_of_payroll'   => 'nullable|integer|min:1',
+            'guard_document' => 'nullable|file',
         ]);
 
-        $noOfPayrolls = $request->no_of_payroll ?? 1;
+        /*$noOfPayrolls = $request->no_of_payroll ?? 1;
         $oneInstallment = $request->amount / $noOfPayrolls;
 
         $existingDeduction = Deduction::where('guard_id', $request->guard_id)
@@ -161,7 +162,37 @@ class DeductionController extends Controller
                             ->where('end_date', '>=', $this->parseDate($request->end_date));
                     });
             })
-            ->exists();
+            ->exists();*/
+
+        $noOfPayrolls = $request->no_of_payroll;
+        $oneInstallment = $noOfPayrolls ? ($request->amount / $noOfPayrolls) : $request->amount;
+
+        $existingDeductionQuery = Deduction::where('guard_id', $request->guard_id)
+            ->where('type', $request->type);
+
+        if ($request->filled('end_date')) {
+            $existingDeductionQuery->where(function ($query) use ($request) {
+                $query->whereBetween('start_date', [
+                    $this->parseDate($request->start_date),
+                    $this->parseDate($request->end_date)
+                ])
+                    ->orWhereBetween('end_date', [
+                        $this->parseDate($request->start_date),
+                        $this->parseDate($request->end_date)
+                    ])
+                    ->orWhere(function ($query) use ($request) {
+                        $query->where('start_date', '<=', $this->parseDate($request->start_date))
+                            ->where('end_date', '>=', $this->parseDate($request->end_date));
+                    });
+            });
+        }
+
+        $existingDeduction = $existingDeductionQuery->exists();
+
+        if ($existingDeduction) {
+            return redirect()->route('deductions.index')
+                ->with('error', 'A deduction of this type already exists for this guard.');
+        }
 
         if ($existingDeduction) {
             return redirect()->route('deductions.index')->with('error', 'A deduction of this type already exists for this guard.');

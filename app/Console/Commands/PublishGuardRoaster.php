@@ -46,10 +46,10 @@ class PublishGuardRoaster extends Command
         $today = Carbon::now()->startOfDay();
         // $today = Carbon::parse("03-02-2025")->startOfDay(); //--Manual Check
 
-        $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();        
+        $fortnightDays = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
         if ($fortnightDays) {
             $endDate = Carbon::parse($fortnightDays->end_date)->startOfDay();
-            $differenceInDays = $today->diffInDays($endDate, false); 
+            $differenceInDays = $today->diffInDays($endDate, false);
             $nextStartDate = Carbon::parse($fortnightDays->end_date)->addDay();
             $nextEndDate = $nextStartDate->copy()->addDays(13);
 
@@ -65,7 +65,7 @@ class PublishGuardRoaster extends Command
             if ($eightDay == $today) {
                 $firstWeekStart = $previousFortnightStartDate;
                 $firstWeekEnd = $firstWeekStart->copy()->addDays(6);
-                
+
                 $secondWeekStart = $firstWeekEnd->copy()->addDay();
                 $secondWeekEnd = $previousFortnightEndDate;
 
@@ -87,28 +87,27 @@ class PublishGuardRoaster extends Command
                 $previousStartDate = $previousFortnightStartDate->format('Y-m-d');
                 $previousEndDate = $previousFortnightEndDate->format('Y-m-d');
                 $attendances = Punch::with('user')->whereDate('in_time', '>=', $previousStartDate)->whereDate('in_time', '<=', $previousEndDate)
-                                    ->select('id', 'user_id', 'guard_type_id', 'client_site_id', 'in_time', 'out_time', 'regular_rate', 'laundry_allowance', 'canine_premium', 'fire_arm_premium', 'gross_hourly_rate', 'overtime_rate', 'holiday_rate', 'late_min')->get();
-                
+                    ->select('id', 'user_id', 'guard_type_id', 'client_site_id', 'in_time', 'out_time', 'regular_rate', 'laundry_allowance', 'canine_premium', 'fire_arm_premium', 'gross_hourly_rate', 'overtime_rate', 'holiday_rate', 'late_min')->get();
+
                 $groupedAttendances = $attendances->groupBy('user_id');
 
-                foreach ($groupedAttendances as $userId => $attendancesForUser)
-                {
+                foreach ($groupedAttendances as $userId => $attendancesForUser) {
                     $attendanceDetails = $attendancesForUser->groupBy(function ($attendance) {
                         return Carbon::parse($attendance->in_time)->toDateString();
                     })->toArray();
 
                     $existingPayroll = Payroll::where('guard_id', $userId)->where('start_date', $previousFortnightStartDate->format('Y-m-d'))
-                                                ->where('end_date', $previousFortnightEndDate->format('Y-m-d'))->first();
+                        ->where('end_date', $previousFortnightEndDate->format('Y-m-d'))->first();
 
-                if (!$existingPayroll) {
-                    $payrollData = Payroll::create([
-                        'guard_id'              => $userId,
-                        'start_date'            => $previousFortnightStartDate->format('Y-m-d'),
-                        'end_date'              => $previousFortnightEndDate->format('Y-m-d'),
-                    ]);
-                } else {
-                    $payrollData = $existingPayroll;
-                }
+                    if (!$existingPayroll) {
+                        $payrollData = Payroll::create([
+                            'guard_id'              => $userId,
+                            'start_date'            => $previousFortnightStartDate->format('Y-m-d'),
+                            'end_date'              => $previousFortnightEndDate->format('Y-m-d'),
+                        ]);
+                    } else {
+                        $payrollData = $existingPayroll;
+                    }
                     $this->createPayrollDetails($payrollData->id, $userId, $attendanceDetails, $publicHolidays, $firstWeekStart, $firstWeekEnd, $secondWeekStart, $secondWeekEnd);
                     $this->calculatePayrollUserHours($payrollData->id, $userId, $attendanceDetails, $publicHolidays, $previousStartDate, $previousEndDate);
                 }
@@ -116,7 +115,7 @@ class PublishGuardRoaster extends Command
 
             if ($isPublishDate == $today) {
                 $payrollPublished = Payroll::where('start_date', $previousFortnightStartDate->format('Y-m-d'))
-                                            ->where('end_date', $previousFortnightEndDate->format('Y-m-d'))->get();
+                    ->where('end_date', $previousFortnightEndDate->format('Y-m-d'))->get();
 
                 foreach ($payrollPublished as $payroll) {
                     $payroll->update([
@@ -171,12 +170,12 @@ class PublishGuardRoaster extends Command
         }
     }
 
-    protected function createPayrollDetails($payrollId, $userId, $attendanceDetails, $publicHolidays, $firstWeekStart, $firstWeekEnd, $secondWeekStart, $secondWeekEnd )
+    protected function createPayrollDetails($payrollId, $userId, $attendanceDetails, $publicHolidays, $firstWeekStart, $firstWeekEnd, $secondWeekStart, $secondWeekEnd)
     {
         $regularWorkingHoursPerDay = 8 * 60;
         $firstWeekAttendanceDetails = [];
         $secondWeekAttendanceDetails = [];
-        
+
         foreach ($attendanceDetails as $attendanceDate => $attendanceDetail) {
             $attendanceDateCarbon = Carbon::parse($attendanceDate);
             if ($attendanceDateCarbon->between($firstWeekStart, $firstWeekEnd)) {
@@ -189,26 +188,27 @@ class PublishGuardRoaster extends Command
         $this->processWeekPayrollDetails($payrollId, $userId, $secondWeekAttendanceDetails, $publicHolidays, $secondWeekStart, $secondWeekEnd);
     }
 
-    protected function processWeekPayrollDetails($payrollId, $userId, $attendanceDetails, $publicHolidays, $weekStart, $weekEnd) {
+    protected function processWeekPayrollDetails($payrollId, $userId, $attendanceDetails, $publicHolidays, $weekStart, $weekEnd)
+    {
         foreach ($attendanceDetails as $attendanceDate => $attendanceDetail) {
             foreach ($attendanceDetail as $attendanceForDay) {
                 $guardTypeId = $attendanceForDay['guard_type_id'];
                 $clientSiteId = $attendanceForDay['client_site_id'];
                 $previousRecords = PayrollDetail::where('payroll_id', $payrollId)->where('guard_id', $userId)->where('date', $attendanceDate)->get();
-                
+
                 $previousNormalMinutes = 0;
                 foreach ($previousRecords as $record) {
                     $previousNormalMinutes += $record->normal_hours * 60;
                 }
-                
+
                 $weeklyPreviousRecords = PayrollDetail::where('payroll_id', $payrollId)->where('guard_id', $userId)->whereBetween('date', [$weekStart, $weekEnd])->sum('normal_hours');
-                
+
                 $existingRecord = PayrollDetail::where('payroll_id', $payrollId)->where('guard_id', $userId)->where('guard_type_id', $guardTypeId)->where('date', $attendanceDate)->first();
-                
+
                 $inTime = Carbon::parse($attendanceForDay['in_time']);
                 $outTime = Carbon::parse($attendanceForDay['out_time']);
                 $workedMinutes = $inTime->diffInMinutes($outTime);
-                if($attendanceForDay['late_min'] != 0) {
+                if ($attendanceForDay['late_min'] != 0) {
                     $workedMinutes = $workedMinutes + $attendanceForDay['late_min'];
                 }
 
@@ -227,9 +227,9 @@ class PublishGuardRoaster extends Command
                     $regularMinutes = 0;
                     $overtimeMinutes = 0;
                     $publicHolidayMinutes = 0;
-                    
+
                     $isPublicHoliday = in_array($attendanceDate, $publicHolidays);
-                    
+
                     if ($isPublicHoliday) {
                         $publicHolidayMinutes = $workedMinutes;
                     } else {
@@ -242,27 +242,27 @@ class PublishGuardRoaster extends Command
                         }
                     }
                 }
-    
+
                 $regularHours = $this->convertToHoursAndMinutes($regularMinutes);
                 $overtimeHours = $this->convertToHoursAndMinutes($overtimeMinutes);
                 $publicHolidayHours = $this->convertToHoursAndMinutes($publicHolidayMinutes);
-    
+
                 $regularHours = round((float)$regularHours, 2);
                 $overtimeHours = round((float)$overtimeHours, 2);
                 $publicHolidayHours = round((float)$publicHolidayHours, 2);
-    
+
                 $normalRate = $attendanceForDay['gross_hourly_rate'];
                 $overtimeRate = $attendanceForDay['overtime_rate'];
                 $publicHolidayRate = $attendanceForDay['holiday_rate'];
-    
+
                 $normalEarnings = $regularHours * $normalRate;
                 $overtimeEarnings = $overtimeHours * $overtimeRate;
                 $publicHolidayEarnings = $publicHolidayHours * $publicHolidayRate;
-    
+
                 $normalEarnings = round($normalEarnings, 2);
                 $overtimeEarnings = round($overtimeEarnings, 2);
                 $publicHolidayEarnings = round($publicHolidayEarnings, 2);
-    
+
                 if ($existingRecord) {
                     $existingRecord->normal_hours += $regularHours;
                     $existingRecord->overtime += $overtimeHours;
@@ -307,27 +307,27 @@ class PublishGuardRoaster extends Command
             $totalNormalHours += $detail->normal_hours;
             $totalOvertimeHours += $detail->overtime;
             $totalPublicHoliday += $detail->public_holiday;
-    
+
             $totalNormalEarnings += $detail->normal_hours_rate;
-            $totalOvertimeEarnings += $detail->	overtime_rate;
+            $totalOvertimeEarnings += $detail->overtime_rate;
             $totalPublicHolidayEarnings += $detail->public_holiday_rate;
         }
 
-        $userData = User::with('guardAdditionalInformation', 'guardAdditionalInformation.rateMaster')->where('id', $userId)->first();        
+        $userData = User::with('guardAdditionalInformation', 'guardAdditionalInformation.rateMaster')->where('id', $userId)->first();
         list($leavePaid, $leaveNotPaid, $paidLeaveBalance) = $this->calculateLeaveDetails($userId, $previousStartDate, $previousEndDate);
         $pendingLeaveAmount = 0;
         $paidLeaveAmount = 0;
         $notPaidLeaveAmount = 0;
         if ($leavePaid > 0) {
             $totalNormalHours += $leavePaid * 8;
-            $totalNormalEarnings += (($leavePaid * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate );
+            $totalNormalEarnings += (($leavePaid * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate);
         }
         if ($leaveNotPaid > 0) {
             $totalNormalHours -= $leaveNotPaid * 8;
-            $totalNormalEarnings -= (($leaveNotPaid * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate );
+            $totalNormalEarnings -= (($leaveNotPaid * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate);
         }
         if ($paidLeaveBalance > 0) {
-            $pendingLeaveAmount += (($paidLeaveBalance * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate );
+            $pendingLeaveAmount += (($paidLeaveBalance * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate);
         }
 
         $leavesAmount = $pendingLeaveAmount;
@@ -345,7 +345,7 @@ class PublishGuardRoaster extends Command
         $lessNis = 0;
         $employerContributionNis = 0;
 
-        if($userData->is_statutory == 0) {
+        if ($userData->is_statutory == 0) {
             $totalNisForCurrentYear = $fullYearNis->sum('less_nis');
             if ($age >= 70) {
                 $lessNis = 0;
@@ -373,7 +373,7 @@ class PublishGuardRoaster extends Command
             } elseif ($statutoryIncome > 65389 && $statutoryIncome <= 230769.23) {
                 $payeData = $statutoryIncome - 65389;
                 $payeIncome = $payeData * 0.25;
-            } elseif($statutoryIncome > 230770.23) {
+            } elseif ($statutoryIncome > 230770.23) {
                 $payeData = $statutoryIncome - 230770.23;
                 $payeIncome = $payeData * 0.30;
             }
@@ -394,22 +394,22 @@ class PublishGuardRoaster extends Command
         }
 
         // if ($userData->is_statutory == 1) {
-            $deductionTypes = [
-                'Staff Loan'        => 'pending_staff_loan',
-                'Medical Ins'       => 'pending_medical_insurance',
-                'Salary Advance'    => 'pending_salary_advance',
-                'PSRA'              => 'pending_psra',
-                'Bank Loan'         => 'pending_bank_loan',
-                'Approved Pension'  => 'pending_approved_pension',
-                'Garnishment'       => 'pending_garnishment',
-                'Missing Goods'     => 'pending_missing_goods',
-                'Damaged Goods'     => 'pending_damaged_goods'
-            ];
+        $deductionTypes = [
+            'Staff Loan'        => 'pending_staff_loan',
+            'Medical Ins'       => 'pending_medical_insurance',
+            'Salary Advance'    => 'pending_salary_advance',
+            'PSRA'              => 'pending_psra',
+            'Bank Loan'         => 'pending_bank_loan',
+            'Approved Pension'  => 'pending_approved_pension',
+            'Garnishment'       => 'pending_garnishment',
+            'Missing Goods'     => 'pending_missing_goods',
+            'Damaged Goods'     => 'pending_damaged_goods'
+        ];
 
-            $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
-            $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
+        $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
+        $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
 
-            foreach ($deductionTypes as $deductionType => $pendingField) {
+        /*foreach ($deductionTypes as $deductionType => $pendingField) {
                 $deductionRecords = Deduction::where('guard_id', $userId)->where('type', $deductionType)
                     ->whereDate('start_date', '<=', $previousEndDate)->whereDate('end_date', '>=', $previousStartDate)->get();
 
@@ -431,27 +431,69 @@ class PublishGuardRoaster extends Command
                         ]);
                     }
                 }
+            }*/
+        foreach ($deductionTypes as $deductionType => $pendingField) {
+            $deductionRecords = Deduction::where('guard_id', $userId)
+                ->where('type', $deductionType)
+                ->where(function ($query) use ($previousStartDate, $previousEndDate) {
+                    $query->whereNull('end_date') // Include deductions with no end_date
+                        ->orWhere(function ($subQuery) use ($previousStartDate, $previousEndDate) {
+                            $subQuery->whereDate('start_date', '<=', $previousEndDate)
+                                ->whereDate('end_date', '>=', $previousStartDate);
+                        });
+                })->get();
+
+            foreach ($deductionRecords as $deduction) {
+                $shouldDeduct = true;
+
+                // If end_date is set, respect the date range
+                if ($deduction->end_date && $deduction->start_date > $previousEndDate || $deduction->end_date < $previousStartDate) {
+                    $shouldDeduct = false;
+                }
+
+                if ($shouldDeduct && $deduction->pending_balance > 0) {
+                    // Deduct full amount if end_date and no_of_payroll are not set
+                    $installmentAmount = ($deduction->end_date && $deduction->no_of_payroll)
+                        ? $deduction->one_installment
+                        : $deduction->pending_balance; 
+
+                    $newPendingBalance = $deduction->pending_balance - $installmentAmount;
+                    $totalDeductions[$deductionType] += $installmentAmount;
+                    $pendingAmounts[$deductionType] = $newPendingBalance;
+                    $deduction->update([
+                        'pending_balance' => $newPendingBalance
+                    ]);
+
+                    DeductionDetail::create([
+                        'guard_id'        => $userId,
+                        'deduction_id'    => $deduction->id,
+                        'deduction_date'  => Carbon::now(),
+                        'amount_deducted' => $installmentAmount,
+                        'balance'         => $newPendingBalance
+                    ]);
+                }
             }
+        }
 
-            $staffLoan = $totalDeductions['Staff Loan'];
-            $medicalInsurance = $totalDeductions['Medical Ins'];
-            $salaryAdvance = $totalDeductions['Salary Advance'];
-            $psra = $totalDeductions['PSRA'];
-            $bankLoan = $totalDeductions['Bank Loan'];
-            $approvedPension = $totalDeductions['Approved Pension'];
-            $garnishment = $totalDeductions['Garnishment'];
-            $missingGoods  = $totalDeductions['Missing Goods'];
-            $damagedGoods = $totalDeductions['Damaged Goods'];
+        $staffLoan = $totalDeductions['Staff Loan'];
+        $medicalInsurance = $totalDeductions['Medical Ins'];
+        $salaryAdvance = $totalDeductions['Salary Advance'];
+        $psra = $totalDeductions['PSRA'];
+        $bankLoan = $totalDeductions['Bank Loan'];
+        $approvedPension = $totalDeductions['Approved Pension'];
+        $garnishment = $totalDeductions['Garnishment'];
+        $missingGoods  = $totalDeductions['Missing Goods'];
+        $damagedGoods = $totalDeductions['Damaged Goods'];
 
-            $pendingStaffLoan = $pendingAmounts['Staff Loan'];
-            $pendingMedicalInsurance = $pendingAmounts['Medical Ins'];
-            $pendingSalaryAdvance = $pendingAmounts['Salary Advance'];
-            $pendingPsra = $pendingAmounts['PSRA'];
-            $pendingBankLoan = $pendingAmounts['Bank Loan'];
-            $pendingApprovedPension = $pendingAmounts['Approved Pension'];
-            $pendingGarnishment = $pendingAmounts['Garnishment'];
-            $pendingMissingGoods = $pendingAmounts['Missing Goods'];
-            $pendingDamagedGoods = $pendingAmounts['Damaged Goods'];
+        $pendingStaffLoan = $pendingAmounts['Staff Loan'];
+        $pendingMedicalInsurance = $pendingAmounts['Medical Ins'];
+        $pendingSalaryAdvance = $pendingAmounts['Salary Advance'];
+        $pendingPsra = $pendingAmounts['PSRA'];
+        $pendingBankLoan = $pendingAmounts['Bank Loan'];
+        $pendingApprovedPension = $pendingAmounts['Approved Pension'];
+        $pendingGarnishment = $pendingAmounts['Garnishment'];
+        $pendingMissingGoods = $pendingAmounts['Missing Goods'];
+        $pendingDamagedGoods = $pendingAmounts['Damaged Goods'];
         // }
         $threshold             = 0;
 
@@ -459,16 +501,16 @@ class PublishGuardRoaster extends Command
             'leave_paid'            => $leavePaid,
             'leave_not_paid'        => $leaveNotPaid,
             'pending_leave_balance' => $paidLeaveBalance,
-            'paid_leaves_amount'    => (($leavePaid * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate ),
-            'not_paid_leaves_amount'=> (($leaveNotPaid * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate ),
+            'paid_leaves_amount'    => (($leavePaid * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate),
+            'not_paid_leaves_amount' => (($leaveNotPaid * 8) * $userData->guardAdditionalInformation->rateMaster->gross_hourly_rate),
             'pending_leaves_amount' => $pendingLeaveAmount,
             'normal_hours'          => $totalNormalHours,
             'overtime'              => $totalOvertimeHours,
             'public_holidays' => $totalPublicHoliday,
-            'normal_hours_rate' => number_format($totalNormalEarnings,2,'.',''),
-            'overtime_rate' =>  number_format($totalOvertimeEarnings, 2, '.',''),
-            'public_holiday_rate' =>  number_format($totalPublicHolidayEarnings, 2, '.',''),
-            'gross_salary_earned' => number_format($totalGrossSalaryEarned, 2, '.',''),
+            'normal_hours_rate' => number_format($totalNormalEarnings, 2, '.', ''),
+            'overtime_rate' =>  number_format($totalOvertimeEarnings, 2, '.', ''),
+            'public_holiday_rate' =>  number_format($totalPublicHolidayEarnings, 2, '.', ''),
+            'gross_salary_earned' => number_format($totalGrossSalaryEarned, 2, '.', ''),
             'less_nis' => number_format($lessNis, 2, '.', ''),
             'employer_contribution_nis_tax' => number_format($employerContributionNis ?? 0, 2, '.', ''),
             'approved_pension_scheme' => number_format($approvedPensionScheme, 2, '.', ''),
@@ -505,9 +547,9 @@ class PublishGuardRoaster extends Command
     {
         $hours = intdiv($minutes, 60);
         $remainingMinutes = $minutes % 60;
-    
+
         $fractionalPart = $remainingMinutes / 60;
-    
+
         return sprintf('%d.%02d', $hours, round($fractionalPart * 100));
     }
 
@@ -545,7 +587,6 @@ class PublishGuardRoaster extends Command
                     $leaveNotPaid = 0;
                     $leavePaid = $leavesCount;
                 }
-
             } else {
                 $leavePaid = $leavesCount;
                 $leaveNotPaid = 0;
@@ -567,14 +608,14 @@ class PublishGuardRoaster extends Command
                 ];
             });
         });
-    
+
         $invoiceDetails = [];
 
         foreach ($aggregatedData as $clientSiteId => $clientData) {
             $existingInvoice = Invoice::where('client_site_id', $clientSiteId)
-                                        ->where('start_date', Carbon::parse($startDate)->format('Y-m-d'))
-                                        ->where('end_date', Carbon::parse($endDate)->format('Y-m-d'))->first();
-    
+                ->where('start_date', Carbon::parse($startDate)->format('Y-m-d'))
+                ->where('end_date', Carbon::parse($endDate)->format('Y-m-d'))->first();
+
             if ($existingInvoice) {
                 $invoice = $existingInvoice;
             } else {
@@ -592,16 +633,16 @@ class PublishGuardRoaster extends Command
                 foreach ($clientData as $guardTypeId => $dateData) {
                     $rate = RateMaster::find($guardTypeId);
                     if (!$rate) continue;
-    
+
                     foreach ($dateData['dates'] as $date => $guardData) {
                         $noOfGuards = $guardData->pluck('guard_id')->unique()->count() ?? 0;
-    
+
                         $normalHours = $guardData->sum('normal_hours');
                         if ($normalHours > 0) {
                             $totalAmount = $normalHours * ($rate->gross_hourly_rate ?? 0);
                             $existingDetail = InvoiceDetail::where('invoice_id', $invoice->id)->where('guard_type_id', $guardTypeId)->where('hours_type', 'Normal')->where('date', Carbon::parse($date)->format('Y-m-d'))->exists();
-                            
-                            if(!$existingDetail) {
+
+                            if (!$existingDetail) {
                                 $invoiceDetails[] = [
                                     'invoice_id' => $invoice->id,
                                     'guard_type_id' => $guardTypeId,
@@ -614,7 +655,7 @@ class PublishGuardRoaster extends Command
                                 ];
                             }
                         }
-    
+
                         $overtimeHours = $guardData->sum('overtime');
                         if ($overtimeHours > 0) {
                             $totalAmount = $noOfGuards * $overtimeHours * ($rate->overtime_rate ?? 0);
@@ -633,12 +674,12 @@ class PublishGuardRoaster extends Command
                                 ];
                             }
                         }
-    
+
                         $publicHolidayHours = $guardData->sum('public_holiday');
                         if ($publicHolidayHours > 0) {
                             $totalAmount = $noOfGuards * $publicHolidayHours * ($rate->holiday_rate ?? 0);
                             $existingDetail = InvoiceDetail::where('invoice_id', $invoice->id)->where('guard_type_id', $guardTypeId)->where('hours_type', 'Public Holiday')->where('date', Carbon::parse($date)->format('Y-m-d'))->exists();
-                            
+
                             if (!$existingDetail) {
                                 $invoiceDetails[] = [
                                     'invoice_id' => $invoice->id,
@@ -656,7 +697,7 @@ class PublishGuardRoaster extends Command
                 }
             }
         }
-    
+
         if (!empty($invoiceDetails)) {
             InvoiceDetail::insert($invoiceDetails);
             foreach ($invoiceDetails as $detail) {
