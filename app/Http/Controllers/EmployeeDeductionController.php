@@ -12,6 +12,7 @@ use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
 use App\Exports\EmployeeDeductionExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 
 class EmployeeDeductionController extends Controller
 {
@@ -315,9 +316,17 @@ class EmployeeDeductionController extends Controller
 
         $employeeDocumentPath = $deduction->employee_document;
         if ($request->hasFile('employee_document')) {
+            if (!empty($deduction->employee_document) && Storage::disk('public')->exists($deduction->employee_document)) {
+                Storage::disk('public')->delete($deduction->employee_document);
+            }
+
             $file = $request->file('employee_document');
             $filename = time() . '_' . $file->getClientOriginalName();
             $employeeDocumentPath = $file->storeAs('employee_documents', $filename, 'public');
+
+            $data['employee_document'] = $employeeDocumentPath;
+        } else {
+            $data['employee_document'] = $deduction->employee_document;
         }
 
         $deduction->update([

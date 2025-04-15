@@ -59,8 +59,27 @@
     <div class="col-md-4 mb-3">
         <x-form-input name="end_date" value="{{ old('end_date', $deduction->end_date ?? '') }}" label="End Date" placeholder="Enter your End Date" class="date-picker-guard" type="text" required="true" />
     </div>
+
     <div class="col-md-4 mb-3">
-        <x-form-input name="employee_document" value="" label="Upload Document" placeholder="Select your document" class="form-control" type="file" />
+        <label for="employee_document">Upload Document</label>
+        <input type="file" name="employee_document" class="form-control" />
+
+        @if (!empty($deduction->employee_document) && Storage::disk('public')->exists($deduction->employee_document))
+        <div class="mt-2">
+            @php
+            $extension = pathinfo($deduction->employee_document, PATHINFO_EXTENSION);
+            $fileUrl = Storage::url($deduction->employee_document);
+            @endphp
+
+            @if (in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']))
+            <img src="{{ asset($fileUrl) }}" alt="Uploaded Document" class="img-thumbnail" style="max-height: 150px;">
+            @else
+            <a href="{{ asset($fileUrl) }}" target="_blank">
+                View Uploaded File
+            </a>
+            @endif
+        </div>
+        @endif
     </div>
 </div>
 
