@@ -21,7 +21,7 @@
             <select name="type" id="type" class="form-control{{ $errors->has('type') ? ' is-invalid' : '' }}">
                 <option value="" disabled selected>Select Type</option>
                 @php
-                $types = ['Staff Loan', 'Salary Advance', 'Medical Ins', 'PSRA', 'Garnishment', 'Missing Goods', 'Damaged Goods', 'Bank Loan', 'Approved Pension'];
+                $types = config('deductiontype.types');
                 @endphp
                 @foreach($types as $type)
                 <option value="{{ $type }}" @selected(isset($deduction->type) && $deduction->type == $type)>
@@ -53,7 +53,7 @@
         <x-form-input name="start_date" id="start_date" value="{{ old('start_date', $deduction->start_date ?? '') }}" label="Start Date" placeholder="Enter your Start Date" class="date-picker-guard" type="text" required="true" />
     </div>
     <div class="col-md-4 mb-3">
-        <x-form-input name="end_date" value="{{ old('end_date', $deduction->end_date ?? '') }}" label="End Date" placeholder="Enter your End Date" class="date-picker-guard" type="text" required="true" />
+        <x-form-input name="end_date" value="{{ old('end_date', $deduction->end_date ?? '') }}" label="End Date" placeholder="Enter your End Date" class="date-picker-guard" type="text"/>
     </div>
     <div class="col-md-4 mb-3">
         <x-form-input name="guard_document" value="" label="Upload Document" placeholder="Select your document" class="form-control" type="file" />
