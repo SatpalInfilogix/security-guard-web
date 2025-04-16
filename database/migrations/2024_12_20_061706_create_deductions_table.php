@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('guard_id');
             $table->string('type');
             $table->decimal('amount', 10, 2)->nullable();
-            $table->integer('no_of_payroll');
+            $table->integer('no_of_payroll')->nullable();
             $table->date('document_date')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();

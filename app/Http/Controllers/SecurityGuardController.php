@@ -29,7 +29,7 @@ class SecurityGuardController extends Controller
      */
     public function index(Request $request)
     {
-        if(!Gate::allows('view security guards')) {
+        if (!Gate::allows('view security guards')) {
             abort(403);
         }
 
@@ -47,7 +47,7 @@ class SecurityGuardController extends Controller
     public function getSecurityGuard(Request $request)
     {
         $userRole = Role::where('id', 3)->first();
-    
+
         $securityGuards = User::with('userDocuments')->whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
         });
@@ -55,52 +55,55 @@ class SecurityGuardController extends Controller
         if ($request->has('search_emp_code') && !empty($request->search_emp_code)) {
             $securityGuards->where('id', $request->search_emp_code);
         }
-    
         if ($request->has('search_name') && !empty($request->search_name)) {
-            $securityGuards->where('first_name', 'like', '%' . $request->search_name . '%');
+            $securityGuards->where(function ($query) use ($request) {
+                $query->where('first_name', 'like', '%' . $request->search_name . '%')
+                    ->orWhere('middle_name', 'like', '%' . $request->search_name . '%')
+                    ->orWhere('surname', 'like', '%' . $request->search_name . '%');
+            });
         }
-    
+
         if ($request->has('search_email') && !empty($request->search_email)) {
             $securityGuards->where('email', 'like', '%' . $request->search_email . '%');
         }
-    
+
         if ($request->has('search_phone') && !empty($request->search_phone)) {
             $securityGuards->where('phone_number', 'like', '%' . $request->search_phone . '%');
         }
-    
+
         if ($request->has('status') && !empty($request->status)) {
             $securityGuards->where('status', $request->status);
         }
-    
+
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
-            $securityGuards->where(function($query) use ($searchValue) {
+            $securityGuards->where(function ($query) use ($searchValue) {
                 $query->where('user_code', 'like', '%' . $searchValue . '%')
-                      ->orwhere('first_name', 'like', '%' . $searchValue . '%')
-                      ->orWhere('last_name', 'like', '%' . $searchValue . '%')
-                      ->orWhere('email', 'like', '%' . $searchValue . '%')
-                      ->orWhere('phone_number', 'like', '%' . $searchValue . '%');
+                    ->orWhere('first_name', 'like', '%' . $searchValue . '%')
+                    ->orWhere('middle_name', 'like', '%' . $searchValue . '%') 
+                    ->orWhere('surname', 'like', '%' . $searchValue . '%') 
+                    ->orWhere('email', 'like', '%' . $searchValue . '%')
+                    ->orWhere('phone_number', 'like', '%' . $searchValue . '%');
             });
         }
-    
+
         $filteredRecords = $securityGuards->count();
         $length = $request->input('length', 10);
         $start = $request->input('start', 0);
-    
+
         $securityGuards = $securityGuards->orderBy('id', 'desc')
-                                         ->skip($start) 
-                                         ->take($length)
-                                         ->get();
-    
+            ->skip($start)
+            ->take($length)
+            ->get();
+
         $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
         $currentYear = now()->year;
-        foreach($securityGuards as $guard)
-        {
+        foreach ($securityGuards as $guard) {
             $approvedLeaves = Leave::where('guard_id', $guard->id)->where('status', 'Approved')->whereYear('date', $currentYear)->get()
-                                    ->sum(function ($leave) {
-                                        return ($leave->type == 'Half Day') ? 0.5 : 1;
-                                    });
-            $guard['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
+                ->sum(function ($leave) {
+                    return ($leave->type == 'Half Day') ? 0.5 : 1;
+                });
+            $guard['pendingLeaveBalance'] =  max(0, $paidLeaveBalanceLimit - $approvedLeaves);
         }
 
         $data = [
@@ -111,17 +114,17 @@ class SecurityGuardController extends Controller
             'recordsFiltered' => $filteredRecords,
             'data' => $securityGuards,
         ];
-    
+
         return response()->json($data);
     }
-    
+
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        if(!Gate::allows('create security guards')) {
+        if (!Gate::allows('create security guards')) {
             abort(403);
         }
 
@@ -137,7 +140,7 @@ class SecurityGuardController extends Controller
     private function parseDate($date)
     {
         if (empty($date)) {
-            return null; 
+            return null;
         }
 
         try {
@@ -149,7 +152,7 @@ class SecurityGuardController extends Controller
 
     public function store(Request $request)
     {
-        if(!Gate::allows('create security guards')) {
+        if (!Gate::allows('create security guards')) {
             abort(403);
         }
 
@@ -162,7 +165,7 @@ class SecurityGuardController extends Controller
             'trn'           => 'nullable|unique:guard_additional_information,trn',
             'nis'           => 'nullable|unique:guard_additional_information,nis',
             'psra'          => 'nullable|unique:guard_additional_information,psra',
-            'account_number'=> 'nullable|unique:users_bank_details,account_no',
+            'account_number' => 'nullable|unique:users_bank_details,account_no',
             'date_of_birth' => [
                 'required',
                 'date',
@@ -172,7 +175,7 @@ class SecurityGuardController extends Controller
                     if ($dateOfJoining && !empty($dateOfJoining)) {
                         $dob = \Carbon\Carbon::createFromFormat('d-m-Y', $value);
                         $joiningDate = \Carbon\Carbon::createFromFormat('d-m-Y', $dateOfJoining);
-                        
+
                         if ($dob >= $joiningDate) {
                             $fail('The date of birth must be before the date of joining.');
                         }
@@ -262,7 +265,7 @@ class SecurityGuardController extends Controller
                     'user_id'   => $user->id,
                     'trn'       => uploadFile($request->file('trn_doc'), 'uploads/user-documents/trn/'),
                     'nis'       => uploadFile($request->file('nis_doc'), 'uploads/user-documents/nis/'),
-                    'psra'      => uploadFile($request->file('psra_doc'),'uploads/user-documents/psra/'),
+                    'psra'      => uploadFile($request->file('psra_doc'), 'uploads/user-documents/psra/'),
                     'birth_certificate' => uploadFile($request->file('birth_certificate'), 'uploads/user-documents/birth_certificate/'),
                 ]);
             }
@@ -288,12 +291,12 @@ class SecurityGuardController extends Controller
      */
     public function edit(string $id)
     {
-        if(!Gate::allows('edit security guards')) {
+        if (!Gate::allows('edit security guards')) {
             abort(403);
         }
 
         $rateMasters = RateMaster::latest()->get();
-        $user = User::with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail', 'userDocuments'])->where('id', $id)->first();
+        $user = User::with(['guardAdditionalInformation', 'contactDetail', 'usersBankDetail', 'usersKinDetail', 'userDocuments'])->where('id', $id)->first();
 
         return view('admin.security-guards.edit', compact('user', 'rateMasters'));
     }
@@ -303,7 +306,7 @@ class SecurityGuardController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        if(!Gate::allows('edit security guards')) {
+        if (!Gate::allows('edit security guards')) {
             abort(403);
         }
 
@@ -317,10 +320,10 @@ class SecurityGuardController extends Controller
             'phone_number'  => 'required|numeric|unique:users,phone_number,' . $id,
             'password'      => 'nullable',
             'recipient_id'  => 'nullable|string|max:15',
-            'trn'           => 'nullable|unique:guard_additional_information,trn,'. optional($guardInfo)->id,
-            'nis'           => 'nullable|unique:guard_additional_information,nis,'. optional($guardInfo)->id,
-            'psra'          => 'nullable|unique:guard_additional_information,psra,'. optional($guardInfo)->id,
-            'account_no'    => 'nullable|unique:users_bank_details,account_no,'. optional($usersBankDetail)->id,
+            'trn'           => 'nullable|unique:guard_additional_information,trn,' . optional($guardInfo)->id,
+            'nis'           => 'nullable|unique:guard_additional_information,nis,' . optional($guardInfo)->id,
+            'psra'          => 'nullable|unique:guard_additional_information,psra,' . optional($guardInfo)->id,
+            'account_no'    => 'nullable|unique:users_bank_details,account_no,' . optional($usersBankDetail)->id,
             'date_of_birth' => [
                 'required',
                 'date',
@@ -330,7 +333,7 @@ class SecurityGuardController extends Controller
                     if ($dateOfJoining && !empty($dateOfJoining)) {
                         $dob = \Carbon\Carbon::createFromFormat('d-m-Y', $value);
                         $joiningDate = \Carbon\Carbon::createFromFormat('d-m-Y', $dateOfJoining);
-                        
+
                         if ($dob >= $joiningDate) {
                             $fail('The date of birth must be before the date of joining.');
                         }
@@ -341,12 +344,12 @@ class SecurityGuardController extends Controller
             'guard_type_id' => 'required',
             'guard_employee_as_id' => 'required'
         ];
-    
+
         if ($request->user_status === 'Active') {
             $validationRules['trn_doc'] = ($usersDocuments->trn ?? null || $request->hasFile('trn_doc')) ? 'nullable' : 'required';
             $validationRules['nis_doc'] = ($usersDocuments->nis ?? null || $request->hasFile('nis_doc')) ? 'nullable' : 'required';
         }
-    
+
         $request->validate($validationRules);
 
         $user = User::findOrFail($id);
@@ -381,45 +384,49 @@ class SecurityGuardController extends Controller
                 'guard_type_id'         => $request->guard_type_id,
                 'guard_employee_as_id'  => $request->guard_employee_as_id,
                 'date_of_seperation'    => $this->parseDate($request->date_of_seperation),
-            ]);
+            ]
+        );
 
-            ContactDetail::updateOrCreate(
-                ['user_id' => $id],
-                [
+        ContactDetail::updateOrCreate(
+            ['user_id' => $id],
+            [
                 'apartment_no'  => $request->apartment_no,
                 'building_name' => $request->building_name,
                 'street_name'   => $request->street_name,
                 'parish'        => $request->parish,
                 'city'          => $request->city,
                 'postal_code'   => $request->postal_code,
-            ]);
+            ]
+        );
 
-            UsersBankDetail::updateOrCreate(
+        UsersBankDetail::updateOrCreate(
             ['user_id' => $id],
             [
-            'bank_name'             => $request->bank_name,
-            'bank_branch_address'   => $request->branch,
-            'account_no'            => $request->account_number,
-            'account_type'          => $request->account_type,
-            'routing_number'        => $request->routing_number,
-            'recipient_id'          => $request->recipient_id,
-        ]);
+                'bank_name'             => $request->bank_name,
+                'bank_branch_address'   => $request->branch,
+                'account_no'            => $request->account_number,
+                'account_type'          => $request->account_type,
+                'routing_number'        => $request->routing_number,
+                'recipient_id'          => $request->recipient_id,
+            ]
+        );
 
         UsersKinDetail::updateOrCreate(
             ['user_id' => $id],
             [
-            'surname'        => $request->kin_surname,
-            'first_name'     => $request->kin_first_name,
-            'middle_name'    => $request->kin_middle_name,
-            'apartment_no'   => $request->kin_apartment_no,
-            'building_name'  => $request->kin_building_name,
-            'street_name'    => $request->kin_street_name,
-            'parish'         => $request->kin_parish,
-            'city'           => $request->kin_city,
-            'postal_code'    => $request->kin_postal_code,
-            'email'          => $request->kin_email,
-            'phone_number'   => $request->kin_phone_number,
-        ]);
+                'surname'        => $request->kin_surname,
+                'first_name'     => $request->kin_first_name,
+                'middle_name'    => $request->kin_middle_name,
+                'apartment_no'   => $request->kin_apartment_no,
+                'building_name'  => $request->kin_building_name,
+                'street_name'    => $request->kin_street_name,
+                'parish'         => $request->kin_parish,
+                'city'           => $request->kin_city,
+                'postal_code'    => $request->kin_postal_code,
+                'email'          => $request->kin_email,
+                'phone_number'   => $request->kin_phone_number,
+            ]
+        );
 
         $documents = [];
         if ($request->hasFile('trn_doc')) {
@@ -438,7 +445,7 @@ class SecurityGuardController extends Controller
         // $usersDocuments->update($documents);
         usersDocuments::updateOrCreate(
             ['user_id' => $id],
-            $documents 
+            $documents
         );
         return redirect()->route('security-guards.index')->with('success', 'Security Guard updated successfully.');
     }
@@ -448,7 +455,7 @@ class SecurityGuardController extends Controller
      */
     public function destroy(string $id)
     {
-        if(!Gate::allows('delete security guards')) {
+        if (!Gate::allows('delete security guards')) {
             abort(403);
         }
 
@@ -466,7 +473,7 @@ class SecurityGuardController extends Controller
 
         $guards = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
-        })->with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail','userDocuments'])->latest()->get();
+        })->with(['guardAdditionalInformation', 'contactDetail', 'usersBankDetail', 'usersKinDetail', 'userDocuments'])->latest()->get();
 
         $guardArray = $guards->map(function ($guard) {
             return [
@@ -525,12 +532,42 @@ class SecurityGuardController extends Controller
         })->toArray();
 
         $headers = [
-            "First Name","Middle Name","Surname","TRN","NIS","PSRA","Date Of Joining","Date Of Birth",
+            "First Name",
+            "Middle Name",
+            "Surname",
+            "TRN",
+            "NIS",
+            "PSRA",
+            "Date Of Joining",
+            "Date Of Birth",
             // "Employer Company Name","Current Rate","Location Code","Location Name","Client Code","Client Name",
-            "Guard Type","Guard Employed As","Date Of Separation",
-            "Apartment No","Building Name","Street Name","Parish","City","Postal Code","Email","Phone Number",
-            "Bank Name","Bank Branch Address","Account Number","Account Type","Routing Number","Kin Surname","Kin First Name","Kin Middle Name","Kin Apartment No",
-            "Kin Building Name","Kin Street Name","Kin Parish","Kin City","Kin Postal Code","Kin Email","Kin Phone Number",
+            "Guard Type",
+            "Guard Employed As",
+            "Date Of Separation",
+            "Apartment No",
+            "Building Name",
+            "Street Name",
+            "Parish",
+            "City",
+            "Postal Code",
+            "Email",
+            "Phone Number",
+            "Bank Name",
+            "Bank Branch Address",
+            "Account Number",
+            "Account Type",
+            "Routing Number",
+            "Kin Surname",
+            "Kin First Name",
+            "Kin Middle Name",
+            "Kin Apartment No",
+            "Kin Building Name",
+            "Kin Street Name",
+            "Kin Parish",
+            "Kin City",
+            "Kin Postal Code",
+            "Kin Email",
+            "Kin Phone Number",
             // "Trn Document","Nis Document","Psra Document","Birth Certificate",
         ];
 
@@ -563,7 +600,7 @@ class SecurityGuardController extends Controller
         session()->flash('success', 'Security Guard imported successfully.');
         $downloadUrl = route('security-guard.download');
 
-        return redirect()->route('security-guards.index')->with('downloadUrl', $downloadUrl); 
+        return redirect()->route('security-guards.index')->with('downloadUrl', $downloadUrl);
     }
 
     public function exportResultCsv()
@@ -579,7 +616,7 @@ class SecurityGuardController extends Controller
 
         $securityGuards = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
-        })->with(['guardAdditionalInformation','contactDetail','usersBankDetail','usersKinDetail','userDocuments'])->latest()->get();
+        })->with(['guardAdditionalInformation', 'contactDetail', 'usersBankDetail', 'usersKinDetail', 'userDocuments'])->latest()->get();
 
         $pdf = PDF::loadView('admin.security-guards.pdf.security-guard-pdf', compact('securityGuards'));
 

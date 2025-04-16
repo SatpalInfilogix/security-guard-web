@@ -35,8 +35,13 @@ class PunchedStatus extends Command
         foreach ($rosters as $roster) {
             $scheduledTime = Carbon::parse($roster->date . ' ' . $roster->start_time);
             $lateThreshold = $scheduledTime->copy()->addMinutes(15);
-            if($today == $lateThreshold) {
-                $punchExists = Punch::where('user_id', $roster->guard_id)->whereBetween('in_time', [$scheduledTime, $lateThreshold])->first();
+            if ($roster->late_punch_sent) {
+                $this->info("Late punch already sent for Guard ID: {$roster->guard_id}, skipping...");
+                continue;
+            }
+            $punchExists = Punch::where('user_id', $roster->guard_id)->whereBetween('in_time', [$scheduledTime, $lateThreshold])->orWhere('in_time', '<', $scheduledTime)->first();
+
+            if ($today == $lateThreshold && !$punchExists) {
 
                 if (!$punchExists || $punchExists->in_time < $scheduledTime || $punchExists->in_time > $lateThreshold) {
                     $latePunches[] = [
@@ -45,8 +50,10 @@ class PunchedStatus extends Command
                         'time' => $scheduledTime->format('Y-m-d H:i:s'),
                         'guard_id' => $roster->guard_id,
                     ];
-        
+
                     $this->info("Guard ID: {$roster->guard_id} has not punched in on time for roster ID: {$roster->id}");
+                    $roster->late_punch_sent = 1;
+                    $roster->save();
                 }
             } else {
                 echo "No late punches found.";

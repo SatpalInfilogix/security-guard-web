@@ -7,6 +7,7 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Facades\Hash;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Carbon\Carbon;
 
 class EmployeeImport implements ToModel, WithHeadingRow
@@ -19,7 +20,12 @@ class EmployeeImport implements ToModel, WithHeadingRow
     */
     public function model(array $row)
     {
-
+        if(!is_string($row["date_of_joining"])){
+            $dateOfjoining = Date::excelToDateTimeObject($row["date_of_joining"]);
+            $row["date_of_joining"] = $dateOfjoining->format('d-m-Y');
+            $date_of_birth = Date::excelToDateTimeObject($row["date_of_birth"]);
+            $row["date_of_birth"] = $date_of_birth->format('d-m-Y');
+        }
         $this->rowIndex++;
 
         $validator = Validator::make($row, [
@@ -79,7 +85,7 @@ class EmployeeImport implements ToModel, WithHeadingRow
 
          // Update or create related data
          $user->guardAdditionalInformation()->updateOrCreate([], [
-            'trn'                 => $row["trn"] ?? NULL,
+            'trn'                 => $this->trnFormat($row["trn"]) ?? NULL,
             'nis'                 => $row["nis"] ?? NULL,
             'date_of_joining'     => $this->parseDate($row["date_of_joining"] ?? null),
             'date_of_birth'       => $this->parseDate($row["date_of_birth"] ?? null),
@@ -163,6 +169,11 @@ class EmployeeImport implements ToModel, WithHeadingRow
     public function getErrors()
     {
         return $this->errors;
+    }
+    public function trnFormat($trn){
+        $new =  str_replace('-','',$trn);
+        $formatted = chunk_split($new, 3, '-');
+        return $formatted = rtrim($formatted, '-'); 
     }
 }
 
