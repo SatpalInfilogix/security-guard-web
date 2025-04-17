@@ -124,7 +124,8 @@
                     data: 'user.user_code'
                 }
                 , {
-                    data: 'user.first_name'
+                    data: 'user.full_name'
+                    , name: 'user.full_name'
                 }
                 , {
                     data: 'type'
