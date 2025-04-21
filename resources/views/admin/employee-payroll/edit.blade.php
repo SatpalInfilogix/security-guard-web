@@ -29,8 +29,8 @@
                             <input type="hidden" value="{{$employeePayroll->id}}" id="payroll_id"> 
                             <div class="row mb-4">
                                 <div class="col-md-6">
-                                    <h6><strong>Employee Name: </strong> {{ $employeePayroll->user->first_name }} {{ $employeePayroll->user->last_name }}</h6>
-                                    <h6><strong>Department: </strong> N/A</h6>
+                                    <h6><strong>Employee Name: </strong> {{ $employeePayroll->user->first_name }} {{ $employeePayroll->user->surname }}</h6>
+                                    <h6><strong>Department: </strong> operations</h6>
                                     <h6><strong>Category: </strong> N/A</h6>
                                 </div>
                                 <div class="col-md-6 text-md-right">

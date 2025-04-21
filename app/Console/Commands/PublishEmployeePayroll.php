@@ -255,39 +255,39 @@ class PublishEmployeePayroll extends Command
         if ($userData->is_statutory == 0) {
             $totalNisForCurrentYear = $fullYearNis->sum('nis');
 
-            // if ($age >= 70) {
-            //     $nis = 0;
-            //     $employerContributionNis = 0;
-            // } else {
-            //     if ($totalNisForCurrentYear < 150000) {
-            //         $nisDeduction = $grossSalary * 0.03;
-            //         $employerContributionNis = $grossSalary * 0.03;
-            //         $remainingNisToReachLimit = 150000 - $totalNisForCurrentYear;
-            //         if ($nisDeduction > $remainingNisToReachLimit) {
-            //             $nis = $remainingNisToReachLimit;
-            //         } else {
-            //             $nis = $nisDeduction;
-            //         }
-            //     } else {
-            //         $nis = 0;
-            //         $employerContributionNis = 0;
-            //     }
-            // }
-
             if ($age >= 70) {
                 $nis = 0;
                 $employerContributionNis = 0;
             } else {
-                $nisDeduction = $grossSalary * 0.03;
-                $nisThreshold  = 150000 / 12;
-                if ($nisDeduction > $nisThreshold) {
-                    $nis = $nisThreshold;
-                    $employerContributionNis = $nisThreshold;
+                if ($totalNisForCurrentYear < 150000) {
+                    $nisDeduction = $grossSalary * 0.03;
+                    $employerContributionNis = $grossSalary * 0.03;
+                    $remainingNisToReachLimit = 150000 - $totalNisForCurrentYear;
+                    if ($nisDeduction > $remainingNisToReachLimit) {
+                        $nis = $remainingNisToReachLimit;
+                    } else {
+                        $nis = $nisDeduction;
+                    }
                 } else {
-                    $nis = $daySalary * 0.03;
-                    $employerContributionNis = $daySalary * 0.03;
+                    $nis = 0;
+                    $employerContributionNis = 0;
                 }
             }
+
+            // if ($age >= 70) {
+            //     $nis = 0;
+            //     $employerContributionNis = 0;
+            // } else {
+            //     $nisDeduction = $grossSalary * 0.03;
+            //     $nisThreshold  = 150000 / 12;
+            //     if ($nisDeduction > $nisThreshold) {
+            //         $nis = $nisThreshold;
+            //         $employerContributionNis = $nisThreshold;
+            //     } else {
+            //         $nis = $daySalary * 0.03;
+            //         $employerContributionNis = $daySalary * 0.03;
+            //     }
+            // }
 
             $statutoryIncome  = $grossSalary -  $nis - $approvedPensionScheme;
 
