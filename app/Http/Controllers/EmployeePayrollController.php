@@ -218,18 +218,22 @@ class EmployeePayrollController extends Controller
 
     public function employeePayrollExport(Request $request)
     {
-        $selectedDate = $request->input('date');
+        $selectedDateRange = $request->input('date'); 
         $spreadsheet = new Spreadsheet();
 
-        $this->addPayrollSheet($spreadsheet, $selectedDate);
+        $this->addPayrollSheet($spreadsheet, $selectedDateRange);
 
-        $writer = new Xlsx($spreadsheet);
-        $fileName = 'SO1 report.xlsx';
+        $startDate = explode(' to ', $selectedDateRange)[0]; 
+        $date = Carbon::parse($startDate);
+        $monthYear = $date->format('F-Y');
+
+        $fileName = 'SO1-Employee-' . $monthYear . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $fileName . '"');
         header('Cache-Control: max-age=0');
 
+        $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;
     }
