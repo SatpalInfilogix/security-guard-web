@@ -224,7 +224,7 @@ class EmployeePayrollController extends Controller
         $this->addPayrollSheet($spreadsheet, $selectedDate);
 
         $writer = new Xlsx($spreadsheet);
-        $fileName = 'Payroll.xlsx';
+        $fileName = 'SO1 report.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $fileName . '"');
