@@ -8,6 +8,7 @@ use App\Models\EmployeeLeave;
 use App\Models\EmployeeRateMaster;
 use App\Models\User;
 use App\Models\EmployeePayroll;
+use App\Models\PublicHoliday;
 use Spatie\Permission\Models\Role;
 use Illuminate\Console\Command;
 use Carbon\Carbon;
@@ -41,8 +42,8 @@ class PublishEmployeePayroll extends Command
 
         if ($employees) {
             foreach ($employees as $employee) {
-                $today = Carbon::now()->startOfDay();
-                // $today = Carbon::parse('23-01-2025')->startOfDay(); //--Manual Check
+                // $today = Carbon::now()->startOfDay();
+                $today = Carbon::parse('23-01-2025')->startOfDay(); //--Manual CheckSS
                 $twentyTwoDay = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
                 if ($twentyTwoDay) {
                     $endDate = Carbon::parse($twentyTwoDay->end_date)->startOfDay();
@@ -72,7 +73,7 @@ class PublishEmployeePayroll extends Command
                                     $endDate = $leavingDateOfEmployee;
                                     $currentDate = $previousStartDate->copy();
                                     while ($currentDate <= $endDate) {
-                                        if ($currentDate->dayOfWeek != Carbon::SATURDAY && $currentDate->dayOfWeek != Carbon::SUNDAY) {
+                                        if ($currentDate->dayOfWeek !== Carbon::SATURDAY && $currentDate->dayOfWeek !== Carbon::SUNDAY && !$this->isPublicHoliday($currentDate)) {
                                             $workingDays++;
                                         }
                                         $currentDate->addDay();
@@ -83,7 +84,7 @@ class PublishEmployeePayroll extends Command
                                 $workingDays = 0;
                                 $currentDate = $startDateForEmployee;
                                 while ($currentDate <= $endDate) {
-                                    if ($currentDate->dayOfWeek != Carbon::SATURDAY && $currentDate->dayOfWeek != Carbon::SUNDAY) {
+                                    if ($currentDate->dayOfWeek !== Carbon::SATURDAY && $currentDate->dayOfWeek !== Carbon::SUNDAY && !$this->isPublicHoliday($currentDate)) {
                                         $workingDays++;
                                     }
                                     $currentDate->addDay();
@@ -182,21 +183,42 @@ class PublishEmployeePayroll extends Command
         $leavesQuery = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved');
         $leavesCountInDecember = $leavesQuery->whereYear('date', $lastDayOfDecember->year)->get()
             ->sum(function ($leave) {
+                $leaveDate = Carbon::parse($leave->date);
+                if (
+                    $leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)
+                ) {
+                    return 0;
+                }
                 return ($leave->type == 'Half Day') ? 0.5 : 1;
             });
         // $leavesCountInDecember = $leavesQuery->whereYear('date', $lastDayOfDecember->year)->count();
         if ($lastDayOfDecember->between($previousStartDate, $endDate)) {
             $paidLeaveBalance = max(0, $paidLeaveBalanceLimit - $leavesCountInDecember);
         }
-        $leavesCount =  $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])->get()
+        $leavesCount = $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])->get()
             ->sum(function ($leave) {
+                $leaveDate = Carbon::parse($leave->date);
+                if (
+                    $leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)
+                ) {
+                    return 0;
+                }
                 return ($leave->type == 'Half Day') ? 0.5 : 1;
             });
 
         // $leavesCount = $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])->count();
         if ($leavesCount > 0) {
-            $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved')->whereDate('date', '<', $previousStartDate)->get()
+            $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)
+                ->where('status', 'Approved')
+                ->whereDate('date', '<', $previousStartDate)
+                ->get()
                 ->sum(function ($leave) {
+                    $leaveDate = Carbon::parse($leave->date);
+                    if (
+                        $leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)
+                    ) {
+                        return 0;
+                    }
                     return ($leave->type == 'Half Day') ? 0.5 : 1;
                 });
             // $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved')->whereDate('date', '<', $previousStartDate)->count();
@@ -389,14 +411,14 @@ class PublishEmployeePayroll extends Command
                     $deductAmount = $deduction->one_installment;
 
                     $totalDeductions[$deductionType] = $deductAmount;
-                    $pendingAmounts[$deductionType] = $deduction->pending_balance; 
+                    $pendingAmounts[$deductionType] = $deduction->pending_balance;
 
                     EmployeeDeductionDetail::create([
                         'employee_id' => $employee->id,
                         'deduction_id' => $deduction->id,
                         'deduction_date' => Carbon::now(),
                         'amount_deducted' => $deductAmount,
-                        'balance' => $deduction->pending_balance 
+                        'balance' => $deduction->pending_balance
                     ]);
                 }
             }
@@ -405,6 +427,10 @@ class PublishEmployeePayroll extends Command
         return [$totalDeductions, $pendingAmounts];
     }
 
+    protected function isPublicHoliday($date)
+    {
+        return PublicHoliday::whereDate('date', $date)->exists();
+    }
 
     // private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)
     // {
