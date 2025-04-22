@@ -21,6 +21,7 @@ use App\Imports\EmployeeImport;
 use App\Exports\EmployeeImportExport;
 use App\Exports\EmployeesExport;
 use App\Models\EmployeeLeave;
+use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller
 {
@@ -144,11 +145,23 @@ class EmployeeController extends Controller
             abort(403);
         }
 
+        $existingUser = User::where('phone_number', $request->phone_number)
+            // ->where('email', $request->email)
+            ->first();
+
         $validationRules = [
             'first_name'    => 'required',
-            'email'         => 'nullable|email|unique:users,email',
-            'phone_number'  => 'required|numeric|unique:users,phone_number',
-            'password'      => 'required',
+            'email'         => [
+                'nullable',
+                'email',
+                Rule::unique('users', 'email')->ignore(optional($existingUser)->id),
+            ],
+            'phone_number'  => [
+                'required',
+                'numeric',
+                Rule::unique('users', 'phone_number')->ignore(optional($existingUser)->id),
+            ],
+            'password'      => $existingUser ? 'nullable' : 'required',
             'recipient_id'  => 'nullable|string|max:15',
             'trn'           => 'nullable|unique:guard_additional_information,trn',
             'nis'           => 'nullable|unique:guard_additional_information,nis',
@@ -157,12 +170,11 @@ class EmployeeController extends Controller
                 'required',
                 'date',
                 'date_format:d-m-Y',
-                function ($attribute, $value, $fail) {
-                    $dateOfJoining = request()->input('date_of_joining');
+                function ($attribute, $value, $fail) use ($request) {
+                    $dateOfJoining = $request->input('date_of_joining');
                     if ($dateOfJoining && !empty($dateOfJoining)) {
-                        $dob = \Carbon\Carbon::createFromFormat('d-m-Y', $value);
-                        $joiningDate = \Carbon\Carbon::createFromFormat('d-m-Y', $dateOfJoining);
-
+                        $dob = Carbon::createFromFormat('d-m-Y', $value);
+                        $joiningDate = Carbon::createFromFormat('d-m-Y', $dateOfJoining);
                         if ($dob >= $joiningDate) {
                             $fail('The date of birth must be before the date of joining.');
                         }
@@ -171,6 +183,11 @@ class EmployeeController extends Controller
             ],
             'date_of_joining' => 'required|date|date_format:d-m-Y',
         ];
+
+        if (!$existingUser) {
+            $validationRules['email'][] = 'unique:users,email';
+            $validationRules['phone_number'][] = 'unique:users,phone_number';
+        }
 
         if ($request->user_status === 'Active') {
             $validationRules['trn_doc'] = 'required';
@@ -185,19 +202,37 @@ class EmployeeController extends Controller
                 $user_code = $this->generateEmployeeCode();
             }
 
-            $user = User::create([
-                'user_code'    => $user_code ?? NULL,
-                'surname'      => $request->surname,
-                'first_name'   => $request->first_name,
-                'middle_name'  => $request->middle_name,
-                'email'        => $request->email,
-                'phone_number' => $request->phone_number,
-                'status'       => $request->user_status ?? 'Inactive',
-                'is_statutory' => $request->is_statutory,
-                'password'     => Hash::make($request->password),
-            ])->assignRole('Employee');
+            if ($existingUser) {
+                $existingUser->update([
+                    'user_code'    => $existingUser->user_code ?? ($user_code ?? NULL),
+                    'surname'      => $request->surname,
+                    'first_name'   => $request->first_name,
+                    'middle_name'  => $request->middle_name,
+                    'email'        => $request->email,
+                    'phone_number' => $request->phone_number,
+                    'status'       => $request->user_status ?? 'Inactive',
+                    'is_statutory' => $request->is_statutory,
+                    'password'     => $request->password ? Hash::make($request->password) : $existingUser->password,
+                ]);
 
+                $existingUser->assignRole('Employee');
 
+                $user = $existingUser;
+            } else {
+                $user = User::create([
+                    'user_code'    => $user_code ?? NULL,
+                    'surname'      => $request->surname,
+                    'first_name'   => $request->first_name,
+                    'middle_name'  => $request->middle_name,
+                    'email'        => $request->email,
+                    'phone_number' => $request->phone_number,
+                    'status'       => $request->user_status ?? 'Inactive',
+                    'is_statutory' => $request->is_statutory,
+                    'password'     => Hash::make($request->password),
+                ]);
+
+                $user->assignRole('Employee');
+            }
 
             if ($user) {
                 GuardAdditionalInformation::create([
@@ -520,10 +555,10 @@ class EmployeeController extends Controller
     }
 
     public function exportEmployees()
-     {
+    {
         return Excel::download(new EmployeesExport, 'guards.xlsx');
 
-    /*     $userRole = Role::where('id', 9)->first();
+        /*     $userRole = Role::where('id', 9)->first();
 
          $employees = User::whereHas('roles', function ($query) use ($userRole) {
              $query->where('role_id', $userRole->id);
@@ -632,7 +667,7 @@ class EmployeeController extends Controller
              'Content-Type' => 'text/csv',
              'Content-Disposition' => 'attachment; filename="guards.csv"',
          ]);*/
-     }
+    }
 
     public function importEmployee(Request $request)
     {
@@ -654,9 +689,10 @@ class EmployeeController extends Controller
         return Excel::download($export, 'employee_import_results.csv');
     }
 
-    public function trnFormat($trn){
-        $new =  str_replace('-','',$trn);
+    public function trnFormat($trn)
+    {
+        $new =  str_replace('-', '', $trn);
         $formatted = chunk_split($new, 3, '-');
-        return $formatted = rtrim($formatted, '-'); 
+        return $formatted = rtrim($formatted, '-');
     }
 }
