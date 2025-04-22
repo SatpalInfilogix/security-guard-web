@@ -43,7 +43,7 @@ class PublishEmployeePayroll extends Command
         if ($employees) {
             foreach ($employees as $employee) {
                 $today = Carbon::now()->startOfDay();
-                // $today = Carbon::parse('23-01-2025')->startOfDay(); //--Manual CheckSS
+                // $today = Carbon::parse('25-01-2025')->startOfDay(); //--Manual CheckSS
                 $twentyTwoDay = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
                 if ($twentyTwoDay) {
                     $endDate = Carbon::parse($twentyTwoDay->end_date)->startOfDay();
@@ -53,7 +53,7 @@ class PublishEmployeePayroll extends Command
                         $year = Carbon::parse($today)->year;
                         $previousEndDate = Carbon::create($year, 12, 13);
                     } else {
-                        $previousEndDate = Carbon::parse($startDate)->addDays(22);  // Payroll generates 23-day period
+                        $previousEndDate = Carbon::parse($startDate)->addDays(24);  // Payroll generates 25-day period
                     }
                     $previousStartDate = $startDate;
                     if ($previousEndDate == $today) {
@@ -325,7 +325,7 @@ class PublishEmployeePayroll extends Command
             }
 
             $eduction_tax = $statutoryIncome * 0.0225;
-            $employer_contribution = $grossSalary * 0.035;
+            $employer_contribution = $statutoryIncome * 0.035;
 
             if ($age >= 65) {
                 $nhtDeduction = 0;

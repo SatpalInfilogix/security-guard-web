@@ -72,31 +72,31 @@
         </tr>
         <tr>
             <td>Gross Earnings</td>
-            <td style="float: right;">{{ $employeePayroll->day_salary }}</td>
-            <td>{{ $employeePayroll->normal_days - $employeePayroll->leave_not_paid }}</td>
-            <td>{{ $employeePayroll->normal_salary }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->day_salary }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->normal_days - $employeePayroll->leave_not_paid }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->normal_salary }}</td>
             <td>PAYE</td>
-            <td>{{ $employeePayroll->paye }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->paye }}</td>
             <td></td>
             {{-- <td></td> --}}
         </tr>
         <tr>
             <td>Leave Paid</td>
             <td></td>
-            <td>{{ $employeePayroll->leave_paid }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->leave_paid }}</td>
             <td>-</td>
             <td>Ed Tax</td>
-            <td>{{ $employeePayroll->education_tax }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->education_tax }}</td>
             <td></td>
             {{-- <td>{{ $employeePayroll->employer_eduction_tax }}</td> --}}
         </tr>
         <tr>
             <td>Leave Not Paid</td>
             <td></td>
-            <td>{{ $employeePayroll->leave_not_paid }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->leave_not_paid }}</td>
             <td>-</td>
             <td>NIS</td>
-            <td>{{ $employeePayroll->nis }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->nis }}</td>
             <td></td>
             {{-- <td>{{ $employeePayroll->employer_contribution_nis_tax }}</td> --}}
         </tr>
@@ -104,14 +104,14 @@
             @if($employeePayroll->pending_leave_balance > 0)
                 <td>Pending Balance</td>
                 <td></td>
-                <td>{{ $employeePayroll->pending_leave_balance }}</td>
-                <td>{{ $employeePayroll->pending_leave_amount }}</td>
+                <td style="text-align: right;">{{ $employeePayroll->pending_leave_balance }}</td>
+                <td style="text-align: right;">{{ $employeePayroll->pending_leave_amount }}</td>
             @else
                 <td colspan="3"></td>
                 <td></td>
             @endif
             <td>NHT</td>
-            <td>{{ $employeePayroll->nht }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->nht }}</td>
             <td></td>
             {{-- <td>{{$employeePayroll->employer_contribution_nht_tax}}</td> --}}
         </tr>
@@ -127,16 +127,16 @@
             <td colspan="3"></td>
             <td></td>
             <td>Staff Loan</td>
-            <td>{{ $employeePayroll->staff_loan }}</td>
-            <td>{{ number_format($employeePayroll->pending_staff_loan)}}</td>
+            <td style="text-align: right;">{{ $employeePayroll->staff_loan }}</td>
+            <td style="text-align: right;">{{ number_format($employeePayroll->pending_staff_loan)}}</td>
             {{-- <td></td> --}}
         </tr>
         <tr>
             <td colspan="3"></td>
             <td></td>
             <td>Medical Ins</td>
-            <td>{{ $employeePayroll->medical_insurance }}</td>
-            <td>{{ number_format($employeePayroll->pending_medical_insurance)}}</td>
+            <td style="text-align: right;">{{ $employeePayroll->medical_insurance }}</td>
+            <td style="text-align: right;">{{ number_format($employeePayroll->pending_medical_insurance)}}</td>
             {{-- <td></td> --}}
         </tr>
         <tr>
@@ -147,9 +147,9 @@
                 $total = $employeePayroll->gross_salary ?? 0;
                 $totalAmount = $employeePayroll->paye +  $employeePayroll->education_tax + $employeePayroll->nis + $employeePayroll->nht + $employeePayroll->staff_loan +  $employeePayroll->medical_insurance + $employeePayroll->salary_advance + $employeePayroll->approved_pension_scheme + $employeePayroll->psra + $employeePayroll->bank_loan + $employeePayroll->missing_goods + $employeePayroll->damaged_goods + $employeePayroll->garnishment;
             @endphp
-            <td>{{ $total }}</td>
+            <td style="text-align: right;">{{ $total }}</td>
             <td></td>
-            <td>{{ $totalAmount }}</td>
+            <td style="text-align: right;">{{ $totalAmount }}</td>
             <td></td>
             {{-- <td></td> --}}
         </tr>
@@ -159,7 +159,7 @@
             <td></td>
             <td></td>
             <th>Net Salary (JMD)</th>
-            <td>{{ $total - $totalAmount }}</td>
+            <td style="text-align: right;">{{ $total - $totalAmount }}</td>
             <td></td>
             {{-- <td></td> --}}
         </tr>
@@ -174,7 +174,7 @@
         <tr>
             <td></td>
             <td></td>
-            <td>{{ $total - $totalAmount }}</td>
+            <td style="text-align: right;">{{ $total - $totalAmount }}</td>
         </tr>
     </table>
     <br>
@@ -182,23 +182,23 @@
     <table>
         <tr>
             {{-- <th>Year to Date (JMD)</th> --}}
-            <th>Gross Earnings</th>
-            <th>NIS</th>
-            <th>Tax</th>
-            <th>Ed Tax</th>
-            <th>NHT</th>
-            <th>Annual Leave</th>
-            <th>Sick Leave</th>
+            <th style="text-align: center">Gross Earnings</th>
+            <th style="text-align: center">NIS</th>
+            <th style="text-align: center">Tax</th>
+            <th style="text-align: center">Ed Tax</th>
+            <th style="text-align: center">NHT</th>
+            <th style="text-align: center">Annual Leave</th>
+            <th style="text-align: center">Sick Leave</th>
         </tr>
         <tr>
             {{-- <td></td> --}}
-            <td>{{ $employeePayroll->gross_total }}</td>
-            <td>{{ $employeePayroll->nis_total }}</td>
-            <td>{{ $employeePayroll->paye_tax_total }}</td>
-            <td>{{ $employeePayroll->education_tax_total }}</td>
-            <td>{{ $employeePayroll->nht_total }}</td>
-            <td>{{ $employeePayroll->pendingLeaveBalance }}</td>
-            <td>{{ setting('yearly_leaves') ?: 10 }} </td>
+            <td style="text-align: right;">{{ $employeePayroll->gross_total }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->nis_total }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->paye_tax_total }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->education_tax_total }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->nht_total }}</td>
+            <td style="text-align: right;">{{ $employeePayroll->pendingLeaveBalance }}</td>
+            <td style="text-align: right;">{{ setting('yearly_leaves') ?: 10 }} </td>
         </tr>
     </table>
 </body>
