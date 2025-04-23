@@ -33,7 +33,8 @@ class PublishEmployeePayroll extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    
+    /*public function handle()
     {
         $userRole = Role::where('id', 9)->first();
         $employees = User::whereHas('roles', function ($query) use ($userRole) {
@@ -167,6 +168,189 @@ class PublishEmployeePayroll extends Command
         } else {
             echo "No employee found";
         }
+    }*/
+
+    public function handle()
+    {
+        $userRole = Role::where('id', 9)->first();
+        $employees = User::whereHas('roles', function ($query) use ($userRole) {
+            $query->where('role_id', $userRole->id);
+        })->with('guardAdditionalInformation')->latest()->get();
+
+        $today = Carbon::now()->startOfDay();
+        // $today = Carbon::parse('25-02-2025')->startOfDay(); // For Manuall testing 
+
+        $processingDate = $this->getProcessingDate($today);
+
+        if (!$today->equalTo($processingDate)) {
+            $this->info("Today is not a valid payroll processing day. Processing should occur on: " . $processingDate->format('Y-m-d'));
+            return;
+        }
+
+        if ($employees) {
+            foreach ($employees as $employee) {
+                $twentyTwoDay = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)
+                    ->whereDate('end_date', '>=', $today)
+                    ->first();
+
+                if ($twentyTwoDay) {
+                    $endDate = Carbon::parse($twentyTwoDay->end_date)->startOfDay();
+                    $startDate = Carbon::parse($twentyTwoDay->start_date)->startOfDay();
+
+                    if ($today->month == 12) {
+                        $year = Carbon::parse($today)->year;
+                        $previousEndDate = Carbon::create($year, 12, 13);
+                    } else {
+                        $previousEndDate = Carbon::parse($startDate)->addDays(24); // For 25-day period
+                    }
+
+                    $previousStartDate = $startDate;
+
+                    // Modified to check if today matches the calculated payroll end date
+                    if ($today->equalTo($previousEndDate) || $today->lessThan($previousEndDate) && $previousEndDate->day == 25) {
+                        $joiningDate = Carbon::parse($employee->guardAdditionalInformation->date_of_joining);
+                        $startDateForEmployee = $joiningDate > $previousStartDate ? $joiningDate : $previousStartDate;
+                        $leavingDateOfEmployee = $employee->guardAdditionalInformation->date_of_seperation ?
+                            Carbon::parse($employee->guardAdditionalInformation->date_of_seperation) : null;
+
+                        if ($leavingDateOfEmployee && $leavingDateOfEmployee->month < $today->month) {
+                            continue;
+                        }
+
+                        if ($startDateForEmployee->greaterThan($endDate)) {
+                            $normalDays = 0;
+                        } else {
+                            if ($joiningDate <= $previousStartDate) {
+                                $normalDays = 22;
+                                $workingDays = 0;
+                                if ($leavingDateOfEmployee && $leavingDateOfEmployee->greaterThanOrEqualTo($previousStartDate) && $leavingDateOfEmployee->lessThanOrEqualTo($endDate)) {
+                                    $endDate = $leavingDateOfEmployee;
+                                    $currentDate = $previousStartDate->copy();
+                                    while ($currentDate <= $endDate) {
+                                        if ($currentDate->dayOfWeek !== Carbon::SATURDAY && $currentDate->dayOfWeek !== Carbon::SUNDAY && !$this->isPublicHoliday($currentDate)) {
+                                            $workingDays++;
+                                        }
+                                        $currentDate->addDay();
+                                    }
+                                    $normalDays = $workingDays;
+                                }
+                            } else {
+                                $workingDays = 0;
+                                $currentDate = $startDateForEmployee;
+                                while ($currentDate <= $endDate) {
+                                    if ($currentDate->dayOfWeek !== Carbon::SATURDAY && $currentDate->dayOfWeek !== Carbon::SUNDAY && !$this->isPublicHoliday($currentDate)) {
+                                        $workingDays++;
+                                    }
+                                    $currentDate->addDay();
+                                }
+                                $normalDays = $workingDays;
+                            }
+                        }
+
+                        if ($normalDays > 0) {
+                            $payroll = EmployeePayroll::where('employee_id', $employee->id)
+                                ->whereDate('start_date', $previousStartDate)
+                                ->whereDate('end_date', $endDate)
+                                ->first();
+
+                            if (!$payroll) {
+                                $employeeRateMaster = EmployeeRateMaster::where('employee_id', $employee->id)->first();
+                                if ($employeeRateMaster) {
+                                    $yearlySalary = $employeeRateMaster->gross_salary;
+                                    $daySalary = ($yearlySalary / 12) / 22;
+
+                                    //===== Employee Leaves Calculation =====
+                                    list($leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary, $pendingLeaveAmount, $normalDaysSalary) =
+                                        $this->calculateLeaveDetails($normalDays, $employee, $previousStartDate, $endDate, $daySalary);
+                                    //===== End Leaves Calculation =====
+
+                                    //===== Employee Payroll Statutory Calculation =====
+                                    $payrollStatutoryData = $this->calculateEmployeePayrollStatutory(
+                                        $employee,
+                                        $previousStartDate,
+                                        $endDate,
+                                        $grossSalary,
+                                        $daySalary
+                                    );
+                                    // ========End Payroll Statutory Calculation ========
+
+                                    //===== Employee Payroll Non Statutory Calculation =====
+                                    list($totalDeductions, $pendingAmounts) = $this->calculateNonStatutoryDeductions(
+                                        $employee,
+                                        $previousStartDate,
+                                        $endDate
+                                    );
+                                    //===== End Employee Payroll Non Statutory Calculation =====
+
+                                    $payrollData = array_merge($payrollStatutoryData, [
+                                        'employee_id' => $employee->id,
+                                        'start_date' => Carbon::parse($twentyTwoDay->start_date)->startOfDay(),
+                                        'end_date' => Carbon::parse($twentyTwoDay->end_date)->startOfDay(),
+                                        'normal_days' => $normalDays,
+                                        'leave_paid' => $leavePaid,
+                                        'leave_not_paid' => $leaveNotPaid,
+                                        'pending_leave_balance' => $paidLeaveBalance,
+                                        'day_salary' => $daySalary,
+                                        'normal_salary' => $normalDaysSalary,
+                                        'pending_leave_amount' => $pendingLeaveAmount,
+                                        'gross_salary' => $grossSalary,
+                                        'staff_loan' => $totalDeductions['Staff Loan'],
+                                        'medical_insurance' => $totalDeductions['Medical Ins'],
+                                        'salary_advance' => $totalDeductions['Salary Advance'],
+                                        'psra' => $totalDeductions['PSRA'],
+                                        'bank_loan' => $totalDeductions['Bank Loan'],
+                                        'pending_staff_loan' => $pendingAmounts['Staff Loan'],
+                                        'pending_medical_insurance' => $pendingAmounts['Medical Ins'],
+                                        'pending_salary_advance' => $pendingAmounts['Salary Advance'],
+                                        'pending_psra' => $pendingAmounts['PSRA'],
+                                        'pending_bank_loan' => $pendingAmounts['Bank Loan'],
+                                        'pending_approved_pension' => $pendingAmounts['Approved Pension'],
+                                        'garnishment' => $totalDeductions['Garnishment'],
+                                        'missing_goods' => $totalDeductions['Missing Goods'],
+                                        'damaged_goods' => $totalDeductions['Damaged Goods'],
+                                        'pending_garnishment' => $pendingAmounts['Garnishment'],
+                                        'pending_missing_goods' => $pendingAmounts['Missing Goods'],
+                                        'pending_damaged_goods' => $pendingAmounts['Damaged Goods'],
+                                        'is_publish' => 0,
+                                    ]);
+
+                                    if (EmployeePayroll::create($payrollData)) {
+                                        echo "Employee payroll created successfully";
+                                    } else {
+                                        echo "Employee payroll not created";
+                                    }
+                                } else {
+                                    echo "Employee ratemaster not created";
+                                }
+                            } else {
+                                echo "Employee payroll already created";
+                            }
+                        } else {
+                            echo "Employee joining days are 0.";
+                        }
+                    } else {
+                        echo "Employee payroll dates not matched (Expected: {$previousEndDate->format('Y-m-d')}, Actual: {$today->format('Y-m-d')})";
+                    }
+                }
+            }
+        } else {
+            echo "No employee found";
+        }
+    }
+
+    protected function getProcessingDate(Carbon $today)
+    {
+        if ($today->month == 12) {
+            $processingDate = Carbon::create($today->year, 12, 12)->startOfDay();
+        } else {
+            $processingDate = Carbon::create($today->year, $today->month, 25)->startOfDay();
+        }
+
+        while ($processingDate->isWeekend() || $this->isPublicHoliday($processingDate)) {
+            $processingDate->subDay();
+        }
+
+        return $processingDate;
     }
 
     protected function calculateLeaveDetails($normalDays, $employee, $previousStartDate, $endDate, $daySalary)
