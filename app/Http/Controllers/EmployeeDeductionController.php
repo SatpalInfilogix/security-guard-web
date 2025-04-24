@@ -69,6 +69,7 @@ class EmployeeDeductionController extends Controller
 
         $deductions = $deductions->skip($start)->take($length)->get()->map(function ($item) {
             $item->user->full_name = $item->user->first_name . ' ' . $item->user->surname;
+            $item->formatted_amount = formatAmount($item->amount);
             return $item;
         });
 

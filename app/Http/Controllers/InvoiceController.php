@@ -27,7 +27,7 @@ class InvoiceController extends Controller
 {
     public function index()
     {
-        if(!Gate::allows('view invoice')) {
+        if (!Gate::allows('view invoice')) {
             abort(403);
         }
         $clients = Client::latest()->get();
@@ -44,7 +44,7 @@ class InvoiceController extends Controller
                 $query->whereIn('client_id', $clientIds);
             });
         }
-    
+
         if ($request->has('client_site_ids') && !empty($request->client_site_ids)) {
             $clientSiteIds = $request->client_site_ids;
             $invoices->whereHas('clientSite', function ($query) use ($clientSiteIds) {
@@ -63,22 +63,22 @@ class InvoiceController extends Controller
 
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
-            $invoices->where(function($query) use ($searchValue) {
+            $invoices->where(function ($query) use ($searchValue) {
                 $query->where('invoice_code', 'like', '%' . $searchValue . '%')
                     ->orWhere('invoice_date', 'like', '%' . $searchValue . '%')
-                    ->orWhereHas('clientSite', function($q) use ($searchValue) {
+                    ->orWhereHas('clientSite', function ($q) use ($searchValue) {
                         $q->where('location_code', 'like', '%' . $searchValue . '%');
                     });
             });
         }
-    
+
         $totalRecords = Invoice::count();
-    
+
         $filteredRecords = $invoices->count();
-    
+
         $length = $request->input('length', 10);
         $start = $request->input('start', 0);
-    
+
         $invoices = $invoices->skip($start)->take($length)->get();
         $data = $invoices->map(function ($invoice) {
             return [
@@ -86,18 +86,18 @@ class InvoiceController extends Controller
                 'invoice_code' => $invoice->invoice_code,
                 'invoice_date' => $invoice->invoice_date,
                 'location_code' => $invoice->clientSite ? $invoice->clientSite->location_code : null,
-                'total_amount' => $invoice->total_amount,
+                'total_amount' => formatAmount($invoice->total_amount),
                 'status'       => $invoice->status
             ];
         });
-    
+
         $response = [
             'draw' => $request->input('draw'),
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
             'data' => $data,
         ];
-    
+
         return response()->json($response);
     }
 
@@ -114,7 +114,7 @@ class InvoiceController extends Controller
 
         return response()->json(['success' => true]);
     }
-    
+
     public function downloadPdf($invoiceId)
     {
         $invoice = Invoice::with('clientSite', 'clientSite.client')->where('id', $invoiceId)->first();
@@ -140,7 +140,7 @@ class InvoiceController extends Controller
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
-    
+
         return $dompdf->stream('invoice-' . $invoiceId . '.pdf');
 
         // return view('admin.invoices.invoice-pdf.invoice', compact('invoice'));
@@ -159,7 +159,6 @@ class InvoiceController extends Controller
             'success' => true,
             'clientSites' => $clientSites
         ]);
-
     }
 
     public function exportCsv(Request $request)
@@ -230,9 +229,9 @@ class InvoiceController extends Controller
                         $invoice = Invoice::whereDate('start_date', $startDate)->where('end_date', $endDate)->where('client_site_id', $clientSiteId)->first();
                         $rate = RateMaster::find($guardGroup->first()->guard_type_id);
                         $clientRateMaster = ClientRateMaster::where('client_id', $clientId)->where('guard_type', $rate->guard_type)->first();
-                            return [
-                            'invoice_number'                =>$invoice->invoice_code,
-                            'invoice_date'                  =>$invoice->invoice_date,
+                        return [
+                            'invoice_number'                => $invoice->invoice_code,
+                            'invoice_date'                  => $invoice->invoice_date,
                             'client_site_id'                => $clientSiteId,
                             'client_site_name'              => $clientSiteName,
                             'guard_type_id_name'            => $rate ? $rate->guard_type : 'Unknown',
@@ -362,13 +361,13 @@ class InvoiceController extends Controller
                         $sheet->setCellValue("F{$row}", 'Normal');
                         $sheet->setCellValue("G{$row}", $data['no_of_guards_normal']);
                         $sheet->setCellValue("H{$row}", convertToHoursAndMinutes($data['normal_hours_guard'] + $data['overtime_guard']));
-                        $sheet->setCellValue("I{$row}", '$ '.$data['client_rate_normal']);
-                        $sheet->setCellValue("J{$row}", '$ '.$normalInvoiceAmount);
+                        $sheet->setCellValue("I{$row}", '$ ' . $data['client_rate_normal']);
+                        $sheet->setCellValue("J{$row}", '$ ' . $normalInvoiceAmount);
                         $sheet->setCellValue("K{$row}", $data['no_of_guards_normal']);
                         $sheet->setCellValue("L{$row}", convertToHoursAndMinutes($data['normal_hours_guard']));
-                        $sheet->setCellValue("M{$row}", '$ '.$data['rate_normal']);
-                        $sheet->setCellValue("N{$row}", '$ '.$normalSalaryPaid);
-                        $sheet->setCellValue("O{$row}", '$ '.$normalGrossMargin);
+                        $sheet->setCellValue("M{$row}", '$ ' . $data['rate_normal']);
+                        $sheet->setCellValue("N{$row}", '$ ' . $normalSalaryPaid);
+                        $sheet->setCellValue("O{$row}", '$ ' . $normalGrossMargin);
                         $row++;
 
                         $overtimeInvoiceAmount = $data['overtime_guard'] * $data['rate_overtime'];
@@ -378,13 +377,13 @@ class InvoiceController extends Controller
                         $sheet->setCellValue("F{$row}", 'Time & 1/2');
                         $sheet->setCellValue("G{$row}", 0);
                         $sheet->setCellValue("H{$row}", '0:0');
-                        $sheet->setCellValue("I{$row}", '$ '.$data['client_rate_overtime']);
-                        $sheet->setCellValue("J{$row}", '$ '. 0);
+                        $sheet->setCellValue("I{$row}", '$ ' . $data['client_rate_overtime']);
+                        $sheet->setCellValue("J{$row}", '$ ' . 0);
                         $sheet->setCellValue("K{$row}", $data['no_of_guards_overtime']);
                         $sheet->setCellValue("L{$row}", convertToHoursAndMinutes($data['overtime_guard']));
-                        $sheet->setCellValue("M{$row}", '$ '.$data['rate_overtime']);
-                        $sheet->setCellValue("N{$row}", '$ '.$overtimeSalaryPaid);
-                        $sheet->setCellValue("O{$row}", '$ '.$overtimeGrossMargin);
+                        $sheet->setCellValue("M{$row}", '$ ' . $data['rate_overtime']);
+                        $sheet->setCellValue("N{$row}", '$ ' . $overtimeSalaryPaid);
+                        $sheet->setCellValue("O{$row}", '$ ' . $overtimeGrossMargin);
                         $row++;
 
                         $holidayInvoiceAmount = $data['double_hours'] * $data['client_rate_holiday'];
@@ -394,13 +393,13 @@ class InvoiceController extends Controller
                         $sheet->setCellValue("F{$row}", 'Double');
                         $sheet->setCellValue("G{$row}", $data['no_of_guards_publicHoliday']);
                         $sheet->setCellValue("H{$row}", convertToHoursAndMinutes($data['double_hours']));
-                        $sheet->setCellValue("I{$row}", '$ '.$data['client_rate_holiday']);
-                        $sheet->setCellValue("J{$row}", '$ '.$holidayInvoiceAmount);
+                        $sheet->setCellValue("I{$row}", '$ ' . $data['client_rate_holiday']);
+                        $sheet->setCellValue("J{$row}", '$ ' . $holidayInvoiceAmount);
                         $sheet->setCellValue("K{$row}", $data['no_of_guards_publicHoliday']);
                         $sheet->setCellValue("L{$row}", convertToHoursAndMinutes($data['double_hours']));
-                        $sheet->setCellValue("M{$row}", '$ '.$data['rate_holiday']);
-                        $sheet->setCellValue("N{$row}", '$ '.$holidaySalaryPaid);
-                        $sheet->setCellValue("O{$row}", '$ '.$holidayGrossMargin);
+                        $sheet->setCellValue("M{$row}", '$ ' . $data['rate_holiday']);
+                        $sheet->setCellValue("N{$row}", '$ ' . $holidaySalaryPaid);
+                        $sheet->setCellValue("O{$row}", '$ ' . $holidayGrossMargin);
                         $row++;
 
                         $siteTotalNormalHours += $data['normal_hours_guard'];
@@ -420,21 +419,21 @@ class InvoiceController extends Controller
                         $guardSalaryPaid += $normalSalaryPaid + $overtimeSalaryPaid + $holidaySalaryPaid;
                         $guardGrossMargin += $normalGrossMargin + $overtimeGrossMargin + $holidayGrossMargin;
                     }
-    
+
                     $sheet->setCellValue("A{$row}", 'Totals');
                     $sheet->setCellValue("H{$row}", convertToHoursAndMinutes($siteTotalNormalHours + $siteTotalOvertime + $siteTotalPublicHoliday));
-                    $sheet->setCellValue("J{$row}", '$ '.$siteTotalAmount);
+                    $sheet->setCellValue("J{$row}", '$ ' . $siteTotalAmount);
                     $sheet->setCellValue("L{$row}", convertToHoursAndMinutes($guardTotalHours + $guardTotalOvertime + $guardTotalPublicHoliday));
-                    $sheet->setCellValue("N{$row}", '$ '.$guardSalaryPaid);
-                    $sheet->setCellValue("O{$row}", '$ '.$guardGrossMargin);
+                    $sheet->setCellValue("N{$row}", '$ ' . $guardSalaryPaid);
+                    $sheet->setCellValue("O{$row}", '$ ' . $guardGrossMargin);
 
                     $sheet->getStyle("A{$row}:p{$row}")->getFont()->setBold(true);
                     $row++;
-    
+
                     $row++;
                 }
             }
-    
+
             $writer = new Xlsx($spreadsheet);
             $filename = "payroll_export_" . now()->format('Y_m_d_H_i_s') . ".xlsx";
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

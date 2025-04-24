@@ -131,7 +131,7 @@
                     data: 'type'
                 }
                 , {
-                    data: 'amount'
+                    data: 'formatted_amount'
                 }
                 , {
                     data: 'no_of_payroll'

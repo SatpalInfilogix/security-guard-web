@@ -299,16 +299,16 @@ class EmployeePayrollController extends Controller
                     $payroll->user->surname,
                     $payroll->user->first_name,
                     $payroll->user->middle_name,
-                    $payroll->user->guardAdditionalInformation->trn,
+                    trnFormat($payroll->user->guardAdditionalInformation->trn),
                     $payroll->user->guardAdditionalInformation->nis,
-                    $payroll->gross_salary,
+                    formatAmount($payroll->gross_salary),
                     0,
-                    $payroll->approved_pension_scheme,
+                    formatAmount($payroll->approved_pension_scheme),
                     0,
-                    $payroll->nis + $payroll->employer_contribution_nis_tax,
-                    $payroll->nht + $payroll->employer_contribution_nht_tax,
-                    $payroll->education_tax + $payroll->employer_eduction_tax,
-                    $payroll->paye
+                    formatAmount($payroll->nis + $payroll->employer_contribution_nis_tax),
+                    formatAmount($payroll->nht + $payroll->employer_contribution_nht_tax),
+                    formatAmount($payroll->education_tax + $payroll->employer_eduction_tax),
+                    formatAmount($payroll->paye)
                 ],
                 NULL,
                 'A' . ($key + 2)
