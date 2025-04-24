@@ -80,8 +80,8 @@ class SecurityGuardController extends Controller
             $securityGuards->where(function ($query) use ($searchValue) {
                 $query->where('user_code', 'like', '%' . $searchValue . '%')
                     ->orWhere('first_name', 'like', '%' . $searchValue . '%')
-                    ->orWhere('middle_name', 'like', '%' . $searchValue . '%') 
-                    ->orWhere('surname', 'like', '%' . $searchValue . '%') 
+                    ->orWhere('middle_name', 'like', '%' . $searchValue . '%')
+                    ->orWhere('surname', 'like', '%' . $searchValue . '%')
                     ->orWhere('email', 'like', '%' . $searchValue . '%')
                     ->orWhere('phone_number', 'like', '%' . $searchValue . '%');
             });
@@ -481,7 +481,9 @@ class SecurityGuardController extends Controller
                 "Middle Name"           => $guard->middle_name,
                 "Surname"               => $guard->surname,
                 // Additional Detail
-                "Guard's TRN"           => $guard->guardAdditionalInformation->trn ?? '',
+                "Guard's TRN"           => isset($guard->guardAdditionalInformation->trn)
+                    ? $this->trnFormat($guard->guardAdditionalInformation->trn)
+                    : '',
                 "NIS/NHT Number"        => $guard->guardAdditionalInformation->nis ?? '',
                 "PSRA Registration No"  => $guard->guardAdditionalInformation->psra ?? '',
                 "Guard's Date of Joining" => $guard->guardAdditionalInformation->date_of_joining ? Carbon::parse($guard->guardAdditionalInformation->date_of_joining)->format('d-m-Y') : '',
@@ -586,6 +588,12 @@ class SecurityGuardController extends Controller
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="guards.csv"',
         ]);
+    }
+
+    public function trnFormat($trn)
+    {
+        $new = str_replace('-', '', $trn);
+        return rtrim(chunk_split($new, 3, '-'), '-');
     }
 
     public function importSecurityGuard(Request $request)
