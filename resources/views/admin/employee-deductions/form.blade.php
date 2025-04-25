@@ -40,7 +40,7 @@
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="amount" value="{{ old('amount', isset($deduction->amount) ? formatAmount($deduction->amount) : '') }}" label="Amount" placeholder="Amount" type="text" required="true" />
+            <x-form-input name="amount" value="{{ old('amount', $deduction->amount ?? '') }}" label="Amount" placeholder="Amount" type="text" required="true" />
         </div>
     </div>
     <div class="col-md-4">
