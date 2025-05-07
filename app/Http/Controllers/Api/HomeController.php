@@ -11,17 +11,53 @@ use App\Models\Leave;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Log;
 
 class HomeController extends Controller
 {
     public function stats()
     {
-        $today = Carbon::now();
+        $timezone = Auth::user()->current_time_zone ?: config('app.timezone');
+        \Log::info('Timezone: ' . $timezone);
+        \Log::info('User ID: ' . Auth::id());
+
+        $now = Carbon::now($timezone);
+      	
+        $today = $now->toDateString();
+        $currentTime = $now->toTimeString();
+        Log::info('Current Time: ' . $currentTime);
+        Log::info('Today: ' . $today);
+      
         $fortnightDate = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
         $startDate = Carbon::parse($fortnightDate->start_date);
-        $endDate = Carbon::parse($fortnightDate->end_date);
-        $todaysDuties = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', $today)->first();
-        $upcomingDuties = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', '>', $startDate)->whereDate('date', '<=', $endDate)->take(2)->get();
+        $endDate = Carbon::parse($fortnightDate->end_date);    
+      
+        // $todaysDuties = GuardRoster::with('clientSite')->where('guard_id',Auth::id())->whereDate('date', $today)->whereTime('start_time', '<=', $currentTime)->whereTime('end_time', '>=', $currentTime)->first();
+        $todaysDuties = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', $today)->whereTime('start_time', '<=', $currentTime)
+        ->where(function ($query) use ($today, $currentTime) {
+            $query->whereDate('end_date', '>', $today)
+                  ->orWhere(function ($q) use ($today, $currentTime) {
+                      $q->whereDate('end_date', '=', $today)
+                        ->whereTime('end_time', '>=', $currentTime);
+                  });
+        })->first();
+      
+        // Log::info('Todays Duties Query: ' . $todaysDuties);
+      
+      	// Log::info('Today\'s Duties: ' . $todaysDuties);
+        $upcomingDuties = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', '>=', $today)->whereDate('date', '<=', $endDate)
+          ->where(function ($query) use ($today, $currentTime) {
+            $query->whereDate('end_date', '>', $today)
+                  ->orWhere(function ($q) use ($today, $currentTime) {
+                      $q->whereDate('end_date', '=', $today)
+                        ->whereTime('end_time', '>=', $currentTime);
+                  });
+        });
+        if(!empty($todaysDuties))
+        {
+            $upcomingDuties = $upcomingDuties->where('id', '!=', $todaysDuties->id);
+        }
+        $upcomingDuties = $upcomingDuties->take(2)->get();
         $upcommingHolidays = PublicHoliday::whereDate('date', '>', $today)->take(2)->get();
         $leaves = Leave::where('guard_id', Auth::id())->whereDate('date', '>=', $startDate)->whereDate('date', '<=', $endDate)->get();
         $approvedLeaves = $leaves->where('status', 'Approved')->count();
@@ -108,6 +144,8 @@ class HomeController extends Controller
                 'absentDays' => 0,
             ];
         }
+        Log::info("Todays Duties: " . json_encode($todaysDuties));
+        Log::info("Upcoming Duties: " . json_encode($upcomingDuties));
 
         return response()->json([
             'success'           => true,
