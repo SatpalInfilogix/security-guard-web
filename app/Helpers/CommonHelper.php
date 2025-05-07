@@ -2,8 +2,9 @@
 
 use App\Models\Setting;
 
-if(!function_exists('uploadFile')) {
-    function uploadFile($file,  $path) {   
+if (!function_exists('uploadFile')) {
+    function uploadFile($file,  $path)
+    {
         if ($file) {
             $imageName = uniqid() . '.' . $file->getClientOriginalExtension();
             $imagePath = $path . $imageName;
@@ -14,8 +15,9 @@ if(!function_exists('uploadFile')) {
     }
 }
 
-if(!function_exists('setting')) {
-    function setting($setting_key){
+if (!function_exists('setting')) {
+    function setting($setting_key)
+    {
         $setting = Setting::where('key', $setting_key)->first();
         $value = '';
         if ($setting) {
@@ -26,9 +28,29 @@ if(!function_exists('setting')) {
 }
 
 if (!function_exists('convertToHoursAndMinutes')) {
-    function convertToHoursAndMinutes($fractionalHours) {
+    function convertToHoursAndMinutes($fractionalHours)
+    {
         $hours = floor($fractionalHours);
         $minutes = round(($fractionalHours - $hours) * 60);
         return $hours . ':' . $minutes;
+    }
+}
+
+if (!function_exists('formatAmount')) {
+    function formatAmount($amount)
+    {
+        if (!is_numeric($amount)) {
+            return '0.00';
+        }
+
+        return number_format((float)$amount, 2, '.', ',');
+    }
+}
+
+if (!function_exists('trnFormat')) {
+    function trnFormat($trn)
+    {
+        $new = str_replace('-', '', $trn);
+        return rtrim(chunk_split($new, 3, '-'), '-');
     }
 }

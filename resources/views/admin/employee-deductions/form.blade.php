@@ -40,7 +40,7 @@
     </div>
     <div class="col-md-4">
         <div class="mb-3">
-            <x-form-input name="amount" value="{{ old('amount', $deduction->amount ?? '') }}" label="Amount" placeholder="Amount" type="number" required="true" />
+            <x-form-input name="amount" value="{{ old('amount', $deduction->amount ?? '') }}" label="Amount" placeholder="Amount" type="text" required="true" />
         </div>
     </div>
     <div class="col-md-4">
@@ -57,7 +57,7 @@
         <x-form-input name="start_date" id="start_date" value="{{ old('start_date', $deduction->start_date ?? '') }}" label="Start Date" placeholder="Enter your Start Date" class="date-picker-guard" type="text" required="true" />
     </div>
     <div class="col-md-4 mb-3">
-        <x-form-input name="end_date" value="{{ old('end_date', $deduction->end_date ?? '') }}" label="End Date" placeholder="Enter your End Date" class="date-picker-guard" type="text"/>
+        <x-form-input name="end_date" value="{{ old('end_date', $deduction->end_date ?? '') }}" label="End Date" placeholder="Enter your End Date" class="date-picker-guard" type="text" />
     </div>
 
     <div class="col-md-4 mb-3">

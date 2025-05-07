@@ -43,7 +43,7 @@ class EmployeeDeductionExport implements  FromCollection, WithHeadings, WithMapp
             $deductionDetails->deduction->user->user_code,
             $deductionDetails->deduction->user->first_name,
             $deductionDetails->deduction->type,
-            $deductionDetails->deduction->amount,
+            formatAmount($deductionDetails->deduction->amount),
             $deductionDetails->deduction->no_of_payroll,
             $deductionDetails->deduction->document_date ? Carbon::parse($deductionDetails->deduction->document_date) : 'N/A',
             $deductionDetails->deduction_date ? Carbon::parse($deductionDetails->deduction_date)->format('d-m-Y') : 'N/A',

@@ -26,7 +26,8 @@ class EmployeeDeductionController extends Controller
 
         if ($request->has('search_name') && !empty($request->search_name)) {
             $deductions->whereHas('user', function ($query) use ($request) {
-                $query->where('first_name', 'like', '%' . $request->search_name . '%');
+                $query->where('first_name', 'like', '%' . $request->search_name . '%')
+                    ->orWhere('surname', 'like', '%' . $request->search_name . '%');
             });
         }
 
@@ -53,7 +54,8 @@ class EmployeeDeductionController extends Controller
                     ->orWhere('end_date', 'like', '%' . $searchValue . '%')
                     ->orWhereHas('user', function ($subQuery) use ($searchValue) {
                         $subQuery->where('user_code', 'like', '%' . $searchValue . '%')
-                            ->orWhere('first_name', 'like', '%' . $searchValue . '%');
+                            ->orWhere('first_name', 'like', '%' . $searchValue . '%')
+                            ->orWhere('surname', 'like', '%' . $searchValue . '%');
                     });
             });
         }
@@ -65,7 +67,11 @@ class EmployeeDeductionController extends Controller
         $length = $request->input('length', 10);
         $start = $request->input('start', 0);
 
-        $deductions = $deductions->skip($start)->take($length)->get();
+        $deductions = $deductions->skip($start)->take($length)->get()->map(function ($item) {
+            $item->user->full_name = $item->user->first_name . ' ' . $item->user->surname;
+            $item->formatted_amount = formatAmount($item->amount);
+            return $item;
+        });
 
         $data = [
             'draw' => $request->input('draw'),
@@ -363,7 +369,8 @@ class EmployeeDeductionController extends Controller
         $query = EmployeeDeductionDetail::with('deduction', 'user');
         if ($searchName) {
             $query->whereHas('user', function ($q) use ($searchName) {
-                $q->where('first_name', 'like', '%' . $searchName . '%');
+                $q->where('first_name', 'like', '%' . $searchName . '%')
+                    ->orwhere('surname', 'like', '%' . $searchName . '%');
             });
         }
 

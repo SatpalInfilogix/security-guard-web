@@ -16,8 +16,8 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
     protected $rowIndex = 0;
 
     /**
-    * @param Collection $collection
-    */
+     * @param Collection $collection
+     */
     public function model(array $row)
     {
 
@@ -29,7 +29,7 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             'phone_number'      => 'required|numeric|unique:users,phone_number',
             'date_of_joining'   => 'nullable|date_format:d-m-Y',
             'date_of_birth'     => 'required|date|before:date_of_joining|date_format:d-m-Y',
-            'date_of_separation'=> 'nullable|date_format:d-m-Y',
+            'date_of_separation' => 'nullable|date_format:d-m-Y',
             'trn'               => 'nullable|unique:guard_additional_information,trn',
             'nis'               => 'nullable|unique:guard_additional_information,nis',
             'psra'              => 'nullable|unique:guard_additional_information,psra',
@@ -64,7 +64,7 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             ];
             return null;
         }
-    
+
         $guardEmployedAs = RateMaster::where('id', $row['guard_employed_as'])->first();
         if (!$guardEmployedAs) {
             $this->errors[] = [
@@ -110,9 +110,9 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             return null;
         }
 
-         // Update or create related data
-         $user->guardAdditionalInformation()->updateOrCreate([], [
-            'trn'                 => $row["trn"] ?? NULL,
+        // Update or create related data
+        $user->guardAdditionalInformation()->updateOrCreate([], [
+            'trn'                 => isset($row["trn"]) ? $this->trnFormat($row["trn"]) : null,
             'nis'                 => $row["nis"] ?? NULL,
             'psra'                => $row["psra"] ?? NULL,
             'date_of_joining'     => $this->parseDate($row["date_of_joining"] ?? null),
@@ -124,7 +124,7 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
             'client_code'         => $row["client_code"] ?? null,
             'client_name'         => $row["client_name"] ?? null, */
             'guard_type_id'          => $row["guard_type"] ?? null,
-            'guard_employee_as_id'=> $row["guard_employed_as"] ?? null,
+            'guard_employee_as_id' => $row["guard_employed_as"] ?? null,
             'date_of_seperation'  => $this->parseDate($row["date_of_seperation"] ?? null),
         ]);
 
@@ -183,9 +183,9 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
     {
         if ($file && file_exists($file)) {
             $filename = basename($file);
-            
+
             $destination = public_path($destinationPath) . $filename;
-            
+
             if (!file_exists($destination)) {
                 copy($file, $destination); // Using copy instead of move
             }
@@ -199,7 +199,7 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
     private function parseDate($date)
     {
         if (empty($date)) {
-            return null; 
+            return null;
         }
 
         try {
@@ -216,5 +216,11 @@ class SecurityGuardImport implements ToModel, WithHeadingRow
     public function getErrors()
     {
         return $this->errors;
+    }
+
+    public function trnFormat($trn)
+    {
+        $new = str_replace('-', '', $trn);
+        return rtrim(chunk_split($new, 3, '-'), '-');
     }
 }

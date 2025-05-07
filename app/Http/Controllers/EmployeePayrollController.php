@@ -18,7 +18,7 @@ class EmployeePayrollController extends Controller
 {
     public function index()
     {
-        if(!Gate::allows('view employee payroll')) {
+        if (!Gate::allows('view employee payroll')) {
             abort(403);
         }
 
@@ -27,7 +27,7 @@ class EmployeePayrollController extends Controller
         $previousEndDate = Carbon::parse($twentyTwoDays->start_date)->subDay();
         $previousStartDate = Carbon::parse($previousEndDate)->startOfMonth();
 
-        return view('admin.employee-payroll.index', compact('twentyTwoDays','previousEndDate', 'previousStartDate'));
+        return view('admin.employee-payroll.index', compact('twentyTwoDays', 'previousEndDate', 'previousStartDate'));
     }
 
     public function getEmployeePayroll(Request $request)
@@ -39,7 +39,7 @@ class EmployeePayrollController extends Controller
         $previousStartDate = Carbon::parse($previousEndDate)->startOfMonth();
 
         $employeePayrolls = EmployeePayroll::with('user');
-        
+
         if ($request->has('date') && !empty($request->date)) {
             $searchDate = $request->date;
             list($startDate, $endDate) = explode(' to ', $searchDate);
@@ -52,13 +52,13 @@ class EmployeePayrollController extends Controller
 
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
-            $employeePayrolls->where(function($query) use ($searchValue) {
+            $employeePayrolls->where(function ($query) use ($searchValue) {
                 $query->where('start_date', 'like', '%' . $searchValue . '%')
                     ->orWhere('end_date', 'like', '%' . $searchValue . '%')
                     ->orWhere('normal_days', 'like', '%' . $searchValue . '%')
                     ->orWhere('leave_paid', 'like', '%' . $searchValue . '%')
-                    ->orWhere('leave_not_paid', '%'. $searchValue . '%')
-                    ->orWhereHas('user', function($q) use ($searchValue) {
+                    ->orWhere('leave_not_paid', 'like', '%' . $searchValue . '%')
+                    ->orWhereHas('user', function ($q) use ($searchValue) {
                         $q->where('first_name', 'like', '%' . $searchValue . '%');
                     });
             });
@@ -84,7 +84,7 @@ class EmployeePayrollController extends Controller
 
     public function edit(EmployeePayroll $employeePayroll)
     {
-        if(!Gate::allows('edit employee payroll')) {
+        if (!Gate::allows('edit employee payroll')) {
             abort(403);
         }
         $employeePayroll = EmployeePayroll::where('id', $employeePayroll->id)->with('user', 'user.guardAdditionalInformation')->first();
@@ -144,10 +144,10 @@ class EmployeePayrollController extends Controller
             $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
             $currentYear = now()->year;
             $approvedLeaves = EmployeeLeave::where('employee_id', $payroll->employee_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->get()
-                                            ->sum(function ($leave) {
-                                                return ($leave->type == 'Half Day') ? 0.5 : 1;
-                                            });
-            $payroll['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
+                ->sum(function ($leave) {
+                    return ($leave->type == 'Half Day') ? 0.5 : 1;
+                });
+            $payroll['pendingLeaveBalance'] =  max(0, $paidLeaveBalanceLimit - $approvedLeaves);
 
             $fortnightDayCount = TwentyTwoDayInterval::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
 
@@ -196,10 +196,10 @@ class EmployeePayrollController extends Controller
         $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
         $currentYear = now()->year;
         $approvedLeaves = EmployeeLeave::where('employee_id', $payroll->employee_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->get()
-                        ->sum(function ($leave) {
-                            return ($leave->type == 'Half Day') ? 0.5 : 1;
-                        });
-        $payroll['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
+            ->sum(function ($leave) {
+                return ($leave->type == 'Half Day') ? 0.5 : 1;
+            });
+        $payroll['pendingLeaveBalance'] =  max(0, $paidLeaveBalanceLimit - $approvedLeaves);
 
         $fortnightDayCount = TwentyTwoDayInterval::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
         $pdfOptions = new Options();
@@ -218,18 +218,22 @@ class EmployeePayrollController extends Controller
 
     public function employeePayrollExport(Request $request)
     {
-        $selectedDate = $request->input('date');
+        $selectedDateRange = $request->input('date'); 
         $spreadsheet = new Spreadsheet();
 
-        $this->addPayrollSheet($spreadsheet, $selectedDate);
+        $this->addPayrollSheet($spreadsheet, $selectedDateRange);
 
-        $writer = new Xlsx($spreadsheet);
-        $fileName = 'Payroll.xlsx';
+        $startDate = explode(' to ', $selectedDateRange)[0]; 
+        $date = Carbon::parse($startDate);
+        $monthYear = $date->format('F-Y');
+
+        $fileName = 'SO1-Employee-' . $monthYear . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="' . $fileName . '"');
         header('Cache-Control: max-age=0');
 
+        $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit;
     }
@@ -240,7 +244,12 @@ class EmployeePayrollController extends Controller
         $sheet->setTitle('EmployeePayrolls');
 
         $headers = [
-            'ID', 'Surename', 'Firstname', 'Middle Initials', 'Employee TRN', 'Employee NIS',
+            'ID',
+            'Surename',
+            'Firstname',
+            'Middle Initials',
+            'Employee TRN',
+            'Employee NIS',
             'Gross Emoluments Received in Cash (Salaries, Wages, Fees, Bonuses, Overtime, Commissions)',
             'Gross Emoluments Received in Kind',
             'Superannuation / Pension, Agreed Expenses, Employees Share Ownership Plan',
@@ -267,7 +276,7 @@ class EmployeePayrollController extends Controller
             $startDate = Carbon::parse($startDate)->startOfDay();
             $endDate = Carbon::parse($endDate)->endOfDay();
             $twentyTwoDays = TwentyTwoDayInterval::whereDate('start_date', '<=', $endDate)->whereDate('end_date', '>=', $startDate)->get();
-            if($twentyTwoDays) {
+            if ($twentyTwoDays) {
                 $previousStartDate = Carbon::parse($twentyTwoDays->first()->start_date);
                 $previousEndDate = Carbon::parse($twentyTwoDays->last()->end_date);
             } else {
@@ -276,7 +285,7 @@ class EmployeePayrollController extends Controller
             }
         } else {
             $today = Carbon::now()->startOfDay();
-            
+
             $twentyTwoDays = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
             $previousEndDate = Carbon::parse($twentyTwoDays->start_date)->subDay();
             $previousStartDate = Carbon::parse($previousEndDate)->startOfMonth();
@@ -286,12 +295,23 @@ class EmployeePayrollController extends Controller
         foreach ($Payrolls as $key => $payroll) {
             $sheet->fromArray(
                 [
-                    $payroll->id, $payroll->user->surname, $payroll->user->first_name, $payroll->user->middle_name,
-                    $payroll->user->guardAdditionalInformation->trn, $payroll->user->guardAdditionalInformation->nis,
-                    $payroll->gross_salary, 0, $payroll->approved_pension_scheme, 0, $payroll->nis + $payroll->employer_contribution_nis_tax,
-                    $payroll->nht + $payroll->employer_contribution_nht_tax, $payroll->education_tax + $payroll->employer_eduction_tax, $payroll->paye
+                    $payroll->id,
+                    $payroll->user->surname,
+                    $payroll->user->first_name,
+                    $payroll->user->middle_name,
+                    trnFormat($payroll->user->guardAdditionalInformation->trn),
+                    $payroll->user->guardAdditionalInformation->nis,
+                    formatAmount($payroll->gross_salary),
+                    0,
+                    formatAmount($payroll->approved_pension_scheme),
+                    0,
+                    formatAmount($payroll->nis + $payroll->employer_contribution_nis_tax),
+                    formatAmount($payroll->nht + $payroll->employer_contribution_nht_tax),
+                    formatAmount($payroll->education_tax + $payroll->employer_eduction_tax),
+                    formatAmount($payroll->paye)
                 ],
-                NULL, 'A' . ($key + 2)
+                NULL,
+                'A' . ($key + 2)
             );
         }
 

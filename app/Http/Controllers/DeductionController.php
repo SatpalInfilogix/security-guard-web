@@ -72,7 +72,10 @@ class DeductionController extends Controller
         $length = $request->input('length', 10);
         $start = $request->input('start', 0);
 
-        $deductions = $deductions->skip($start)->take($length)->get();
+        $deductions = $deductions->skip($start)->take($length)->get()->map(function ($item) {
+            $item->amount = formatAmount($item->amount);
+            return $item;
+        });
 
         $data = [
             'draw' => $request->input('draw'),

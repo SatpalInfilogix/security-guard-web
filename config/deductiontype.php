@@ -11,7 +11,7 @@ return [
         'Damaged Goods',
         'Bank Loan',
         'Approved Pension',
-        'Commercial Bank Loan',
+        'NCB Loan',
         'C&WJ Credit Union Loan',
         'EduCom Co-op Loan',
         'National Housing Trust Mortgage Loan',

@@ -29,8 +29,8 @@
                             <input type="hidden" value="{{$employeePayroll->id}}" id="payroll_id"> 
                             <div class="row mb-4">
                                 <div class="col-md-6">
-                                    <h6><strong>Employee Name: </strong> {{ $employeePayroll->user->first_name }} {{ $employeePayroll->user->last_name }}</h6>
-                                    <h6><strong>Department: </strong> N/A</h6>
+                                    <h6><strong>Employee Name: </strong> {{ $employeePayroll->user->first_name }} {{ $employeePayroll->user->surname }}</h6>
+                                    <h6><strong>Department: </strong> operations</h6>
                                     <h6><strong>Category: </strong> N/A</h6>
                                 </div>
                                 <div class="col-md-6 text-md-right">
@@ -60,11 +60,11 @@
                                     <tbody>
                                         <tr>
                                             <td>Gross Earnings</td>
-                                            <td>{{ $employeePayroll->day_salary }}</td>
+                                            <td>{{ formatAmount($employeePayroll->day_salary) }}</td>
                                             <td>{{ $employeePayroll->normal_days - $employeePayroll->leave_not_paid }}</td>
-                                            <td>{{ $employeePayroll->normal_salary }}</td>
+                                            <td>{{ formatAmount($employeePayroll->normal_salary) }}</td>
                                             <td>PAYE</td>
-                                            <td><input type="text" class="form-control editable" id="paye" value="{{ $employeePayroll->paye }}"></td>
+                                            <td><input type="text" class="form-control editable" id="paye" value="{{ formatAmount($employeePayroll->paye) }}"></td>
                                             <td></td>
                                             {{-- <td id="normal_hours_rate">{{ $employeePayroll->normal_hours_rate }}</td> --}}
                                         </tr>
@@ -74,9 +74,9 @@
                                             <td>{{ $employeePayroll->leave_paid }}</td>
                                             <td>-</td>
                                             <td>Ed Tax</td>
-                                            <td id="education_tax">{{ $employeePayroll->education_tax }}</td>
+                                            <td id="education_tax">{{ formatAmount($employeePayroll->education_tax)}}</td>
                                             <td></td>
-                                            <td>{{ $employeePayroll->employer_eduction_tax }}</td>
+                                            <td>{{ formatAmount($employeePayroll->employer_eduction_tax) }}</td>
                                             {{-- <td id="overtime_rate">{{ $employeePayroll->overtime_rate }}</td> --}}
                                         </tr>
                                         <tr>
@@ -85,25 +85,25 @@
                                             <td>{{ ($employeePayroll->leave_not_paid) }}</td>
                                             <td>-</td>
                                             <td>NIS</td>
-                                            <td id="less_nis">{{ $employeePayroll->nis }}</td>
+                                            <td id="less_nis">{{ formatAmount($employeePayroll->nis) }}</td>
                                             <td></td>
-                                            <td>{{ $employeePayroll->employer_contribution_nis_tax }}</td>
+                                            <td>{{ formatAmount($employeePayroll->employer_contribution_nis_tax) }}</td>
                                             {{-- <td id="public_holiday_rate">{{ $employeePayroll->public_holiday_rate }}</td> --}}
                                         </tr>
                                         <tr>
                                             @if($employeePayroll->pending_leave_balance > 0)
                                                 <td>Pending Balance</td>
                                                 <td></td>
-                                                <td>{{ $employeePayroll->pending_leave_balance }}</td>
-                                                <td>{{ $employeePayroll->pending_leave_amount }}</td>
+                                                <td>{{ formatAmount($employeePayroll->pending_leave_balance) }}</td>
+                                                <td>{{ formatAmount($employeePayroll->pending_leave_amount) }}</td>
                                             @else
                                                 <td colspan="3"></td> <!-- Optionally, you can display a message if the balance is 0 or less -->
                                                 <td></td>
                                             @endif
                                             <td>NHT</td>
-                                            <td id="nht">{{ $employeePayroll->nht }}</td>
+                                            <td id="nht">{{ formatAmount($employeePayroll->nht) }}</td>
                                             <td></td>
-                                            <td>{{$employeePayroll->employer_contribution_nht_tax}}</td>
+                                            <td>{{formatAmount($employeePayroll->employer_contribution_nht_tax)}}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
@@ -111,69 +111,69 @@
                                             <td>Heart</td>
                                             <td></td>
                                             <td></td>
-                                            <td>{{$employeePayroll->heart}}</td>
+                                            <td>{{formatAmount($employeePayroll->heart)}}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Staff Loan</td>
-                                            <td> <input type="text" class="form-control editable" id="staff_loan" value="{{ $employeePayroll->staff_loan }}" readonly></td>
+                                            <td> <input type="text" class="form-control editable" id="staff_loan" value="{{ formatAmount($employeePayroll->staff_loan) }}" readonly></td>
                                             <td id="balance">{{ number_format($employeePayroll->pending_staff_loan)}}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Medical Ins</td>
-                                            <td><input type="text" class="form-control editable" id="medical_insurance" value="{{ $employeePayroll->medical_insurance }}" readonly>
+                                            <td><input type="text" class="form-control editable" id="medical_insurance" value="{{ formatAmount($employeePayroll->medical_insurance) }}" readonly>
                                             <td>{{ number_format($employeePayroll->pending_medical_insurance)}}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Salary Advance</td>
-                                            <td>{{ $employeePayroll->salary_advance }}</td>
+                                            <td>{{ formatAmount($employeePayroll->salary_advance) }}</td>
                                             <td>{{ number_format($employeePayroll->pending_salary_advance)}}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Approved Pension</td>
-                                            <td>{{ $employeePayroll->approved_pension_scheme }}</td>
+                                            <td>{{ formatAmount($employeePayroll->approved_pension_scheme) }}</td>
                                             <td>{{ number_format($employeePayroll->pending_approved_pension)}}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>PSRA</td>
-                                            <td>{{ $employeePayroll->psra }}</td>
+                                            <td>{{ formatAmount($employeePayroll->psra) }}</td>
                                             <td>{{ number_format($employeePayroll->pending_psra)}}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Bank Loan</td>
-                                            <td>{{ $employeePayroll->bank_loan }}</td>
+                                            <td>{{ formatAmount($employeePayroll->bank_loan) }}</td>
                                             <td>{{ number_format($employeePayroll->pending_bank_loan)}}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Garnishment</td>
-                                            <td>{{ $employeePayroll->garnishment }}</td>
+                                            <td>{{ formatAmount($employeePayroll->garnishment) }}</td>
                                             <td>{{ number_format($employeePayroll->pending_garnishment)}}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Damaged Goods</td>
-                                            <td>{{ $employeePayroll->damaged_goods }}</td>
+                                            <td>{{ formatAmount($employeePayroll->damaged_goods) }}</td>
                                             <td>{{ number_format($employeePayroll->pending_damaged_goods)}}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Missing Goods</td>
-                                            <td>{{ $employeePayroll->missing_goods }}</td>
+                                            <td>{{ formatAmount($employeePayroll->missing_goods) }}</td>
                                             <td>{{ number_format($employeePayroll->pending_missing_goods)}}</td>
                                         </tr>
                                         <tr>
@@ -184,19 +184,19 @@
                                                 $total = $employeePayroll->gross_salary ?? 0;
                                                 $totalAmount = $employeePayroll->paye +  $employeePayroll->education_tax + $employeePayroll->nis + $employeePayroll->nht + $employeePayroll->staff_loan +  $employeePayroll->medical_insurance + $employeePayroll->salary_advance + $employeePayroll->approved_pension_scheme + $employeePayroll->psra + $employeePayroll->bank_loan + $employeePayroll->missing_goods + $employeePayroll->damaged_goods + $employeePayroll->garnishment;
                                             @endphp
-                                            <td><strong>{{ $total }}</strong></td>
+                                            <td><strong>{{ formatAmount($total) }}</strong></td>
                                             <td></td>
-                                            <td><strong id="totalDeductions">{{ $totalAmount }}</strong></td>
+                                            <td><strong id="totalDeductions">{{ formatAmount($totalAmount) }}</strong></td>
                                         </tr>
                                         <tr>
                                             <td colspan="4"></td>
                                             <td>Net Salary</td>
-                                            <td id="netSalary">{{ $total - $totalAmount }}</td>
+                                            <td id="netSalary">{{ formatAmount($total - $totalAmount) }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="4"></td>
                                             <td>BNS Account</td>
-                                            <td id="bnsAccount">{{ $total - $totalAmount }}</td>
+                                            <td id="bnsAccount">{{ formatAmount($total - $totalAmount) }}</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -217,11 +217,11 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td>{{ $employeePayroll->gross_salary }}</td>
-                                            <td>{{ $employeePayroll->nis_total }}</td>
-                                            <td id="payeTax">{{ $employeePayroll->paye_tax_total }}</td>
-                                            <td>{{ $employeePayroll->education_tax_total }}</td>
-                                            <td>{{ $employeePayroll->nht_total }}</td>
+                                            <td>{{ formatAmount($employeePayroll->gross_salary) }}</td>
+                                            <td>{{ formatAmount($employeePayroll->nis_total) }}</td>
+                                            <td id="payeTax">{{ formatAmount($employeePayroll->paye_tax_total) }}</td>
+                                            <td>{{ formatAmount($employeePayroll->education_tax_total) }}</td>
+                                            <td>{{ formatAmount($employeePayroll->nht_total) }}</td>
                                         </tr>
                                     </tbody>
                                 </table>
