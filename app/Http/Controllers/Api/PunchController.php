@@ -217,11 +217,13 @@ class PunchController extends Controller
             'time' => 'required|date_format:Y-m-d H:i:s',
         ];
 
-        $today = Carbon::now();
+        $timezone = Auth::user()->current_time_zone ?: config('app.timezone');
+
+        $today = Carbon::now($timezone);
         // $today = Carbon::parse('2025-03-11');
 
-        $requestTime = Carbon::parse($request->time);
-        $start_time = Carbon::parse($request->time)->format('H:i:s');
+        $requestTime = Carbon::parse($request->time, $timezone);
+        $start_time = Carbon::parse($request->time, $timezone)->format('H:i:s');
         if ($today->toDateString() == $requestTime->toDateString()) {
             $todaysDuties = GuardRoster::with('clientSite')->where('guard_id', Auth::id())->whereDate('date', $today)->get();
             if ($todaysDuties->isEmpty()) {
@@ -236,7 +238,7 @@ class PunchController extends Controller
                 $todaysDuty = $todaysDuties->first();
                 $guard_type_id = $todaysDuty->guard_type_id;
                 $client_site_id = $todaysDuty->client_site_id;
-                $duty_start_time = Carbon::parse($todaysDuty->start_time);
+                $duty_start_time = Carbon::parse($todaysDuty->start_time, $timezone);
                 if ($requestTime < $duty_start_time) {
                     $timeDifference = 0;
                 } else {
@@ -248,8 +250,8 @@ class PunchController extends Controller
             } else {
                 $todaysDuty = null;
                 foreach($todaysDuties as $duty) {
-                    $duty_start_time = Carbon::parse($duty->start_time);
-                    $duty_end_time = Carbon::parse($duty->end_time); 
+                    $duty_start_time = Carbon::parse($duty->start_time, $timezone);
+                    $duty_end_time = Carbon::parse($duty->end_time, $timezone); 
                     if ($action === 'in') {
                         if ($requestTime->equalTo($duty_start_time) || $requestTime->lessThan($duty_start_time) || $requestTime->between($duty_start_time, $duty_end_time)) {
                             $todaysDuty = $duty;
@@ -354,7 +356,7 @@ class PunchController extends Controller
 
                 $userLat = $request->input('in_lat');
                 $userLong = $request->input('in_long');
-
+                
                 if ($userLat && $userLong) {
                     $outsideDistance = $this->checkIfUserExistingInSite($userLat, $userLong, $clientLat, $clientLong, $clientRadius);
                     if($outsideDistance){
@@ -391,7 +393,7 @@ class PunchController extends Controller
             return response()->json([
                 'success' => false,
                 'status' => 'Date',
-                'message' => 'Punch in date and today dat not match.'
+                'message' => 'Punch in date and today date not match.'
             ], 400);
         }
     }
@@ -423,13 +425,15 @@ class PunchController extends Controller
 
     public function calculateOvertime($userId)
     {
+        $timezone = Auth::user()->current_time_zone ?: config('app.timezone');
+
         $punchRecords = Punch::where('user_id', $userId)->get();
         $overtimeHours = 0;
 
         foreach ($punchRecords as $record) {
             if ($record->out_time && $record->in_time) {
-                $inTime = Carbon::parse($record->in_time);
-                $outTime = Carbon::parse($record->out_time);
+                $inTime = Carbon::parse($record->in_time, $timezone);
+                $outTime = Carbon::parse($record->out_time, $timezone);
 
                 if ($inTime < $outTime) {
                     $totalWorkedHours = $inTime->diffInHours($outTime);

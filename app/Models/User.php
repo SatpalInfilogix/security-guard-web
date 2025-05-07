@@ -35,7 +35,8 @@ class User extends Authenticatable
         'password',
         'status',
         'user_code',
-        'is_statutory'
+        'is_statutory',
+        'current_time_zone'
     ];
 
     /**

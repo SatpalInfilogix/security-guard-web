@@ -40,7 +40,8 @@ class LoginController extends Controller
         if (Hash::check($request->password, $user->password)) {
             $token = $user->createToken('MyApp')->plainTextToken;
             $user->token = $token;
-
+            User::where('id', $user->id)->update(['current_time_zone' => $request->timezone]);
+            
             if($request->device_token) {
                 $fcmToken = FcmToken::create([
                     'user_id' => $user->id,
