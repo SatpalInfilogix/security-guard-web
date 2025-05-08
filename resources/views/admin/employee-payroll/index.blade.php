@@ -243,10 +243,18 @@
             });
 
             $('#resetBtn').on('click', function() {
-                $('#month').val("{{ now()->subMonth()->month }}").trigger('change');
-                $('#year').val("{{ now()->year }}").trigger('change');
-                payrollTable.ajax.reload();
+                const defaultMonth = "{{ now()->subMonth()->month }}";
+                const defaultYear = "{{ now()->year }}";
+
+                $('#month').val(defaultMonth).trigger('change');
+                $('#year').val(defaultYear).trigger('change');
+
+                const baseUrl = "{{ route('employee-payroll.index') }}";
+                window.history.pushState({}, '', baseUrl);
+
+                $('#payroll-list').DataTable().ajax.reload();
             });
+
         });
     </script>
 @endsection
