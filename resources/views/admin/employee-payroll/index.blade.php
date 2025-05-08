@@ -112,7 +112,7 @@
 
                         @can('edit employee payroll')
                             actions +=
-                                `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/employee-payroll') }}/${row.id}/edit">`;
+                                `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/employee-payroll') }}/${row.id}/edit?year=${$('#year').val()}&month=${$('#month').val()}">`;
                             actions += '<i class="fas fa-pencil-alt"></i>';
                             actions += '</a>';
                         @endcan
@@ -243,8 +243,8 @@
             });
 
             $('#resetBtn').on('click', function() {
-                $('#year').val("{{ now()->year }}");
-                $('#month').val("{{ now()->subMonth()->month }}");
+                $('#month').val("{{ now()->subMonth()->month }}").trigger('change');
+                $('#year').val("{{ now()->year }}").trigger('change');
                 payrollTable.ajax.reload();
             });
         });
