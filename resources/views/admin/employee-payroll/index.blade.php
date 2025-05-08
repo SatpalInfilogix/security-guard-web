@@ -13,10 +13,9 @@
                             <a href="javascript:void(0);" id="bulkDownloadBtn" class="btn btn-primary primary-btn btn-md me-1">
                                 <i class="bx bx-download"></i> Bulk Download PDFs
                             </a>
-                            <a href="{{ route('employee-payroll-export.csv', ['year' => request('year'), 'month' => request('month')]) }}"
-                                id="exportBtn" class="btn btn-primary primary-btn btn-md me-1"><i
-                                    class="bx bx-download"></i> SO1
-                                Report</a>
+                            <a href="javascript:void(0);" id="exportBtn" class="btn btn-primary primary-btn btn-md me-1">
+                                <i class="bx bx-download"></i> SO1 Report
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -208,7 +207,6 @@
                 payrollTable.ajax.reload();
             });
 
-
             /* $('#searchBtn').on('click', function() {
                  payrollTable.ajax.reload();
              });
@@ -231,6 +229,18 @@
                 window.location.href = fullUrl;
             });
 
+            $('#exportBtn').on('click', function() {
+                const year = $('#year').val();
+                const month = $('#month').val();
+
+                if (!year || !month) {
+                    alert('Please select both year and month.');
+                    return;
+                }
+
+                const exportUrl = `{{ route('employee-payroll-export.csv') }}?year=${year}&month=${month}`;
+                window.location.href = exportUrl;
+            });
 
             $('#resetBtn').on('click', function() {
                 $('#year').val("{{ now()->year }}");

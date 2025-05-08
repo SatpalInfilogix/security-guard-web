@@ -298,15 +298,21 @@ class EmployeePayrollController extends Controller
 
     public function employeePayrollExport(Request $request)
     {
-        $selectedDateRange = $request->input('date');
-        $spreadsheet = new Spreadsheet();
+        $year = $request->input('year');
+        $month = $request->input('month');
 
+        if (!$year || !$month) {
+            return response()->json(['error' => 'Year and month are required.'], 400);
+        }
+
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+        $selectedDateRange = $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d');
+
+        $spreadsheet = new Spreadsheet();
         $this->addPayrollSheet($spreadsheet, $selectedDateRange);
 
-        $startDate = explode(' to ', $selectedDateRange)[0];
-        $date = Carbon::parse($startDate);
-        $monthYear = $date->format('F-Y');
-
+        $monthYear = $startDate->format('F-Y');
         $fileName = 'SO1-Employee-' . $monthYear . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
