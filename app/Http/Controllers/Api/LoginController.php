@@ -20,29 +20,30 @@ class LoginController extends Controller
             'phone_number'  => 'required_without:email',
             'password'      => 'required',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json(['success' => false, 'message' => $validator->errors()], 400);
         }
-    
-        $user = $request->filled('email') 
-            ? User::where('email', $request->email)->first() 
+
+        $user = $request->filled('email')
+            ? User::where('email', $request->email)->first()
             : User::where('phone_number', $request->phone_number)->first();
-    
+
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'User not found'], 404);
         }
-    
+
         if ($user->status !== 'Active') {
             return response()->json(['success' => false, 'message' => 'Your account is not active.'], 403);
         }
-    
+
         if (Hash::check($request->password, $user->password)) {
             $token = $user->createToken('MyApp')->plainTextToken;
             $user->token = $token;
-            User::where('id', $user->id)->update(['current_time_zone' => $request->timezone]);
-            
-            if($request->device_token) {
+            if (!empty($request->timezone)) {
+                User::where('id', $user->id)->update(['current_time_zone' => $request->timezone]);
+            }
+            if ($request->device_token) {
                 $fcmToken = FcmToken::create([
                     'user_id' => $user->id,
                     'fcm_token' => $request->device_token,
@@ -59,7 +60,7 @@ class LoginController extends Controller
                 'punchInfo' => $punchStatus,
             ], 200);
         }
-    
+
         return response()->json(['success' => false, 'message' => 'Invalid credentials.'], 401);
     }
 
@@ -80,7 +81,7 @@ class LoginController extends Controller
 
         $user = Auth::user();
 
-        if(!$user) {
+        if (!$user) {
             return response()->json([
                 'success' => false,
                 'status' => 'USER_NOT_FOUND',
@@ -117,11 +118,11 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
-        if($request->device_token) {
+        if ($request->device_token) {
             $fcmToken = FcmToken::where('user_id', Auth::id())->where('fcm_token', $request->device_token)->delete();
         }
         $request->user()->currentAccessToken()->delete();
-        
+
         return response()->json([
             'success' => true,
             'message' => 'User logged out successfully.'

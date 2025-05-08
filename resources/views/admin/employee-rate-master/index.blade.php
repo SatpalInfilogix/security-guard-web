@@ -46,7 +46,7 @@
                                 <tr>
                                     <td>{{ ++$key }}</td>
                                     <td>{{ $rateMaster->user->user_code ?? 'N/A' }}</td>
-                                    <td>{{ $rateMaster->user->first_name ?? 'N/A'}}</td>
+                                    <td>{{ $rateMaster->user->first_name ?? 'N/A'}} {{ $rateMaster->user->surname ?? 'N/A'}}</td>
                                     <td>${{formatAmount($rateMaster->gross_salary ?? '')}}</td>
                                     @canany(['edit employee rate master', 'delete employee rate master'])
                                     <td class="action-buttons">
