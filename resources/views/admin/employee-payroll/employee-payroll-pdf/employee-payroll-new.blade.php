@@ -105,8 +105,8 @@
         <tr>
             <td>Employee Allowance</td>
             {{-- <td></td> --}}
-            <td style="text-align: right;">{{ $employeePayroll->leave_not_paid }}</td>
-            <td>-</td>
+            <td></td>
+            <td style="text-align: right;">{{ formatAmount($employeeAllowance) }}</td>
             <td>NIS</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->nis) }}
             </td>
@@ -159,7 +159,7 @@
         @endif
 
         @php
-            $total = $employeePayroll->gross_salary ?? 0;
+            $total =($employeePayroll->gross_salary ?? 0) + ($employeeAllowance ?? 0);
             $totalAmount =
                 $employeePayroll->paye +
                 $employeePayroll->education_tax +

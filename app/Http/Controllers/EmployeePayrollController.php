@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Carbon\Carbon;
 use App\Models\EmployeePayroll;
+use App\Models\EmployeeRateMaster;
 use App\Models\TwentyTwoDayInterval;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -156,6 +157,9 @@ class EmployeePayrollController extends Controller
         $employeePayroll = EmployeePayroll::where('id', $employeePayroll->id)->with('user', 'user.guardAdditionalInformation')->first();
         $month = $employeePayroll->end_date;
         $fullYearPayroll = EmployeePayroll::where('employee_id', $employeePayroll->employee_id)->whereDate('end_date', '<=', $month)->whereYear('created_at', now()->year)->orderBy('created_at', 'desc')->get();
+        $employeeRate = EmployeeRateMaster::where('employee_id', $employeePayroll->employee_id)->first();
+        $employeeAllowance = $employeeRate?->employee_allowance ?? 0;
+
 
         $employeePayroll['gross_total'] = $fullYearPayroll->sum('gross_salary_earned');
         $employeePayroll['nis_total'] = $fullYearPayroll->sum('nis');
@@ -266,7 +270,8 @@ class EmployeePayrollController extends Controller
         $payroll = EmployeePayroll::where('id', $payrollId)->with('user', 'user.guardAdditionalInformation')->first();
         $month = $payroll->end_date;
         $fullYearPayroll = EmployeePayroll::where('employee_id', $payroll->employee_id)->whereDate('end_date', '<=', $month)->whereYear('created_at', now()->year)->orderBy('created_at', 'desc')->get();
-
+        $employeeRate = EmployeeRateMaster::where('employee_id', $payroll->employee_id)->first();
+        $employeeAllowance = $employeeRate?->employee_allowance ?? 0;
         $payroll['gross_total'] = $fullYearPayroll->sum('gross_salary');
         $payroll['nis_total'] = $fullYearPayroll->sum('nis');
         $payroll['paye_tax_total'] = $fullYearPayroll->sum('paye');
@@ -287,7 +292,8 @@ class EmployeePayrollController extends Controller
         $pdfOptions->set('isPhpEnabled', true);
 
         $dompdf = new Dompdf($pdfOptions);
-        $html = view('admin.employee-payroll.employee-payroll-pdf.employee-payroll-new', ['employeePayroll' => $payroll, 'fortnightDayCount' => $fortnightDayCount])->render();
+        $html = view('admin.employee-payroll.employee-payroll-pdf.employee-payroll-new', ['employeePayroll' => $payroll, 'fortnightDayCount' => $fortnightDayCount,
+        'employeeAllowance' => $employeeAllowance,])->render();
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();

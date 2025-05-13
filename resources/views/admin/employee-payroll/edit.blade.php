@@ -88,10 +88,10 @@
                                             {{-- <td id="overtime_rate">{{ $employeePayroll->overtime_rate }}</td> --}}
                                         </tr>
                                         <tr>
-                                            <td>Leave Not Paid</td>
+                                            <td>Employee Allowance</td>
                                             <td></td>
-                                            <td>{{ $employeePayroll->leave_not_paid }}</td>
-                                            <td>-</td>
+                                            <td></td>
+                                            <td>{{ formatAmount($employeeAllowance) }}</td>
                                             <td>NIS</td>
                                             <td id="less_nis">{{ formatAmount($employeePayroll->nis) }}</td>
                                             <td></td>
@@ -194,7 +194,7 @@
                                             <td></td>
                                             <td></td>
                                             @php
-                                                $total = $employeePayroll->gross_salary ?? 0;
+                                                $total =($employeePayroll->gross_salary ?? 0) + ($employeeAllowance ?? 0);
                                                 $totalAmount =
                                                     $employeePayroll->paye +
                                                     $employeePayroll->education_tax +
