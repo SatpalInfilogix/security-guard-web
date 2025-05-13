@@ -2,12 +2,14 @@
     <div class="col-md-6">
         <div class="mb-3">
             <label for="employee_id">Employee<span class="text-danger">*</span></label>
-            <select name="employee_id" id="employee_id" class="form-control{{ $errors->has('employee_id') ? ' is-invalid' : '' }}">
+            <select name="employee_id" id="employee_id"
+                class="form-control{{ $errors->has('employee_id') ? ' is-invalid' : '' }}">
                 <option value="" disabled selected>Select Employee</option>
-                @foreach($employees as $employee)
-                <option value="{{ $employee->id }}" data-name="{{ $employee->first_name }}" @selected(($rateMaster->employee_id ?? '') == $employee->id)>
-                    {{ $employee->user_code }}
-                </option>
+                @foreach ($employees as $employee)
+                    <option value="{{ $employee->id }}" data-name="{{ $employee->first_name }}"
+                        @selected(($rateMaster->employee_id ?? '') == $employee->id)>
+                        {{ $employee->user_code }}
+                    </option>
                 @endforeach
             </select>
             @error('employee_id')
@@ -18,20 +20,32 @@
 
     <div class="col-md-6">
         <div class="mb-3">
-            <x-form-input id="name" name="name" value="{{ $rateMaster->first_name ?? '' }}" label="Employee Name" placeholder="Enter Employee Name" required="true"/>
+            <x-form-input id="name" name="name" value="{{ $rateMaster->first_name ?? '' }}"
+                label="Employee Name" placeholder="Enter Employee Name" required="true" />
         </div>
     </div>
     <div class="col-md-6">
         <div class="mb-3">
-            <x-form-input id="gross_salary" name="gross_salary" value="{{ $rateMaster->gross_salary ?? '' }}" label="Gross Salary" placeholder="Enter Gross Salary" type="number" step="any" min="0" required="true"/>
+            <x-form-input id="gross_salary" name="gross_salary" value="{{ $rateMaster->gross_salary ?? '' }}"
+                label="Gross Salary" placeholder="Enter Gross Salary" type="number" step="any" min="0"
+                required="true" />
         </div>
     </div>
     <div class="col-md-6">
         <div class="mb-3">
-            <x-form-input id="monthly_income" name="monthly_income" value="{{ $rateMaster->monthly_income ?? '' }}" label="Monthly Income" placeholder="Monthly Income" type="number" step="any" min="0" readonly />
+            <x-form-input id="monthly_income" name="monthly_income" value="{{ $rateMaster->monthly_income ?? '' }}"
+                label="Monthly Income" placeholder="Monthly Income" type="number" step="any" min="0"
+                readonly />
         </div>
     </div>
-    
+    <div class="col-md-6">
+        <div class="mb-3">
+            <x-form-input id="employee_allowance" name="employee_allowance"
+                value="{{ $rateMaster->employee_allowance ?? '' }}" label="Employee Allowance"
+                placeholder="Enter Allowance" type="number" step="any" min="0"/>
+        </div>
+    </div>
+
 </div>
 
 <div class="row mb-2">
@@ -41,14 +55,14 @@
 </div>
 
 <script>
-     $(document).ready(function() {
+    $(document).ready(function() {
         $('#employee_id').change(function() {
             var selectedOption = $(this).find('option:selected');
             var employeeName = selectedOption.data('name');
             $('#name').val(employeeName);
         });
 
-        if($('#employee_id').val() != "") {
+        if ($('#employee_id').val() != "") {
             var selectedOption = $('#employee_id').find('option:selected');
             var employeeName = selectedOption.data('name');
             $('#name').val(employeeName);
