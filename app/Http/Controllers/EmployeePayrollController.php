@@ -169,7 +169,7 @@ class EmployeePayrollController extends Controller
 
         $twentyTwoDayCount = TwentyTwoDayInterval::where('start_date', $employeePayroll->start_date)->where('end_date', $employeePayroll->end_date)->first();
 
-        return view('admin.employee-payroll.edit', compact('employeePayroll', 'twentyTwoDayCount'));
+        return view('admin.employee-payroll.edit', compact('employeePayroll', 'twentyTwoDayCount','employeeAllowance'));
     }
 
     public function bulkDownloadPdf(Request $request)

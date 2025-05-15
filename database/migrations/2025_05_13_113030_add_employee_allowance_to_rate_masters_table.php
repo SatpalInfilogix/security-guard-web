@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('employee_rate_masters', function (Blueprint $table) {
-            $table->decimal('employee_allowance', 12, 2)->default(0)->after('monthly_income');
+            $table->decimal('employee_allowance', 12, 2)->default(0)->nullable()->after('monthly_income');
         });
     }
 

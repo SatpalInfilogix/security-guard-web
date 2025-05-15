@@ -26,9 +26,10 @@ use App\Http\Controllers\EmployeeRateMasterController;
 use App\Http\Controllers\EmployeeLeavesController;
 use App\Http\Controllers\EmployeePayrollController;
 use App\Http\Controllers\EmployeeDeductionController;
+use App\Http\Controllers\EmployeeOvertimeController;
 use Illuminate\Support\Facades\Response;
 
-Route::get('/', function (){
+Route::get('/', function () {
     return redirect()->route('admin.dashboard.index');
 });
 
@@ -41,7 +42,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('admin.dashboard.index');
         Route::post('/get-guard-roster', [GuardRosterController::class, 'getGuardRosters'])->name('get-guard-roster');
         Route::post('/get-guard-roster-list', [GuardRosterController::class, 'getGuardRosterList'])->name('get-guard-roster-list');
-        
+
         Route::resources([
             'profile'               => ProfileController::class,
             'users'                 => UserController::class,
@@ -66,16 +67,19 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'employee-leaves'       => EmployeeLeavesController::class,
             'employee-payroll'      => EmployeePayrollController::class,
             'employee-deductions'   => EmployeeDeductionController::class,
+            'employee-overtime'     => EmployeeOvertimeController::class,
         ]);
+        Route::get('employee-overtime/{employee_id}/{date}/edit', [EmployeeOvertimeController::class, 'edit'])->name('employee-overtime.edit');
+        Route::put('employee-overtime/{employee_id}/{date}', [EmployeeOvertimeController::class, 'update'])->name('employee-overtime.update');
 
         Route::get('/payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
         Route::get('/gerenal-settings', [SettingController::class, 'generalSettings'])->name('settings.gerenal-settings');
 
-        Route::get('/roles-and-permissions/role-list', [RoleAndPermissionController::class,'show'])->name('roles-and-permissions.role-list');
-        Route::post('/roles-and-permissions/store-role', [RoleAndPermissionController::class,'storeRole'])->name('roles-and-permissions.store-role');
+        Route::get('/roles-and-permissions/role-list', [RoleAndPermissionController::class, 'show'])->name('roles-and-permissions.role-list');
+        Route::post('/roles-and-permissions/store-role', [RoleAndPermissionController::class, 'storeRole'])->name('roles-and-permissions.store-role');
         // Route::post('import-guards', [SecurityGuardController::class, 'importGuards'])->name('import.guards');
-        Route::view('/calendar-management','admin.calendar-management.index')->name('calendar.management');
-       
+        Route::view('/calendar-management', 'admin.calendar-management.index')->name('calendar.management');
+
         Route::post('/generate-client-code', [ClientController::class, 'generateClientCode'])->name('generate.client.code');
         Route::get('/twenty-two-days-interval', [FortnightDatesController::class, 'listingTwentyTwoDays'])->name('get-interval');
     });
@@ -93,26 +97,26 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('import-guard-roster', [GuardRosterController::class, 'importGuardRoster'])->name('import.guard-roster');
     Route::post('import-security-guard', [SecurityGuardController::class, 'importSecurityGuard'])->name('import.security-guard');
 
-    Route::get('download-guard-roster-sample', function() {
+    Route::get('download-guard-roster-sample', function () {
         $file = public_path('assets/sample-guard-roster/guard_roster.xlsx');
         return Response::download($file);
     });
 
-    Route::get('download-guard-sample', function() {
+    Route::get('download-guard-sample', function () {
         $file = public_path('assets/sample-security-guard/security-guard.csv');
         return Response::download($file);
     });
 
-    Route::get('download-payroll-sample', function() {
+    Route::get('download-payroll-sample', function () {
         $file = public_path('assets/sample-payroll/payroll.csv');
         return Response::download($file);
     });
-    Route::get('download-client-site-sample', function() {
+    Route::get('download-client-site-sample', function () {
         $file = public_path('assets/sample-client-site/client-site.csv');
         return Response::download($file);
     });
 
-    Route::get('download-employee-sample', function() {
+    Route::get('download-employee-sample', function () {
         $file = public_path('assets/sample-employee/employee.csv');
         return Response::download($file);
     });
@@ -122,10 +126,10 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('export-clients', [ClientSiteController::class, 'exportClients'])->name('export.client');
     Route::get('/client-site/download', [ClientSiteController::class, 'download'])->name('client-site.download');
     Route::get('/security-guards/filter', [SecurityGuardController::class, 'filter'])->name('security-guards.filter');
-   
+
     Route::get('/payroll-export/csv', [PayrollController::class, 'payrollExport'])->name('payroll-export.csv');
     Route::get('/payrolls/download', [PayrollController::class, 'download'])->name('payrolls.download');
-   
+
     Route::post('get-security-guard', [SecurityGuardController::class, 'getSecurityGuard'])->name('get-security-guard');
     Route::post('get-client-list', [ClientController::class, 'getClient'])->name('get-client-list');
     Route::post('get-client-site-list', [ClientSiteController::class, 'getClientSite'])->name('get-client-site-list');
@@ -145,9 +149,9 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('/get-guard-type-by-guard-id/{guardId}', [GuardRosterController::class, 'getGuardTypeByGuardId']);
 
     Route::get('/get-end-date', [DeductionController::class, 'getEndDate']);
-    
+
     Route::get('export-deduction', [DeductionController::class, 'exportDeduction'])->name('export.deductions');
-    
+
     Route::get('invoice/{id}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoice.download-pdf');
     Route::get('/export-csv', [InvoiceController::class, 'exportCsv'])->name('invoice.export-csv');
     Route::post('/invoice/update-status', [InvoiceController::class, 'updateStatus'])->name('invoice.update-status');

@@ -97,6 +97,7 @@
                             @can('view employee payroll')
                                 <li><a href="{{ route('employee-payroll.index') }}">Employee Payroll</a></li>
                             @endcan
+                            <li><a href="{{ route('employee-overtime.index') }}">Employee Overtime</a></li>
                             <li><a href="{{ route('get-interval') }}">Twenty Two Days Interval</a></li>
                         </ul>
                     </li>
