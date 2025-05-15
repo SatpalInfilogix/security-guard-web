@@ -20,7 +20,8 @@
                  </div>
                  <div class="col-md-2">
                      <label class="form-label">Rate</label>
-                     <input type="number" class="form-control" name="rate[]" value="{{ $overtimeItem->rate }}">
+                     <input type="number" class="form-control" name="rate[]" value="{{ $overtimeItem->rate }}"
+                         readonly>
                  </div>
                  <div class="col-md-2">
                      <label class="form-label">Hours</label>
@@ -42,7 +43,8 @@
                  <select class="form-select" name="employee_id[]">
                      <option value="">Select Employee</option>
                      @foreach ($employees as $employee)
-                         <option value="{{ $employee->id }}">{{ $employee->first_name }} {{ $employee->surname }}
+                         <option value="{{ $employee->id }}" data-rate="{{ $employee->hourly_income }}">
+                             {{ $employee->first_name }} {{ $employee->surname }}
                          </option>
                      @endforeach
                  </select>
@@ -53,8 +55,8 @@
              </div>
              <div class="col-md-2">
                  <label class="form-label">Rate</label>
-                 <input type="number" class="form-control" name="rate[]" value="{{ old('rate') }}"
-                     placeholder="Rate">
+                 <input type="text" class="form-control" name="rate[]" value="{{ old('rate') }}"
+                     placeholder="Rate" readonly>
              </div>
              <div class="col-md-2">
                  <label class="form-label">Hours</label>
@@ -111,7 +113,7 @@
                     <input type="date" class="form-control" name="work_date[]" value="${newDate}">
                 </div>
                 <div class="col-md-2">
-                    <input type="number" class="form-control" name="rate[]" value="${rate}">
+                    <input type="number" class="form-control" name="rate[]" value="${rate}" readonly>
                 </div>
                 <div class="col-md-2">
                     <input type="number" class="form-control" name="hours[]" value="${hours}">
@@ -166,5 +168,17 @@
              e.preventDefault();
              alert(errorMsg);
          }
+     });
+
+     // Autofill rate from selected employee
+     $(document).on('change', 'select[name="employee_id[]"]', function() {
+         const rate = $(this).find('option:selected').data('rate') || '';
+         const row = $(this).closest('.row');
+         row.find('input[name="rate[]"]').val(rate);
+     });
+
+     // Trigger autofill on page load (if needed)
+     $('select[name="employee_id[]"]').each(function() {
+         $(this).trigger('change');
      });
  </script>

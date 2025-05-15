@@ -40,10 +40,13 @@ class EmployeeOvertimeController extends Controller
      */
     public function create()
     {
-        $employees = User::role('employee')->get();
+        $employees = User::role('employee')
+            ->leftJoin('employee_rate_masters', 'users.id', '=', 'employee_rate_masters.employee_id')
+            ->select('users.id', 'users.first_name', 'users.surname', 'employee_rate_masters.hourly_income')
+            ->get();
+
         return view('admin.employee-overtime.create', compact('employees'));
     }
-
     /**
      * Store a newly created resource in storage.
      */

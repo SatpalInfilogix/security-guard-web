@@ -45,11 +45,17 @@ class EmployeeRateMasterController extends Controller
             'employee_allowance' => 'nullable',
         ]);
 
+        // Calculate daily and hourly income
+        $daily_income = $request->monthly_income / 22;
+        $hourly_income = $daily_income / 8;
+
         EmployeeRateMaster::create([
             'employee_id'    => $request->employee_id,
             'gross_salary'   => $request->gross_salary,
             'monthly_income' => $request->monthly_income,
             'employee_allowance' => $request->employee_allowance,
+            'daily_income'       => $daily_income,
+            'hourly_income'      => $hourly_income,
         ]);
 
         return redirect()->route('employee-rate-master.index')->with('success', 'Employee Rate Master created successfully.');
@@ -82,11 +88,16 @@ class EmployeeRateMasterController extends Controller
             'employee_allowance' => 'nullable',
         ]);
 
+        $daily_income = $request->monthly_income / 22;
+        $hourly_income = $daily_income / 8;
+
         EmployeeRateMaster::where('id', $id)->update([
             'employee_id'    => $request->employee_id,
             'gross_salary'   => $request->gross_salary,
             'monthly_income' => $request->monthly_income,
             'employee_allowance' => $request->employee_allowance,
+            'daily_income'       => $daily_income,
+            'hourly_income'      => $hourly_income,
         ]);
 
         return redirect()->route('employee-rate-master.index')->with('success', 'Employee Rate Master updated successfully.');
