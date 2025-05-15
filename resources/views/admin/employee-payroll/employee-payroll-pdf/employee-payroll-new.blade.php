@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,23 +9,31 @@
         body {
             font-family: Arial, sans-serif;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
-        table, th, td {
+
+        table,
+        th,
+        td {
             border: 1px solid black;
         }
-        th, td {
+
+        th,
+        td {
             padding: 4px;
             text-align: left;
             font-size: 10px;
         }
+
         th {
             background-color: #f2f2f2;
         }
     </style>
 </head>
+
 <body>
     <h4 style="text-align: center">Vanguard Security Limited, 6 East Wood Avenue, Kingston 10, Jamaica Payslip</h4>
     {{-- <h4 style="text-align: center">Payslip</h4> --}}
@@ -54,7 +63,7 @@
             <td>{{ $fortnightDayCount->id }}</td>
         </tr>
         <tr>
-            <th>Payroll Processed Date</th> 
+            <th>Payroll Processed Date</th>
             <td colspan="3">{{ $employeePayroll->created_at->format('d-M-Y') }}</td>
         </tr>
     </table>
@@ -62,7 +71,7 @@
     <table>
         <tr>
             <th style="width: 18%; text-align: center;">Earnings</th>
-            <th style="width: 10%; text-align: center;">Monthly Salary</th>
+            {{-- <th style="width: 10%; text-align: center;">Monthly Salary</th> --}}
             <th style="width: 8%; text-align: center;">Units</th>
             <th style="width: 10%; text-align: center;">Total Salary</th>
             <th style="width: 11%; text-align: center;">Deductions</th>
@@ -72,81 +81,104 @@
         </tr>
         <tr>
             <td>Gross Earnings</td>
-            <td style="text-align: right;">{{ formatAmount($employeePayroll->day_salary) }}</td>
-            <td style="text-align: right;">{{ $employeePayroll->normal_days - $employeePayroll->leave_not_paid }}</td>
+            {{-- <td style="text-align: right;">{{ formatAmount($employeePayroll->day_salary) }}</td> --}}
+            <td style="text-align: right;">
+                {{ $employeePayroll->leave_paid > 0 ? $employeePayroll->normal_days - $employeePayroll->leave_not_paid - $employeePayroll->leave_paid : $employeePayroll->normal_days - $employeePayroll->leave_not_paid }}
+            </td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->normal_salary) }}</td>
             <td>PAYE</td>
-            <td style="text-align: right;">{{ formatAmount($employeePayroll->paye) }}</td>
+            <td style="text-align: right;">
+                {{ formatAmount($employeePayroll->paye) }}</td>
             <td></td>
-            {{-- <td></td> --}}
         </tr>
         <tr>
             <td>Leave Paid</td>
-            <td></td>
+            {{-- <td></td> --}}
             <td style="text-align: right;">{{ $employeePayroll->leave_paid }}</td>
             <td>-</td>
             <td>Ed Tax</td>
-            <td style="text-align: right;">{{ formatAmount($employeePayroll->education_tax) }}</td>
+            <td style="text-align: right;">
+                {{ formatAmount($employeePayroll->education_tax) }}</td>
             <td></td>
             {{-- <td>{{ $employeePayroll->employer_eduction_tax }}</td> --}}
         </tr>
         <tr>
-            <td>Leave Not Paid</td>
+            <td>Employee Allowance</td>
+            {{-- <td></td> --}}
             <td></td>
-            <td style="text-align: right;">{{ $employeePayroll->leave_not_paid }}</td>
-            <td>-</td>
+            <td style="text-align: right;">{{ formatAmount($employeeAllowance) }}</td>
             <td>NIS</td>
-            <td style="text-align: right;">{{ formatAmount($employeePayroll->nis) }}</td>
+            <td style="text-align: right;">{{ formatAmount($employeePayroll->nis) }}
+            </td>
             <td></td>
             {{-- <td>{{ $employeePayroll->employer_contribution_nis_tax }}</td> --}}
         </tr>
         <tr>
-            @if($employeePayroll->pending_leave_balance > 0)
+            @if ($employeePayroll->pending_leave_balance > 0)
                 <td>Pending Balance</td>
-                <td></td>
+                {{-- <td>{!! '&nbsp;' !!}</td> --}}
                 <td style="text-align: right;">{{ $employeePayroll->pending_leave_balance }}</td>
                 <td style="text-align: right;">{{ formatAmount($employeePayroll->pending_leave_amount) }}</td>
             @else
-                <td colspan="3"></td>
-                <td></td>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                {{-- <td>{!! '&nbsp;' !!}</td> --}}
             @endif
+
             <td>NHT</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->nht) }}</td>
-            <td></td>
-            {{-- <td>{{$employeePayroll->employer_contribution_nht_tax}}</td> --}}
+            <td>{!! '&nbsp;' !!}</td>
         </tr>
         <tr>
             <td colspan="3"></td>
-            <td></td>
+            {{-- <td></td> --}}
             <td>Heart</td>
             <td></td>
             <td></td>
             {{-- <td>{{$employeePayroll->heart}}</td> --}}
         </tr>
-        <tr>
-            <td colspan="3"></td>
-            <td></td>
-            <td>Staff Loan</td>
-            <td style="text-align: right;">{{ formatAmount($employeePayroll->staff_loan) }}</td>
-            <td style="text-align: right;">{{ number_format($employeePayroll->pending_staff_loan)}}</td>
-            {{-- <td></td> --}}
-        </tr>
-        <tr>
-            <td colspan="3"></td>
-            <td></td>
-            <td>Medical Ins</td>
-            <td style="text-align: right;">{{ formatAmount($employeePayroll->medical_insurance) }}</td>
-            <td style="text-align: right;">{{ number_format($employeePayroll->pending_medical_insurance)}}</td>
-            {{-- <td></td> --}}
-        </tr>
+        @if ($employeePayroll->staff_loan > 0 || $employeePayroll->pending_staff_loan > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                <td>Staff Loan</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->staff_loan) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_staff_loan) }}</td>
+                {{-- <td></td> --}}
+            </tr>
+        @endif
+
+        @if ($employeePayroll->medical_insurance > 0 || $employeePayroll->pending_medical_insurance > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                <td>Medical Ins</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->medical_insurance) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_medical_insurance) }}</td>
+                {{-- <td></td> --}}
+            </tr>
+        @endif
+
+        @php
+            $total =($employeePayroll->gross_salary ?? 0) + ($employeeAllowance ?? 0);
+            $totalAmount =
+                $employeePayroll->paye +
+                $employeePayroll->education_tax +
+                $employeePayroll->nis +
+                $employeePayroll->nht +
+                $employeePayroll->staff_loan +
+                $employeePayroll->medical_insurance +
+                $employeePayroll->salary_advance +
+                $employeePayroll->approved_pension_scheme +
+                $employeePayroll->psra +
+                $employeePayroll->bank_loan +
+                $employeePayroll->missing_goods +
+                $employeePayroll->damaged_goods +
+                $employeePayroll->garnishment;
+        @endphp
         <tr>
             <th>Total (JMD)</th>
+            {{-- <td></td> --}}
             <td></td>
-            <td></td>
-            @php
-                $total = $employeePayroll->gross_salary ?? 0;
-                $totalAmount = $employeePayroll->paye +  $employeePayroll->education_tax + $employeePayroll->nis + $employeePayroll->nht + $employeePayroll->staff_loan +  $employeePayroll->medical_insurance + $employeePayroll->salary_advance + $employeePayroll->approved_pension_scheme + $employeePayroll->psra + $employeePayroll->bank_loan + $employeePayroll->missing_goods + $employeePayroll->damaged_goods + $employeePayroll->garnishment;
-            @endphp
             <td style="text-align: right;">{{ formatAmount($total) }}</td>
             <td></td>
             <td style="text-align: right;">{{ formatAmount($totalAmount) }}</td>
@@ -155,7 +187,7 @@
         </tr>
         <tr>
             <td></td>
-            <td></td>
+            {{-- <td></td> --}}
             <td></td>
             <td></td>
             <th>Net Salary (JMD)</th>
@@ -164,7 +196,7 @@
             {{-- <td></td> --}}
         </tr>
     </table>
-    <br>
+    {{-- <br>
     <table>
         <tr>
             <th>Bank Name</th>
@@ -176,9 +208,9 @@
             <td></td>
             <td style="text-align: right;">{{ formatAmount($total - $totalAmount) }}</td>
         </tr>
-    </table>
+    </table> --}}
     <br>
-        <span style="text-size: 18px "><strong>Year to Date (JMD)</strong></span>
+    <span style="text-size: 18px "><strong>Year to Date (JMD)</strong></span>
     <table>
         <tr>
             {{-- <th>Year to Date (JMD)</th> --}}
@@ -187,8 +219,8 @@
             <th style="text-align: center">Tax</th>
             <th style="text-align: center">Ed Tax</th>
             <th style="text-align: center">NHT</th>
-            <th style="text-align: center">Annual Leave</th>
-            <th style="text-align: center">Sick Leave</th>
+            {{-- <th style="text-align: center">Annual Leave</th> --}}
+            {{-- <th style="text-align: center">Sick Leave</th> --}}
         </tr>
         <tr>
             {{-- <td></td> --}}
@@ -197,9 +229,10 @@
             <td style="text-align: right;">{{ formatAmount($employeePayroll->paye_tax_total) }}</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->education_tax_total) }}</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->nht_total) }}</td>
-            <td style="text-align: right;">{{ $employeePayroll->pendingLeaveBalance }}</td>
-            <td style="text-align: right;">{{ setting('yearly_leaves') ?: 10 }} </td>
+            {{-- <td style="text-align: right;">{{ $employeePayroll->pendingLeaveBalance }}</td> --}}
+            {{-- <td style="text-align: right;">{{ setting('yearly_leaves') ?: 10 }} </td> --}}
         </tr>
     </table>
 </body>
+
 </html>

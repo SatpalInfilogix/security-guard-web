@@ -368,7 +368,23 @@ class PublishGuardRoaster extends Command
             }
 
             $statutoryIncome  = $totalGrossSalaryEarned -  $lessNis - $approvedPensionScheme;
-            if ($statutoryIncome < 65389) {
+            // Determine threshold based on age
+            if ($age >= 65) {
+                $taxFreeThreshold = 75003.38; // Higher threshold for age 65+
+            } else {
+                $taxFreeThreshold = 65389;
+            }
+
+            if ($statutoryIncome < $taxFreeThreshold) {
+                $payeIncome = 0;
+            } elseif ($statutoryIncome > $taxFreeThreshold && $statutoryIncome <= 230769.23) {
+                $payeData = $statutoryIncome - $taxFreeThreshold;
+                $payeIncome = $payeData * 0.25;
+            } elseif ($statutoryIncome > 230770.23) {
+                $payeData = $statutoryIncome - 230770.23;
+                $payeIncome = $payeData * 0.30;
+            }
+            /*if ($statutoryIncome < 65389) {
                 $payeIncome = 0;
             } elseif ($statutoryIncome > 65389 && $statutoryIncome <= 230769.23) {
                 $payeData = $statutoryIncome - 65389;
@@ -376,7 +392,7 @@ class PublishGuardRoaster extends Command
             } elseif ($statutoryIncome > 230770.23) {
                 $payeData = $statutoryIncome - 230770.23;
                 $payeIncome = $payeData * 0.30;
-            }
+            }*/
 
             $eduction_tax = $statutoryIncome * 0.0225;
             $employer_contribution = $totalGrossSalaryEarned * 0.035;
@@ -455,7 +471,7 @@ class PublishGuardRoaster extends Command
                     // Deduct full amount if end_date and no_of_payroll are not set
                     $installmentAmount = ($deduction->end_date && $deduction->no_of_payroll)
                         ? $deduction->one_installment
-                        : $deduction->pending_balance; 
+                        : $deduction->pending_balance;
 
                     $newPendingBalance = $deduction->pending_balance - $installmentAmount;
                     $totalDeductions[$deductionType] += $installmentAmount;

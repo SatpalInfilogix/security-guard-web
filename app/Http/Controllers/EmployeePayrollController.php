@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Carbon\Carbon;
 use App\Models\EmployeePayroll;
+use App\Models\EmployeeRateMaster;
 use App\Models\TwentyTwoDayInterval;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -31,6 +32,72 @@ class EmployeePayrollController extends Controller
     }
 
     public function getEmployeePayroll(Request $request)
+    {
+        $employeePayrolls = EmployeePayroll::with('user');
+
+        if ($request->has('year') && $request->has('month') && !empty($request->year) && !empty($request->month)) {
+            $year = (int) $request->year;
+            $month = (int) $request->month;
+
+            $startDate = Carbon::create($year, $month, 1)->startOfDay();
+            $endDate = Carbon::create($year, $month, 1)->endOfMonth()->endOfDay();
+
+            $employeePayrolls->whereDate('start_date', '<=', $endDate)
+                ->whereDate('end_date', '>=', $startDate);
+        } elseif ($request->has('date') && !empty($request->date)) {
+            $searchDate = $request->date;
+            list($startDate, $endDate) = explode(' to ', $searchDate);
+            $startDate = Carbon::parse($startDate)->startOfDay();
+            $endDate = Carbon::parse($endDate)->endOfDay();
+
+            $employeePayrolls->whereDate('start_date', '<=', $endDate)
+                ->whereDate('end_date', '>=', $startDate);
+        } else {
+            $today = Carbon::now()->startOfDay();
+            $twentyTwoDays = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)
+                ->whereDate('end_date', '>=', $today)
+                ->first();
+
+            if ($twentyTwoDays) {
+                $previousEndDate = Carbon::parse($twentyTwoDays->start_date)->subDay();
+                $previousStartDate = Carbon::parse($previousEndDate)->startOfMonth();
+
+                $employeePayrolls->where('start_date', '>=', $previousStartDate)
+                    ->whereDate('end_date', '<=', $previousEndDate);
+            }
+        }
+
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $employeePayrolls->where(function ($query) use ($searchValue) {
+                $query->where('start_date', 'like', '%' . $searchValue . '%')
+                    ->orWhere('end_date', 'like', '%' . $searchValue . '%')
+                    ->orWhere('normal_days', 'like', '%' . $searchValue . '%')
+                    ->orWhere('leave_paid', 'like', '%' . $searchValue . '%')
+                    ->orWhere('leave_not_paid', 'like', '%' . $searchValue . '%')
+                    ->orWhereHas('user', function ($q) use ($searchValue) {
+                        $q->where('first_name', 'like', '%' . $searchValue . '%');
+                    });
+            });
+        }
+
+        $totalRecords = EmployeePayroll::count();
+        $filteredRecords = $employeePayrolls->count();
+
+        $length = $request->input('length', 10);
+        $start = $request->input('start', 0);
+
+        $employeePayrolls = $employeePayrolls->skip($start)->take($length)->get();
+
+        return response()->json([
+            'draw' => $request->input('draw'),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $employeePayrolls,
+        ]);
+    }
+
+    /* public function getEmployeePayroll(Request $request)
     {
         $today = Carbon::now()->startOfDay();
         $twentyTwoDays = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
@@ -80,7 +147,7 @@ class EmployeePayrollController extends Controller
         ];
 
         return response()->json($data);
-    }
+    }*/
 
     public function edit(EmployeePayroll $employeePayroll)
     {
@@ -90,6 +157,9 @@ class EmployeePayrollController extends Controller
         $employeePayroll = EmployeePayroll::where('id', $employeePayroll->id)->with('user', 'user.guardAdditionalInformation')->first();
         $month = $employeePayroll->end_date;
         $fullYearPayroll = EmployeePayroll::where('employee_id', $employeePayroll->employee_id)->whereDate('end_date', '<=', $month)->whereYear('created_at', now()->year)->orderBy('created_at', 'desc')->get();
+        $employeeRate = EmployeeRateMaster::where('employee_id', $employeePayroll->employee_id)->first();
+        $employeeAllowance = $employeeRate?->employee_allowance ?? 0;
+
 
         $employeePayroll['gross_total'] = $fullYearPayroll->sum('gross_salary_earned');
         $employeePayroll['nis_total'] = $fullYearPayroll->sum('nis');
@@ -99,41 +169,51 @@ class EmployeePayrollController extends Controller
 
         $twentyTwoDayCount = TwentyTwoDayInterval::where('start_date', $employeePayroll->start_date)->where('end_date', $employeePayroll->end_date)->first();
 
-        return view('admin.employee-payroll.edit', compact('employeePayroll', 'twentyTwoDayCount'));
+        return view('admin.employee-payroll.edit', compact('employeePayroll', 'twentyTwoDayCount','employeeAllowance'));
     }
 
     public function bulkDownloadPdf(Request $request)
     {
-        $today = Carbon::now()->startOfDay();
-        $twentyTwoDays = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
-
-        $previousEndDate = Carbon::parse($twentyTwoDays->start_date)->subDay();
-        $previousStartDate = Carbon::parse($previousEndDate)->startOfMonth();
-
-        $payrolls = EmployeePayroll::with('user');
-
-        if ($request->has('date') && !empty($request->date)) {
-            $searchDate = $request->date;
-            list($startDate, $endDate) = explode(' to ', $searchDate);
-            $startDate = Carbon::parse($startDate)->startOfDay();
-            $endDate = Carbon::parse($endDate)->endOfDay();
-            $payrolls->whereDate('start_date', '<=', $endDate)->whereDate('end_date', '>=', $startDate);
-        } else {
-            $payrolls->where('start_date', '>=', $previousStartDate)->whereDate('end_date', '<=', $previousEndDate);
+        if (!$request->filled('year') || !$request->filled('month')) {
+            return response()->json(['error' => 'Year and month are required.'], 422);
         }
 
-        $payrolls = $payrolls->get();
+        $year = (int) $request->year;
+        $month = (int) $request->month;
+
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfDay();
+        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth()->endOfDay();
+
+        $payrolls = EmployeePayroll::with('user')
+            ->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                    ->orWhereBetween('end_date', [$startDate, $endDate])
+                    ->orWhere(function ($q) use ($startDate, $endDate) {
+                        $q->where('start_date', '<', $startDate)
+                            ->where('end_date', '>', $endDate);
+                    });
+            })
+            ->get();
+
+        if ($payrolls->isEmpty()) {
+            return response()->json(['error' => 'No payrolls found for the selected date range.'], 404);
+        }
 
         $tempZipFile = tempnam(sys_get_temp_dir(), 'payrolls-') . '.zip';
-
         $zip = new ZipArchive();
+
         if ($zip->open($tempZipFile, ZipArchive::CREATE) !== TRUE) {
             return response()->json(['error' => 'Failed to create zip file.'], 500);
         }
 
         foreach ($payrolls as $payroll) {
-            $month = $payroll->end_date;
-            $fullYearPayroll = EmployeePayroll::where('employee_id', $payroll->employee_id)->whereDate('end_date', '<=', $month)->whereYear('created_at', now()->year)->orderBy('created_at', 'desc')->get();
+            $monthEnd = $payroll->end_date;
+
+            $fullYearPayroll = EmployeePayroll::where('employee_id', $payroll->employee_id)
+                ->whereDate('end_date', '<=', $monthEnd)
+                ->whereYear('created_at', $year)
+                ->orderBy('created_at', 'desc')
+                ->get();
 
             $payroll['gross_total'] = $fullYearPayroll->sum('gross_salary');
             $payroll['nis_total'] = $fullYearPayroll->sum('less');
@@ -142,37 +222,41 @@ class EmployeePayrollController extends Controller
             $payroll['nht_total'] = $fullYearPayroll->sum('nht');
 
             $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
-            $currentYear = now()->year;
-            $approvedLeaves = EmployeeLeave::where('employee_id', $payroll->employee_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->get()
+            $approvedLeaves = EmployeeLeave::where('employee_id', $payroll->employee_id)
+                ->where('status', 'Approved')
+                ->whereDate('date', '<=', $monthEnd)
+                ->whereYear('date', $year)
+                ->get()
                 ->sum(function ($leave) {
-                    return ($leave->type == 'Half Day') ? 0.5 : 1;
+                    return $leave->type === 'Half Day' ? 0.5 : 1;
                 });
-            $payroll['pendingLeaveBalance'] =  max(0, $paidLeaveBalanceLimit - $approvedLeaves);
 
-            $fortnightDayCount = TwentyTwoDayInterval::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
+            $payroll['pendingLeaveBalance'] = max(0, $paidLeaveBalanceLimit - $approvedLeaves);
+
+            $fortnightDayCount = TwentyTwoDayInterval::where('start_date', $payroll->start_date)
+                ->where('end_date', $payroll->end_date)
+                ->first();
 
             $html = view('admin.employee-payroll.employee-payroll-pdf.employee-payroll-new', [
                 'employeePayroll' => $payroll,
                 'fortnightDayCount' => $fortnightDayCount
             ])->render();
 
-            $options = new Options();
-            $options->set('isHtml5ParserEnabled', true);
-            $options->set('isPhpEnabled', true);
-            $dompdf = new Dompdf($options);
+            $dompdf = new Dompdf((new Options())->set('isHtml5ParserEnabled', true)->set('isPhpEnabled', true));
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'portrait');
             $dompdf->render();
-            $pdfContent = $dompdf->output();
-            $pdfName = $payroll->user->first_name . '-' . $fortnightDayCount->id . '-' . Carbon::parse($payroll->start_date)->year . '.pdf';
-            $zip->addFromString($pdfName, $pdfContent);
+
+            $pdfName = $payroll->user->first_name . '-' . $fortnightDayCount->id . '-' . $year . '.pdf';
+            $zip->addFromString($pdfName, $dompdf->output());
         }
 
         $zip->close();
 
         if (!file_exists($tempZipFile)) {
-            return response()->json(['error' => 'Employee Payroll data not exixt.'], 500);
+            return response()->json(['error' => 'Zip file creation failed.'], 500);
         }
+
         $zipFileContent = file_get_contents($tempZipFile);
 
         return response($zipFileContent, 200)
@@ -186,7 +270,8 @@ class EmployeePayrollController extends Controller
         $payroll = EmployeePayroll::where('id', $payrollId)->with('user', 'user.guardAdditionalInformation')->first();
         $month = $payroll->end_date;
         $fullYearPayroll = EmployeePayroll::where('employee_id', $payroll->employee_id)->whereDate('end_date', '<=', $month)->whereYear('created_at', now()->year)->orderBy('created_at', 'desc')->get();
-
+        $employeeRate = EmployeeRateMaster::where('employee_id', $payroll->employee_id)->first();
+        $employeeAllowance = $employeeRate?->employee_allowance ?? 0;
         $payroll['gross_total'] = $fullYearPayroll->sum('gross_salary');
         $payroll['nis_total'] = $fullYearPayroll->sum('nis');
         $payroll['paye_tax_total'] = $fullYearPayroll->sum('paye');
@@ -207,7 +292,8 @@ class EmployeePayrollController extends Controller
         $pdfOptions->set('isPhpEnabled', true);
 
         $dompdf = new Dompdf($pdfOptions);
-        $html = view('admin.employee-payroll.employee-payroll-pdf.employee-payroll-new', ['employeePayroll' => $payroll, 'fortnightDayCount' => $fortnightDayCount])->render();
+        $html = view('admin.employee-payroll.employee-payroll-pdf.employee-payroll-new', ['employeePayroll' => $payroll, 'fortnightDayCount' => $fortnightDayCount,
+        'employeeAllowance' => $employeeAllowance,])->render();
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
@@ -218,15 +304,21 @@ class EmployeePayrollController extends Controller
 
     public function employeePayrollExport(Request $request)
     {
-        $selectedDateRange = $request->input('date'); 
-        $spreadsheet = new Spreadsheet();
+        $year = $request->input('year');
+        $month = $request->input('month');
 
+        if (!$year || !$month) {
+            return response()->json(['error' => 'Year and month are required.'], 400);
+        }
+
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
+        $selectedDateRange = $startDate->format('Y-m-d') . ' to ' . $endDate->format('Y-m-d');
+
+        $spreadsheet = new Spreadsheet();
         $this->addPayrollSheet($spreadsheet, $selectedDateRange);
 
-        $startDate = explode(' to ', $selectedDateRange)[0]; 
-        $date = Carbon::parse($startDate);
-        $monthYear = $date->format('F-Y');
-
+        $monthYear = $startDate->format('F-Y');
         $fileName = 'SO1-Employee-' . $monthYear . '.xlsx';
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');

@@ -12,7 +12,7 @@ class EmployeeRateMasterController extends Controller
 {
     public function index()
     {
-        if(!Gate::allows('view employee rate master')) {
+        if (!Gate::allows('view employee rate master')) {
             abort(403);
         }
         $employeeRateMasters = EmployeeRateMaster::with('user')->get();
@@ -22,7 +22,7 @@ class EmployeeRateMasterController extends Controller
 
     public function create()
     {
-        if(!Gate::allows('create employee rate master')) {
+        if (!Gate::allows('create employee rate master')) {
             abort(403);
         }
         $userRole = Role::where('id', 9)->first();
@@ -36,18 +36,26 @@ class EmployeeRateMasterController extends Controller
 
     public function store(Request $request)
     {
-        if(!Gate::allows('create employee rate master')) {
+        if (!Gate::allows('create employee rate master')) {
             abort(403);
         }
         $request->validate([
             'employee_id' => 'required|unique:employee_rate_masters,employee_id',
             'gross_salary' => 'required',
+            'employee_allowance' => 'nullable',
         ]);
+
+        // Calculate daily and hourly income
+        $daily_income = $request->monthly_income / 22;
+        $hourly_income = $daily_income / 8;
 
         EmployeeRateMaster::create([
             'employee_id'    => $request->employee_id,
             'gross_salary'   => $request->gross_salary,
             'monthly_income' => $request->monthly_income,
+            'employee_allowance' => $request->employee_allowance,
+            'daily_income'       => $daily_income,
+            'hourly_income'      => $hourly_income,
         ]);
 
         return redirect()->route('employee-rate-master.index')->with('success', 'Employee Rate Master created successfully.');
@@ -55,7 +63,7 @@ class EmployeeRateMasterController extends Controller
 
     public function edit($id)
     {
-        if(!Gate::allows('edit employee rate master')) {
+        if (!Gate::allows('edit employee rate master')) {
             abort(403);
         }
         $userRole = Role::where('id', 9)->first();
@@ -71,19 +79,25 @@ class EmployeeRateMasterController extends Controller
 
     public function update(Request $request, $id)
     {
-        if(!Gate::allows('edit employee rate master')) {
+        if (!Gate::allows('edit employee rate master')) {
             abort(403);
         }
         $request->validate([
             'employee_id' => 'required|unique:employee_rate_masters,employee_id,' . $id,
             'gross_salary' => 'required',
+            'employee_allowance' => 'nullable',
         ]);
+
+        $daily_income = $request->monthly_income / 22;
+        $hourly_income = $daily_income / 8;
 
         EmployeeRateMaster::where('id', $id)->update([
             'employee_id'    => $request->employee_id,
             'gross_salary'   => $request->gross_salary,
             'monthly_income' => $request->monthly_income,
-
+            'employee_allowance' => $request->employee_allowance,
+            'daily_income'       => $daily_income,
+            'hourly_income'      => $hourly_income,
         ]);
 
         return redirect()->route('employee-rate-master.index')->with('success', 'Employee Rate Master updated successfully.');
@@ -91,7 +105,7 @@ class EmployeeRateMasterController extends Controller
 
     public function destroy(string $id)
     {
-        if(!Gate::allows('delete employee rate master')) {
+        if (!Gate::allows('delete employee rate master')) {
             abort(403);
         }
         EmployeeRateMaster::where('id', $id)->delete();

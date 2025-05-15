@@ -33,7 +33,7 @@ class PublishEmployeePayroll extends Command
     /**
      * Execute the console command.
      */
-    
+
     /*public function handle()
     {
         $userRole = Role::where('id', 9)->first();
@@ -497,7 +497,23 @@ class PublishEmployeePayroll extends Command
 
             $statutoryIncome  = $grossSalary -  $nis - $approvedPensionScheme;
 
-            if ($statutoryIncome < 141674) {
+            if ($age >= 65) {
+                $threshold = 162507.33; // (1,700,088 + 250,000) / 12
+            } else {
+                $threshold = 141674.00;
+            }
+
+            if ($statutoryIncome < $threshold) {
+                $payeIncome = 0;
+            } elseif ($statutoryIncome > $threshold && $statutoryIncome <= 500000.00) {
+                $payeData = $statutoryIncome - $threshold;
+                $payeIncome = $payeData * 0.25;
+            } elseif ($statutoryIncome > 500000.00) {
+                $payeData = ($statutoryIncome - 500000.00) * 0.30;
+                $payeeThreshold = (500000.00 - $threshold) * 0.25;
+                $payeIncome = $payeData + $payeeThreshold;
+            }
+            /*if ($statutoryIncome < 141674) {
                 $payeIncome = 0;
             } elseif ($statutoryIncome > 141674 && $statutoryIncome <= 500000.00) {
                 $payeData = $statutoryIncome - 141674;
@@ -506,7 +522,7 @@ class PublishEmployeePayroll extends Command
                 $payeData = ($statutoryIncome - 500000.00) * 0.30;
                 $payeeThreshold = (500000.00 - 141674.00) * 0.25;
                 $payeIncome = $payeData + $payeeThreshold;
-            }
+            }*/
 
             $eduction_tax = $statutoryIncome * 0.0225;
             $employer_contribution = $statutoryIncome * 0.035;
