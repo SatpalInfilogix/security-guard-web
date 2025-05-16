@@ -27,6 +27,7 @@ use App\Http\Controllers\EmployeeLeavesController;
 use App\Http\Controllers\EmployeePayrollController;
 use App\Http\Controllers\EmployeeDeductionController;
 use App\Http\Controllers\EmployeeOvertimeController;
+use App\Http\Controllers\LeaveEncashmentController;
 use Illuminate\Support\Facades\Response;
 
 Route::get('/', function () {
@@ -68,6 +69,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'employee-payroll'      => EmployeePayrollController::class,
             'employee-deductions'   => EmployeeDeductionController::class,
             'employee-overtime'     => EmployeeOvertimeController::class,
+            'leave-encashment'      => LeaveEncashmentController::class,
         ]);
         Route::get('employee-overtime/{employee_id}/{date}/edit', [EmployeeOvertimeController::class, 'edit'])->name('employee-overtime.edit');
         Route::put('employee-overtime/{employee_id}/{date}', [EmployeeOvertimeController::class, 'update'])->name('employee-overtime.update');
