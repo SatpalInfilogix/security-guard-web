@@ -106,7 +106,6 @@
                                                 <td>{{ formatAmount($employeePayroll->pending_leave_amount) }}</td>
                                             @else
                                                 <td colspan="3"></td>
-                                                <!-- Optionally, you can display a message if the balance is 0 or less -->
                                                 <td></td>
                                             @endif
                                             <td>NHT</td>
@@ -115,8 +114,10 @@
                                             <td>{{ formatAmount($employeePayroll->employer_contribution_nht_tax) }}</td>
                                         </tr>
                                         <tr>
-                                            <td colspan="3"></td>
-                                            <td></td>
+                                            <td>Employee Overtime</td>
+                                                <td></td>
+                                                <td></td>
+                                                <td>{{ formatAmount($employeePayroll->overtime_income_total) }}</td>
                                             <td>Heart</td>
                                             <td></td>
                                             <td></td>

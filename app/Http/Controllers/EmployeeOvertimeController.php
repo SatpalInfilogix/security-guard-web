@@ -6,6 +6,7 @@ use App\Models\EmployeeOvertime;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use Carbon\Carbon;
+use App\Models\PublicHoliday;
 use Illuminate\Http\Request;
 
 class EmployeeOvertimeController extends Controller
@@ -79,7 +80,28 @@ class EmployeeOvertimeController extends Controller
                 continue;
             }
 
-            EmployeeOvertime::create($rowData);
+            $date = Carbon::parse($rowData['work_date']);
+            $dayOfWeek = $date->dayOfWeek; // 0 = Sunday, 6 = Saturday
+
+            // Check if it's a public holiday
+            $isHoliday = PublicHoliday::whereDate('date', $date->toDateString())->exists();
+
+            $multiplier = 1;
+            if ($isHoliday || $dayOfWeek == 0) {
+                $multiplier = 2;
+            } elseif ($dayOfWeek == 6) {
+                $multiplier = 1.5;
+            }
+
+            $overtimeIncome = $rowData['rate'] * $rowData['hours'] * $multiplier;
+
+            EmployeeOvertime::create([
+                'employee_id'     => $rowData['employee_id'],
+                'work_date'       => $rowData['work_date'],
+                'rate'            => $rowData['rate'],
+                'hours'           => $rowData['hours'],
+                'overtime_income' => $overtimeIncome,
+            ]);
         }
 
         if (!empty($errors)) {
@@ -137,24 +159,34 @@ class EmployeeOvertimeController extends Controller
 
         foreach ($employeeIds as $index => $empId) {
             $id = $ids[$index] ?? null;
+            $workDate = Carbon::parse($dates[$index]);
+
+            $isHoliday = PublicHoliday::whereDate('date', $workDate->toDateString())->exists();
+
+            $multiplier = 1;
+            if ($isHoliday || $workDate->isSunday()) {
+                $multiplier = 2;
+            } elseif ($workDate->isSaturday()) {
+                $multiplier = 1.5;
+            }
+
+            $overtimeIncome = $rates[$index] * $hours[$index] * $multiplier;
+
+            $data = [
+                'employee_id'     => $empId,
+                'work_date'       => $dates[$index],
+                'rate'            => $rates[$index],
+                'hours'           => $hours[$index],
+                'overtime_income' => $overtimeIncome,
+            ];
 
             if (!empty($id)) {
                 $overtime = EmployeeOvertime::find($id);
                 if ($overtime) {
-                    $overtime->update([
-                        'employee_id' => $empId,
-                        'work_date' => $dates[$index],
-                        'rate' => $rates[$index],
-                        'hours' => $hours[$index],
-                    ]);
+                    $overtime->update($data);
                 }
             } else {
-                EmployeeOvertime::create([
-                    'employee_id' => $empId,
-                    'work_date' => $dates[$index],
-                    'rate' => $rates[$index],
-                    'hours' => $hours[$index],
-                ]);
+                EmployeeOvertime::create($data);
             }
         }
 

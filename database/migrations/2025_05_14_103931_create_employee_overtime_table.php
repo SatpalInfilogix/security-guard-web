@@ -13,6 +13,7 @@ return new class extends Migration {
             $table->date('work_date');
             $table->decimal('rate', 10, 2);
             $table->decimal('hours', 5, 2);
+            $table->decimal('overtime_income',10, 2)->nullable();
             $table->timestamps();
         });
     }
