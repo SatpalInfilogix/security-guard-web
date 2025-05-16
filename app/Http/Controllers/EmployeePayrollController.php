@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use App\Models\EmployeePayroll;
 use App\Models\EmployeeRateMaster;
 use App\Models\TwentyTwoDayInterval;
+use App\Models\EmployeeOvertime;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use ZipArchive;
@@ -160,16 +161,19 @@ class EmployeePayrollController extends Controller
         $employeeRate = EmployeeRateMaster::where('employee_id', $employeePayroll->employee_id)->first();
         $employeeAllowance = $employeeRate?->employee_allowance ?? 0;
 
-
         $employeePayroll['gross_total'] = $fullYearPayroll->sum('gross_salary_earned');
         $employeePayroll['nis_total'] = $fullYearPayroll->sum('nis');
         $employeePayroll['paye_tax_total'] = $fullYearPayroll->sum('paye');
         $employeePayroll['education_tax_total'] = $fullYearPayroll->sum('education_tax');
         $employeePayroll['nht_total'] = $fullYearPayroll->sum('nht');
 
+        $overtimeTotal = EmployeeOvertime::where('employee_id', $employeePayroll->employee_id)
+            ->whereBetween('work_date', [$employeePayroll->start_date, $employeePayroll->end_date])
+            ->sum('overtime_income');
+        $employeePayroll['overtime_income_total'] = $overtimeTotal;
         $twentyTwoDayCount = TwentyTwoDayInterval::where('start_date', $employeePayroll->start_date)->where('end_date', $employeePayroll->end_date)->first();
 
-        return view('admin.employee-payroll.edit', compact('employeePayroll', 'twentyTwoDayCount','employeeAllowance'));
+        return view('admin.employee-payroll.edit', compact('employeePayroll', 'twentyTwoDayCount', 'employeeAllowance'));
     }
 
     public function bulkDownloadPdf(Request $request)
@@ -278,6 +282,11 @@ class EmployeePayrollController extends Controller
         $payroll['education_tax_total'] = $fullYearPayroll->sum('education_tax');
         $payroll['nht_total'] = $fullYearPayroll->sum('nht');
 
+        $overtimeTotal = EmployeeOvertime::where('employee_id', $payroll->employee_id)
+            ->whereBetween('work_date', [$payroll->start_date, $payroll->end_date])
+            ->sum('overtime_income');
+        $payroll['overtime_income_total'] = $overtimeTotal;
+
         $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
         $currentYear = now()->year;
         $approvedLeaves = EmployeeLeave::where('employee_id', $payroll->employee_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->get()
@@ -292,8 +301,11 @@ class EmployeePayrollController extends Controller
         $pdfOptions->set('isPhpEnabled', true);
 
         $dompdf = new Dompdf($pdfOptions);
-        $html = view('admin.employee-payroll.employee-payroll-pdf.employee-payroll-new', ['employeePayroll' => $payroll, 'fortnightDayCount' => $fortnightDayCount,
-        'employeeAllowance' => $employeeAllowance,])->render();
+        $html = view('admin.employee-payroll.employee-payroll-pdf.employee-payroll-new', [
+            'employeePayroll' => $payroll,
+            'fortnightDayCount' => $fortnightDayCount,
+            'employeeAllowance' => $employeeAllowance,
+        ])->render();
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();

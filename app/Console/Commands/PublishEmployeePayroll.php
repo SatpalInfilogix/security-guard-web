@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\EmployeeDeduction;
 use App\Models\EmployeeDeductionDetail;
 use App\Models\EmployeeLeave;
+use App\Models\EmployeeOvertime;
 use App\Models\EmployeeRateMaster;
 use App\Models\User;
 use App\Models\EmployeePayroll;
@@ -177,8 +178,8 @@ class PublishEmployeePayroll extends Command
             $query->where('role_id', $userRole->id);
         })->with('guardAdditionalInformation')->latest()->get();
 
-        $today = Carbon::now()->startOfDay();
-        // $today = Carbon::parse('25-02-2025')->startOfDay(); // For Manuall testing 
+        // $today = Carbon::now()->startOfDay();
+        $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
 
         $processingDate = $this->getProcessingDate($today);
 
@@ -264,6 +265,11 @@ class PublishEmployeePayroll extends Command
                                         $this->calculateLeaveDetails($normalDays, $employee, $previousStartDate, $endDate, $daySalary);
                                     //===== End Leaves Calculation =====
 
+                                    $overtimeTotal = EmployeeOvertime::where('employee_id', $employee->id)
+                                        ->whereBetween('work_date', [$previousStartDate, $endDate])
+                                        ->sum('overtime_income');
+
+                                    $grossSalary += $overtimeTotal;
                                     //===== Employee Payroll Statutory Calculation =====
                                     $payrollStatutoryData = $this->calculateEmployeePayrollStatutory(
                                         $employee,
