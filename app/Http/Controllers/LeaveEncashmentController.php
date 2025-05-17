@@ -41,7 +41,7 @@ class LeaveEncashmentController extends Controller
 
         $leaves = EmployeeLeave::where('employee_id', $employee->id)
             ->where('status', 'approved')
-            ->where('created_at', '>=', now()->subYear())
+            ->where('date', '>=', now()->subYear())
             ->get();
 
         $usedLeaves = $leaves->sum(function ($leave) {
@@ -98,7 +98,7 @@ class LeaveEncashmentController extends Controller
 
         $leaves = EmployeeLeave::where('employee_id', $employee->id)
             ->where('status', 'approved')
-            ->where('created_at', '>=', now()->subYear())
+            ->where('date', '>=', now()->subYear())
             ->get();
 
         $usedLeaves = $leaves->sum(function ($leave) {
@@ -144,7 +144,7 @@ class LeaveEncashmentController extends Controller
         }
         $leaves = EmployeeLeave::where('employee_id', $employeeId)
             ->where('status', 'approved')
-            ->where('created_at', '>=', now()->subYear())
+            ->where('date', '>=', now()->subYear())
             ->get();
 
         $usedLeaves = $leaves->sum(function ($leave) {
