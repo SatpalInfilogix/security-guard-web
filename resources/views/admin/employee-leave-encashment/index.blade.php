@@ -11,8 +11,8 @@
                         <h4 class="mb-sm-0 font-size-18">Employee Overtime</h4>
 
                         <div class="page-title-right">
-                            <a href="{{ route('employee-overtime.create') }}" class="btn btn-primary">Add New Employee
-                                Overtime</a>
+                            <a href="{{ route('employee-leave-encashment.create') }}" class="btn btn-primary">Add New Leave
+                                Encashment</a>
                         </div>
 
                     </div>
@@ -32,30 +32,26 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Employee Name</th>
-                                        <th>Rate</th>
-                                        <th>Hours</th>
-                                        <th>Created Date</th>
+                                        <th>Pending Leaves</th>
+                                        <th>Leaves Encashment</th>
+                                        <th>Date</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($overtimes as $index => $overtime)
+                                    @foreach ($encashments as $index => $encashment)
                                         <tr>
                                             <td>{{ $index + 1 }}</td>
-                                            <td>{{ $overtime->employee->first_name ?? '' }}
-                                                {{ $overtime->employee->surname ?? '' }}</td>
-                                            <td>{{ number_format($overtime->rate, 2) }}</td>
-                                            <td>{{ $overtime->total_hours }}</td>
-                                            <td>{{ $overtime->created_date }}</td>
+                                            <td>{{ $encashment->employee->first_name ?? '' }}
+                                                {{ $encashment->employee->surname ?? '' }}</td>
+                                            <td>{{ $encashment->pending_leaves }}</td>
+                                            <td>{{ $encashment->encash_leaves }}</td>
+                                            <td>{{ $encashment->created_at->format('Y-m-d') }}</td>
                                             <td>
-                                                <a href="{{ route('employee-overtime.edit', [
-                                                    $overtime->employee_id,
-                                                    \Carbon\Carbon::parse($overtime->created_date)->toDateString(),
-                                                ]) }}"
+                                                <a href="{{ route('employee-leave-encashment.edit', $encashment->id) }}"
                                                     class="btn btn-sm btn-info">Edit</a>
-
                                                 <button type="button" data-source="Employee Overtime"
-                                                    data-endpoint="{{ route('employee-overtime.destroy', $overtime->employee_id) }}"
+                                                    data-endpoint="{{ route('employee-leave-encashment.destroy', $encashment->id) }}"
                                                     class="delete-btn btn btn-danger btn-sm">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>
@@ -63,7 +59,6 @@
                                         </tr>
                                     @endforeach
                                 </tbody>
-
                             </table>
                         </div>
                     </div>

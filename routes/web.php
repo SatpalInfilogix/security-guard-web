@@ -69,8 +69,11 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'employee-payroll'      => EmployeePayrollController::class,
             'employee-deductions'   => EmployeeDeductionController::class,
             'employee-overtime'     => EmployeeOvertimeController::class,
-            'leave-encashment'      => LeaveEncashmentController::class,
+            'employee-leave-encashment'  => LeaveEncashmentController::class,
         ]);
+
+        Route::get('/get-pending-leaves', [LeaveEncashmentController::class, 'getPendingLeaves'])->name('get-pending-leaves');
+
         Route::get('employee-overtime/{employee_id}/{date}/edit', [EmployeeOvertimeController::class, 'edit'])->name('employee-overtime.edit');
         Route::put('employee-overtime/{employee_id}/{date}', [EmployeeOvertimeController::class, 'update'])->name('employee-overtime.update');
 
