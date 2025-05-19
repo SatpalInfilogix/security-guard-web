@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Leave;
 use App\Models\GuardLeaveEncashment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class GuardLeaveEncashmentController extends Controller
 {
@@ -33,30 +34,22 @@ class GuardLeaveEncashmentController extends Controller
         $request->validate([
             'guard_id' => 'required|exists:users,id',
             'encash_leaves' => 'required|integer|min:1',
+            'pending_leaves' => 'required|numeric|min:0',
         ]);
 
-        $guard = User::findOrFail($request->guard_id);
-
-        $usedLeaves = Leave::where('guard_id', $guard->id)
-            ->where('status', 'approved')
-            ->where('date', '>=', now()->subYear())
-            ->count();
-
-        $pendingLeaves = max(0, 10 - $usedLeaves); // Assume 10 leave quota
-
-        if ($request->encash_leaves > $pendingLeaves) {
+        if ($request->encash_leaves > $request->pending_leaves) {
             return redirect()->back()->withInput()->withErrors([
-                'encash_leaves' => 'Encash leaves cannot be greater than pending leaves (' . $pendingLeaves . ').'
+                'encash_leaves' => 'Encash leaves cannot be greater than pending leaves (' . $request->pending_leaves . ').'
             ]);
         }
 
         GuardLeaveEncashment::create([
-            'guard_id' => $guard->id,
-            'pending_leaves' => $pendingLeaves,
+            'guard_id' => $request->guard_id,
+            'pending_leaves' => $request->pending_leaves,
             'encash_leaves' => $request->encash_leaves,
         ]);
 
-        return redirect()->route('guard-leave-encashment.index')->with('success', 'Leave Encashment recorded.');
+        return redirect()->route('guard-leave-encashment.index')->with('success', 'Guard Leave Encashment recorded.');
     }
 
     public function edit($id)
@@ -78,31 +71,24 @@ class GuardLeaveEncashmentController extends Controller
         $request->validate([
             'guard_id' => 'required|exists:users,id',
             'encash_leaves' => 'required|integer|min:1',
+            'pending_leaves' => 'required|numeric|min:0',
         ]);
 
-        $encashment = GuardLeaveEncashment::findOrFail($id);
-        $guard = User::findOrFail($request->guard_id);
-
-        $usedLeaves = Leave::where('guard_id', $guard->id)
-            ->where('status', 'approved')
-            ->where('date', '>=', now()->subYear())
-            ->count();
-
-        $pendingLeaves = max(0, 10 - $usedLeaves);
-
-        if ($request->encash_leaves > $pendingLeaves) {
+        if ($request->encash_leaves > $request->pending_leaves) {
             return redirect()->back()
-                ->withErrors(['encash_leaves' => 'Encash leaves cannot be greater than pending leaves (' . $pendingLeaves . ').'])
+                ->withErrors(['encash_leaves' => 'Encash leaves cannot be greater than pending leaves (' . $request->pending_leaves . ').'])
                 ->withInput();
         }
 
+        $encashment = GuardLeaveEncashment::findOrFail($id);
+
         $encashment->update([
-            'guard_id' => $guard->id,
-            'pending_leaves' => $pendingLeaves,
+            'guard_id' => $request->guard_id,
+            'pending_leaves' => $request->pending_leaves,
             'encash_leaves' => $request->encash_leaves,
         ]);
 
-        return redirect()->route('guard-leave-encashment.index')->with('success', 'Leave Encashment updated.');
+        return redirect()->route('guard-leave-encashment.index')->with('success', 'Guard Leave Encashment updated.');
     }
 
     public function destroy($id)
@@ -140,7 +126,11 @@ class GuardLeaveEncashmentController extends Controller
             ->where('date', '>=', now()->subYear())
             ->count();
 
-        $pendingLeaves = max(0, 10 - $usedLeaves);
+        $encashedLeaves = DB::table('guard_leave_encashments')
+            ->where('guard_id', $guardId)
+            ->sum('encash_leaves');
+        // dd( $usedLeaves);
+        $pendingLeaves = max(0, 10 - $usedLeaves - $encashedLeaves);
 
         return response()->json(['pending_leaves' => $pendingLeaves]);
     }

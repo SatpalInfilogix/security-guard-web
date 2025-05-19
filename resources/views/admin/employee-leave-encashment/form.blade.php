@@ -24,7 +24,7 @@
 
     <div class="col-md-4">
         <label>Pending Leaves</label>
-        <input type="text" class="form-control" id="pending_leaves"
+        <input type="text" name="pending_leaves" class="form-control" id="pending_leaves"
             value="{{ isset($encashment) ? $encashment->pending_leaves : '' }}" readonly>
     </div>
 
