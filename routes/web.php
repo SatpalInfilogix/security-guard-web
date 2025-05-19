@@ -27,6 +27,7 @@ use App\Http\Controllers\EmployeeLeavesController;
 use App\Http\Controllers\EmployeePayrollController;
 use App\Http\Controllers\EmployeeDeductionController;
 use App\Http\Controllers\EmployeeOvertimeController;
+use App\Http\Controllers\GuardLeaveEncashmentController;
 use App\Http\Controllers\LeaveEncashmentController;
 use Illuminate\Support\Facades\Response;
 
@@ -69,8 +70,13 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'employee-payroll'      => EmployeePayrollController::class,
             'employee-deductions'   => EmployeeDeductionController::class,
             'employee-overtime'     => EmployeeOvertimeController::class,
-            'leave-encashment'      => LeaveEncashmentController::class,
+            'employee-leave-encashment'  => LeaveEncashmentController::class,
+            'guard-leave-encashment'  => GuardLeaveEncashmentController::class,
         ]);
+
+        Route::get('/get-pending-leaves', [LeaveEncashmentController::class, 'getPendingLeaves'])->name('get-pending-leaves');
+        Route::get('guard-leave-encashments/get-pending-leaves', [GuardLeaveEncashmentController::class, 'getPendingLeaves'])->name('get-guard-pending-leaves');
+
         Route::get('employee-overtime/{employee_id}/{date}/edit', [EmployeeOvertimeController::class, 'edit'])->name('employee-overtime.edit');
         Route::put('employee-overtime/{employee_id}/{date}', [EmployeeOvertimeController::class, 'update'])->name('employee-overtime.update');
 
