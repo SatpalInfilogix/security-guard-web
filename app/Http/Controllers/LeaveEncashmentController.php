@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\EmployeeLeave;
 use App\Models\LeaveEncashment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LeaveEncashmentController extends Controller
 {
@@ -35,30 +36,18 @@ class LeaveEncashmentController extends Controller
         $request->validate([
             'employee_id' => 'required|exists:users,id',
             'encash_leaves' => 'required|integer|min:1',
+            'pending_leaves' => 'required|numeric|min:0',
         ]);
 
-        $employee = User::findOrFail($request->employee_id);
-
-        $leaves = EmployeeLeave::where('employee_id', $employee->id)
-            ->where('status', 'approved')
-            ->where('date', '>=', now()->subYear())
-            ->get();
-
-        $usedLeaves = $leaves->sum(function ($leave) {
-            return $leave->type === 'Half Day' ? 0.5 : 1;
-        });
-
-        $pendingLeaves = max(0, 10 - $usedLeaves);
-
-        if ($request->encash_leaves > $pendingLeaves) {
+        if ($request->encash_leaves > $request->pending_leaves) {
             return redirect()->back()->withInput()->withErrors([
-                'encash_leaves' => 'Encash leaves cannot be greater than pending leaves (' . $pendingLeaves . ').'
+                'encash_leaves' => 'Encash leaves cannot be greater than pending leaves (' . $request->pending_leaves . ').'
             ]);
         }
 
         LeaveEncashment::create([
-            'employee_id' => $employee->id,
-            'pending_leaves' => $pendingLeaves,
+            'employee_id' => $request->employee_id,
+            'pending_leaves' => $request->pending_leaves,
             'encash_leaves' => $request->encash_leaves,
         ]);
 
@@ -91,36 +80,25 @@ class LeaveEncashmentController extends Controller
         $request->validate([
             'employee_id' => 'required|exists:users,id',
             'encash_leaves' => 'required|integer|min:1',
+            'pending_leaves' => 'required|numeric|min:0',
         ]);
 
-        $encashment = LeaveEncashment::findOrFail($id);
-        $employee = User::findOrFail($request->employee_id);
-
-        $leaves = EmployeeLeave::where('employee_id', $employee->id)
-            ->where('status', 'approved')
-            ->where('date', '>=', now()->subYear())
-            ->get();
-
-        $usedLeaves = $leaves->sum(function ($leave) {
-            return $leave->type === 'Half Day' ? 0.5 : 1;
-        });
-
-        $pendingLeaves = max(0, 10 - $usedLeaves);
-
-        if ($request->encash_leaves > $pendingLeaves) {
+        if ($request->encash_leaves > $request->pending_leaves) {
             return redirect()->back()
-                ->withErrors(['encash_leaves' => 'Encash leaves cannot be greater than pending leaves (' . $pendingLeaves . ').'])
+                ->withErrors(['encash_leaves' => 'Encash leaves cannot be greater than pending leaves (' . $request->pending_leaves . ').'])
                 ->withInput();
         }
 
+        $encashment = LeaveEncashment::findOrFail($id);
+
         $encashment->update([
-            'pending_leaves' => $pendingLeaves,
+            'employee_id' => $request->employee_id,
+            'pending_leaves' => $request->pending_leaves,
             'encash_leaves' => $request->encash_leaves,
         ]);
 
         return redirect()->route('employee-leave-encashment.index')->with('success', 'Leave Encashment updated.');
     }
-
 
     /**
      * Remove the specified resource from storage.
@@ -150,8 +128,11 @@ class LeaveEncashmentController extends Controller
         $usedLeaves = $leaves->sum(function ($leave) {
             return $leave->type === 'Half Day' ? 0.5 : 1;
         });
+        $encashedLeaves = DB::table('leave_encashments')
+            ->where('employee_id', $employeeId)
+            ->sum('encash_leaves');
         // dd( $usedLeaves);
-        $pendingLeaves = max(0, 10 - $usedLeaves);
+        $pendingLeaves = max(0, 10 - $usedLeaves - $encashedLeaves);
 
         return response()->json(['pending_leaves' => $pendingLeaves]);
     }
