@@ -13,10 +13,15 @@ class LeaveEncashmentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $encashments = LeaveEncashment::with('employee')->latest()->get();
-        return view('admin.employee-leave-encashment.index', compact('encashments'));
+        $employees = User::role('employee')->get();
+        $query = LeaveEncashment::with('employee')->latest();
+        if ($request->filled('employee_id')) {
+            $query->where('employee_id', $request->employee_id);
+        }
+        $encashments = $query->get();
+        return view('admin.employee-leave-encashment.index', compact('encashments', 'employees'));
     }
 
     /**

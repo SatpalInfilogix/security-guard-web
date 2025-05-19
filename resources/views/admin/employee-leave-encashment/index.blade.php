@@ -8,18 +8,39 @@
             <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                        <h4 class="mb-sm-0 font-size-18">Employee Overtime</h4>
+                        <h4 class="mb-sm-0 font-size-18">Employee Leave Encashment</h4>
 
                         <div class="page-title-right">
                             <a href="{{ route('employee-leave-encashment.create') }}" class="btn btn-primary">Add New Leave
                                 Encashment</a>
                         </div>
-
                     </div>
                 </div>
             </div>
             <!-- end page title -->
 
+            <!-- 🔍 Employee Filter with Search & Reset -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <form method="GET" action="{{ route('employee-leave-encashment.index') }}">
+                        <div class="input-group">
+                            <select name="employee_id" class="form-control select2">
+                                <option value="">-- Select Employee --</option>
+                                @foreach ($employees as $employee)
+                                    <option value="{{ $employee->id }}"
+                                        {{ request('employee_id') == $employee->id ? 'selected' : '' }}>
+                                        {{ $employee->first_name }} {{ $employee->surname }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="btn btn-md btn-primary mx-1 ">Search</button>
+                            <a href="{{ route('employee-leave-encashment.index') }}" class="btn btn-secondary">Reset</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Messages -->
             <div class="row">
                 <div class="col-12">
                     <x-error-message :message="$errors->first('message')" />
@@ -66,5 +87,17 @@
             </div>
         </div>
     </div>
-    <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
+
+    <x-include-plugins :plugins="['dataTable']" />
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+                placeholder: "Select Employee",
+                allowClear: true
+            });
+        });
+    </script>
+@endpush
