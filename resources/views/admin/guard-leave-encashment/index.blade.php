@@ -18,6 +18,26 @@
                 </div>
             </div>
             <!-- end page title -->
+            <!-- 🔍 Guard Filter with Search & Reset -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <form method="GET" action="{{ route('guard-leave-encashment.index') }}">
+                        <div class="input-group">
+                            <select name="guard_id" class="form-control guardselect2">
+                                <option value="">-- Select Guard --</option>
+                                @foreach ($guards as $guard)
+                                    <option value="{{ $guard->id }}"
+                                        {{ request('guard_id') == $guard->id ? 'selected' : '' }}>
+                                        {{ $guard->first_name }} {{ $guard->surname }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="btn btn-md btn-primary mx-1">Search</button>
+                            <a href="{{ route('guard-leave-encashment.index') }}" class="btn btn-secondary">Reset</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             <div class="row">
                 <div class="col-12">
@@ -41,10 +61,8 @@
                                     @foreach ($encashments as $index => $encashment)
                                         <tr>
                                             <td>{{ $index + 1 }}</td>
-                                            <td>
-                                                {{ $encashment->guardUser->first_name ?? '' }}
-                                                {{ $encashment->guardUser->surname ?? '' }}
-                                            </td>
+                                            <td>{{ $encashment->guardUser->first_name ?? '' }}
+                                                {{ $encashment->guardUser->surname ?? '' }}</td>
                                             <td>{{ $encashment->pending_leaves }}</td>
                                             <td>{{ $encashment->encash_leaves }}</td>
                                             <td>{{ $encashment->created_at->format('Y-m-d') }}</td>
@@ -69,3 +87,13 @@
     </div>
     <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
 @endsection
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            $('.guardselect2').select2({
+                placeholder: "Select Guard",
+                allowClear: true
+            });
+        });
+    </script>
+@endpush

@@ -11,11 +11,24 @@ use Illuminate\Support\Facades\DB;
 
 class GuardLeaveEncashmentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $encashments = GuardLeaveEncashment::with('guardUser')->latest()->get();
-        return view('admin.guard-leave-encashment.index', compact('encashments'));
+        $query = GuardLeaveEncashment::with('guardUser');
+
+        if ($request->filled('guard_id')) {
+            $query->where('guard_id', $request->guard_id);
+        }
+
+        $encashments = $query->latest()->get();
+
+        $userRole = Role::find(3); // Security Guard role
+        $guards = User::whereHas('roles', function ($q) use ($userRole) {
+            $q->where('role_id', $userRole->id);
+        })->where('status', 'Active')->get();
+
+        return view('admin.guard-leave-encashment.index', compact('encashments', 'guards'));
     }
+
 
     public function create()
     {
