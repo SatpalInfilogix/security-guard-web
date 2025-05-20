@@ -9,6 +9,7 @@ use App\Models\EmployeeOvertime;
 use App\Models\EmployeeRateMaster;
 use App\Models\User;
 use App\Models\EmployeePayroll;
+use App\Models\LeaveEncashment;
 use App\Models\PublicHoliday;
 use Spatie\Permission\Models\Role;
 use Illuminate\Console\Command;
@@ -178,8 +179,8 @@ class PublishEmployeePayroll extends Command
             $query->where('role_id', $userRole->id);
         })->with('guardAdditionalInformation')->latest()->get();
 
-        // $today = Carbon::now()->startOfDay();
-        $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
+        $today = Carbon::now()->startOfDay();
+        // $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
 
         $processingDate = $this->getProcessingDate($today);
 
@@ -439,7 +440,15 @@ class PublishEmployeePayroll extends Command
         $pendingLeaveAmount = $paidLeaveBalance * $daySalary;
         $normalDaysSalary = $grossSalary;
 
-        $grossSalary += $paidLeaveBalance * $daySalary;
+        $leaveEncashments = LeaveEncashment::where('employee_id', $employee->id)
+            ->whereDate('created_at', '<=', $endDate)
+            ->get();
+
+        $encashLeaveDays = $leaveEncashments->sum('encash_leaves');
+        $encashLeaveAmount = $encashLeaveDays * $daySalary;
+
+        $grossSalary += $encashLeaveAmount; 
+        // $grossSalary += $paidLeaveBalance * $daySalary;
 
         return [$leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary, $pendingLeaveAmount, $normalDaysSalary];
     }

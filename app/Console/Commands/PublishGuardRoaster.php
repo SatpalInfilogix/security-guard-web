@@ -7,6 +7,7 @@ use App\Models\Deduction;
 use App\Models\DeductionDetail;
 use Illuminate\Console\Command;
 use App\Models\FortnightDates;
+use App\Models\GuardLeaveEncashment;
 use App\Models\GuardRoster;
 use App\Models\Payroll;
 use App\Models\PayrollDetail;
@@ -28,7 +29,7 @@ class PublishGuardRoaster extends Command
      *
      * @var string
      */
-    protected $signature = 'publish:guard-roaster';
+    protected $signature = 'publish:guard-roaster'; 
 
     /**
      * The console command description.
@@ -314,7 +315,7 @@ class PublishGuardRoaster extends Command
         }
 
         $userData = User::with('guardAdditionalInformation', 'guardAdditionalInformation.rateMaster')->where('id', $userId)->first();
-        list($leavePaid, $leaveNotPaid, $paidLeaveBalance) = $this->calculateLeaveDetails($userId, $previousStartDate, $previousEndDate);
+        list($leavePaid, $leaveNotPaid, $paidLeaveBalance, $leaveEncashmentAmount) = $this->calculateLeaveDetails($userId, $previousStartDate, $previousEndDate);
         $pendingLeaveAmount = 0;
         $paidLeaveAmount = 0;
         $notPaidLeaveAmount = 0;
@@ -332,7 +333,7 @@ class PublishGuardRoaster extends Command
 
         $leavesAmount = $pendingLeaveAmount;
 
-        $totalGrossSalaryEarned = $totalNormalEarnings + $leavesAmount + $totalOvertimeEarnings + $totalPublicHolidayEarnings;
+        $totalGrossSalaryEarned = $totalNormalEarnings + $leavesAmount + $totalOvertimeEarnings + $totalPublicHolidayEarnings + $leaveEncashmentAmount;
 
         $approvedPensionScheme = 0;
         $dateOfBirth = $userData->guardAdditionalInformation->date_of_birth;
@@ -609,8 +610,25 @@ class PublishGuardRoaster extends Command
             }
         }
 
+        $leaveEncashmentAmount = 0;
+        // Calculate encashed leaves and amount
+        $leaveEncashments = GuardLeaveEncashment::where('guard_id', $userId)
+            ->whereBetween('created_at', [$previousStartDate, $previousEndDate])
+            ->get();
 
-        return [$leavePaid, $leaveNotPaid, $paidLeaveBalance];
+        if ($leaveEncashments->count()) {
+            $hourlyRate = User::with('guardAdditionalInformation.rateMaster')
+                ->find($userId)
+                ->guardAdditionalInformation
+                ->rateMaster
+                ->gross_hourly_rate;
+
+            foreach ($leaveEncashments as $encashment) {
+                $leaveEncashmentAmount += ($encashment->encash_leaves * 8) * $hourlyRate;
+            }
+        }
+
+        return [$leavePaid, $leaveNotPaid, $paidLeaveBalance, $leaveEncashmentAmount];
     }
 
     private function generateInvoice($payrollDetails, $startDate, $endDate)
