@@ -173,6 +173,10 @@ class EmployeePayrollController extends Controller
         $overtimeTotal = EmployeeOvertime::where('employee_id', $employeePayroll->employee_id)
             ->whereBetween('work_date', [$employeePayroll->start_date, $employeePayroll->end_date])
             ->sum('overtime_income');
+        $overtimeHours = EmployeeOvertime::where('employee_id', $employeePayroll->employee_id)
+            ->whereBetween('work_date', [$employeePayroll->start_date, $employeePayroll->end_date])
+            ->sum('hours');
+
         $employeePayroll['overtime_income_total'] = $overtimeTotal;
         $twentyTwoDayCount = TwentyTwoDayInterval::where('start_date', $employeePayroll->start_date)->where('end_date', $employeePayroll->end_date)->first();
         $leaveEncashments = LeaveEncashment::where('employee_id', $employeePayroll->employee_id)
@@ -188,6 +192,7 @@ class EmployeePayrollController extends Controller
             'employeeAllowance',
             'encashLeaveDays',
             'encashLeaveAmount',
+            'overtimeHours',
         ));
     }
 
@@ -302,6 +307,9 @@ class EmployeePayrollController extends Controller
         $overtimeTotal = EmployeeOvertime::where('employee_id', $payroll->employee_id)
             ->whereBetween('work_date', [$payroll->start_date, $payroll->end_date])
             ->sum('overtime_income');
+        $overtimeHours = EmployeeOvertime::where('employee_id', $payroll->employee_id)
+            ->whereBetween('work_date', [$payroll->start_date, $payroll->end_date])
+            ->sum('hours');
         $payroll['overtime_income_total'] = $overtimeTotal;
         $leaveEncashments = LeaveEncashment::where('employee_id', $payroll->employee_id)
             ->whereDate('created_at', '<=', $payroll->end_date)
@@ -328,6 +336,7 @@ class EmployeePayrollController extends Controller
             'employeeAllowance' => $employeeAllowance,
             'encashLeaveDays' => $encashLeaveDays,
             'encashLeaveAmount' => $encashLeaveAmount,
+            'overtimeHours' => $overtimeHours,
         ])->render();
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');

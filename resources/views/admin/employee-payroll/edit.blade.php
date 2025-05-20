@@ -115,9 +115,9 @@
                                         </tr>
                                         <tr>
                                             <td>Employee Overtime</td>
-                                                <td></td>
-                                                <td></td>
-                                                <td>{{ formatAmount($employeePayroll->overtime_income_total) }}</td>
+                                            <td></td>
+                                            <td>{{ $overtimeHours }}</td>
+                                            <td>{{ formatAmount($employeePayroll->overtime_income_total) }}</td>
                                             <td>Heart</td>
                                             <td></td>
                                             <td></td>
@@ -197,7 +197,8 @@
                                             <td></td>
                                             <td></td>
                                             @php
-                                                $total =($employeePayroll->gross_salary ?? 0) + ($employeeAllowance ?? 0);
+                                                $total =
+                                                    ($employeePayroll->gross_salary ?? 0) + ($employeeAllowance ?? 0);
                                                 $totalAmount =
                                                     $employeePayroll->paye +
                                                     $employeePayroll->education_tax +

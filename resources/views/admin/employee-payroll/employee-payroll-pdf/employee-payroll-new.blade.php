@@ -130,7 +130,7 @@
         </tr>
         <tr>
             <td>Employee Overtime</td>
-            <td></td>
+            <td style="text-align: right;">{{$overtimeHours}}</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->overtime_income_total) }}</td>
             {{-- <td></td> --}}
             <td>Heart</td>
