@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('current_time_zone')->nullable()->after('remember_token');
+            $table->string('current_time_zone')->nullable()->default('America/Jamaica')->after('remember_token');
         });
     }
 

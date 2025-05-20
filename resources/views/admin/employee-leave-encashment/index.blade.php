@@ -70,7 +70,7 @@
                                             <td>{{ $encashment->created_at->format('Y-m-d') }}</td>
                                             <td>
                                                 <a href="{{ route('employee-leave-encashment.edit', $encashment->id) }}"
-                                                    class="btn btn-sm btn-info">Edit</a>
+                                                    class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
                                                 <button type="button" data-source="Employee Overtime"
                                                     data-endpoint="{{ route('employee-leave-encashment.destroy', $encashment->id) }}"
                                                     class="delete-btn btn btn-danger btn-sm">
