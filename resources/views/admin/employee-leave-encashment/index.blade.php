@@ -7,7 +7,7 @@
             <!-- start page title -->
             <div class="row">
                 <div class="col-12">
-                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between p-1 mb-1">
                         <h4 class="mb-sm-0 font-size-18">Employee Leave Encashment</h4>
 
                         <div class="page-title-right">
