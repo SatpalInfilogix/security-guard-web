@@ -182,8 +182,13 @@ class EmployeePayrollController extends Controller
         $encashLeaveDays = $leaveEncashments->sum('encash_leaves');
         $encashLeaveAmount = $encashLeaveDays * $daySalary;
 
-        return view('admin.employee-payroll.edit', compact('employeePayroll', 'twentyTwoDayCount', 'employeeAllowance', 'encashLeaveDays',
-        'encashLeaveAmount',));
+        return view('admin.employee-payroll.edit', compact(
+            'employeePayroll',
+            'twentyTwoDayCount',
+            'employeeAllowance',
+            'encashLeaveDays',
+            'encashLeaveAmount',
+        ));
     }
 
     public function bulkDownloadPdf(Request $request)
@@ -286,6 +291,8 @@ class EmployeePayrollController extends Controller
         $fullYearPayroll = EmployeePayroll::where('employee_id', $payroll->employee_id)->whereDate('end_date', '<=', $month)->whereYear('created_at', now()->year)->orderBy('created_at', 'desc')->get();
         $employeeRate = EmployeeRateMaster::where('employee_id', $payroll->employee_id)->first();
         $employeeAllowance = $employeeRate?->employee_allowance ?? 0;
+        $daySalary = $employeeRate?->daily_income ?? 0;
+
         $payroll['gross_total'] = $fullYearPayroll->sum('gross_salary');
         $payroll['nis_total'] = $fullYearPayroll->sum('nis');
         $payroll['paye_tax_total'] = $fullYearPayroll->sum('paye');
@@ -296,7 +303,11 @@ class EmployeePayrollController extends Controller
             ->whereBetween('work_date', [$payroll->start_date, $payroll->end_date])
             ->sum('overtime_income');
         $payroll['overtime_income_total'] = $overtimeTotal;
-
+        $leaveEncashments = LeaveEncashment::where('employee_id', $payroll->employee_id)
+            ->whereDate('created_at', '<=', $payroll->end_date)
+            ->get();
+        $encashLeaveDays = $leaveEncashments->sum('encash_leaves');
+        $encashLeaveAmount = $encashLeaveDays * $daySalary;
         $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
         $currentYear = now()->year;
         $approvedLeaves = EmployeeLeave::where('employee_id', $payroll->employee_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->get()
@@ -315,6 +326,8 @@ class EmployeePayrollController extends Controller
             'employeePayroll' => $payroll,
             'fortnightDayCount' => $fortnightDayCount,
             'employeeAllowance' => $employeeAllowance,
+            'encashLeaveDays' => $encashLeaveDays,
+            'encashLeaveAmount' => $encashLeaveAmount,
         ])->render();
         $dompdf->loadHtml($html);
         $dompdf->setPaper('A4', 'portrait');

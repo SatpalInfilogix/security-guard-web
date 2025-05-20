@@ -138,16 +138,17 @@
             <td></td>
             {{-- <td>{{$employeePayroll->heart}}</td> --}}
         </tr>
-        @if ($employeePayroll->staff_loan > 0 || $employeePayroll->pending_staff_loan > 0)
+        {{-- @if ($employeePayroll->staff_loan > 0 || $employeePayroll->pending_staff_loan > 0) --}}
             <tr>
-                <td colspan="3">{!! '&nbsp;' !!}</td>
-                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                <td>Leave Encashment</td>
+                <td style="text-align: right;">{{ $encashLeaveDays ?? 0}}</td>
+                <td style="text-align: right;">{{ formatAmount($encashLeaveAmount ?? 0) }}</td>
                 <td>Staff Loan</td>
                 <td style="text-align: right;">{{ formatAmount($employeePayroll->staff_loan) }}</td>
                 <td style="text-align: right;">{{ number_format($employeePayroll->pending_staff_loan) }}</td>
                 {{-- <td></td> --}}
             </tr>
-        @endif
+        {{-- @endif --}}
 
         @if ($employeePayroll->medical_insurance > 0 || $employeePayroll->pending_medical_insurance > 0)
             <tr>
