@@ -124,8 +124,10 @@
                                             <td>{{ formatAmount($employeePayroll->heart) }}</td>
                                         </tr>
                                         <tr>
-                                            <td colspan="3"></td>
+                                            <td>Leave Encashment</td>
                                             <td></td>
+                                            <td>{{ $encashLeaveDays }}</td>
+                                            <td>{{ formatAmount($encashLeaveAmount) }}</td>
                                             <td>Staff Loan</td>
                                             <td> <input type="text" class="form-control editable" id="staff_loan"
                                                     value="{{ formatAmount($employeePayroll->staff_loan) }}" readonly></td>

@@ -10,6 +10,7 @@ use App\Models\EmployeePayroll;
 use App\Models\EmployeeRateMaster;
 use App\Models\TwentyTwoDayInterval;
 use App\Models\EmployeeOvertime;
+use App\Models\LeaveEncashment;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use ZipArchive;
@@ -160,6 +161,8 @@ class EmployeePayrollController extends Controller
         $fullYearPayroll = EmployeePayroll::where('employee_id', $employeePayroll->employee_id)->whereDate('end_date', '<=', $month)->whereYear('created_at', now()->year)->orderBy('created_at', 'desc')->get();
         $employeeRate = EmployeeRateMaster::where('employee_id', $employeePayroll->employee_id)->first();
         $employeeAllowance = $employeeRate?->employee_allowance ?? 0;
+        $daySalary = $employeeRate?->daily_income ?? 0;
+
 
         $employeePayroll['gross_total'] = $fullYearPayroll->sum('gross_salary_earned');
         $employeePayroll['nis_total'] = $fullYearPayroll->sum('nis');
@@ -172,8 +175,15 @@ class EmployeePayrollController extends Controller
             ->sum('overtime_income');
         $employeePayroll['overtime_income_total'] = $overtimeTotal;
         $twentyTwoDayCount = TwentyTwoDayInterval::where('start_date', $employeePayroll->start_date)->where('end_date', $employeePayroll->end_date)->first();
+        $leaveEncashments = LeaveEncashment::where('employee_id', $employeePayroll->employee_id)
+            ->whereDate('created_at', '<=', $employeePayroll->end_date)
+            ->get();
 
-        return view('admin.employee-payroll.edit', compact('employeePayroll', 'twentyTwoDayCount', 'employeeAllowance'));
+        $encashLeaveDays = $leaveEncashments->sum('encash_leaves');
+        $encashLeaveAmount = $encashLeaveDays * $daySalary;
+
+        return view('admin.employee-payroll.edit', compact('employeePayroll', 'twentyTwoDayCount', 'employeeAllowance', 'encashLeaveDays',
+        'encashLeaveAmount',));
     }
 
     public function bulkDownloadPdf(Request $request)
