@@ -105,7 +105,9 @@
                                                 <td>{{ formatAmount($employeePayroll->pending_leave_balance) }}</td>
                                                 <td>{{ formatAmount($employeePayroll->pending_leave_amount) }}</td>
                                             @else
-                                                <td colspan="3"></td>
+                                                <td>Leave not Paid</td>
+                                                <td></td>
+                                                <td>{{$employeePayroll->leave_not_paid}}</td>
                                                 <td></td>
                                             @endif
                                             <td>NHT</td>
@@ -115,17 +117,19 @@
                                         </tr>
                                         <tr>
                                             <td>Employee Overtime</td>
-                                                <td></td>
-                                                <td></td>
-                                                <td>{{ formatAmount($employeePayroll->overtime_income_total) }}</td>
+                                            <td></td>
+                                            <td>{{ $overtimeHours }}</td>
+                                            <td>{{ formatAmount($employeePayroll->overtime_income_total) }}</td>
                                             <td>Heart</td>
                                             <td></td>
                                             <td></td>
                                             <td>{{ formatAmount($employeePayroll->heart) }}</td>
                                         </tr>
                                         <tr>
-                                            <td colspan="3"></td>
+                                            <td>Leave Encashment</td>
                                             <td></td>
+                                            <td>{{ $encashLeaveDays }}</td>
+                                            <td>{{ formatAmount($encashLeaveAmount) }}</td>
                                             <td>Staff Loan</td>
                                             <td> <input type="text" class="form-control editable" id="staff_loan"
                                                     value="{{ formatAmount($employeePayroll->staff_loan) }}" readonly></td>
@@ -195,7 +199,8 @@
                                             <td></td>
                                             <td></td>
                                             @php
-                                                $total =($employeePayroll->gross_salary ?? 0) + ($employeeAllowance ?? 0);
+                                                $total =
+                                                    ($employeePayroll->gross_salary ?? 0) + ($employeeAllowance ?? 0);
                                                 $totalAmount =
                                                     $employeePayroll->paye +
                                                     $employeePayroll->education_tax +

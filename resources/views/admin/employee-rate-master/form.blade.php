@@ -42,7 +42,19 @@
         <div class="mb-3">
             <x-form-input id="employee_allowance" name="employee_allowance"
                 value="{{ $rateMaster->employee_allowance ?? '' }}" label="Employee Allowance"
-                placeholder="Enter Allowance" type="number" step="any" min="0"/>
+                placeholder="Enter Allowance" type="number" step="any" min="0" />
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mb-3">
+            <x-form-input id="daily_income" name="daily_income" value="{{ $rateMaster->daily_income ?? '' }}"
+                label="Daily Income" placeholder="Daily Income" type="number" step="any" readonly />
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="mb-3">
+            <x-form-input id="hourly_income" name="hourly_income" value="{{ $rateMaster->hourly_income ?? '' }}"
+                label="Hourly Income" placeholder="Hourly Income" type="number" step="any" readonly />
         </div>
     </div>
 
@@ -72,12 +84,22 @@
             var grossSalary = parseFloat($(this).val()) || 0;
             var monthlyIncome = grossSalary / 12;
             $('#monthly_income').val(monthlyIncome.toFixed(2));
+
+            var dailyIncome = monthlyIncome / 22;
+            var hourlyIncome = dailyIncome / 8;
+            $('#daily_income').val(dailyIncome.toFixed(2));
+            $('#hourly_income').val(hourlyIncome.toFixed(2));
         });
 
         if ($('#gross_salary').val() != "") {
             var grossSalary = parseFloat($('#gross_salary').val()) || 0;
             var monthlyIncome = grossSalary / 12;
             $('#monthly_income').val(monthlyIncome.toFixed(2));
+            
+            var dailyIncome = monthlyIncome / 22;
+            var hourlyIncome = dailyIncome / 8;
+            $('#daily_income').val(dailyIncome.toFixed(2));
+            $('#hourly_income').val(hourlyIncome.toFixed(2));
         }
     });
 </script>
