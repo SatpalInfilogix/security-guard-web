@@ -7,6 +7,13 @@ use App\Models\EmployeeLeave;
 use App\Models\LeaveEncashment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Imports\LeaveEncashmentImport;
+use App\Exports\LeaveEncashmentImportResultExport;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Session;
+use App\Exports\LeaveEncashmentSampleExport;
+use PDF;
 
 class LeaveEncashmentController extends Controller
 {
@@ -141,4 +148,38 @@ class LeaveEncashmentController extends Controller
 
         return response()->json(['pending_leaves' => $pendingLeaves]);
     }
+
+   
+    public function import(Request $request)
+    {
+        $request->validate([
+            'import_file' => 'required|file|mimes:xlsx,csv',
+        ]);
+
+        try {
+            $import = new LeaveEncashmentImport;
+            Excel::import($import, $request->file('import_file'));
+
+            $results = $import->getResults();
+
+            $successCount = collect($results)->where('status', 'Success')->count();
+            $failCount = collect($results)->where('status', 'Failed')->count();
+
+            Session::flash('message', "$successCount rows imported successfully. $failCount rows failed.");
+            Session::flash('alert-type', $failCount > 0 ? 'warning' : 'success');
+
+            $filename = 'leave_encashment_import_result_' . now()->format('Ymd_His') . '.xlsx';
+            return Excel::download(new LeaveEncashmentImportResultExport($results), $filename);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with([
+                'message' => 'Import failed: ' . $e->getMessage(),
+                'alert-type' => 'error'
+            ]);
+        }
+    }
+public function downloadSample()
+{
+    return Excel::download(new LeaveEncashmentSampleExport, 'leave_encashment_sample.xlsx');
+}
 }
