@@ -8,6 +8,14 @@ use App\Models\Leave;
 use App\Models\GuardLeaveEncashment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Imports\GuardLeaveEncashmentImport;
+use App\Exports\GuardLeaveEncashmentResultExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\GuardLeaveEncashmentSampleExport;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Session;
+use PDF;
+
 
 class GuardLeaveEncashmentController extends Controller
 {
@@ -146,5 +154,41 @@ class GuardLeaveEncashmentController extends Controller
         $pendingLeaves = max(0, 10 - $usedLeaves - $encashedLeaves);
 
         return response()->json(['pending_leaves' => $pendingLeaves]);
+    }
+
+
+       public function import(Request $request)
+    {
+        $request->validate([
+            'import_file' => 'required|file|mimes:xlsx,csv',
+        ]);
+
+        try {
+            $file = $request->file('import_file');
+            $importHandler = new GuardLeaveEncashmentImport();
+
+            Excel::import($importHandler, $file);
+            $results = $importHandler->getResults();
+
+            $successCount = collect($results)->where('status', 'Success')->count();
+            $failCount = collect($results)->where('status', 'Failed')->count();
+
+            Session::flash('message', "$successCount rows imported successfully. $failCount rows failed.");
+            Session::flash('alert-type', $failCount > 0 ? 'warning' : 'success');
+
+            $filename = 'guard_leave_encashment_result_' . now()->format('Ymd_His') . '.xlsx';
+            return Excel::download(new GuardLeaveEncashmentResultExport($results), $filename);
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with([
+                'message' => 'Import failed: ' . $e->getMessage(),
+                'alert-type' => 'error'
+            ]);
+        }
+    }
+
+    public function downloadSample()
+    {
+        return Excel::download(new GuardLeaveEncashmentSampleExport, 'guard_leave_encashment_sample.xlsx');
     }
 }

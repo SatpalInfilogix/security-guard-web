@@ -9,10 +9,21 @@
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between p-1 mb-1">
                         <h4 class="mb-sm-0 font-size-18">Guard Leave Encashment</h4>
 
-                        <div class="page-title-right">
-                            <a href="{{ route('guard-leave-encashment.create') }}" class="btn btn-primary">Add New Leave
-                                Encashment</a>
-                        </div>
+                    <div class="page-title-right d-flex gap-2">
+                        <a href="{{ route('guard-leave-encashment.sample') }}"
+                            class="btn btn-primary btn-md">
+                            <i class="bx bx-download"></i> Download Sample File
+                        </a>
+                        <form id="importForm" action="{{ route('guard-leave-encashment.import') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <label for="fileInput" class="btn btn-primary mb-0">
+                                <i class="bx bx-cloud-upload"></i> Import Leave Encashment
+                                <input type="file" id="fileInput" name="import_file" accept=".csv,.xlsx" style="display: none;" onchange="submitImportForm()">
+                            </label>
+                        </form>
+
+                        <a href="{{ route('guard-leave-encashment.create') }}" class="btn btn-primary">Add New Leave
+                            Encashment</a>
                     </div>
                 </div>
             </div>
@@ -37,11 +48,12 @@
                     </form>
                 </div>
             </div>
+        </div>
 
-            <div class="row">
-                <div class="col-12">
-                    <x-error-message :message="$errors->first('message')" />
-                    <x-success-message :message="session('success')" />
+        <div class="row">
+            <div class="col-12">
+                <x-error-message :message="$errors->first('message')" />
+                <x-success-message :message="session('success')" />
 
                     <div class="card">
                         <div class="card-body">
@@ -84,15 +96,19 @@
             </div>
         </div>
     </div>
-    <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
+</div>
+<x-include-plugins :plugins="['dataTable']"></x-include-plugins>
 @endsection
 @push('scripts')
-    <script>
-        $(document).ready(function() {
-            $('.guardselect2').select2({
-                placeholder: "Select Guard",
-                allowClear: true
-            });
+<script>
+    $(document).ready(function() {
+        $('.guardselect2').select2({
+            placeholder: "Select Guard",
+            allowClear: true
         });
-    </script>
+    });
+      function submitImportForm() {
+        document.getElementById('importForm').submit();
+    }
+</script>
 @endpush

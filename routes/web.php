@@ -107,6 +107,11 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('employee-leave-encashment/import', [LeaveEncashmentController::class, 'import'])->name('employee-leave-encashment.import');
     Route::get('employee-leave-encashment/export-results', [LeaveEncashmentController::class, 'exportResultCsv'])->name('employee-leave-encashment.export-results');
     Route::get('/download-leave-encashment-sample', [LeaveEncashmentController::class, 'downloadSample'])->name('leave-encashment.sample');
+    Route::post('guard-leave-encashment/import', [GuardLeaveEncashmentController::class, 'import'])->name('guard-leave-encashment.import');
+    Route::get('guard-leave-encashment/export-results', [GuardLeaveEncashmentController::class, 'exportResultCsv'])
+    ->name('guard-leave-encashment.export-results');
+    Route::get('/download-guard-leave-encashment-sample', [GuardLeaveEncashmentController::class, 'downloadSample'])
+        ->name('guard-leave-encashment.sample');
 
 
 
