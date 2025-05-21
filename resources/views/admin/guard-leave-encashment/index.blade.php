@@ -3,11 +3,10 @@
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
-
             <!-- start page title -->
             <div class="row">
                 <div class="col-12">
-                    <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                    <div class="page-title-box d-sm-flex align-items-center justify-content-between p-1 mb-1">
                         <h4 class="mb-sm-0 font-size-18">Guard Leave Encashment</h4>
 
                         <div class="page-title-right">
@@ -19,7 +18,7 @@
             </div>
             <!-- end page title -->
             <!-- 🔍 Guard Filter with Search & Reset -->
-            <div class="row mb-3">
+            <div class="row mb-4">
                 <div class="col-md-6">
                     <form method="GET" action="{{ route('guard-leave-encashment.index') }}">
                         <div class="input-group">
@@ -68,7 +67,7 @@
                                             <td>{{ $encashment->created_at->format('Y-m-d') }}</td>
                                             <td>
                                                 <a href="{{ route('guard-leave-encashment.edit', $encashment->id) }}"
-                                                    class="btn btn-sm btn-info">Edit</a>
+                                                    class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
                                                 <button type="button" data-source="Guard Leave Encashment"
                                                     data-endpoint="{{ route('guard-leave-encashment.destroy', $encashment->id) }}"
                                                     class="delete-btn btn btn-danger btn-sm">
