@@ -447,7 +447,7 @@ class PublishEmployeePayroll extends Command
         $encashLeaveDays = $leaveEncashments->sum('encash_leaves');
         $encashLeaveAmount = $encashLeaveDays * $daySalary;
 
-        $grossSalary += $encashLeaveAmount; 
+        $grossSalary += $encashLeaveAmount;
         // $grossSalary += $paidLeaveBalance * $daySalary;
 
         return [$leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary, $pendingLeaveAmount, $normalDaysSalary];
@@ -539,7 +539,12 @@ class PublishEmployeePayroll extends Command
                 $payeIncome = $payeData + $payeeThreshold;
             }*/
 
-            $eduction_tax = $statutoryIncome * 0.0225;
+            if ($age >= 65) {
+                $eduction_tax = 0;
+            } else {
+                $eduction_tax = $statutoryIncome * 0.0225;
+            }
+            
             $employer_contribution = $statutoryIncome * 0.035;
 
             if ($age >= 65) {
