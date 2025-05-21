@@ -104,6 +104,11 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('import-client-site', [ClientSiteController::class, 'importClientSite'])->name('import.client-site');
     Route::post('import-guard-roster', [GuardRosterController::class, 'importGuardRoster'])->name('import.guard-roster');
     Route::post('import-security-guard', [SecurityGuardController::class, 'importSecurityGuard'])->name('import.security-guard');
+    Route::post('employee-leave-encashment/import', [LeaveEncashmentController::class, 'import'])->name('employee-leave-encashment.import');
+    Route::get('employee-leave-encashment/export-results', [LeaveEncashmentController::class, 'exportResultCsv'])->name('employee-leave-encashment.export-results');
+    Route::get('/download-leave-encashment-sample', [LeaveEncashmentController::class, 'downloadSample'])->name('leave-encashment.sample');
+
+
 
     Route::get('download-guard-roster-sample', function () {
         $file = public_path('assets/sample-guard-roster/guard_roster.xlsx');
