@@ -104,6 +104,12 @@
 
 <script>
     $(document).ready(function() {
+
+        flatpickr('.date-picker-guard', {
+            dateFormat: "d-m-Y",
+            allowInput: true
+        });
+
         $('#document_date').on('change', function() {
             triggerEndDateCalculation();
         });

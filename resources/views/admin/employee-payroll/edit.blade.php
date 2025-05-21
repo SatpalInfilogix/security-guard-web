@@ -105,7 +105,9 @@
                                                 <td>{{ formatAmount($employeePayroll->pending_leave_balance) }}</td>
                                                 <td>{{ formatAmount($employeePayroll->pending_leave_amount) }}</td>
                                             @else
-                                                <td colspan="3"></td>
+                                                <td>Leave not Paid</td>
+                                                <td></td>
+                                                <td>{{$employeePayroll->leave_not_paid}}</td>
                                                 <td></td>
                                             @endif
                                             <td>NHT</td>
