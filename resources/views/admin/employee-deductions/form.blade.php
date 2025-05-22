@@ -107,7 +107,8 @@
 
         flatpickr('.date-picker-guard', {
             dateFormat: "d-m-Y",
-            allowInput: true
+            allowInput: true,
+            minDate: "today"
         });
 
         $('#document_date').on('change', function() {
@@ -139,6 +140,12 @@
                         if (response.end_date) {
                             $('#start_date').val(response.start_date);
                             $('#end_date').val(response.end_date);
+                            flatpickr('.date-picker-guard', {
+                                dateFormat: "d-m-Y",
+                                allowInput: true,
+                                minDate: "today",
+                                date: response.start_date,
+                            });
                         } else {
                             alert('End date could not be calculated.');
                         }
