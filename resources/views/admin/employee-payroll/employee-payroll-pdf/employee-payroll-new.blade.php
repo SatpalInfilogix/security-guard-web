@@ -141,7 +141,7 @@
         </tr>
         {{-- @if ($employeePayroll->staff_loan > 0 || $employeePayroll->pending_staff_loan > 0) --}}
             <tr>
-                <td>Leave Encashment</td>
+                <td>Pay in Lieu of Employee</td>
                 <td style="text-align: right;">{{ $encashLeaveDays ?? 0}}</td>
                 <td style="text-align: right;">{{ formatAmount($encashLeaveAmount ?? 0) }}</td>
                 <td>Staff Loan</td>
