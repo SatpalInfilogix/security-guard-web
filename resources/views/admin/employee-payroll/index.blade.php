@@ -159,7 +159,10 @@
                         return meta.row + 1 + meta.settings._iDisplayStart;
                     }
                 }, {
-                    data: 'user.first_name'
+                    data: 'user',
+                    render: function(data, type, row) {
+                        return data.first_name + ' ' + data.surname;
+                    }
                 }, {
                     data: 'start_date'
                 }, {

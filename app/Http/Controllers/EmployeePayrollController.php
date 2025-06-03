@@ -78,7 +78,8 @@ class EmployeePayrollController extends Controller
                     ->orWhere('leave_paid', 'like', '%' . $searchValue . '%')
                     ->orWhere('leave_not_paid', 'like', '%' . $searchValue . '%')
                     ->orWhereHas('user', function ($q) use ($searchValue) {
-                        $q->where('first_name', 'like', '%' . $searchValue . '%');
+                        $q->where('first_name', 'like', '%' . $searchValue . '%')
+                        ->orWhere('surname', 'like', '%' . $searchValue . '%');
                     });
             });
         }
