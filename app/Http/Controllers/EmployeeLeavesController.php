@@ -14,7 +14,7 @@ class EmployeeLeavesController extends Controller
 {
     public function index()
     {
-        if(!Gate::allows('view employee leaves')) {
+        if (!Gate::allows('view employee leaves')) {
             abort(403);
         }
         return view('admin.employee-leaves.index');
@@ -22,7 +22,7 @@ class EmployeeLeavesController extends Controller
 
     public function create()
     {
-        if(!Gate::allows('create employee leaves')) {
+        if (!Gate::allows('create employee leaves')) {
             abort(403);
         }
         $userRole = Role::where('id', 9)->first();
@@ -43,11 +43,11 @@ class EmployeeLeavesController extends Controller
         }
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
-            $leaves->where(function($query) use ($searchValue) {
+            $leaves->where(function ($query) use ($searchValue) {
                 $query->where('date', 'like', '%' . $searchValue . '%')
                     ->orWhere('type', 'like', '%' . $searchValue . '%')
                     ->orWhere('reason', 'like', '%' . $searchValue . '%')
-                    ->orWhereHas('user', function($q) use ($searchValue) {
+                    ->orWhereHas('user', function ($q) use ($searchValue) {
                         $q->where('first_name', 'like', '%' . $searchValue . '%');
                     });
             });
@@ -74,13 +74,15 @@ class EmployeeLeavesController extends Controller
 
     public function store(Request $request)
     {
-        if(!Gate::allows('create employee leaves')) {
+        if (!Gate::allows('create employee leaves')) {
             abort(403);
         }
         $request->validate([
             'employee_id'   => 'required',
             'start_date'    => 'required|date',
             'end_date'      => 'nullable|date|after_or_equal:start_date',
+            'actual_start_date'   => 'nullable|date',
+            'actual_end_date'     => 'nullable|date|after_or_equal:actual_start_date',
         ]);
 
         $start_date = Carbon::parse($request->start_date);
@@ -106,6 +108,8 @@ class EmployeeLeavesController extends Controller
                     'type'        => $request->type,
                     'reason'      => $request->reason,
                     'description' => $request->description,
+                    'actual_start_date' => $request->actual_start_date ? Carbon::parse($request->actual_start_date) : null,
+                    'actual_end_date'   => $request->actual_end_date ? Carbon::parse($request->actual_end_date) : null,
                 ]);
                 $createdDates[] = $date->toDateString();
             }
@@ -120,7 +124,7 @@ class EmployeeLeavesController extends Controller
 
     public function destroy($id)
     {
-        if(!Gate::allows('delete employee leaves')) {
+        if (!Gate::allows('delete employee leaves')) {
             abort(403);
         }
 
@@ -155,5 +159,4 @@ class EmployeeLeavesController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Status updated successfully.']);
     }
-
 }
