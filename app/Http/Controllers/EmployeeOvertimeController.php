@@ -23,10 +23,14 @@ class EmployeeOvertimeController extends Controller
         });
 
         $displayOvertimes = $groupedOvertimes->map(function ($group) {
+            $first = $group->first();
             return (object)[
-                'employee'     => $group->first()->employee,
-                'employee_id'  => $group->first()->employee_id,
-                'created_date' => $group->first()->created_at->format('Y-m-d'),
+                'employee'     => $first->employee,
+                'employee_id'  => $first->employee_id,
+                'created_date' => $first->created_at->format('Y-m-d'),
+                'actual_date'  => $first->actual_date
+                    ? Carbon::parse($first->actual_date)->format('Y-m-d')
+                    : 'N/A',
                 'total_hours'  => $group->sum('hours'),
                 'rate'         => $group->avg('rate'),
             ];

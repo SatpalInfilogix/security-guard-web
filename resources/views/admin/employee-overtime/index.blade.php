@@ -35,6 +35,7 @@
                                         <th>Rate</th>
                                         <th>Hours</th>
                                         <th>Created Date</th>
+                                        <th>Actual Date</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
@@ -47,6 +48,7 @@
                                             <td>{{ number_format($overtime->rate, 2) }}</td>
                                             <td>{{ $overtime->total_hours }}</td>
                                             <td>{{ $overtime->created_date }}</td>
+                                            <td>{{ $overtime->actual_date }}</td>
                                             <td>
                                                 <a href="{{ route('employee-overtime.edit', [
                                                     $overtime->employee_id,
