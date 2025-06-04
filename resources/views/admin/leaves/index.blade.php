@@ -11,8 +11,8 @@
                         <h4 class="mb-sm-0 font-size-18">Leaves</h4>
 
                         <div class="page-title-right">
-                            @if(Auth::user()->can('create leaves'))
-                            <a href="{{ route('leaves.create') }}" class="btn btn-primary">Add New Leave</a>
+                            @if (Auth::user()->can('create leaves'))
+                                <a href="{{ route('leaves.create') }}" class="btn btn-primary">Add New Leave</a>
                             @endif
                         </div>
                     </div>
@@ -59,10 +59,12 @@
                                         <th>#</th>
                                         <th>Guard Name</th>
                                         <th>Date</th>
+                                        <th>Actual Start Date</th>
+                                        <th>Actual End Date</th>
                                         <th>Reason</th>
                                         <th>Status</th>
                                         @can('delete leaves')
-                                        <th>Action</th>
+                                            <th>Action</th>
                                         @endcan
                                     </tr>
                                 </thead>
@@ -115,7 +117,7 @@
                 }];
             @endcan
 
-            console.log('actionColumn',actionColumn)
+            console.log('actionColumn', actionColumn)
 
             var table = $('#leaves-list').DataTable({
                 processing: true,
@@ -143,6 +145,18 @@
                     },
                     {
                         data: 'date'
+                    },
+                    {
+                        data: 'actual_start_date',
+                        render: function(data, type, row) {
+                            return data ? data : 'N/A';
+                        }
+                    },
+                    {
+                        data: 'actual_end_date',
+                        render: function(data, type, row) {
+                            return data ? data : 'N/A';
+                        }
                     },
                     {
                         data: 'reason'
