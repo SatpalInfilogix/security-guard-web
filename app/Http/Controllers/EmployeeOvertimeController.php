@@ -57,7 +57,7 @@ class EmployeeOvertimeController extends Controller
         $workDates   = $request->input('work_date');
         $rates       = $request->input('rate');
         $hours       = $request->input('hours');
-
+        $actualDates = $request->input('actual_date');
         $errors = [];
 
         for ($i = 0; $i < count($employeeIds); $i++) {
@@ -66,11 +66,13 @@ class EmployeeOvertimeController extends Controller
                 'work_date'   => $workDates[$i],
                 'rate'        => $rates[$i],
                 'hours'       => $hours[$i],
+                'actual_date' => $actualDates[$i] ?? null,
             ];
 
             $validator = Validator::make($rowData, [
                 'employee_id' => 'required|exists:users,id',
                 'work_date'   => 'required|date',
+                'actual_date' => 'nullable|date',
                 'rate'        => 'required|numeric|min:0',
                 'hours'       => 'required|numeric|min:0|max:24',
             ]);
@@ -83,7 +85,6 @@ class EmployeeOvertimeController extends Controller
             $date = Carbon::parse($rowData['work_date']);
             $dayOfWeek = $date->dayOfWeek; // 0 = Sunday, 6 = Saturday
 
-            // Check if it's a public holiday
             $isHoliday = PublicHoliday::whereDate('date', $date->toDateString())->exists();
 
             $multiplier = 1;
@@ -98,6 +99,7 @@ class EmployeeOvertimeController extends Controller
             EmployeeOvertime::create([
                 'employee_id'     => $rowData['employee_id'],
                 'work_date'       => $rowData['work_date'],
+                'actual_date'     => $rowData['actual_date'],
                 'rate'            => $rowData['rate'],
                 'hours'           => $rowData['hours'],
                 'overtime_income' => $overtimeIncome,
@@ -146,14 +148,16 @@ class EmployeeOvertimeController extends Controller
     {
         $request->validate([
             'employee_id.*' => 'required|exists:users,id',
-            'work_date.*' => 'required|date',
-            'rate.*' => 'required|numeric|min:0.01',
-            'hours.*' => 'required|numeric|min:0.01',
+            'work_date.*'   => 'required|date',
+            'actual_date.*' => 'nullable|date',
+            'rate.*'        => 'required|numeric|min:0.01',
+            'hours.*'       => 'required|numeric|min:0.01',
         ]);
 
         $ids = $request->input('ids', []);
         $employeeIds = $request->input('employee_id', []);
         $dates = $request->input('work_date', []);
+        $actualDates = $request->input('actual_date', []);
         $rates = $request->input('rate', []);
         $hours = $request->input('hours', []);
 
@@ -175,6 +179,7 @@ class EmployeeOvertimeController extends Controller
             $data = [
                 'employee_id'     => $empId,
                 'work_date'       => $dates[$index],
+                'actual_date'     => $actualDates[$index] ?? null,
                 'rate'            => $rates[$index],
                 'hours'           => $hours[$index],
                 'overtime_income' => $overtimeIncome,

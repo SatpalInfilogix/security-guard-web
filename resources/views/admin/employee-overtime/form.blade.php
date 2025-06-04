@@ -3,8 +3,8 @@
          @foreach ($overtimes as $index => $overtimeItem)
              <div class="row mb-3 g-2 align-items-end" id="row-{{ $index }}">
                  <input type="hidden" name="ids[]" value="{{ $overtimeItem->id }}">
-                 <div class="col-md-3">
-                     <label class="form-label">Employee</label>
+                 <div class="col-md-2">
+                     <label class="form-label">Employee<span class="text-danger">*</span></label>
                      <select class="form-select" disabled>
                          <option value="{{ $overtimeItem->employee_id }}" selected>
                              {{ $overtimeItem->employee->first_name ?? '' }}
@@ -14,20 +14,25 @@
                      <input type="hidden" name="employee_id[]" value="{{ $overtimeItem->employee_id }}">
                  </div>
                  <div class="col-md-2">
-                     <label class="form-label">Date</label>
+                     <label class="form-label">Actual Date</label>
+                     <input type="date" class="form-control" name="actual_date[]"
+                         value="{{ $overtimeItem->actual_date }}">
+                 </div>
+                 <div class="col-md-2">
+                     <label class="form-label">Date<span class="text-danger">*</span></label>
                      <input type="date" class="form-control" name="work_date[]"
                          value="{{ $overtimeItem->work_date }}">
                  </div>
                  <div class="col-md-2">
-                     <label class="form-label">Rate</label>
+                     <label class="form-label">Rate<span class="text-danger">*</span></label>
                      <input type="number" class="form-control" name="rate[]" value="{{ $overtimeItem->rate }}"
                          readonly>
                  </div>
                  <div class="col-md-2">
-                     <label class="form-label">Hours</label>
+                     <label class="form-label">Hours<span class="text-danger">*</span></label>
                      <input type="number" class="form-control" name="hours[]" value="{{ $overtimeItem->hours }}">
                  </div>
-                 <div class="col-md-3">
+                 <div class="col-md-2">
                      @if ($loop->first)
                          <button type="button" class="btn btn-primary mt-2" id="addRow">Add More</button>
                      @else
@@ -38,8 +43,8 @@
          @endforeach
      @else
          <div class="row mb-3 g-2 align-items-end" id="row-0">
-             <div class="col-md-3">
-                 <label class="form-label">Employee</label>
+             <div class="col-md-2">
+                 <label class="form-label">Employee<span class="text-danger">*</span></label>
                  <select class="form-select" name="employee_id[]">
                      <option value="">Select Employee</option>
                      @foreach ($employees as $employee)
@@ -50,20 +55,24 @@
                  </select>
              </div>
              <div class="col-md-2">
-                 <label class="form-label">Date</label>
+                 <label class="form-label">Actual Date</label>
+                 <input type="date" class="form-control" name="actual_date[]" value="{{ old('actual_date') }}">
+             </div>
+             <div class="col-md-2">
+                 <label class="form-label">Date<span class="text-danger">*</span></label>
                  <input type="date" class="form-control" name="work_date[]" value="{{ old('work_date') }}">
              </div>
              <div class="col-md-2">
-                 <label class="form-label">Rate</label>
+                 <label class="form-label">Rate<span class="text-danger">*</span></label>
                  <input type="text" class="form-control" name="rate[]" value="{{ old('rate') }}"
                      placeholder="Rate" readonly>
              </div>
              <div class="col-md-2">
-                 <label class="form-label">Hours</label>
+                 <label class="form-label">Hours<span class="text-danger">*</span></label>
                  <input type="number" class="form-control" name="hours[]" value="{{ old('hours') }}"
                      placeholder="Hours">
              </div>
-             <div class="col-md-3">
+             <div class="col-md-2">
                  <button type="button" class="btn btn-primary mt-2" id="addRow">Add More</button>
              </div>
          </div>
@@ -78,51 +87,64 @@
      let rowIndex = {{ isset($overtimes) ? count($overtimes) : 1 }};
 
      $('#addRow').click(function() {
-         const firstRow = $('#formContainer .row').last();
+         const lastRow = $('#formContainer .row').last();
 
          let empId, empName;
-         if (firstRow.find('select[name="employee_id[]"]').length) {
-             empId = firstRow.find('select[name="employee_id[]"]').val();
-             empName = firstRow.find('select[name="employee_id[]"] option:selected').text();
+         if (lastRow.find('select[name="employee_id[]"]').length) {
+             empId = lastRow.find('select[name="employee_id[]"]').val();
+             empName = lastRow.find('select[name="employee_id[]"] option:selected').text();
          } else {
-             empId = firstRow.find('input[name="employee_id[]"]').val();
-             empName = firstRow.find('select option:selected').text();
+             empId = lastRow.find('input[name="employee_id[]"]').val();
+             empName = lastRow.find('select option:selected').text();
          }
 
-         const dateVal = firstRow.find('input[name="work_date[]"]').val();
-         const rate = firstRow.find('input[name="rate[]"]').val();
-         const hours = firstRow.find('input[name="hours[]"]').val();
+         const lastWorkDate = lastRow.find('input[name="work_date[]"]').val();
 
-         let newDate = '';
-         if (dateVal) {
-             const date = new Date(dateVal);
+         const lastActualDate = lastRow.find('input[name="actual_date[]"]').val();
+
+         const rate = lastRow.find('input[name="rate[]"]').val();
+         const hours = lastRow.find('input[name="hours[]"]').val();
+
+         let newWorkDate = '',
+             newActualDate = '';
+         if (lastWorkDate) {
+             const date = new Date(lastWorkDate);
              date.setDate(date.getDate() + 1);
-             newDate = date.toISOString().split('T')[0];
+             newWorkDate = date.toISOString().split('T')[0];
+         }
+
+         if (lastActualDate) {
+             const actual = new Date(lastActualDate);
+             actual.setDate(actual.getDate() + 1);
+             newActualDate = actual.toISOString().split('T')[0];
          }
 
          const newRow = `
-            <div class="row mb-3 g-2 align-items-end" id="row-${rowIndex}">
-                <input type="hidden" name="ids[]" value="">
-                <div class="col-md-3">
-                    <select class="form-select" disabled>
-                        <option value="${empId}" selected>${empName}</option>
-                    </select>
-                    <input type="hidden" name="employee_id[]" value="${empId}">
-                </div>
-                <div class="col-md-2">
-                    <input type="date" class="form-control" name="work_date[]" value="${newDate}">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" class="form-control" name="rate[]" value="${rate}" readonly>
-                </div>
-                <div class="col-md-2">
-                    <input type="number" class="form-control" name="hours[]" value="${hours}">
-                </div>
-                <div class="col-md-3">
-                    <button type="button" class="btn btn-danger removeRow mt-2">Remove</button>
-                </div>
+        <div class="row mb-3 g-2 align-items-end" id="row-${rowIndex}">
+            <input type="hidden" name="ids[]" value="">
+            <div class="col-md-2">
+                <select class="form-select" disabled>
+                    <option value="${empId}" selected>${empName}</option>
+                </select>
+                <input type="hidden" name="employee_id[]" value="${empId}">
             </div>
-        `;
+            <div class="col-md-2">
+                <input type="date" class="form-control" name="actual_date[]" value="${newActualDate}">
+            </div>
+            <div class="col-md-2">
+                <input type="date" class="form-control" name="work_date[]" value="${newWorkDate}">
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control" name="rate[]" value="${rate}" readonly>
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control" name="hours[]" value="${hours}">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-danger removeRow mt-2">Remove</button>
+            </div>
+        </div>
+    `;
 
          $('#formContainer').append(newRow);
          rowIndex++;
