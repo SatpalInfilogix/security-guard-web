@@ -16,7 +16,8 @@ use Dompdf\Options;
 use ZipArchive;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\EmployeePayrollExport;
 class EmployeePayrollController extends Controller
 {
     public function index()
@@ -477,5 +478,20 @@ class EmployeePayrollController extends Controller
         }
 
         $spreadsheet->createSheet();
+    }
+
+    public function export(Request $request)
+    {
+        $request->validate([
+            'year' => 'required|integer',
+            'month' => 'required|integer'
+        ]);
+
+        $year = $request->year;
+        $month = $request->month;
+
+        $fileName = "employee-payroll-{$month}-{$year}.xlsx";
+
+        return Excel::download(new EmployeePayrollExport($year, $month), $fileName);
     }
 }
