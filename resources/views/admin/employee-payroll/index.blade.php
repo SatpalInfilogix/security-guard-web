@@ -18,7 +18,7 @@
                             </a>
                             <a href="javascript:void(0);" id="exportPayrollDataBtn"
                                 class="btn btn-primary primary-btn btn-md me-1">
-                                <i class="bx bx-file"></i> Export Payroll Data
+                                <i class="bx bx-file"></i> Export Payroll Summary
                             </a>
                         </div>
                     </div>
