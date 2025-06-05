@@ -158,12 +158,25 @@ class EmployeeOvertimeController extends Controller
             'hours.*'       => 'required|numeric|min:0.01',
         ]);
 
-        $ids = $request->input('ids', []);
+        $ids         = $request->input('ids', []);
         $employeeIds = $request->input('employee_id', []);
-        $dates = $request->input('work_date', []);
+        $dates       = $request->input('work_date', []);
         $actualDates = $request->input('actual_date', []);
-        $rates = $request->input('rate', []);
-        $hours = $request->input('hours', []);
+        $rates       = $request->input('rate', []);
+        $hours       = $request->input('hours', []);
+
+        // ✅ Fix: prevent index mismatch
+        $submittedIds = array_filter($ids, fn($id) => !is_null($id) && $id !== '');
+        $existingOvertimeIds = EmployeeOvertime::where('employee_id', $employee_id)
+            ->whereDate('created_at', $date)
+            ->pluck('id')
+            ->toArray();
+
+        $deletedIds = array_diff($existingOvertimeIds, $submittedIds);
+
+        if (!empty($deletedIds)) {
+            EmployeeOvertime::whereIn('id', $deletedIds)->delete();
+        }
 
         foreach ($employeeIds as $index => $empId) {
             $id = $ids[$index] ?? null;
