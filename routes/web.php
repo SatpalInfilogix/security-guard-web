@@ -113,6 +113,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('/download-guard-leave-encashment-sample', [GuardLeaveEncashmentController::class, 'downloadSample'])
         ->name('guard-leave-encashment.sample');
     Route::get('/employee-payroll/export', [EmployeePayrollController::class, 'export'])->name('employee-payroll.export');
+    Route::get('payroll-export/guard', [PayrollController::class, 'exportGuardPayroll'])->name('payroll-export.guard');
 
 
 
