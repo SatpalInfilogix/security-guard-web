@@ -34,10 +34,11 @@
                                     <th>#</th>
                                     <th>Employee No</th>
                                     <th>Employee Name</th>
-                                    <th>Gross Salary</th>
-                                    <th>Monthly Salary</th>
-                                    <th>Daily Salary</th>
-                                    <th>Hourly Salary</th>
+                                    <th>Gross Rate</th>
+                                    <th>Monthly Rate</th>
+                                    <th>Daily Rate</th>
+                                    <th>Hourly Rate</th>
+                                    <th>Allowance</th>
                                     @canany(['edit employee rate master', 'delete employee rate master'])
                                     <th>Action</th>
                                     @endcanany
@@ -54,6 +55,7 @@
                                     <td>${{formatAmount($rateMaster->monthly_income ?? '')}}</td>
                                     <td>${{formatAmount($rateMaster->daily_income ?? '')}}</td>
                                     <td>${{formatAmount($rateMaster->hourly_income ?? '')}}</td>
+                                    <td>${{formatAmount($rateMaster->employee_allowance ?? '')}}</td>
                                     @canany(['edit employee rate master', 'delete employee rate master'])
                                     <td class="action-buttons">
                                         @if(Auth::user()->can('edit employee rate master'))

@@ -133,14 +133,15 @@
             <td style="text-align: right;">{{$overtimeHours}}</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->overtime_income_total) }}</td>
             {{-- <td></td> --}}
-            <td>Heart</td>
+            {{-- <td>Heart</td> --}}
+            <td></td>
             <td></td>
             <td></td>
             {{-- <td>{{$employeePayroll->heart}}</td> --}}
         </tr>
         {{-- @if ($employeePayroll->staff_loan > 0 || $employeePayroll->pending_staff_loan > 0) --}}
             <tr>
-                <td>Leave Encashment</td>
+                <td>Pay in Lieu of Employee</td>
                 <td style="text-align: right;">{{ $encashLeaveDays ?? 0}}</td>
                 <td style="text-align: right;">{{ formatAmount($encashLeaveAmount ?? 0) }}</td>
                 <td>Staff Loan</td>

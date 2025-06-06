@@ -146,7 +146,7 @@ class DeductionController extends Controller
             'type'        => 'required|string',
             'amount'      => 'required|numeric|min:0',
             'document_date' => 'required|date',
-            'start_date'  => 'required|date',
+            'start_date'  => 'required|date|after_or_equal:document_date',
             'end_date'        => 'nullable|date|after_or_equal:start_date',
             'no_of_payroll'   => 'nullable|integer|min:1',
             'guard_document' => 'nullable|file',

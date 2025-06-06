@@ -16,6 +16,10 @@
                             <a href="javascript:void(0);" id="exportBtn" class="btn btn-primary primary-btn btn-md me-1">
                                 <i class="bx bx-download"></i> SO1 Report
                             </a>
+                            <a href="javascript:void(0);" id="exportPayrollDataBtn"
+                                class="btn btn-primary primary-btn btn-md me-1">
+                                <i class="bx bx-file"></i> Export Payroll Summary
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -159,7 +163,10 @@
                         return meta.row + 1 + meta.settings._iDisplayStart;
                     }
                 }, {
-                    data: 'user.first_name'
+                    data: 'user',
+                    render: function(data, type, row) {
+                        return data.first_name + ' ' + data.surname;
+                    }
                 }, {
                     data: 'start_date'
                 }, {
@@ -253,6 +260,19 @@
                 window.history.pushState({}, '', baseUrl);
 
                 $('#payroll-list').DataTable().ajax.reload();
+            });
+
+            $('#exportPayrollDataBtn').on('click', function() {
+                const year = $('#year').val();
+                const month = $('#month').val();
+
+                if (!year || !month) {
+                    alert('Please select both year and month before exporting.');
+                    return;
+                }
+
+                const exportUrl = `{{ route('employee-payroll.export') }}?year=${year}&month=${month}`;
+                window.location.href = exportUrl;
             });
 
         });

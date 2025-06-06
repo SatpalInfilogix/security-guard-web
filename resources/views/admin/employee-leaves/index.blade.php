@@ -11,8 +11,9 @@
                         <h4 class="mb-sm-0 font-size-18">Employee Leaves</h4>
 
                         <div class="page-title-right">
-                            @if(Auth::user()->can('create employee leaves'))
-                            <a href="{{ route('employee-leaves.create') }}" class="btn btn-primary">Add New Employee Leave</a>
+                            @if (Auth::user()->can('create employee leaves'))
+                                <a href="{{ route('employee-leaves.create') }}" class="btn btn-primary">Add New Employee
+                                    Leave</a>
                             @endif
                         </div>
                     </div>
@@ -59,11 +60,13 @@
                                         <th>#</th>
                                         <th>Employee Name</th>
                                         <th>Date</th>
+                                        <th>Actual Start Date</th>
+                                        <th>Actual End Date</th>
                                         <th>Type</th>
                                         <th>Reason</th>
                                         <th>Status</th>
                                         @can('delete employee leaves')
-                                        <th>Action</th>
+                                            <th>Action</th>
                                         @endcan
                                     </tr>
                                 </thead>
@@ -116,7 +119,7 @@
                 }];
             @endcan
 
-            console.log('actionColumn',actionColumn)
+            console.log('actionColumn', actionColumn)
 
             var table = $('#leaves-list').DataTable({
                 processing: true,
@@ -140,12 +143,31 @@
                         }
                     },
                     {
-                        data: 'user.first_name'
+                        data: null,
+                        name: 'user.full_name',
+                        render: function(data, type, row) {
+                            const firstName = row.user?.first_name ?? '';
+                            const surname = row.user?.surname ?? '';
+                            return `${firstName} ${surname}`.trim();
+                        }
                     },
                     {
                         data: 'date'
                     },
-                     {
+                    {
+                        data: 'actual_start_date',
+                        render: function(data, type, row) {
+                            return data ? data : 'N/A';
+                        }
+                    },
+                    {
+                        data: 'actual_end_date',
+                        render: function(data, type, row) {
+                            return data ? data : 'N/A';
+                        }
+                    },
+
+                    {
                         data: 'type'
                     },
                     {

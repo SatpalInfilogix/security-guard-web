@@ -14,6 +14,7 @@ use App\Imports\PayrollImport;
 use App\Exports\PayrollExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Gate;
+use App\Exports\GuardPayrollExport;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use ZipArchive;
@@ -22,7 +23,7 @@ class PayrollController extends Controller
 {
     public function index()
     {
-        if(!Gate::allows('view payroll')) {
+        if (!Gate::allows('view payroll')) {
             abort(403);
         }
 
@@ -31,7 +32,7 @@ class PayrollController extends Controller
         $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
         $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
 
-        return view('admin.payroll.index', compact('fortnightDays','previousFortnightEndDate', 'previousFortnightStartDate'));
+        return view('admin.payroll.index', compact('fortnightDays', 'previousFortnightEndDate', 'previousFortnightStartDate'));
     }
 
     public function getPayroll(Request $request)
@@ -42,7 +43,7 @@ class PayrollController extends Controller
         $previousFortnightEndDate = Carbon::parse($fortnightDays->start_date)->subDay();
         $previousFortnightStartDate = $previousFortnightEndDate->copy()->subDays(13);
         $payrolls = Payroll::with('user');
-        
+
         if ($request->has('date') && !empty($request->date)) {
             $searchDate = $request->date;
             list($startDate, $endDate) = explode(' to ', $searchDate);
@@ -55,13 +56,13 @@ class PayrollController extends Controller
 
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
-            $payrolls->where(function($query) use ($searchValue) {
+            $payrolls->where(function ($query) use ($searchValue) {
                 $query->where('start_date', 'like', '%' . $searchValue . '%')
                     ->orWhere('end_date', 'like', '%' . $searchValue . '%')
                     ->orWhere('normal_hours', 'like', '%' . $searchValue . '%')
                     ->orWhere('overtime', 'like', '%' . $searchValue . '%')
-                    ->orWhere('public_holidays', '%'. $searchValue . '%')
-                    ->orWhereHas('user', function($q) use ($searchValue) {
+                    ->orWhere('public_holidays', '%' . $searchValue . '%')
+                    ->orWhereHas('user', function ($q) use ($searchValue) {
                         $q->where('first_name', 'like', '%' . $searchValue . '%');
                     });
             });
@@ -84,14 +85,16 @@ class PayrollController extends Controller
         return response()->json($data);
     }
 
-    public function create() {
+    public function create()
+    {
         //
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
         //
     }
-    
+
     public function show(Payroll $payroll)
     {
         $payroll = Payroll::where('id', $payroll->id)->with('user', 'user.guardAdditionalInformation')->first();
@@ -103,7 +106,7 @@ class PayrollController extends Controller
 
     public function edit(Payroll $payroll)
     {
-        if(!Gate::allows('edit payroll')) {
+        if (!Gate::allows('edit payroll')) {
             abort(403);
         }
         $payroll = Payroll::where('id', $payroll->id)->with('user', 'user.guardAdditionalInformation')->first();
@@ -121,9 +124,9 @@ class PayrollController extends Controller
         return view('admin.payroll.edit', compact('payroll', 'fortnightDayCount'));
     }
 
-    public function update(Request $request, Payroll $payroll) 
+    public function update(Request $request, Payroll $payroll)
     {
-        if(!Gate::allows('edit payroll')) {
+        if (!Gate::allows('edit payroll')) {
             abort(403);
         }
         $payroll->update([
@@ -162,7 +165,12 @@ class PayrollController extends Controller
         $sheet->setTitle('Payrolls');
 
         $headers = [
-            'ID', 'Surename', 'Firstname', 'Middle Initials', 'Employee TRN', 'Employee NIS',
+            'ID',
+            'Surename',
+            'Firstname',
+            'Middle Initials',
+            'Employee TRN',
+            'Employee NIS',
             'Gross Emoluments Received in Cash (Salaries, Wages, Fees, Bonuses, Overtime, Commissions)',
             'Gross Emoluments Received in Kind',
             'Superannuation / Pension, Agreed Expenses, Employees Share Ownership Plan',
@@ -188,9 +196,9 @@ class PayrollController extends Controller
             list($startDate, $endDate) = explode(' to ', $selectedDate);
             $startDate = Carbon::parse($startDate)->startOfDay();
             $endDate = Carbon::parse($endDate)->endOfDay();
-            
+
             $fortnightDays = FortnightDates::whereDate('start_date', '<=', $endDate)->whereDate('end_date', '>=', $startDate)->get();
-            if($fortnightDays) {
+            if ($fortnightDays) {
                 $previousFortnightStartDate = Carbon::parse($fortnightDays->first()->start_date);
                 $previousFortnightEndDate = Carbon::parse($fortnightDays->last()->end_date);
             } else {
@@ -209,12 +217,23 @@ class PayrollController extends Controller
         foreach ($Payrolls as $key => $payroll) {
             $sheet->fromArray(
                 [
-                    $payroll->id, $payroll->user->surname, $payroll->user->first_name, $payroll->user->middle_name,
-                    $payroll->user->guardAdditionalInformation->trn, $payroll->user->guardAdditionalInformation->nis,
-                    $payroll->gross_salary_earned, 0, $payroll->approved_pension_scheme, 0, $payroll->less_nis + $payroll->employer_contribution_nis_tax,
-                    $payroll->nht + $payroll->employer_contribution_nht_tax, $payroll->education_tax + $payroll->employer_eduction_tax, $payroll->paye
+                    $payroll->id,
+                    $payroll->user->surname,
+                    $payroll->user->first_name,
+                    $payroll->user->middle_name,
+                    $payroll->user->guardAdditionalInformation->trn,
+                    $payroll->user->guardAdditionalInformation->nis,
+                    $payroll->gross_salary_earned,
+                    0,
+                    $payroll->approved_pension_scheme,
+                    0,
+                    $payroll->less_nis + $payroll->employer_contribution_nis_tax,
+                    $payroll->nht + $payroll->employer_contribution_nht_tax,
+                    $payroll->education_tax + $payroll->employer_eduction_tax,
+                    $payroll->paye
                 ],
-                NULL, 'A' . ($key + 2)
+                NULL,
+                'A' . ($key + 2)
             );
         }
 
@@ -230,12 +249,12 @@ class PayrollController extends Controller
         session()->flash('success', 'Payroll imported successfully.');
         $downloadUrl = route('payrolls.download');
 
-        return redirect()->route('payrolls.index')->with('downloadUrl', $downloadUrl); 
+        return redirect()->route('payrolls.index')->with('downloadUrl', $downloadUrl);
     }
 
     public function download()
     {
-        $import = session('importData'); 
+        $import = session('importData');
         $export = new PayrollExport($import);
         return Excel::download($export, 'payroll_import_results.csv');
     }
@@ -255,7 +274,7 @@ class PayrollController extends Controller
         $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
         $currentYear = now()->year;
         $approvedLeaves = Leave::where('guard_id', $payroll->guard_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->count();
-        $payroll['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
+        $payroll['pendingLeaveBalance'] =  max(0, $paidLeaveBalanceLimit - $approvedLeaves);
 
         $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
         $pdfOptions = new Options();
@@ -313,7 +332,7 @@ class PayrollController extends Controller
             $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
             $currentYear = now()->year;
             $approvedLeaves = Leave::where('guard_id', $payroll->guard_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->count();
-            $payroll['pendingLeaveBalance'] =  max(0,$paidLeaveBalanceLimit - $approvedLeaves);
+            $payroll['pendingLeaveBalance'] =  max(0, $paidLeaveBalanceLimit - $approvedLeaves);
 
             $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
 
@@ -339,12 +358,19 @@ class PayrollController extends Controller
         if (!file_exists($tempZipFile)) {
             return response()->json(['error' => 'Payroll data not exixt.'], 500);
         }
-        
+
         $zipFileContent = file_get_contents($tempZipFile);
 
         return response($zipFileContent, 200)
             ->header('Content-Type', 'application/zip')
             ->header('Content-Disposition', 'attachment; filename="payrolls.zip"')
             ->header('Content-Length', strlen($zipFileContent));
+    }
+
+    public function exportGuardPayroll(Request $request)
+    {
+        $dateRange = $request->date;
+        // dd($dateRange);
+        return Excel::download(new GuardPayrollExport($dateRange), 'guard_payroll_export.xlsx');
     }
 }

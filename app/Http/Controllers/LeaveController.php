@@ -46,7 +46,7 @@ class LeaveController extends Controller
     //         ->withData([
     //             'leave_status' => $leaveStatus
     //         ]);
-       
+
     //        $response =  $this->messaging->send($message);
     //        dd($response);
     //         Log::info("Your leave status has been updated:" . json_encode($response));
@@ -58,7 +58,7 @@ class LeaveController extends Controller
         $request->validate([
             'status' => 'required',
         ]);
-        
+
         $leave = Leave::where('id', $leaveId)->first();
         if (!$leave) {
             return response()->json(['success' => false, 'message' => 'Leave record not found.'], 404);
@@ -74,15 +74,15 @@ class LeaveController extends Controller
         }
         $leave->save();
 
-        $title ='Leave Status Update';
+        $title = 'Leave Status Update';
         $body = "Your leave status has been updated: $request->status";
-        $this->pushNotificationService->sendNotification($leave->guard_id, $title, $body); 
+        $this->pushNotificationService->sendNotification($leave->guard_id, $title, $body);
         return response()->json(['success' => true, 'message' => 'Status updated successfully.']);
     }
 
     public function index()
     {
-        if(!Gate::allows('view leaves')) {
+        if (!Gate::allows('view leaves')) {
             abort(403);
         }
         $leaves = Leave::with('user')->latest()->get();
@@ -99,10 +99,10 @@ class LeaveController extends Controller
         }
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
-            $leaves->where(function($query) use ($searchValue) {
+            $leaves->where(function ($query) use ($searchValue) {
                 $query->where('date', 'like', '%' . $searchValue . '%')
                     ->orWhere('reason', 'like', '%' . $searchValue . '%')
-                    ->orWhereHas('user', function($q) use ($searchValue) {
+                    ->orWhereHas('user', function ($q) use ($searchValue) {
                         $q->where('first_name', 'like', '%' . $searchValue . '%');
                     });
             });
@@ -130,7 +130,7 @@ class LeaveController extends Controller
 
     public function create()
     {
-        if(!Gate::allows('create leaves')) {
+        if (!Gate::allows('create leaves')) {
             abort(403);
         }
         $userRole = Role::where('id', 3)->first();
@@ -144,13 +144,15 @@ class LeaveController extends Controller
 
     public function store(Request $request)
     {
-        if(!Gate::allows('create leaves')) {
+        if (!Gate::allows('create leaves')) {
             abort(403);
         }
         $request->validate([
             'guard_id'       => 'required',
             'start_date' => 'required|date',
             'end_date'   => 'nullable|date|after_or_equal:start_date',
+            'actual_start_date'  => 'nullable|date',
+            'actual_end_date'    => 'nullable|date|after_or_equal:actual_start_date',
         ]);
 
         $start_date = Carbon::parse($request->start_date);
@@ -175,6 +177,8 @@ class LeaveController extends Controller
                     'date'        => $date,
                     'reason'      => $request->reason,
                     'description' => $request->description,
+                    'actual_start_date' => $request->actual_start_date ? Carbon::parse($request->actual_start_date) : null,
+                    'actual_end_date'   => $request->actual_end_date ? Carbon::parse($request->actual_end_date) : null,
                 ]);
                 $createdDates[] = $date->toDateString();
             }
@@ -194,7 +198,7 @@ class LeaveController extends Controller
 
     public function destroy($id)
     {
-        if(!Gate::allows('delete leaves')) {
+        if (!Gate::allows('delete leaves')) {
             abort(403);
         }
         Leave::where('id', $id)->delete();

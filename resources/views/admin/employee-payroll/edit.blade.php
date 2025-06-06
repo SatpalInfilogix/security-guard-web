@@ -126,7 +126,7 @@
                                             <td>{{ formatAmount($employeePayroll->heart) }}</td>
                                         </tr>
                                         <tr>
-                                            <td>Leave Encashment</td>
+                                            <td>Pay in Lieu of Employee</td>
                                             <td></td>
                                             <td>{{ $encashLeaveDays }}</td>
                                             <td>{{ formatAmount($encashLeaveAmount) }}</td>

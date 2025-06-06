@@ -16,7 +16,8 @@ use Dompdf\Options;
 use ZipArchive;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\EmployeePayrollExport;
 class EmployeePayrollController extends Controller
 {
     public function index()
@@ -78,7 +79,8 @@ class EmployeePayrollController extends Controller
                     ->orWhere('leave_paid', 'like', '%' . $searchValue . '%')
                     ->orWhere('leave_not_paid', 'like', '%' . $searchValue . '%')
                     ->orWhereHas('user', function ($q) use ($searchValue) {
-                        $q->where('first_name', 'like', '%' . $searchValue . '%');
+                        $q->where('first_name', 'like', '%' . $searchValue . '%')
+                            ->orWhere('surname', 'like', '%' . $searchValue . '%');
                     });
             });
         }
@@ -257,13 +259,37 @@ class EmployeePayrollController extends Controller
 
             $payroll['pendingLeaveBalance'] = max(0, $paidLeaveBalanceLimit - $approvedLeaves);
 
+            $employeeRate = EmployeeRateMaster::where('employee_id', $payroll->employee_id)->first();
+            $payroll['employee_allowance'] = $employeeRate?->employee_allowance ?? 0;
+            $daySalary = $employeeRate?->daily_income ?? 0;
+            $payroll['daily_income'] = $daySalary;
+
+            $payroll['overtime_total'] = EmployeeOvertime::where('employee_id', $payroll->employee_id)
+                ->whereBetween('work_date', [$payroll->start_date, $payroll->end_date])
+                ->sum('overtime_income');
+
+            $payroll['overtime_hours'] = EmployeeOvertime::where('employee_id', $payroll->employee_id)
+                ->whereBetween('work_date', [$payroll->start_date, $payroll->end_date])
+                ->sum('hours');
+
+            $leaveEncashments = LeaveEncashment::where('employee_id', $payroll->employee_id)
+                ->whereDate('created_at', '<=', $payroll->end_date)
+                ->get();
+
+            $encashLeaveDays = $leaveEncashments->sum('encash_leaves');
+            $payroll['encash_leave_days'] = $encashLeaveDays;
+            $payroll['encash_leave_amount'] = $encashLeaveDays * $daySalary;
+            $employeeAllowance = $payroll['employee_allowance'];
+            $overtimeHours = $payroll['overtime_hours'];
             $fortnightDayCount = TwentyTwoDayInterval::where('start_date', $payroll->start_date)
                 ->where('end_date', $payroll->end_date)
                 ->first();
 
             $html = view('admin.employee-payroll.employee-payroll-pdf.employee-payroll-new', [
                 'employeePayroll' => $payroll,
-                'fortnightDayCount' => $fortnightDayCount
+                'fortnightDayCount' => $fortnightDayCount,
+                'employeeAllowance' => $employeeAllowance,
+                'overtimeHours' => $overtimeHours,
             ])->render();
 
             $dompdf = new Dompdf((new Options())->set('isHtml5ParserEnabled', true)->set('isPhpEnabled', true));
@@ -452,5 +478,20 @@ class EmployeePayrollController extends Controller
         }
 
         $spreadsheet->createSheet();
+    }
+
+    public function export(Request $request)
+    {
+        $request->validate([
+            'year' => 'required|integer',
+            'month' => 'required|integer'
+        ]);
+
+        $year = $request->year;
+        $month = $request->month;
+
+        $fileName = "employee-payroll-{$month}-{$year}.xlsx";
+
+        return Excel::download(new EmployeePayrollExport($year, $month), $fileName);
     }
 }
