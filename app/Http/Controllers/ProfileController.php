@@ -22,12 +22,13 @@ class ProfileController extends Controller
             'first_name'    => 'required',
             'last_name'     => 'required',
             'phone_no'      => 'required',
+            'profile_image'   => 'nullable',
+            'password'        => 'nullable|min:4',
         ]);
 
         $user = User::where('id', Auth::id())->first();
         $oldProfile = $user ? $user->profile_picture : NULL;
-        if ($request->hasFile('profile_image'))
-        {
+        if ($request->hasFile('profile_image')) {
             $filename = uploadFile($request->file('profile_image'), 'uploads/profile-pic/');
 
             if ($oldProfile && File::exists(public_path($oldProfile))) {
@@ -42,6 +43,7 @@ class ProfileController extends Controller
             'last_name'       => $request->last_name,
             'phone_number'    => $request->phone_no,
             'profile_picture' => $filename,
+            'password'        =>$request->password,    
         ]);
 
         return redirect()->route('profile.index')->with('success', 'Profile updated successfully');

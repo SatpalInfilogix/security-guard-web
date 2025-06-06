@@ -12,6 +12,7 @@ use App\Imports\GuardLeaveEncashmentImport;
 use App\Exports\GuardLeaveEncashmentResultExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\GuardLeaveEncashmentSampleExport;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Session;
 use PDF;
@@ -21,6 +22,10 @@ class GuardLeaveEncashmentController extends Controller
 {
     public function index(Request $request)
     {
+        if(!Gate::allows('view guard encashment')) {
+            abort(403);
+        }
+
         $query = GuardLeaveEncashment::with('guardUser');
 
         if ($request->filled('guard_id')) {
@@ -40,6 +45,10 @@ class GuardLeaveEncashmentController extends Controller
 
     public function create()
     {
+        if(!Gate::allows('create guard encashment')) {
+            abort(403);
+        }
+
         $userRole = Role::find(3);
 
         $guards = User::whereHas('roles', function ($query) use ($userRole) {
@@ -52,6 +61,10 @@ class GuardLeaveEncashmentController extends Controller
 
     public function store(Request $request)
     {
+        if(!Gate::allows('create guard encashment')) {
+            abort(403);
+        }
+
         $request->validate([
             'guard_id' => 'required|exists:users,id',
             'encash_leaves' => 'required|integer|min:1',
@@ -75,6 +88,10 @@ class GuardLeaveEncashmentController extends Controller
 
     public function edit($id)
     {
+        if(!Gate::allows('edit guard encashment')) {
+            abort(403);
+        }
+
         $encashment = GuardLeaveEncashment::with('guardUser')->findOrFail($id);
 
         $userRole = Role::find(3); // or Role::where('name', 'Security Guard')->first()
@@ -89,6 +106,10 @@ class GuardLeaveEncashmentController extends Controller
 
     public function update(Request $request, $id)
     {
+        if(!Gate::allows('edit guard encashment')) {
+            abort(403);
+        }
+
         $request->validate([
             'guard_id' => 'required|exists:users,id',
             'encash_leaves' => 'required|integer|min:1',
@@ -114,6 +135,10 @@ class GuardLeaveEncashmentController extends Controller
 
     public function destroy($id)
     {
+        if(!Gate::allows('delete guard encashment')) {
+            abort(403);
+        }
+
         GuardLeaveEncashment::where('id', $id)->delete();
 
         return response()->json([
