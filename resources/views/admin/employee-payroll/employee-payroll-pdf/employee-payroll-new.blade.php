@@ -130,7 +130,7 @@
         </tr>
         <tr>
             <td>Employee Overtime</td>
-            <td style="text-align: right;">{{$overtimeHours}}</td>
+            <td style="text-align: right;">{{ $overtimeHours }}</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->overtime_income_total) }}</td>
             {{-- <td></td> --}}
             {{-- <td>Heart</td> --}}
@@ -140,15 +140,15 @@
             {{-- <td>{{$employeePayroll->heart}}</td> --}}
         </tr>
         {{-- @if ($employeePayroll->staff_loan > 0 || $employeePayroll->pending_staff_loan > 0) --}}
-            <tr>
-                <td>Pay in Lieu of Employee</td>
-                <td style="text-align: right;">{{ $encashLeaveDays ?? 0}}</td>
-                <td style="text-align: right;">{{ formatAmount($encashLeaveAmount ?? 0) }}</td>
-                <td>Staff Loan</td>
-                <td style="text-align: right;">{{ formatAmount($employeePayroll->staff_loan) }}</td>
-                <td style="text-align: right;">{{ number_format($employeePayroll->pending_staff_loan) }}</td>
-                {{-- <td></td> --}}
-            </tr>
+        <tr>
+            <td>Pay in Lieu of Employee</td>
+            <td style="text-align: right;">{{ $encashLeaveDays ?? 0 }}</td>
+            <td style="text-align: right;">{{ formatAmount($encashLeaveAmount ?? 0) }}</td>
+            <td>Staff Loan</td>
+            <td style="text-align: right;">{{ formatAmount($employeePayroll->staff_loan) }}</td>
+            <td style="text-align: right;">{{ number_format($employeePayroll->pending_staff_loan) }}</td>
+            {{-- <td></td> --}}
+        </tr>
         {{-- @endif --}}
 
         @if ($employeePayroll->medical_insurance > 0 || $employeePayroll->pending_medical_insurance > 0)
@@ -158,6 +158,72 @@
                 <td>Medical Ins</td>
                 <td style="text-align: right;">{{ formatAmount($employeePayroll->medical_insurance) }}</td>
                 <td style="text-align: right;">{{ number_format($employeePayroll->pending_medical_insurance) }}</td>
+                {{-- <td></td> --}}
+            </tr>
+        @endif
+
+        @if ($employeePayroll->approved_pension_scheme > 0 || $employeePayroll->pending_approved_pension > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                <td>Approved Pension</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->approved_pension_scheme) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_approved_pension) }}</td>
+                {{-- <td></td> --}}
+            </tr>
+        @endif
+
+        @if ($employeePayroll->psra > 0 || $employeePayroll->pending_psra > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                <td>PSRA</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->psra) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_psra) }}</td>
+                {{-- <td></td> --}}
+            </tr>
+        @endif
+
+        @if ($employeePayroll->bank_loan > 0 || $employeePayroll->pending_bank_loan > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                <td>Bank Loan</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->bank_loan) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_bank_loan) }}</td>
+                {{-- <td></td> --}}
+            </tr>
+        @endif
+
+        @if ($employeePayroll->garnishment > 0 || $employeePayroll->pending_garnishment > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                <td>Garnishment</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->garnishment) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_garnishment) }}</td>
+                {{-- <td></td> --}}
+            </tr>
+        @endif
+
+        @if ($employeePayroll->damaged_goods > 0 || $employeePayroll->pending_damaged_goods > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                <td>Damaged Goods</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->damaged_goods) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_damaged_goods) }}</td>
+                {{-- <td></td> --}}
+            </tr>
+        @endif
+
+        @if ($employeePayroll->missing_goods > 0 || $employeePayroll->pending_missing_goods > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                <td>Damaged Goods</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->missing_goods) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_missing_goods) }}</td>
                 {{-- <td></td> --}}
             </tr>
         @endif
