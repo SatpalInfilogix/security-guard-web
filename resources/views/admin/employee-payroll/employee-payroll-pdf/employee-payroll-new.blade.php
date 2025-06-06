@@ -221,7 +221,7 @@
             <tr>
                 <td colspan="3">{!! '&nbsp;' !!}</td>
                 {{-- <td>{!! '&nbsp;' !!}</td> --}}
-                <td>Damaged Goods</td>
+                <td>Missing Goods</td>
                 <td style="text-align: right;">{{ formatAmount($employeePayroll->missing_goods) }}</td>
                 <td style="text-align: right;">{{ number_format($employeePayroll->pending_missing_goods) }}</td>
                 {{-- <td></td> --}}
