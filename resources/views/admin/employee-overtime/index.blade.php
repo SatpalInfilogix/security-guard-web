@@ -34,6 +34,7 @@
                                         <th>Employee Name</th>
                                         <th>Rate</th>
                                         <th>Hours</th>
+                                        <th>Work Date</th>
                                         <th>Created Date</th>
                                         <th>Actual Date</th>
                                         <th>Action</th>
@@ -47,8 +48,9 @@
                                                 {{ $overtime->employee->surname ?? '' }}</td>
                                             <td>{{ number_format($overtime->rate, 2) }}</td>
                                             <td>{{ $overtime->total_hours }}</td>
-                                            <td>{{ $overtime->created_at ? \Carbon\Carbon::parse($overtime->created_at)->format('Y-m-d') : '' }}</td>
-                                            <td>{{ $overtime->actual_date ? \Carbon\Carbon::parse($overtime->actual_date)->format('Y-m-d') : '' }}</td>
+                                            <td>{{ $overtime->work_date ? \Carbon\Carbon::parse($overtime->created_at)->format('Y-m-d') : 'N/A' }}</td>
+                                            <td>{{ $overtime->created_at ? \Carbon\Carbon::parse($overtime->created_at)->format('Y-m-d') : 'N/A' }}</td>
+                                            <td>{{ $overtime->actual_date ? \Carbon\Carbon::parse($overtime->actual_date)->format('Y-m-d') : 'N/A' }}</td>
                                             <td>
                                                 <a href="{{ route('employee-overtime.edit', [
                                                     $overtime->employee_id,
