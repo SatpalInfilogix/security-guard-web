@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('employee_overtimes_main', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('employee_overtime_main_id');
             $table->unsignedBigInteger('employee_id');
             $table->unsignedBigInteger('employee_overtime_id')->nullable(); // Make this nullable for 'set null'
             $table->decimal('rate', 10, 2);
