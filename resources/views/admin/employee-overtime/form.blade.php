@@ -1,17 +1,17 @@
  <div id="formContainer">
-     @if (isset($overtimes) && count($overtimes) > 0)
-         @foreach ($overtimes as $index => $overtimeItem)
+     @if (isset($overtimes->detail) && count($overtimes->detail) > 0)
+         @foreach ($overtimes->detail as $index => $overtimeItem)
              <div class="row mb-3 g-2 align-items-end" id="row-{{ $index }}">
-                 <input type="hidden" name="ids[]" value="{{ $overtimeItem->id }}">
+                 {{--<input type="hidden" name="ids[]" value="{{ $overtimeItem->id }}">--}}
                  <div class="col-md-2">
                      <label class="form-label">Employee<span class="text-danger">*</span></label>
                      <select class="form-select" disabled>
                          <option value="{{ $overtimeItem->employee_id }}" selected>
-                             {{ $overtimeItem->employee->first_name ?? '' }}
-                             {{ $overtimeItem->employee->surname ?? '' }}
+                             {{ $overtimes->employee->first_name ?? '' }}
+                             {{ $overtimes->employee->surname ?? '' }}
                          </option>
                      </select>
-                     <input type="hidden" name="employee_id[]" value="{{ $overtimeItem->employee_id }}">
+                     <input type="hidden" name="employee_id[]" value="{{ $overtimes->employee_id }}">
                  </div>
                  <div class="col-md-2">
                      <label class="form-label">Actual Date</label>
@@ -84,7 +84,7 @@
  </button>
 
  <script>
-     let rowIndex = {{ isset($overtimes) ? count($overtimes) : 1 }};
+     let rowIndex = {{ isset($overtimes->detail) ? count($overtimes->detail) : 1 }};
 
      $('#addRow').click(function() {
          const lastRow = $('#formContainer .row').last();

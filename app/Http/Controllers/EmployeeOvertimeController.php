@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\EmployeeOvertime;
+use App\Models\EmployeeOvertimeMain;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use Carbon\Carbon;
@@ -16,9 +17,14 @@ class EmployeeOvertimeController extends Controller
      */
     public function index()
     {
-        $overtimes = EmployeeOvertime::with('employee')->get();
-
-        $groupedOvertimes = $overtimes->groupBy(function ($item) {
+        $displayOvertimes = EmployeeOvertimeMain::with(['detail','employee'])->get();
+        $displayOvertimes->map(function ($item) {
+            $item->total_hours = $item->detail->sum('hours');
+            return $item;
+        });
+      //  $overtimes = EmployeeOvertime::with('employee')->get();
+        //dd($displayOvertimes);
+       /* $groupedOvertimes = $overtimes->groupBy(function ($item) {
             return $item->employee_id . '-' . $item->created_at->format('Y-m-d');
         });
 
@@ -34,7 +40,7 @@ class EmployeeOvertimeController extends Controller
                 'total_hours'  => $group->sum('hours'),
                 'rate'         => $group->avg('rate'),
             ];
-        })->values();
+        })->values();*/
 
         return view('admin.employee-overtime.index', ['overtimes' => $displayOvertimes]);
     }
@@ -57,63 +63,51 @@ class EmployeeOvertimeController extends Controller
      */
     public function store(Request $request)
     {
-        $employeeIds = $request->input('employee_id');
-        $workDates   = $request->input('work_date');
-        $rates       = $request->input('rate');
-        $hours       = $request->input('hours');
-        $actualDates = $request->input('actual_date');
-        $errors = [];
+        $request->validate([
+            'employee_id.*' => 'required|exists:users,id',
+            'work_date.*'   => 'required|date',
+            'actual_date.*' => 'nullable|date',
+            'rate.*'       => 'required|numeric|min:0.01',
+            'hours.*'      => 'required|numeric|min:0.01|max:24',
+        ]);
 
-        for ($i = 0; $i < count($employeeIds); $i++) {
-            $rowData = [
-                'employee_id' => $employeeIds[$i],
-                'work_date'   => $workDates[$i],
-                'rate'        => $rates[$i],
-                'hours'       => $hours[$i],
-                'actual_date' => $actualDates[$i] ?? null,
-            ];
+        $employeeIds = $request->input('employee_id', []);
+        $workDates   = $request->input('work_date', []);
+        $rates       = $request->input('rate', []);
+        $hours       = $request->input('hours', []);
+        $actualDates = $request->input('actual_date', []);
 
-            $validator = Validator::make($rowData, [
-                'employee_id' => 'required|exists:users,id',
-                'work_date'   => 'required|date',
-                'actual_date' => 'nullable|date',
-                'rate'        => 'required|numeric|min:0',
-                'hours'       => 'required|numeric|min:0|max:24',
-            ]);
+        // Create main record using first item data
+        $mainId = EmployeeOvertimeMain::create([
+            'employee_id' => $employeeIds[0],
+            'rate' => $rates[0],
+            'work_date' => $workDates[0],
+            'actual_date' => $actualDates[0] ?? null,
+        ])->id;
 
-            if ($validator->fails()) {
-                $errors[$i] = $validator->errors()->all();
-                continue;
-            }
+        foreach ($employeeIds as $index => $empId) {
+            $workDate = Carbon::parse($workDates[$index]);
 
-            $date = Carbon::parse($rowData['work_date']);
-            $dayOfWeek = $date->dayOfWeek; // 0 = Sunday, 6 = Saturday
-
-            $isHoliday = PublicHoliday::whereDate('date', $date->toDateString())->exists();
+            $isHoliday = PublicHoliday::whereDate('date', $workDate->toDateString())->exists();
 
             $multiplier = 1;
-            if ($isHoliday || $dayOfWeek == 0) {
+            if ($isHoliday || $workDate->isSunday()) {
                 $multiplier = 2;
-            } elseif ($dayOfWeek == 6) {
+            } elseif ($workDate->isSaturday()) {
                 $multiplier = 1.5;
             }
 
-            $overtimeIncome = $rowData['rate'] * $rowData['hours'] * $multiplier;
+            $overtimeIncome = $rates[$index] * $hours[$index] * $multiplier;
 
             EmployeeOvertime::create([
-                'employee_id'     => $rowData['employee_id'],
-                'work_date'       => $rowData['work_date'],
-                'actual_date'     => $rowData['actual_date'],
-                'rate'            => $rowData['rate'],
-                'hours'           => $rowData['hours'],
+                'employee_overtime_main_id' => $mainId,
+                'employee_id'     => $empId,
+                'work_date'       => $workDates[$index],
+                'actual_date'     => $actualDates[$index] ?? null,
+                'rate'            => $rates[$index],
+                'hours'           => $hours[$index],
                 'overtime_income' => $overtimeIncome,
             ]);
-        }
-
-        if (!empty($errors)) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['validation_errors' => $errors]);
         }
 
         return redirect()->route('employee-overtime.index')->with('success', 'Employee overtime records saved successfully!');
@@ -130,26 +124,26 @@ class EmployeeOvertimeController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit($employee_id, $date)
+    public function edit($employee_id, $id)
     {
+        
         $employees = User::role('employee')->get();
-
-        $overtimes = EmployeeOvertime::where('employee_id', $employee_id)
+        $overtimes = EmployeeOvertimeMain::with(['detail','employee'])->where('employee_id',$employee_id)->where('id',$id)->first();
+        /*$overtimes = EmployeeOvertime::where('employee_id', $employee_id)
             ->whereDate('created_at', $date)
             ->get();
-
         if ($overtimes->isEmpty()) {
             abort(404, 'No overtime records found for this employee and date.');
-        }
-
+        }*/
         return view('admin.employee-overtime.edit', compact('overtimes', 'employees'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, $employee_id, $date)
+    public function update(Request $request, $employee_id, $id)
     {
+        $mainId = $id;
         $request->validate([
             'employee_id.*' => 'required|exists:users,id',
             'work_date.*'   => 'required|date',
@@ -165,10 +159,10 @@ class EmployeeOvertimeController extends Controller
         $rates       = $request->input('rate', []);
         $hours       = $request->input('hours', []);
 
-        // ✅ Fix: prevent index mismatch
+        
         $submittedIds = array_filter($ids, fn($id) => !is_null($id) && $id !== '');
         $existingOvertimeIds = EmployeeOvertime::where('employee_id', $employee_id)
-            ->whereDate('created_at', $date)
+            ->where('employee_overtime_main_id', $mainId)
             ->pluck('id')
             ->toArray();
 
@@ -194,6 +188,7 @@ class EmployeeOvertimeController extends Controller
             $overtimeIncome = $rates[$index] * $hours[$index] * $multiplier;
 
             $data = [
+                'employee_overtime_main_id' => $mainId,
                 'employee_id'     => $empId,
                 'work_date'       => $dates[$index],
                 'actual_date'     => $actualDates[$index] ?? null,
@@ -218,13 +213,28 @@ class EmployeeOvertimeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($employee_id)
+    public function destroy($employee_id, $id)
     {
-        EmployeeOvertime::where('employee_id', $employee_id)->delete();
+        try {
+            // Delete the main record and all associated overtime records
+            EmployeeOvertimeMain::where('id', $id)
+                ->where('employee_id', $employee_id)
+                ->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Employee overtime record deleted successfully!'
-        ]);
+            EmployeeOvertime::where('employee_overtime_main_id', $id)
+                ->where('employee_id', $employee_id)
+                ->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Employee overtime records deleted successfully!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete overtime records: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

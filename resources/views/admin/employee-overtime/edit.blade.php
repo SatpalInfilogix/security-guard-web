@@ -26,7 +26,7 @@
                     <div class="card">
                         <div class="card-body">
                             <form
-                                action="{{ route('employee-overtime.update', [$overtimes->first()->employee_id, $overtimes->first()->created_at->toDateString()]) }}"
+                                action="{{ route('employee-overtime.update', [$overtimes->employee_id, $overtimes->id]) }}"
                                 method="post" enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
