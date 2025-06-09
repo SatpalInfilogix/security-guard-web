@@ -9,11 +9,12 @@ return new class extends Migration {
     {
         Schema::create('employee_overtimes', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('employee_overtime_main_id');
             $table->unsignedBigInteger('employee_id');
             $table->date('work_date');
             $table->decimal('rate', 10, 2);
             $table->decimal('hours', 5, 2);
-            $table->decimal('overtime_income',10, 2)->nullable();
+            $table->decimal('overtime_income', 10, 2)->nullable();
             $table->timestamps();
         });
     }

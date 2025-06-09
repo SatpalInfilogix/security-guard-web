@@ -15,6 +15,7 @@ use Spatie\Permission\Models\Role;
 use Illuminate\Console\Command;
 use Carbon\Carbon;
 use App\Models\TwentyTwoDayInterval;
+use Illuminate\Support\Str;
 
 class PublishEmployeePayroll extends Command
 {
@@ -311,6 +312,7 @@ class PublishEmployeePayroll extends Command
                                         'pending_salary_advance' => $pendingAmounts['Salary Advance'],
                                         'pending_psra' => $pendingAmounts['PSRA'],
                                         'pending_bank_loan' => $pendingAmounts['Bank Loan'],
+                                        'approved_pension_scheme' => $totalDeductions['Approved Pension'],
                                         'pending_approved_pension' => $pendingAmounts['Approved Pension'],
                                         'garnishment' => $totalDeductions['Garnishment'],
                                         'missing_goods' => $totalDeductions['Missing Goods'],
@@ -544,7 +546,7 @@ class PublishEmployeePayroll extends Command
             } else {
                 $eduction_tax = $statutoryIncome * 0.0225;
             }
-            
+
             $employer_contribution = $statutoryIncome * 0.035;
 
             if ($age >= 65) {
@@ -573,7 +575,7 @@ class PublishEmployeePayroll extends Command
         ];
     }
 
-    private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)
+    /*private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)
     {
         $deductionTypes = [
             'Staff Loan' => 'pending_staff_loan',
@@ -591,6 +593,75 @@ class PublishEmployeePayroll extends Command
         $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
 
         foreach ($deductionTypes as $deductionType => $pendingField) {
+            $deductionRecords = EmployeeDeduction::where('employee_id', $employee->id)
+                ->where('type', $deductionType)
+                ->where(function ($query) use ($previousStartDate, $endDate) {
+                    $query->where(function ($q) use ($previousStartDate, $endDate) {
+                        $q->whereDate('start_date', '<=', $endDate)
+                            ->whereDate('end_date', '>=', $previousStartDate);
+                    })
+                        ->orWhere(function ($q) use ($endDate) {
+                            $q->whereNull('end_date')->whereDate('start_date', '<=', $endDate);
+                        });
+                })
+                ->get();
+
+            foreach ($deductionRecords as $deduction) {
+                if ($deduction->end_date !== null) {
+                    if (
+                        $deduction->start_date <= $endDate &&
+                        $deduction->end_date >= $previousStartDate &&
+                        $deduction->pending_balance > 0
+                    ) {
+                        $deductAmount = min($deduction->one_installment, $deduction->pending_balance);
+                        $pendingBalance = $deduction->pending_balance - $deductAmount;
+
+                        $totalDeductions[$deductionType] = $deductAmount;
+                        $pendingAmounts[$deductionType] = $pendingBalance;
+
+                        $deduction->update(['pending_balance' => $pendingBalance]);
+
+                        EmployeeDeductionDetail::create([
+                            'employee_id' => $employee->id,
+                            'deduction_id' => $deduction->id,
+                            'deduction_date' => Carbon::now(),
+                            'amount_deducted' => $deductAmount,
+                            'balance' => $pendingBalance
+                        ]);
+                    }
+                } else {
+                    $deductAmount = $deduction->one_installment;
+
+                    $totalDeductions[$deductionType] = $deductAmount;
+                    $pendingAmounts[$deductionType] = $deduction->pending_balance;
+
+                    EmployeeDeductionDetail::create([
+                        'employee_id' => $employee->id,
+                        'deduction_id' => $deduction->id,
+                        'deduction_date' => Carbon::now(),
+                        'amount_deducted' => $deductAmount,
+                        'balance' => $deduction->pending_balance
+                    ]);
+                }
+            }
+        }
+
+        return [$totalDeductions, $pendingAmounts];
+    }*/
+
+    private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)
+    {
+        $deductionTypes = config('deductiontype.types');
+
+        $totalDeductions = [];
+        $pendingAmounts = [];
+
+        foreach ($deductionTypes as $deductionType) {
+            $pendingField = 'pending_' . Str::snake($deductionType);
+
+            $totalDeductions[$deductionType] = 0;
+            $pendingAmounts[$deductionType] = 0;
+
             $deductionRecords = EmployeeDeduction::where('employee_id', $employee->id)
                 ->where('type', $deductionType)
                 ->where(function ($query) use ($previousStartDate, $endDate) {

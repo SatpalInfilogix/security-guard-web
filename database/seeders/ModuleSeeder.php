@@ -113,5 +113,9 @@ class ModuleSeeder extends Seeder
             'name' => 'Employee Encashment',
             'slug' => 'employee encashment',
         ]);
+        Module::create([
+            'name' => 'Employee Overtime',
+            'slug' => 'employee overtime',
+        ]);
     }
 }
