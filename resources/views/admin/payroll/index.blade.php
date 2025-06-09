@@ -12,7 +12,7 @@
                         <div class="page-title-right">
                             <a href="{{ route('payroll-export.guard', ['date' => request('date')]) }}" id="guardExportBtn"
                                 class="btn btn-primary primary-btn btn-md me-1">
-                                <i class="bx bx-download"></i> Guard Payroll Export
+                                <i class="bx bx-download"></i> Guard Payroll Summary
                             </a>
                             <a href="javascript:void(0);" id="bulkDownloadBtn"
                                 class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Bulk Download

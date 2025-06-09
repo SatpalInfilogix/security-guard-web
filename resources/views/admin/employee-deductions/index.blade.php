@@ -13,7 +13,7 @@
                     <div class="page-title-right">
                         <a href="#" id="exportBtn" class="btn btn-primary"><i class="bx bx-export"></i>Employee Deduction Export</a>
                         {{-- <a href="{{ route('export.deductions') }}" class="btn btn-primary"><i class="bx bx-export"></i> Deduction Export</a> --}}
-                        @can('create nst deduction')
+                        @can('create employee deduction')
                         <a href="{{ route('employee-deductions.create') }}" class="btn btn-primary">Add New Employee Deduction</a>
                         @endcan
                     </div>
@@ -161,11 +161,11 @@
 
                         let buttons = '';
 
-                        @can('edit nst deduction')
+                        @can('edit employee deduction')
                         buttons += `<a href="${editUrl}" class="btn btn-sm btn-primary me-1"><i class="bx bx-edit"></i></a>`;
                         @endcan
 
-                        @can('delete nst deduction')
+                        @can('delete employee deduction')
                         buttons += `
     <button data-endpoint="${deleteUrl}" data-source="Employee Deduction"
         class="delete-btn btn btn-danger waves-effect waves-light btn-sm">

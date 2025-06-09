@@ -30,6 +30,10 @@ class ModuleSeeder extends Seeder
             'slug' => 'guard roster'
         ]);
         Module::create([
+            'name' => 'Guard Encashment',
+            'slug' => 'guard encashment',
+        ]);
+        Module::create([
             'name' => 'Attendance',
             'slug' => 'attendance'
         ]);
@@ -100,6 +104,14 @@ class ModuleSeeder extends Seeder
         Module::create([
             'name' => 'Employee Payroll',
             'slug' => 'employee payroll',
+        ]);
+        Module::create([
+            'name' => 'Employee Deduction',
+            'slug' => 'employee deduction',
+        ]);
+        Module::create([
+            'name' => 'Employee Encashment',
+            'slug' => 'employee encashment',
         ]);
     }
 }

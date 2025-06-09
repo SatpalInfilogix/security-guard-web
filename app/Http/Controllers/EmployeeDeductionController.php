@@ -18,6 +18,9 @@ class EmployeeDeductionController extends Controller
 {
     public function index()
     {
+        if (!Gate::allows('view employee deduction')) {
+            abort(403);
+        }
         return view('admin.employee-deductions.index');
     }
     public function getDeductionsData(Request $request)
@@ -85,7 +88,7 @@ class EmployeeDeductionController extends Controller
 
     public function create()
     {
-        if (!Gate::allows('create nst deduction')) {
+        if (!Gate::allows('create employee deduction')) {
             abort(403);
         }
         $userRole = Role::where('id', 9)->first();
@@ -194,7 +197,7 @@ class EmployeeDeductionController extends Controller
     // }
     public function store(Request $request)
     {
-        if (!Gate::allows('create nst deduction')) {
+        if (!Gate::allows('create employee deduction')) {
             abort(403);
         }
 
@@ -261,7 +264,7 @@ class EmployeeDeductionController extends Controller
 
     public function edit($id)
     {
-        if (!Gate::allows('edit nst deduction')) {
+        if (!Gate::allows('edit employee deduction')) {
             abort(403);
         }
 
@@ -278,7 +281,7 @@ class EmployeeDeductionController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!Gate::allows('edit nst deduction')) {
+        if (!Gate::allows('edit employee deduction')) {
             abort(403);
         }
 
@@ -354,6 +357,9 @@ class EmployeeDeductionController extends Controller
 
     public function destroy($id)
     {
+        if (!Gate::allows('delete employee deduction')) {
+            abort(403);
+        }
         $deduction = EmployeeDeduction::findOrFail($id);
         $deduction->delete();
 
