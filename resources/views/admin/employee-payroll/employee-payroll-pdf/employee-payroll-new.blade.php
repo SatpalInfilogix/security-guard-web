@@ -162,6 +162,17 @@
             </tr>
         @endif
 
+        @if ($employeePayroll->salary_advance > 0 || $employeePayroll->pending_salary_advance > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                <td>Salary Advance</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->salary_advance) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_salary_advance) }}</td>
+                {{-- <td></td> --}}
+            </tr>
+        @endif
+
         @if ($employeePayroll->approved_pension_scheme > 0 || $employeePayroll->pending_approved_pension > 0)
             <tr>
                 <td colspan="3">{!! '&nbsp;' !!}</td>
