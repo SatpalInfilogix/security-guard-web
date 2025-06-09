@@ -13,6 +13,7 @@ use App\Exports\LeaveEncashmentImportResultExport;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Session;
 use App\Exports\LeaveEncashmentSampleExport;
+use Illuminate\Support\Facades\Gate;
 use PDF;
 
 class LeaveEncashmentController extends Controller
@@ -22,6 +23,9 @@ class LeaveEncashmentController extends Controller
      */
     public function index(Request $request)
     {
+        if (!Gate::allows('view employee encashment')) {
+            abort(403);
+        }
         $employees = User::role('employee')->get();
         $query = LeaveEncashment::with('employee')->latest();
         if ($request->filled('employee_id')) {
@@ -36,6 +40,9 @@ class LeaveEncashmentController extends Controller
      */
     public function create()
     {
+        if (!Gate::allows('create employee encashment')) {
+            abort(403);
+        }
         $employees = User::role('employee')->get();
         return view('admin.employee-leave-encashment.create', compact('employees'));
     }
@@ -45,6 +52,9 @@ class LeaveEncashmentController extends Controller
      */
     public function store(Request $request)
     {
+        if (!Gate::allows('create employee encashment')) {
+            abort(403);
+        }
         $request->validate([
             'employee_id' => 'required|exists:users,id',
             'encash_leaves' => 'required|integer|min:1',
@@ -79,6 +89,9 @@ class LeaveEncashmentController extends Controller
      */
     public function edit($id)
     {
+        if (!Gate::allows('edit employee encashment')) {
+            abort(403);
+        }
         $encashment = LeaveEncashment::with('employee')->findOrFail($id);
         $employees = User::role('employee')->get();
         return view('admin.employee-leave-encashment.edit', compact('encashment', 'employees'));
@@ -89,6 +102,9 @@ class LeaveEncashmentController extends Controller
      */
     public function update(Request $request, $id)
     {
+        if (!Gate::allows('edit employee encashment')) {
+            abort(403);
+        }
         $request->validate([
             'employee_id' => 'required|exists:users,id',
             'encash_leaves' => 'required|integer|min:1',
@@ -117,6 +133,9 @@ class LeaveEncashmentController extends Controller
      */
     public function destroy($encashment_id)
     {
+        if (!Gate::allows('delete employee encashment')) {
+            abort(403);
+        }
         LeaveEncashment::where('id', $encashment_id)->delete();
 
         return response()->json([
