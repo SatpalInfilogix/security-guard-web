@@ -208,7 +208,7 @@ class EmployeeDeductionController extends Controller
             'document_date'     => 'required|date',
             'start_date'        => 'required|date|after_or_equal:document_date',
             'end_date'          => 'nullable|date|after_or_equal:start_date',
-            'no_of_payroll'     => 'nullable|integer|min:1',
+            'no_of_payroll'     => 'nullable',
             'employee_document' => 'nullable',
         ]);
 
@@ -294,9 +294,12 @@ class EmployeeDeductionController extends Controller
             'document_date'     => 'required|date',
             'start_date'        => 'required|date',
             'end_date'          => 'nullable|date|after_or_equal:start_date',
-            'no_of_payroll'     => 'nullable|integer|min:1',
-            'employee_document' => 'nullable',
+            'no_of_payroll'     => 'nullable',
+            'employee_document' => 'nullable|file',
         ]);
+
+        $startDate = $request->start_date ? Carbon::parse($request->start_date)->toDateString() : null;
+        $endDate = $request->end_date ? Carbon::parse($request->end_date)->toDateString() : null;
 
         $noOfPayrolls = $request->no_of_payroll;
         $oneInstallment = $noOfPayrolls ? ($request->amount / $noOfPayrolls) : $request->amount;
@@ -305,49 +308,48 @@ class EmployeeDeductionController extends Controller
             ->where('type', $request->type)
             ->where('id', '!=', $deduction->id);
 
-        if ($request->filled('end_date')) {
-            $existingDeductionQuery->where(function ($query) use ($request) {
-                $query->whereBetween('start_date', [$this->parseDate($request->start_date), $this->parseDate($request->end_date)])
-                    ->orWhereBetween('end_date', [$this->parseDate($request->start_date), $this->parseDate($request->end_date)])
-                    ->orWhere(function ($query) use ($request) {
-                        $query->where('start_date', '<=', $this->parseDate($request->start_date))
-                            ->where('end_date', '>=', $this->parseDate($request->end_date));
+        if ($endDate) {
+            $existingDeductionQuery->where(function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('start_date', [$startDate, $endDate])
+                    ->orWhereBetween('end_date', [$startDate, $endDate])
+                    ->orWhere(function ($query) use ($startDate, $endDate) {
+                        $query->where('start_date', '<=', $startDate)
+                            ->where('end_date', '>=', $endDate);
                     });
+            });
+        } else {
+            $existingDeductionQuery->where(function ($query) use ($startDate) {
+                $query->whereNull('end_date')
+                    ->where('start_date', $startDate);
             });
         }
 
-        $existingDeduction = $existingDeductionQuery->exists();
-
-        if ($existingDeduction) {
+        if ($existingDeductionQuery->exists()) {
             return redirect()->route('employee-deductions.index')
                 ->with('error', 'A deduction of this type already exists for this employee in the given date range.');
         }
 
         $employeeDocumentPath = $deduction->employee_document;
         if ($request->hasFile('employee_document')) {
-            if (!empty($deduction->employee_document) && Storage::disk('public')->exists($deduction->employee_document)) {
-                Storage::disk('public')->delete($deduction->employee_document);
+            if ($employeeDocumentPath && Storage::disk('public')->exists($employeeDocumentPath)) {
+                Storage::disk('public')->delete($employeeDocumentPath);
             }
 
             $file = $request->file('employee_document');
             $filename = time() . '_' . $file->getClientOriginalName();
             $employeeDocumentPath = $file->storeAs('employee_documents', $filename, 'public');
-
-            $data['employee_document'] = $employeeDocumentPath;
-        } else {
-            $data['employee_document'] = $deduction->employee_document;
         }
 
         $deduction->update([
-            'employee_id'     => $request->employee_id,
-            'type'            => $request->type,
-            'amount'          => $request->amount,
-            'no_of_payroll'   => $noOfPayrolls,
-            'document_date'   => $request->document_date,
-            'start_date'      => $this->parseDate($request->start_date),
-            'end_date'        => $this->parseDate($request->end_date),
-            'one_installment' => $oneInstallment,
-            'pending_balance' => $request->amount,
+            'employee_id'       => $request->employee_id,
+            'type'              => $request->type,
+            'amount'            => $request->amount,
+            'no_of_payroll'     => $noOfPayrolls,
+            'document_date'     => Carbon::parse($request->document_date)->toDateString(),
+            'start_date'        => $startDate,
+            'end_date'          => $endDate,
+            'one_installment'   => $oneInstallment,
+            'pending_balance'   => $request->amount,
             'employee_document' => $employeeDocumentPath,
         ]);
 
