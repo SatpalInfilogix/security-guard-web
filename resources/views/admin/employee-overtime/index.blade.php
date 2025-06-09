@@ -47,17 +47,20 @@
                                                 {{ $overtime->employee->surname ?? '' }}</td>
                                             <td>{{ number_format($overtime->rate, 2) }}</td>
                                             <td>{{ $overtime->total_hours }}</td>
-                                            <td>{{ $overtime->created_date }}</td>
-                                            <td>{{ $overtime->actual_date }}</td>
+                                            <td>{{ $overtime->created_at ? \Carbon\Carbon::parse($overtime->created_at)->format('Y-m-d') : '' }}</td>
+                                            <td>{{ $overtime->actual_date ? \Carbon\Carbon::parse($overtime->actual_date)->format('Y-m-d') : '' }}</td>
                                             <td>
                                                 <a href="{{ route('employee-overtime.edit', [
                                                     $overtime->employee_id,
-                                                    \Carbon\Carbon::parse($overtime->created_date)->toDateString(),
+                                                    $overtime->id,
                                                 ]) }}"
                                                     class="btn btn-sm btn-info">Edit</a>
 
                                                 <button type="button" data-source="Employee Overtime"
-                                                    data-endpoint="{{ route('employee-overtime.destroy', $overtime->employee_id) }}"
+                                                    data-endpoint="{{ route('employee-overtime.destroy', [
+                                                        $overtime->employee_id,
+                                                        $overtime->id
+                                                    ]) }}"
                                                     class="delete-btn btn btn-danger btn-sm">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>

@@ -79,6 +79,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
 
         Route::get('employee-overtime/{employee_id}/{date}/edit', [EmployeeOvertimeController::class, 'edit'])->name('employee-overtime.edit');
         Route::put('employee-overtime/{employee_id}/{date}', [EmployeeOvertimeController::class, 'update'])->name('employee-overtime.update');
+        Route::delete('employee-overtime/{employee_id}/{id}', [EmployeeOvertimeController::class, 'destroy'])->name('employee-overtime.destroy');
 
         Route::get('/payment-settings', [SettingController::class, 'paymentSetting'])->name('settings.payment-settings');
         Route::get('/gerenal-settings', [SettingController::class, 'generalSettings'])->name('settings.gerenal-settings');
