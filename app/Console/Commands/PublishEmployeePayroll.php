@@ -15,6 +15,7 @@ use Spatie\Permission\Models\Role;
 use Illuminate\Console\Command;
 use Carbon\Carbon;
 use App\Models\TwentyTwoDayInterval;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class PublishEmployeePayroll extends Command
@@ -180,8 +181,8 @@ class PublishEmployeePayroll extends Command
             $query->where('role_id', $userRole->id);
         })->with('guardAdditionalInformation')->latest()->get();
 
-        $today = Carbon::now()->startOfDay();
-        // $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
+        // $today = Carbon::now()->startOfDay();
+        $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
 
         $processingDate = $this->getProcessingDate($today);
 
@@ -575,7 +576,7 @@ class PublishEmployeePayroll extends Command
         ];
     }
 
-    /*private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)
+    private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)
     {
         $deductionTypes = [
             'Staff Loan' => 'pending_staff_loan',
@@ -590,66 +591,67 @@ class PublishEmployeePayroll extends Command
         ];
 
         $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
-        $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
 
         foreach ($deductionTypes as $deductionType => $pendingField) {
             $deductionRecords = EmployeeDeduction::where('employee_id', $employee->id)
                 ->where('type', $deductionType)
-                ->where(function ($query) use ($previousStartDate, $endDate) {
-                    $query->where(function ($q) use ($previousStartDate, $endDate) {
-                        $q->whereDate('start_date', '<=', $endDate)
-                            ->whereDate('end_date', '>=', $previousStartDate);
-                    })
-                        ->orWhere(function ($q) use ($endDate) {
-                            $q->whereNull('end_date')->whereDate('start_date', '<=', $endDate);
-                        });
-                })
+                ->whereDate('start_date', '<=', $endDate)
                 ->get();
 
             foreach ($deductionRecords as $deduction) {
-                if ($deduction->end_date !== null) {
-                    if (
-                        $deduction->start_date <= $endDate &&
-                        $deduction->end_date >= $previousStartDate &&
-                        $deduction->pending_balance > 0
-                    ) {
-                        $deductAmount = min($deduction->one_installment, $deduction->pending_balance);
-                        $pendingBalance = $deduction->pending_balance - $deductAmount;
+                if (!is_null($deduction->end_date) && $deduction->start_date <= $endDate && $deduction->end_date >= $previousStartDate) {
+                    $deductionAmount = min($deduction->one_installment, $deduction->pending_balance);
+                    $newBalance = $deduction->pending_balance - $deductionAmount;
 
-                        $totalDeductions[$deductionType] = $deductAmount;
-                        $pendingAmounts[$deductionType] = $pendingBalance;
+                    $totalDeductions[$deductionType] += $deductionAmount;
 
-                        $deduction->update(['pending_balance' => $pendingBalance]);
-
-                        EmployeeDeductionDetail::create([
-                            'employee_id' => $employee->id,
-                            'deduction_id' => $deduction->id,
-                            'deduction_date' => Carbon::now(),
-                            'amount_deducted' => $deductAmount,
-                            'balance' => $pendingBalance
-                        ]);
-                    }
-                } else {
-                    $deductAmount = $deduction->one_installment;
-
-                    $totalDeductions[$deductionType] = $deductAmount;
-                    $pendingAmounts[$deductionType] = $deduction->pending_balance;
+                    // ✅ Only update if end_date is present
+                    $deduction->update(['pending_balance' => $newBalance]);
 
                     EmployeeDeductionDetail::create([
                         'employee_id' => $employee->id,
                         'deduction_id' => $deduction->id,
                         'deduction_date' => Carbon::now(),
-                        'amount_deducted' => $deductAmount,
-                        'balance' => $deduction->pending_balance
+                        'amount_deducted' => $deductionAmount,
+                        'balance' => $newBalance
                     ]);
+                } elseif (is_null($deduction->end_date) && is_null($deduction->no_of_payroll)) {
+                    if ($deduction->pending_balance > 0) {
+                        $deductionAmount = min($deduction->one_installment, $deduction->pending_balance);
+                        $newBalance = $deduction->pending_balance - $deductionAmount;
+
+                        $totalDeductions[$deductionType] += $deductionAmount;
+                        // ✅ Do not update pending_balance if end_date is not present
+                        // $deduction->update(['pending_balance' => $newBalance]);
+                        EmployeeDeductionDetail::create([
+                            'employee_id' => $employee->id,
+                            'deduction_id' => $deduction->id,
+                            'deduction_date' => Carbon::now(),
+                            'amount_deducted' => $deductionAmount,
+                            'balance' => 0//$deduction->pending_balance // Show current balance without change
+                        ]);
+                    }
                 }
             }
+
+        $deductionIds = EmployeeDeduction::where('employee_id', $employee->id)
+            ->where('type', $deductionType)
+            ->pluck('id');
+
+        $pendingAmounts[$deductionType] = EmployeeDeductionDetail::whereIn('deduction_id', $deductionIds)
+            ->select('deduction_id', DB::raw('MAX(id) as latest_id'))
+            ->groupBy('deduction_id')
+            ->pluck('latest_id')
+            ->pipe(function ($latestIds) {
+                return EmployeeDeductionDetail::whereIn('id', $latestIds)->sum('balance');
+            });
         }
 
         return [$totalDeductions, $pendingAmounts];
-    }*/
+    }
 
-    private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)
+
+    /*private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)
     {
         $deductionTypes = config('deductiontype.types');
 
@@ -716,7 +718,7 @@ class PublishEmployeePayroll extends Command
         }
 
         return [$totalDeductions, $pendingAmounts];
-    }
+    }*/
 
     protected function isPublicHoliday($date)
     {
