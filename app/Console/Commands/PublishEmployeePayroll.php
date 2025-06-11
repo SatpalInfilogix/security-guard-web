@@ -181,8 +181,8 @@ class PublishEmployeePayroll extends Command
             $query->where('role_id', $userRole->id);
         })->with('guardAdditionalInformation')->latest()->get();
 
-        // $today = Carbon::now()->startOfDay();
-        $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
+        $today = Carbon::now()->startOfDay();
+        // $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
 
         $processingDate = $this->getProcessingDate($today);
 
