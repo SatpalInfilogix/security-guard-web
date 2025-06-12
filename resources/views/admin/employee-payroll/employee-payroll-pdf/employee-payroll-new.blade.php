@@ -120,36 +120,41 @@
                 <td style="text-align: right;">{{ $employeePayroll->pending_leave_balance }}</td>
                 <td style="text-align: right;">{{ formatAmount($employeePayroll->pending_leave_amount) }}</td>
             @else
-                <td colspan="3">{!! '&nbsp;' !!}</td>
-                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                {{-- <td colspan="3">{!! '&nbsp;' !!}</td> --}}
+                <td>{!! '&nbsp;' !!}</td>
+                <td>{!! '&nbsp;' !!}</td>
+                <td>{!! '&nbsp;' !!}</td>
             @endif
 
             <td>NHT</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->nht) }}</td>
             <td>{!! '&nbsp;' !!}</td>
         </tr>
-        <tr>
-            <td>Employee Overtime</td>
-            <td style="text-align: right;">{{ $overtimeHours }}</td>
-            <td style="text-align: right;">{{ formatAmount($employeePayroll->overtime_income_total) }}</td>
-            {{-- <td></td> --}}
-            {{-- <td>Heart</td> --}}
-            <td></td>
-            <td></td>
-            <td></td>
-            {{-- <td>{{$employeePayroll->heart}}</td> --}}
-        </tr>
-        {{-- @if ($employeePayroll->staff_loan > 0 || $employeePayroll->pending_staff_loan > 0) --}}
-        <tr>
-            <td>Pay in Lieu of Employee</td>
-            <td style="text-align: right;">{{ $encashLeaveDays ?? 0 }}</td>
-            <td style="text-align: right;">{{ formatAmount($encashLeaveAmount ?? 0) }}</td>
-            <td>Staff Loan</td>
-            <td style="text-align: right;">{{ formatAmount($employeePayroll->staff_loan) }}</td>
-            <td style="text-align: right;">{{ number_format($employeePayroll->pending_staff_loan) }}</td>
-            {{-- <td></td> --}}
-        </tr>
-        {{-- @endif --}}
+        @if ($overtimeHours > 0 || $employeePayroll->overtime_income_total > 0)
+            <tr>
+                <td>Employee Overtime</td>
+                <td style="text-align: right;">{{ $overtimeHours }}</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->overtime_income_total) }}</td>
+                {{-- <td></td> --}}
+                {{-- <td>Heart</td> --}}
+                <td></td>
+                <td></td>
+                <td></td>
+                {{-- <td>{{$employeePayroll->heart}}</td> --}}
+            </tr>
+        @endif
+        @if (
+            $encashLeaveDays > 0 ||$encashLeaveAmount > 0 ||$employeePayroll->staff_loan > 0 ||$employeePayroll->pending_staff_loan > 0)
+            <tr>
+                <td>Pay in Lieu of Employee</td>
+                <td style="text-align: right;">{{ $encashLeaveDays ?? 0 }}</td>
+                <td style="text-align: right;">{{ formatAmount($encashLeaveAmount ?? 0) }}</td>
+                <td>Staff Loan</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->staff_loan) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_staff_loan) }}</td>
+                {{-- <td></td> --}}
+            </tr>
+        @endif
 
         @if ($employeePayroll->medical_insurance > 0 || $employeePayroll->pending_medical_insurance > 0)
             <tr>
@@ -261,7 +266,7 @@
             {{-- <td></td> --}}
             <td></td>
             <td style="text-align: right;">{{ formatAmount($total) }}</td>
-            <td></td>
+            <th>Total (Deduction)</th>
             <td style="text-align: right;">{{ formatAmount($totalAmount) }}</td>
             <td></td>
             {{-- <td></td> --}}
