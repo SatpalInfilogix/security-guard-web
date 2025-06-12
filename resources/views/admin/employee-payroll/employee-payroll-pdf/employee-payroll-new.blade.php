@@ -144,7 +144,7 @@
             </tr>
         @endif
         @if (
-            $encashLeaveDays > 0 ||$encashLeaveAmount > 0 ||$employeePayroll->staff_loan > 0 ||$employeePayroll->pending_staff_loan > 0)
+            $employeePayroll->encashLeaveDays > 0 ||$employeePayroll->encashLeaveAmount > 0 ||$employeePayroll->staff_loan > 0 ||$employeePayroll->pending_staff_loan > 0)
             <tr>
                 <td>Pay in Lieu of Employee</td>
                 <td style="text-align: right;">{{ $encashLeaveDays ?? 0 }}</td>
@@ -310,7 +310,7 @@
         </tr>
         <tr>
             {{-- <td></td> --}}
-            <td style="text-align: right;">{{ formatAmount($employeePayroll->gross_total) }}</td>
+            <td style="text-align: right;">{{ formatAmount($employeePayroll->gross_total + $employeeAllowance ?? 0) }}</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->nis_total) }}</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->paye_tax_total) }}</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->education_tax_total) }}</td>
