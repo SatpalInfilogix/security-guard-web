@@ -181,8 +181,8 @@ class PublishEmployeePayroll extends Command
             $query->where('role_id', $userRole->id);
         })->with('guardAdditionalInformation')->latest()->get();
 
-        $today = Carbon::now()->startOfDay();
-        // $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
+        // $today = Carbon::now()->startOfDay();
+        $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
 
         $processingDate = $this->getProcessingDate($today);
 
@@ -289,6 +289,7 @@ class PublishEmployeePayroll extends Command
                                         $previousStartDate,
                                         $endDate
                                     );
+                                    // dd($totalDeductions);
                                     //===== End Employee Payroll Non Statutory Calculation =====
 
                                     $payrollData = array_merge($payrollStatutoryData, [
@@ -321,6 +322,28 @@ class PublishEmployeePayroll extends Command
                                         'pending_garnishment' => $pendingAmounts['Garnishment'],
                                         'pending_missing_goods' => $pendingAmounts['Missing Goods'],
                                         'pending_damaged_goods' => $pendingAmounts['Damaged Goods'],
+                                        // New deduction fields
+                                        'ncb_loan' => $totalDeductions['NCB Loan'],
+                                        'cwj_credit_union_loan' => $totalDeductions['C&WJ Credit Union Loan'],
+                                        'edu_com_coop_loan' => $totalDeductions['Edu Com Co-op Loan'],
+                                        'nht_mortgage_loan' => $totalDeductions['National Housing Trust Mortgage Loan'],
+                                        'jn_bank_loan' => $totalDeductions['Jamaica National Bank Loan'],
+                                        'sagicor_bank_loan' => $totalDeductions['Sagicor Bank Loan'],
+                                        'health_insurance' => $totalDeductions['Health Insurance'],
+                                        'life_insurance' => $totalDeductions['Life Insurance'],
+                                        'overpayment' => $totalDeductions['Overpayment'],
+                                        'training' => $totalDeductions['Training'],
+                                        // Pending amounts for new deductions
+                                        'pending_ncb_loan' => $pendingAmounts['NCB Loan'],
+                                        'pending_cwj_credit_union_loan' => $pendingAmounts['C&WJ Credit Union Loan'],
+                                        'pending_edu_com_coop_loan' => $pendingAmounts['Edu Com Co-op Loan'],
+                                        'pending_nht_mortgage_loan' => $pendingAmounts['National Housing Trust Mortgage Loan'],
+                                        'pending_jn_bank_loan' => $pendingAmounts['Jamaica National Bank Loan'],
+                                        'pending_sagicor_bank_loan' => $pendingAmounts['Sagicor Bank Loan'],
+                                        'pending_health_insurance' => $pendingAmounts['Health Insurance'],
+                                        'pending_life_insurance' => $pendingAmounts['Life Insurance'],
+                                        'pending_overpayment' => $pendingAmounts['Overpayment'],
+                                        'pending_training' => $pendingAmounts['Training'],
                                         'is_publish' => 0,
                                     ]);
 
@@ -588,6 +611,16 @@ class PublishEmployeePayroll extends Command
             'Garnishment' => 'pending_garnishment',
             'Missing Goods' => 'pending_missing_goods',
             'Damaged Goods' => 'pending_damaged_goods',
+            'NCB Loan' => 'pending_ncb_loan',
+            'C&WJ Credit Union Loan' => 'pending_cwj_credit_union_loan',
+            'Edu Com Co-op Loan' => 'pending_edu_com_coop_loan',
+            'National Housing Trust Mortgage Loan' => 'pending_nht_mortgage_loan',
+            'Jamaica National Bank Loan' => 'pending_jamaica_national_bank_loan',
+            'Sagicor Bank Loan' => 'pending_sagicor_bank_loan',
+            'Health Insurance' => 'pending_health_insurance',
+            'Life Insurance' => 'pending_life_insurance',
+            'Overpayment' => 'pending_overpayment',
+            'Training' => 'pending_training'
         ];
 
         $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
@@ -597,6 +630,8 @@ class PublishEmployeePayroll extends Command
                 ->where('type', $deductionType)
                 ->whereDate('start_date', '<=', $endDate)
                 ->get();
+            echo "End Date : " . $endDate->format('Y-m-d') ." Deduction Type : " . $deductionType."\n";
+            // dd($deductionRecords);
 
             foreach ($deductionRecords as $deduction) {
                 if (!is_null($deduction->end_date) && $deduction->start_date <= $endDate && $deduction->end_date >= $previousStartDate) {
@@ -647,78 +682,9 @@ class PublishEmployeePayroll extends Command
             });
         }
 
+        // dd($totalDeductions, $pendingAmounts);
         return [$totalDeductions, $pendingAmounts];
     }
-
-
-    /*private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)
-    {
-        $deductionTypes = config('deductiontype.types');
-
-        $totalDeductions = [];
-        $pendingAmounts = [];
-
-        foreach ($deductionTypes as $deductionType) {
-            $pendingField = 'pending_' . Str::snake($deductionType);
-
-            $totalDeductions[$deductionType] = 0;
-            $pendingAmounts[$deductionType] = 0;
-
-            $deductionRecords = EmployeeDeduction::where('employee_id', $employee->id)
-                ->where('type', $deductionType)
-                ->where(function ($query) use ($previousStartDate, $endDate) {
-                    $query->where(function ($q) use ($previousStartDate, $endDate) {
-                        $q->whereDate('start_date', '<=', $endDate)
-                            ->whereDate('end_date', '>=', $previousStartDate);
-                    })
-                        ->orWhere(function ($q) use ($endDate) {
-                            $q->whereNull('end_date')->whereDate('start_date', '<=', $endDate);
-                        });
-                })
-                ->get();
-
-            foreach ($deductionRecords as $deduction) {
-                if ($deduction->end_date !== null) {
-                    if (
-                        $deduction->start_date <= $endDate &&
-                        $deduction->end_date >= $previousStartDate &&
-                        $deduction->pending_balance > 0
-                    ) {
-                        $deductAmount = min($deduction->one_installment, $deduction->pending_balance);
-                        $pendingBalance = $deduction->pending_balance - $deductAmount;
-
-                        $totalDeductions[$deductionType] = $deductAmount;
-                        $pendingAmounts[$deductionType] = $pendingBalance;
-
-                        $deduction->update(['pending_balance' => $pendingBalance]);
-
-                        EmployeeDeductionDetail::create([
-                            'employee_id' => $employee->id,
-                            'deduction_id' => $deduction->id,
-                            'deduction_date' => Carbon::now(),
-                            'amount_deducted' => $deductAmount,
-                            'balance' => $pendingBalance
-                        ]);
-                    }
-                } else {
-                    $deductAmount = $deduction->one_installment;
-
-                    $totalDeductions[$deductionType] = $deductAmount;
-                    $pendingAmounts[$deductionType] = $deduction->pending_balance;
-
-                    EmployeeDeductionDetail::create([
-                        'employee_id' => $employee->id,
-                        'deduction_id' => $deduction->id,
-                        'deduction_date' => Carbon::now(),
-                        'amount_deducted' => $deductAmount,
-                        'balance' => $deduction->pending_balance
-                    ]);
-                }
-            }
-        }
-
-        return [$totalDeductions, $pendingAmounts];
-    }*/
 
     protected function isPublicHoliday($date)
     {

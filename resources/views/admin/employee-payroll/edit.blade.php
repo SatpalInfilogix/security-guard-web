@@ -107,7 +107,7 @@
                                             @else
                                                 <td>Leave not Paid</td>
                                                 <td></td>
-                                                <td>{{$employeePayroll->leave_not_paid}}</td>
+                                                <td>{{ $employeePayroll->leave_not_paid }}</td>
                                                 <td></td>
                                             @endif
                                             <td>NHT</td>
@@ -195,6 +195,67 @@
                                             <td>{{ number_format($employeePayroll->pending_missing_goods) }}</td>
                                         </tr>
                                         <tr>
+                                            <td colspan="3"></td>
+                                            <td></td>
+                                            <td>NCB Loan</td>
+                                            <td>{{ formatAmount($employeePayroll->ncb_loan) }}</td>
+                                            <td>{{ number_format($employeePayroll->pending_ncb_loan) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3"></td>
+                                            <td></td>
+                                            <td>C&amp;WJ Credit Union Loan</td>
+                                            <td>{{ formatAmount($employeePayroll->cwj_credit_union_loan) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3"></td>
+                                            <td></td>
+                                            <td>Edu Com Co-op Loan</td>
+                                            <td>{{ formatAmount($employeePayroll->edu_com_coop_loan) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3"></td>
+                                            <td></td>
+                                            <td>National Housing Trust Mortgage Loan</td>
+                                            <td>{{ formatAmount($employeePayroll->nht_mortgage_loan) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3"></td>
+                                            <td></td>
+                                            <td>Jamaica National Bank Loan</td>
+                                            <td>{{ formatAmount($employeePayroll->jn_bank_loan) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3"></td>
+                                            <td></td>
+                                            <td>Sagicor Bank Loan</td>
+                                            <td>{{ formatAmount($employeePayroll->sagicor_bank_loan) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3"></td>
+                                            <td></td>
+                                            <td>Health Insurance</td>
+                                            <td>{{ formatAmount($employeePayroll->health_insurance) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3"></td>
+                                            <td></td>
+                                            <td>Life Insurance</td>
+                                            <td>{{ formatAmount($employeePayroll->life_insurance) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3"></td>
+                                            <td></td>
+                                            <td>Overpayment</td>
+                                            <td>{{ formatAmount($employeePayroll->overpayment) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3"></td>
+                                            <td></td>
+                                            <td>Training</td>
+                                            <td>{{ formatAmount($employeePayroll->training) }}</td>
+                                        </tr>
+                                        <tr>
                                             <td><strong>Total</strong></td>
                                             <td></td>
                                             <td></td>
@@ -214,7 +275,17 @@
                                                     $employeePayroll->bank_loan +
                                                     $employeePayroll->missing_goods +
                                                     $employeePayroll->damaged_goods +
-                                                    $employeePayroll->garnishment;
+                                                    $employeePayroll->garnishment +
+                                                    $employeePayroll->ncb_loan +
+                                                    $employeePayroll->cwj_credit_union_loan +
+                                                    $employeePayroll->edu_com_coop_loan +
+                                                    $employeePayroll->nht_mortgage_loan +
+                                                    $employeePayroll->jn_bank_loan +
+                                                    $employeePayroll->sagicor_bank_loan +
+                                                    $employeePayroll->health_insurance +
+                                                    $employeePayroll->life_insurance +
+                                                    $employeePayroll->overpayment +
+                                                    $employeePayroll->training;
                                             @endphp
                                             <td><strong>{{ formatAmount($total) }}</strong></td>
                                             <td></td>
@@ -249,7 +320,8 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td>{{ formatAmount($employeePayroll->gross_salary + $employeeAllowance ?? 0)}}</td>
+                                            <td>{{ formatAmount($employeePayroll->gross_salary + $employeeAllowance ?? 0) }}
+                                            </td>
                                             <td>{{ formatAmount($employeePayroll->nis_total) }}</td>
                                             <td id="payeTax">{{ formatAmount($employeePayroll->paye_tax_total) }}</td>
                                             <td>{{ formatAmount($employeePayroll->education_tax_total) }}</td>
