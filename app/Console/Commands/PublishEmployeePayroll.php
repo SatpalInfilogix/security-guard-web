@@ -536,7 +536,7 @@ class PublishEmployeePayroll extends Command
             //     }
             // }
 
-            $statutoryIncome  = $grossSalary -  $nis - $approvedPensionScheme;
+            /* $statutoryIncome  = $grossSalary -  $nis - $approvedPensionScheme;
 
             if ($age >= 65) {
                 $threshold = 162507.33; // (1,700,088 + 250,000) / 12
@@ -553,7 +553,7 @@ class PublishEmployeePayroll extends Command
                 $payeData = ($statutoryIncome - 500000.00) * 0.30;
                 $payeeThreshold = (500000.00 - $threshold) * 0.25;
                 $payeIncome = $payeData + $payeeThreshold;
-            }
+            }*/
             /*if ($statutoryIncome < 141674) {
                 $payeIncome = 0;
             } elseif ($statutoryIncome > 141674 && $statutoryIncome <= 500000.00) {
@@ -564,6 +564,44 @@ class PublishEmployeePayroll extends Command
                 $payeeThreshold = (500000.00 - 141674.00) * 0.25;
                 $payeIncome = $payeData + $payeeThreshold;
             }*/
+            // Calculate statutory income
+            $statutoryIncome = $grossSalary - $nis - $approvedPensionScheme;
+
+            // Get all thresholds from config
+            $taxThresholds = config('tax_thresholds');
+            $currentDate = now();
+
+            // Determine which year's thresholds to use
+            $applicableThresholds = [];
+            foreach ($taxThresholds['thresholds'] as $year => $threshold) {
+                if ($currentDate >= Carbon::parse($threshold['effective_date'])) {
+                    $applicableThresholds = $threshold;
+                }
+            }
+
+            // If no thresholds found (before 2025), use the earliest available
+            if (empty($applicableThresholds)) {
+                $applicableThresholds = reset($taxThresholds['thresholds']);
+            }
+
+            // Calculate threshold based on age
+            if ($age >= 65) {
+                $threshold = ($applicableThresholds['annual'] + $taxThresholds['senior_citizen_bonus']) / 12;
+            } else {
+                $threshold = $applicableThresholds['monthly'];
+            }
+
+            // Calculate PAYE
+            if ($statutoryIncome < $threshold) {
+                $payeIncome = 0;
+            } elseif ($statutoryIncome > $threshold && $statutoryIncome <= $applicableThresholds['next_slab_monthly']) {
+                $payeData = $statutoryIncome - $threshold;
+                $payeIncome = $payeData * 0.25;
+            } elseif ($statutoryIncome > $applicableThresholds['next_slab_monthly']) {
+                $payeData = ($statutoryIncome - $applicableThresholds['next_slab_monthly']) * 0.30;
+                $payeeThreshold = ($applicableThresholds['next_slab_monthly'] - $threshold) * 0.25;
+                $payeIncome = $payeData + $payeeThreshold;
+            }
 
             if ($age >= 65) {
                 $eduction_tax = 0;
@@ -630,7 +668,7 @@ class PublishEmployeePayroll extends Command
                 ->where('type', $deductionType)
                 ->whereDate('start_date', '<=', $endDate)
                 ->get();
-            echo "End Date : " . $endDate->format('Y-m-d') ." Deduction Type : " . $deductionType."\n";
+            echo "End Date : " . $endDate->format('Y-m-d') . " Deduction Type : " . $deductionType . "\n";
             // dd($deductionRecords);
 
             foreach ($deductionRecords as $deduction) {
@@ -663,23 +701,23 @@ class PublishEmployeePayroll extends Command
                             'deduction_id' => $deduction->id,
                             'deduction_date' => Carbon::now(),
                             'amount_deducted' => $deductionAmount,
-                            'balance' => 0//$deduction->pending_balance // Show current balance without change
+                            'balance' => 0 //$deduction->pending_balance // Show current balance without change
                         ]);
                     }
                 }
             }
 
-        $deductionIds = EmployeeDeduction::where('employee_id', $employee->id)
-            ->where('type', $deductionType)
-            ->pluck('id');
+            $deductionIds = EmployeeDeduction::where('employee_id', $employee->id)
+                ->where('type', $deductionType)
+                ->pluck('id');
 
-        $pendingAmounts[$deductionType] = EmployeeDeductionDetail::whereIn('deduction_id', $deductionIds)
-            ->select('deduction_id', DB::raw('MAX(id) as latest_id'))
-            ->groupBy('deduction_id')
-            ->pluck('latest_id')
-            ->pipe(function ($latestIds) {
-                return EmployeeDeductionDetail::whereIn('id', $latestIds)->sum('balance');
-            });
+            $pendingAmounts[$deductionType] = EmployeeDeductionDetail::whereIn('deduction_id', $deductionIds)
+                ->select('deduction_id', DB::raw('MAX(id) as latest_id'))
+                ->groupBy('deduction_id')
+                ->pluck('latest_id')
+                ->pipe(function ($latestIds) {
+                    return EmployeeDeductionDetail::whereIn('id', $latestIds)->sum('balance');
+                });
         }
 
         // dd($totalDeductions, $pendingAmounts);

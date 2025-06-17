@@ -29,7 +29,7 @@ class PublishGuardRoaster extends Command
      *
      * @var string
      */
-    protected $signature = 'publish:guard-roaster'; 
+    protected $signature = 'publish:guard-roaster';
 
     /**
      * The console command description.
@@ -213,7 +213,7 @@ class PublishGuardRoaster extends Command
                     $workedMinutes = $workedMinutes + $attendanceForDay['late_min'];
                 }
 
-                $weekllyHourlyMin = 40 * 60;
+                /* $weekllyHourlyMin = 40 * 60;
                 // $regularWorkingHoursPerDay = 8 * 60;
                 // if ($workedMinutes >= 465 && $workedMinutes <= $regularWorkingHoursPerDay) {
                 //     $workedMinutes = $regularWorkingHoursPerDay;
@@ -240,6 +240,31 @@ class PublishGuardRoaster extends Command
                         } else {
                             $regularMinutes = $remainingNormalMinutes;
                             $overtimeMinutes = $workedMinutes - $remainingNormalMinutes;
+                        }
+                    }
+                }*/
+
+                $weeklyHourlyMin = 40 * 60; // 40 hours in minutes
+                $dayOfWeek = Carbon::parse($attendanceDate)->dayOfWeek;
+                $isPublicHoliday = in_array($attendanceDate, $publicHolidays);
+
+                $regularMinutes = 0;
+                $overtimeMinutes = 0;
+                $publicHolidayMinutes = 0;
+
+                if ($isPublicHoliday) {
+                    $publicHolidayMinutes = $workedMinutes;
+                } else {
+                    $remainingNormalMinutes = max(0, $weeklyHourlyMin - ($weeklyPreviousRecords * 60));
+
+                    if ($workedMinutes <= $remainingNormalMinutes) {
+                        $regularMinutes = $workedMinutes;
+                    } else {
+                        if ($remainingNormalMinutes > 0) {
+                            $regularMinutes = $remainingNormalMinutes;
+                            $overtimeMinutes = $workedMinutes - $remainingNormalMinutes;
+                        } else {
+                            $overtimeMinutes = $workedMinutes;
                         }
                     }
                 }
@@ -512,7 +537,7 @@ class PublishGuardRoaster extends Command
         $pendingMissingGoods = $pendingAmounts['Missing Goods'];
         $pendingDamagedGoods = $pendingAmounts['Damaged Goods'];
         // }
-        $threshold             = 0;
+        $threshold = 0;
 
         $payroll = Payroll::where('id', $payrollId)->update([
             'leave_paid'            => $leavePaid,
