@@ -154,6 +154,10 @@
                                 <li><a href="{{ route('settings.payment-settings') }}" key="t-tui-calendar">Payment
                                         Settings</a></li>
                             @endcan
+                            <li><a href="{{ route('employee-tax-threshold.index') }}" key="t-tui-calendar">Employee
+                                    Tax Threshold</a></li>
+                            <li><a href="{{ route('guard-tax-threshold.index') }}" key="t-tui-calendar">Guard
+                                    Tax Threshold</a></li>
                         </ul>
                     </li>
                 @endcanany

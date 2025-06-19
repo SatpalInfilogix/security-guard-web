@@ -27,7 +27,9 @@ use App\Http\Controllers\EmployeeLeavesController;
 use App\Http\Controllers\EmployeePayrollController;
 use App\Http\Controllers\EmployeeDeductionController;
 use App\Http\Controllers\EmployeeOvertimeController;
+use App\Http\Controllers\EmployeeTaxThresholdController;
 use App\Http\Controllers\GuardLeaveEncashmentController;
+use App\Http\Controllers\GuardTaxThresholdController;
 use App\Http\Controllers\LeaveEncashmentController;
 use Illuminate\Support\Facades\Response;
 
@@ -72,6 +74,8 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'employee-overtime'     => EmployeeOvertimeController::class,
             'employee-leave-encashment'  => LeaveEncashmentController::class,
             'guard-leave-encashment'  => GuardLeaveEncashmentController::class,
+            'employee-tax-threshold'  => EmployeeTaxThresholdController::class,
+            'guard-tax-threshold'   =>   GuardTaxThresholdController::class,
         ]);
 
         Route::get('/get-pending-leaves', [LeaveEncashmentController::class, 'getPendingLeaves'])->name('get-pending-leaves');
