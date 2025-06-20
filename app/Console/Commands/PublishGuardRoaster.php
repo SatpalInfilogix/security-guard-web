@@ -19,6 +19,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceDetail;
 use App\Models\RateMaster;
 use App\Models\Leave;
+use App\Models\GuardTaxThreshold;
 use Google\Service\Sheets\NumberFormat;
 use Spatie\Permission\Models\Role;
 
@@ -392,8 +393,17 @@ class PublishGuardRoaster extends Command
                 }
                 // $employerContributionNis = $totalGrossSalaryEarned * 0.03;
             }
+            /*if ($statutoryIncome < 65389) {
+                $payeIncome = 0;
+            } elseif ($statutoryIncome > 65389 && $statutoryIncome <= 230769.23) {
+                $payeData = $statutoryIncome - 65389;
+                $payeIncome = $payeData * 0.25;
+            } elseif ($statutoryIncome > 230770.23) {
+                $payeData = $statutoryIncome - 230770.23;
+                $payeIncome = $payeData * 0.30;
+            }*/
 
-            $statutoryIncome  = $totalGrossSalaryEarned -  $lessNis - $approvedPensionScheme;
+            /* $statutoryIncome  = $totalGrossSalaryEarned -  $lessNis - $approvedPensionScheme;
             // Determine threshold based on age
             if ($age >= 65) {
                 $taxFreeThreshold = 75003.38; // Higher threshold for age 65+
@@ -409,16 +419,42 @@ class PublishGuardRoaster extends Command
             } elseif ($statutoryIncome > 230770.23) {
                 $payeData = $statutoryIncome - 230770.23;
                 $payeIncome = $payeData * 0.30;
-            }
-            /*if ($statutoryIncome < 65389) {
-                $payeIncome = 0;
-            } elseif ($statutoryIncome > 65389 && $statutoryIncome <= 230769.23) {
-                $payeData = $statutoryIncome - 65389;
-                $payeIncome = $payeData * 0.25;
-            } elseif ($statutoryIncome > 230770.23) {
-                $payeData = $statutoryIncome - 230770.23;
-                $payeIncome = $payeData * 0.30;
             }*/
+
+            $statutoryIncome = $totalGrossSalaryEarned - $lessNis - $approvedPensionScheme;
+            $currentDate = Carbon::now();
+
+            $applicableThreshold = GuardTaxThreshold::whereDate('effective_date', '<=', $currentDate)
+                ->orderBy('effective_date', 'desc')
+                ->first();
+
+            if (!$applicableThreshold) {
+                $applicableThreshold = GuardTaxThreshold::orderBy('effective_date', 'asc')->first();
+            }
+
+            if (!$applicableThreshold) {
+                throw new \Exception('No guard tax threshold found. Please configure one.');
+            }
+
+            if ($age >= 65) {
+                $annualWithBonus = $applicableThreshold->annual + 250000;
+                $taxFreeThreshold = round($annualWithBonus / 26, 2); // 26 fortnights in a year
+            } else {
+                $taxFreeThreshold = $applicableThreshold->fortnightly;
+            }
+            
+            // 6,000,000 annual => 6,000,000 / 26 ≈ 230769.23
+            $nextSlabFortnightly = 230769.23;
+            if ($statutoryIncome < $taxFreeThreshold) {
+                $payeIncome = 0;
+            } elseif ($statutoryIncome <= $nextSlabFortnightly) {
+                $payeData = $statutoryIncome - $taxFreeThreshold;
+                $payeIncome = $payeData * 0.25;
+            } else {
+                $payeData = ($statutoryIncome - $nextSlabFortnightly) * 0.30;
+                $payeeThreshold = ($nextSlabFortnightly - $taxFreeThreshold) * 0.25;
+                $payeIncome = $payeData + $payeeThreshold;
+            }
 
             $eduction_tax = $statutoryIncome * 0.0225;
             $employer_contribution = $totalGrossSalaryEarned * 0.035;

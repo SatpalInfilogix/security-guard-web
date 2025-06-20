@@ -38,7 +38,7 @@ class GuardTaxThresholdController extends Controller
         return redirect()->route('guard-tax-threshold.index')->with('success', 'Guard Tax Threshold created successfully.');
     }
 
-     public function edit(string $id)
+    public function edit(string $id)
     {
         $threshold = GuardTaxThreshold::findOrFail($id);
         return view('admin.guard-tax-threshold.edit', compact('threshold'));
@@ -65,6 +65,15 @@ class GuardTaxThresholdController extends Controller
 
     public function destroy(string $id)
     {
+        $totalThresholds = GuardTaxThreshold::count();
+
+        if ($totalThresholds <= 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'At least one tax threshold must remain. Deletion aborted to prevent payroll issues.',
+            ], 422);
+        }
+
         $threshold = GuardTaxThreshold::findOrFail($id);
         $threshold->delete();
 

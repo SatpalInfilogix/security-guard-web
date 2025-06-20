@@ -1,11 +1,10 @@
 @php
-$site_name= DB::table('settings')->where('key','site_name')->first();
-if($site_name)
-{
-$site_name = $site_name->value;}
-else{
-$site_name = '';
-}
+    $site_name = DB::table('settings')->where('key', 'site_name')->first();
+    if ($site_name) {
+        $site_name = $site_name->value;
+    } else {
+        $site_name = '';
+    }
 @endphp
 <!doctype html>
 <html lang="en">
@@ -60,7 +59,8 @@ $site_name = '';
 
             <div class="p-4">
                 <div class="mb-2">
-                    <img src="{{ asset('assets/images/layouts/layout-1.jpg') }}" class="img-thumbnail" alt="layout images">
+                    <img src="{{ asset('assets/images/layouts/layout-1.jpg') }}" class="img-thumbnail"
+                        alt="layout images">
                 </div>
 
                 <div class="form-check form-switch mb-3">
@@ -69,7 +69,8 @@ $site_name = '';
                 </div>
 
                 <div class="mb-2">
-                    <img src="{{ asset('assets/images/layouts/layout-2.jpg') }}" class="img-thumbnail" alt="layout images">
+                    <img src="{{ asset('assets/images/layouts/layout-2.jpg') }}" class="img-thumbnail"
+                        alt="layout images">
                 </div>
                 <div class="form-check form-switch mb-3">
                     <input class="form-check-input theme-choice" type="checkbox" id="dark-mode-switch">
@@ -77,7 +78,8 @@ $site_name = '';
                 </div>
 
                 <div class="mb-2">
-                    <img src="{{ asset('assets/images/layouts/layout-3.jpg') }}" class="img-thumbnail" alt="layout images">
+                    <img src="{{ asset('assets/images/layouts/layout-3.jpg') }}" class="img-thumbnail"
+                        alt="layout images">
                 </div>
                 <div class="form-check form-switch mb-3">
                     <input class="form-check-input theme-choice" type="checkbox" id="rtl-mode-switch">
@@ -85,7 +87,8 @@ $site_name = '';
                 </div>
 
                 <div class="mb-2">
-                    <img src="{{ asset('assets/images/layouts/layout-4.jpg') }}" class="img-thumbnail" alt="layout images">
+                    <img src="{{ asset('assets/images/layouts/layout-4.jpg') }}" class="img-thumbnail"
+                        alt="layout images">
                 </div>
                 <div class="form-check form-switch mb-5">
                     <input class="form-check-input theme-choice" type="checkbox" id="dark-rtl-mode-switch">
@@ -122,7 +125,7 @@ $site_name = '';
     <script src="{{ asset('assets/libs/sweetalert2/sweetalert.min.js') }}"></script>
 
     <!-- Sweet alert init js-->
-    <script src="{{ asset('assets/js/pages/sweet-alerts.init.js')}}"></script>
+    <script src="{{ asset('assets/js/pages/sweet-alerts.init.js') }}"></script>
     @stack('scripts')
     <script>
         $(function() {
@@ -131,39 +134,53 @@ $site_name = '';
                 let deleteApiEndpoint = $(this).data('endpoint');
 
                 swal({
-                    title: "Are you sure?"
-                    , text: `You really want to remove this ${source}?`
-                    , type: "warning"
-                    , showCancelButton: true
-                    , closeOnConfirm: false
-                , }, function(isConfirm) {
+                    title: "Are you sure?",
+                    text: `You really want to remove this ${source}?`,
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false
+                }, function(isConfirm) {
                     if (isConfirm) {
                         $.ajax({
-                            url: deleteApiEndpoint
-                            , method: 'DELETE'
-                            , data: {
+                            url: deleteApiEndpoint,
+                            method: 'DELETE',
+                            data: {
                                 '_token': '{{ csrf_token() }}'
-                            }
-                            , success: function(response) {
+                            },
+                            success: function(response) {
                                 if (response.success) {
                                     swal({
-                                        title: "Success!"
-                                        , text: response.message
-                                        , type: "success"
-                                        , showConfirmButton: false
-                                    })
+                                        title: "Success!",
+                                        text: response.message,
+                                        type: "success",
+                                        showConfirmButton: false
+                                    });
 
                                     setTimeout(() => {
                                         location.reload();
                                     }, 2000);
                                 }
+                            },
+                            error: function(xhr) {
+                                // Handle 422 and other errors
+                                let message = 'Something went wrong. Please try again.';
+                                if (xhr.status === 422 && xhr.responseJSON && xhr
+                                    .responseJSON.message) {
+                                    message = xhr.responseJSON.message;
+                                }
+
+                                swal({
+                                    title: "Error!",
+                                    text: message,
+                                    type: "error"
+                                });
                             }
-                        })
+                        });
                     }
                 });
-            })
-        })
-
+            });
+        });
     </script>
 </body>
+
 </html>

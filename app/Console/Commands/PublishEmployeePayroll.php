@@ -14,6 +14,7 @@ use App\Models\PublicHoliday;
 use Spatie\Permission\Models\Role;
 use Illuminate\Console\Command;
 use Carbon\Carbon;
+use App\Models\EmployeeTaxThreshold;
 use App\Models\TwentyTwoDayInterval;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -535,25 +536,6 @@ class PublishEmployeePayroll extends Command
             //         $employerContributionNis = $daySalary * 0.03;
             //     }
             // }
-
-            /* $statutoryIncome  = $grossSalary -  $nis - $approvedPensionScheme;
-
-            if ($age >= 65) {
-                $threshold = 162507.33; // (1,700,088 + 250,000) / 12
-            } else {
-                $threshold = 141674.00;
-            }
-
-            if ($statutoryIncome < $threshold) {
-                $payeIncome = 0;
-            } elseif ($statutoryIncome > $threshold && $statutoryIncome <= 500000.00) {
-                $payeData = $statutoryIncome - $threshold;
-                $payeIncome = $payeData * 0.25;
-            } elseif ($statutoryIncome > 500000.00) {
-                $payeData = ($statutoryIncome - 500000.00) * 0.30;
-                $payeeThreshold = (500000.00 - $threshold) * 0.25;
-                $payeIncome = $payeData + $payeeThreshold;
-            }*/
             /*if ($statutoryIncome < 141674) {
                 $payeIncome = 0;
             } elseif ($statutoryIncome > 141674 && $statutoryIncome <= 500000.00) {
@@ -564,42 +546,60 @@ class PublishEmployeePayroll extends Command
                 $payeeThreshold = (500000.00 - 141674.00) * 0.25;
                 $payeIncome = $payeData + $payeeThreshold;
             }*/
-            // Calculate statutory income
-            $statutoryIncome = $grossSalary - $nis - $approvedPensionScheme;
 
-            // Get all thresholds from config
-            $taxThresholds = config('tax_thresholds');
-            $currentDate = now();
-
-            // Determine which year's thresholds to use
-            $applicableThresholds = [];
-            foreach ($taxThresholds['thresholds'] as $year => $threshold) {
-                if ($currentDate >= Carbon::parse($threshold['effective_date'])) {
-                    $applicableThresholds = $threshold;
-                }
-            }
-
-            // If no thresholds found (before 2025), use the earliest available
-            if (empty($applicableThresholds)) {
-                $applicableThresholds = reset($taxThresholds['thresholds']);
-            }
-
-            // Calculate threshold based on age
+            /* $statutoryIncome  = $grossSalary -  $nis - $approvedPensionScheme;
             if ($age >= 65) {
-                $threshold = ($applicableThresholds['annual'] + $taxThresholds['senior_citizen_bonus']) / 12;
+                $threshold = 162507.33; // (1,700,088 + 250,000) / 12
             } else {
-                $threshold = $applicableThresholds['monthly'];
+                $threshold = 141674.00;
             }
-
-            // Calculate PAYE
             if ($statutoryIncome < $threshold) {
                 $payeIncome = 0;
-            } elseif ($statutoryIncome > $threshold && $statutoryIncome <= $applicableThresholds['next_slab_monthly']) {
+            } elseif ($statutoryIncome > $threshold && $statutoryIncome <= 500000.00) {
                 $payeData = $statutoryIncome - $threshold;
                 $payeIncome = $payeData * 0.25;
-            } elseif ($statutoryIncome > $applicableThresholds['next_slab_monthly']) {
-                $payeData = ($statutoryIncome - $applicableThresholds['next_slab_monthly']) * 0.30;
-                $payeeThreshold = ($applicableThresholds['next_slab_monthly'] - $threshold) * 0.25;
+            } elseif ($statutoryIncome > 500000.00) {
+                $payeData = ($statutoryIncome - 500000.00) * 0.30;
+                $payeeThreshold = (500000.00 - $threshold) * 0.25;
+                $payeIncome = $payeData + $payeeThreshold;
+            }*/
+
+            $statutoryIncome = $grossSalary - $nis - $approvedPensionScheme;
+
+            // Get applicable threshold based on current date
+            $currentDate = Carbon::now();
+            $latestThreshold = EmployeeTaxThreshold::whereDate('effective_date', '<=', $currentDate)
+                ->orderBy('effective_date', 'desc')
+                ->first();
+
+            // Optional fallback
+            if (!$latestThreshold) {
+                $latestThreshold = EmployeeTaxThreshold::orderBy('effective_date', 'asc')->first();
+            }
+            // Fallback again if still null (just to be safe)
+            if (!$latestThreshold) {
+                throw new \Exception('No tax threshold data found.');
+            }
+            $seniorCitizenBonus = 250000;
+            // Calculate threshold based on age
+            if ($age >= 65) {
+                $threshold = ($latestThreshold->annual + $seniorCitizenBonus) / 12;
+            } else {
+                $threshold = $latestThreshold->monthly;
+            }
+
+            // Define next slab monthly (e.g., 6M annual → 500k monthly)
+            // Ideally, fetch this from DB or config if dynamic
+            $nextSlabMonthly = 500000.00;
+
+            // PAYE logic
+            if ($statutoryIncome < $threshold) {
+                $payeIncome = 0;
+            } elseif ($statutoryIncome <= $nextSlabMonthly) {
+                $payeIncome = ($statutoryIncome - $threshold) * 0.25;
+            } else {
+                $payeData = ($statutoryIncome - $nextSlabMonthly) * 0.30;
+                $payeeThreshold = ($nextSlabMonthly - $threshold) * 0.25;
                 $payeIncome = $payeData + $payeeThreshold;
             }
 

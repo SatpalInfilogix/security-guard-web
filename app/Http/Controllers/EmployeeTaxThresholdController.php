@@ -83,7 +83,7 @@ class EmployeeTaxThresholdController extends Controller
             'annual' => $request->annual,
             'monthly' => $request->monthly,
             'fortnightly' => $request->fortnightly,
-            'effective_date' =>$request->effective_date,
+            'effective_date' => $request->effective_date,
         ]);
 
         return redirect()->route('employee-tax-threshold.index')->with('success', 'Tax threshold updated successfully.');
@@ -94,6 +94,14 @@ class EmployeeTaxThresholdController extends Controller
      */
     public function destroy(string $id)
     {
+        // Ensure there's at least one record left
+        if (EmployeeTaxThreshold::count() <= 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'At least one tax threshold must be present. Deletion aborted to prevent payroll issues.'
+            ], 422);
+        }
+
         $threshold = EmployeeTaxThreshold::findOrFail($id);
         $threshold->delete();
 
