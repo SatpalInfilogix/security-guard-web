@@ -10,7 +10,7 @@ class GuardTaxThresholdController extends Controller
 {
     public function index()
     {
-        $thresholds = GuardTaxThreshold::latest()->get();
+        $thresholds = GuardTaxThreshold::get();
         return view('admin.guard-tax-threshold.index', compact('thresholds'));
     }
 
