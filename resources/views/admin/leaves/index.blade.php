@@ -141,8 +141,12 @@
                         }
                     },
                     {
-                        data: 'user.first_name'
-                    },
+                        data: 'user.first_name',
+                        render: function(data, type, row) {
+                            return row.user ? `${row.user.first_name} ${row.user.surname ?? ''}` :
+                                'N/A';
+                        }
+                    } ,
                     {
                         data: 'date'
                     },
