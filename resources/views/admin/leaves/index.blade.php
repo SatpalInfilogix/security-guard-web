@@ -24,7 +24,7 @@
                         <div class="row">
                             <div class="col-md-3">
                                 <?php
-                                $reasons = ['Approve', 'Pending', 'Reject'];
+                                $reasons = ['Approved', 'Pending', 'Rejected'];
                                 ?>
                                 <select name="leave_status" id="leave_status" class="form-control">
                                     <option value="" selected disabled>Select status</option>
@@ -58,7 +58,8 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Guard Name</th>
-                                        <th>Date</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
                                         <th>Actual Start Date</th>
                                         <th>Actual End Date</th>
                                         <th>Reason</th>
@@ -106,12 +107,15 @@
                 actionColumn = [{
                     data: null,
                     render: function(data, type, row) {
+                        var editUrlTemplate = "{{ route('leaves.modify', ['id' => '__ID__', 'date' => '__DATE__']) }}";
+                        var editRoute = editUrlTemplate.replace('__ID__', data.guard_id).replace('__DATE__', data.created_date);
                         var actions = '<div class="action-buttons">';
-                        actions +=
-                            `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${row.id}">`;
+                        actions += `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${data.guard_id}" data-date="${data.created_date}">`;
                         actions += '<i class="fas fa-trash-alt"></i>';
                         actions += '</a>';
+                        actions += `<a class="btn btn-primary waves-effect waves-light btn-sm leave-edit-btn" href="${editRoute}" ><i class="fas fa-edit"></i></a>`;
                         actions += '</div>';
+                        
                         return actions;
                     }
                 }];
@@ -146,9 +150,12 @@
                             return row.user ? `${row.user.first_name} ${row.user.surname ?? ''}` :
                                 'N/A';
                         }
-                    } ,
+                    },
                     {
-                        data: 'date'
+                        data: 'start_date'
+                    },
+                    {
+                        data: 'end_date'
                     },
                     {
                         data: 'actual_start_date',
@@ -169,14 +176,14 @@
                         data: null,
                         name: 'status',
                         render: function(data, type, row) {
-                            return `
+                            return`
                                 <div class="dropdown">
                                     <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="statusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                         ${row.status}
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="statusDropdown">
-                                        <li><a class="dropdown-item" href="javascript:void(0);" data-status="Approved" data-id="${row.id}">Approve</a></li>
-                                        ${row.status !== 'Cancelled' ? `<li><a class="dropdown-item" href="javascript:void(0);" data-status="Rejected" data-id="${row.id}">Reject</a></li>` : ''}
+                                        <li><a class="dropdown-item" href="javascript:void(0);" data-status="Approved" data-id="${data.guard_id}" data-date="${data.created_date}">Approve</a></li>
+                                        ${row.status !== 'Cancelled' ? `<li><a class="dropdown-item" href="javascript:void(0);" data-status="Rejected" data-id="${data.guard_id}" data-date="${data.created_date}">Reject</a></li>` : ''}
                                     </ul>
                                 </div>
                             `;
@@ -194,7 +201,8 @@
         $(document).on('click', '.leave-delete-btn', function() {
             let source = $(this).data('source');
             let leaveId = $(this).data('id');
-            var deleteApiEndpoint = "{{ route('leaves.destroy', '') }}/" + leaveId;
+            let createDate = $(this).data('date');
+            var deleteApiEndpoint = "{{ route('leaves.destroy', '') }}/" + leaveId+"/"+createDate;
 
             swal({
                 title: "Are you sure?",
@@ -234,10 +242,12 @@
             $(document).on('click', '.dropdown-item', function() {
                 const newStatus = $(this).data('status');
                 const leaveId = $(this).data('id');
+                const createdDate = $(this).data('date');
                 const statusButton = $(this).closest('tr').find('.dropdown-toggle');
 
                 if (newStatus === 'Rejected') {
                     $('#leaveId').val(leaveId);
+                    $('#confirmReject').attr('data-date',createdDate);
                     $('#rejectModal').modal('show');
                 } else {
                     swal({
@@ -249,7 +259,7 @@
                     }, function(isConfirm) {
                         if (isConfirm) {
                             statusButton.text(newStatus);
-                            updateLeaveStatus(leaveId, newStatus);
+                            updateLeaveStatus(leaveId, newStatus,'',createdDate);
                         }
                     });
                 }
@@ -258,6 +268,7 @@
             $('#confirmReject').on('click', function() {
                 const rejectionReason = $('#rejectionReason').val();
                 const leaveId = $('#leaveId').val();
+                const createdDate = $(this).data('date');
                 if (!rejectionReason) {
                     swal({
                         title: "Error!",
@@ -276,17 +287,18 @@
                     closeOnConfirm: false,
                 }, function(isConfirm) {
                     if (isConfirm) {
-                        updateLeaveStatus(leaveId, 'Rejected', rejectionReason);
+                        updateLeaveStatus(leaveId, 'Rejected', rejectionReason, createdDate);
                     }
                 });
             });
 
-            function updateLeaveStatus(leaveId, newStatus, rejectionReason = null) {
+            function updateLeaveStatus(leaveId, newStatus, rejectionReason = null, createdDate = null) {
                 $.ajax({
                     url: `/leaves/${leaveId}/update-status`,
                     method: 'POST',
                     data: {
                         status: newStatus,
+                        created_date: createdDate,
                         rejection_reason: rejectionReason,
                         _token: '{{ csrf_token() }}'
                     },

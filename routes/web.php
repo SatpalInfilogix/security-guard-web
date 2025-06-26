@@ -77,6 +77,13 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'employee-tax-threshold'  => EmployeeTaxThresholdController::class,
             'guard-tax-threshold'   =>   GuardTaxThresholdController::class,
         ]);
+        Route::get('employee-leaves/{id}/{date?}/edit', [EmployeeLeavesController::class, 'edit'])->name('employee-leaves.modify');
+        Route::put('employee-leaves/{id}/{date?}', [EmployeeLeavesController::class, 'update'])->name('employee-leaves.update');
+        Route::delete('employee-leaves/{id}/{date?}', [EmployeeLeavesController::class, 'destroy'])->name('employee-leaves.destroy');
+
+        Route::get('leaves/{id}/{date?}/edit', [LeaveController::class, 'edit'])->name('leaves.modify');
+        Route::put('/leaves/{guardId}/{createdDate}', [LeaveController::class, 'update'])->name('leaves.update');
+        Route::delete('/leaves/{id}/{date?}', [LeaveController::class, 'destroy'])->name('leaves.destroy');
 
         Route::get('/get-pending-leaves', [LeaveEncashmentController::class, 'getPendingLeaves'])->name('get-pending-leaves');
         Route::get('guard-leave-encashments/get-pending-leaves', [GuardLeaveEncashmentController::class, 'getPendingLeaves'])->name('get-guard-pending-leaves');
