@@ -56,6 +56,14 @@ class EmployeeLeavesController extends Controller
             $query->where('status', 'like', '%' . $request->leave_status . '%');
         }
 
+        if ($request->has('month') && !empty($request->month)) {
+            $query->whereMonth('date', $request->month);
+        }
+
+        if ($request->has('year') && !empty($request->year)) {
+            $query->whereYear('date', $request->year);
+        }
+
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
             $query->where(function ($q) use ($searchValue) {

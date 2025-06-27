@@ -10,7 +10,8 @@
                         <h4 class="mb-sm-0 font-size-18">Employee Leaves</h4>
                         <div class="page-title-right">
                             @if (Auth::user()->can('create employee leaves'))
-                                <a href="{{ route('employee-leaves.create') }}" class="btn btn-primary">Add New Employee Leave</a>
+                                <a href="{{ route('employee-leaves.create') }}" class="btn btn-primary">Add New Employee
+                                    Leave</a>
                             @endif
                         </div>
                     </div>
@@ -20,19 +21,40 @@
                 <div class="col-md-12">
                     <form id="filterForm" method="GET">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <?php
                                 $reasons = ['Approved', 'Pending', 'Rejected'];
                                 ?>
                                 <select name="leave_status" id="leave_status" class="form-control">
                                     <option value="" selected>Select status</option>
                                     @foreach ($reasons as $reason)
-                                        <option value="{{ $reason }}" {{ old('reason') == $reason ? 'selected' : '' }}>{{ $reason }}</option>
+                                        <option value="{{ $reason }}"
+                                            {{ old('reason') == $reason ? 'selected' : '' }}>{{ $reason }}</option>
                                     @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="month" id="month" class="form-control">
+                                    <option value="">All Months</option>
+                                    @for ($i = 1; $i <= 12; $i++)
+                                        <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
+                                            {{ date('F', mktime(0, 0, 0, $i, 1)) }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="year" id="year" class="form-control">
+                                    <option value="">All Years</option>
+                                    @for ($i = date('Y'); $i >= date('Y') - 1; $i--)
+                                        <option value="{{ $i }}" {{ request('year') == $i ? 'selected' : '' }}>
+                                            {{ $i }}</option>
+                                    @endfor
                                 </select>
                             </div>
                             <div class="col-md-3">
                                 <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
+                                <button type="button" id="resetBtn" class="btn btn-secondary">Reset</button>
                             </div>
                         </div>
                     </form>
@@ -99,18 +121,27 @@
     <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
     <script>
         $(document).ready(function() {
+            // Set default month and year to current
+            // const currentDate = new Date();
+            // $('#month').val(currentDate.getMonth() + 1);
+            // $('#year').val(currentDate.getFullYear());
+
             let actionColumn = [];
             @can('delete employee leaves')
                 actionColumn = [{
                     data: null,
                     render: function(data, type, row) {
-                        var editUrlTemplate = "{{ route('employee-leaves.modify', ['id' => '__ID__', 'date' => '__DATE__']) }}";
-                        var editRoute = editUrlTemplate.replace('__ID__', data.employee_id).replace('__DATE__', data.created_date);
+                        var editUrlTemplate =
+                            "{{ route('employee-leaves.modify', ['id' => '__ID__', 'date' => '__DATE__']) }}";
+                        var editRoute = editUrlTemplate.replace('__ID__', data.employee_id).replace(
+                            '__DATE__', data.created_date);
                         var actions = '<div class="action-buttons">';
-                        actions += `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${data.employee_id}" data-date="${data.created_date}">`;
+                        actions +=
+                            `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${data.employee_id}" data-date="${data.created_date}">`;
                         actions += '<i class="fas fa-trash-alt"></i>';
                         actions += '</a>';
-                        actions += `<a class="btn btn-primary waves-effect waves-light btn-sm leave-edit-btn" href="${editRoute}"><i class="fas fa-edit"></i></a>`;
+                        actions +=
+                            `<a class="btn btn-primary waves-effect waves-light btn-sm leave-edit-btn" href="${editRoute}"><i class="fas fa-edit"></i></a>`;
                         actions += '</div>';
                         return actions;
                     }
@@ -126,14 +157,15 @@
                     data: function(d) {
                         d._token = "{{ csrf_token() }}";
                         d.leave_status = $('#leave_status').val();
+                        d.month = $('#month').val();
+                        d.year = $('#year').val();
                         return d;
                     },
                     dataSrc: function(response) {
                         return response.data;
                     }
                 },
-                columns: [
-                    {
+                columns: [{
                         data: null,
                         render: function(data, type, row, meta) {
                             return meta.row + 1 + meta.settings._iDisplayStart;
@@ -142,7 +174,8 @@
                     {
                         data: 'user.first_name',
                         render: function(data, type, row) {
-                            return row.user ? `${row.user.first_name} ${row.user.surname ?? ''}` : 'N/A';
+                            return row.user ? `${row.user.first_name} ${row.user.surname ?? ''}` :
+                                'N/A';
                         }
                     },
                     {
@@ -180,8 +213,8 @@
                                         <li><a class="dropdown-item change-status" href="javascript:void(0);" 
                                             data-status="Approved" data-id="${data.employee_id}" data-date="${data.created_date}">Approve</a></li>
                                         ${row.status !== 'Cancelled' ? `
-                                        <li><a class="dropdown-item change-status" href="javascript:void(0);" 
-                                            data-status="Rejected" data-id="${data.employee_id}" data-date="${data.created_date}">Reject</a></li>` : ''}
+                                                            <li><a class="dropdown-item change-status" href="javascript:void(0);" 
+                                                                data-status="Rejected" data-id="${data.employee_id}" data-date="${data.created_date}">Reject</a></li>` : ''}
                                     </ul>
                                 </div>
                             `;
@@ -195,11 +228,24 @@
                 table.draw();
             });
 
+            $('#resetBtn').click(function() {
+                $('#leave_status, #month, #year').val('');
+                table.draw();
+            });
+
+            // $('#resetBtn').click(function() {
+            //     $('#leave_status').val('');
+            //     $('#month').val(currentDate.getMonth() + 1);
+            //     $('#year').val(currentDate.getFullYear());
+            //     table.draw();
+            // });
+
             $(document).on('click', '.leave-delete-btn', function() {
                 let source = $(this).data('source');
                 let leaveId = $(this).data('id');
                 let createDate = $(this).data('date');
-                var deleteApiEndpoint = "{{ route('employee-leaves.destroy', '') }}/" + leaveId + "/" + createDate;
+                var deleteApiEndpoint = "{{ route('employee-leaves.destroy', '') }}/" + leaveId + "/" +
+                    createDate;
 
                 swal({
                     title: "Are you sure?",
@@ -263,7 +309,7 @@
                 const rejectionReason = $('#rejectionReason').val();
                 const leaveId = $('#leaveId').val();
                 const createdDate = $(this).data('date');
-                
+
                 if (!rejectionReason) {
                     swal({
                         title: "Error!",
@@ -273,7 +319,7 @@
                     });
                     return;
                 }
-                
+
                 $('#rejectModal').modal('hide');
                 swal({
                     title: "Are you sure?",

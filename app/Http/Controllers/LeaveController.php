@@ -118,18 +118,25 @@ class LeaveController extends Controller
             DB::raw('DATE(created_at) as created_date'),
             DB::raw('MIN(date) as start_date'),
             DB::raw('MAX(date) as end_date'),
-            DB::raw('MIN(status) as status'), // 👈 One status per group
-            DB::raw('MIN(reason) as reason'),  
-            DB::raw('MIN(actual_start_date) as actual_start_date'),  
-            DB::raw('MIN(actual_end_date) as actual_end_date'),  
-            DB::raw('MIN(description) as description'),  
+            DB::raw('MIN(status) as status'),
+            DB::raw('MIN(reason) as reason'),
+            DB::raw('MIN(actual_start_date) as actual_start_date'),
+            DB::raw('MIN(actual_end_date) as actual_end_date'),
+            DB::raw('MIN(description) as description'),
         )
-        ->groupBy('guard_id', DB::raw('DATE(created_at)'))
-        ->with('user');
-
-        // Apply filters
+            ->groupBy('guard_id', DB::raw('DATE(created_at)'))
+            ->with('user');
+            
         if ($request->has('leave_status') && !empty($request->leave_status)) {
-            $query->where('status', 'like', '%' . $request->leave_status . '%');
+            $query->where('status', $request->leave_status);
+        }
+
+        if ($request->has('month') && !empty($request->month)) {
+            $query->whereMonth('date', $request->month);
+        }
+
+        if ($request->has('year') && !empty($request->year)) {
+            $query->whereYear('date', $request->year);
         }
 
         if ($request->has('search') && !empty($request->search['value'])) {
@@ -224,16 +231,16 @@ class LeaveController extends Controller
     public function edit($guardId, $date)
     {
         $leave = Leave::select(
-                'guard_id',
-                DB::raw('DATE(created_at) as created_date'),
-                DB::raw('MIN(date) as start_date'),
-                DB::raw('MAX(date) as end_date'),
-                DB::raw('MIN(status) as status'),
-                DB::raw('MIN(reason) as reason'),
-                DB::raw('MIN(actual_start_date) as actual_start_date'),  
-                DB::raw('MIN(actual_end_date) as actual_end_date'),  
-                DB::raw('MIN(description) as description'),  
-            )
+            'guard_id',
+            DB::raw('DATE(created_at) as created_date'),
+            DB::raw('MIN(date) as start_date'),
+            DB::raw('MAX(date) as end_date'),
+            DB::raw('MIN(status) as status'),
+            DB::raw('MIN(reason) as reason'),
+            DB::raw('MIN(actual_start_date) as actual_start_date'),
+            DB::raw('MIN(actual_end_date) as actual_end_date'),
+            DB::raw('MIN(description) as description'),
+        )
             ->where('guard_id', $guardId)
             ->whereDate('created_at', $date)
             ->groupBy('guard_id', DB::raw('DATE(created_at)'))
@@ -249,7 +256,7 @@ class LeaveController extends Controller
             $query->where('role_id', $userRole->id);
         })->where('status', 'Active')->latest()->get();
 
-        return view('admin.leaves.edit', compact('leave','securityGuards'));
+        return view('admin.leaves.edit', compact('leave', 'securityGuards'));
     }
 
     public function update(Request $request, $guardId, $createdDate)

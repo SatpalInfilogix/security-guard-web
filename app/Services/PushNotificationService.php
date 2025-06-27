@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\FcmToken;
 use Google\Client as GoogleClient;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class PushNotificationService
 {
@@ -69,7 +70,7 @@ class PushNotificationService
             return $decodedResponse;
         } catch (Exception $e) {
             // Log the error or handle it accordingly
-            \Log::error('Error sending push notification: ' . $e->getMessage());
+            Log::error('Error sending push notification: ' . $e->getMessage());
             return null;
         }
     }
