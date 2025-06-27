@@ -150,11 +150,12 @@ class LeaveController extends Controller
             });
         }
 
+        $countQuery = (clone $query);
+        $totalRecords = $countQuery->get()->count();
+
         $length = $request->input('length', 10);
         $start = $request->input('start', 0);
-
         $leaves = $query->skip($start)->take($length)->get();
-        $totalRecords = $leaves->count();
 
         return response()->json([
             'draw' => $request->input('draw'),
