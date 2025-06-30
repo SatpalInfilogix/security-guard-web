@@ -91,13 +91,26 @@ class LeaveController extends Controller
             $leave->save();
         }
 
-        $title = 'Leave Status Update';
-        $body = "Your leave status has been updated: {$request->status}";
-        $this->pushNotificationService->sendNotification($guardId, $title, $body);
+        // $title = 'Leave Status Update';
+        // $body = "Your leave status has been updated: {$request->status}";
+        // $this->pushNotificationService->sendNotification($guardId, $title, $body);
 
         return response()->json([
             'success' => true,
-            'message' => 'Leave status updated successfully.'
+            'message' => 'Leave status updated successfully.',
+            'status' => $request->status,
+            'guardId' => $guardId,
+        ]);
+    }
+
+    public function sendNotificationAfterLeave($guardId = null, $status = null)
+    {
+        $title = 'Leave Status Update';
+        $body = "Your leave status has been updated: {$status}";
+        $this->pushNotificationService->sendNotification($guardId, $title, $body);
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification Sent!'
         ]);
     }
 
@@ -126,7 +139,7 @@ class LeaveController extends Controller
         )
             ->groupBy('guard_id', DB::raw('DATE(created_at)'))
             ->with('user');
-            
+
         if ($request->has('leave_status') && !empty($request->leave_status)) {
             $query->where('status', $request->leave_status);
         }

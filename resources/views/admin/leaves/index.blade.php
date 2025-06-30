@@ -334,7 +334,6 @@
                     }
                 });
             });
-
             function updateLeaveStatus(leaveId, newStatus, rejectionReason = null, createdDate = null) {
                 $.ajax({
                     url: `/leaves/${leaveId}/update-status`,
@@ -353,10 +352,16 @@
                                 type: "success",
                                 showConfirmButton: false
                             });
-
-                            setTimeout(() => {
-                                location.reload();
-                            }, 2000);
+                            
+                            // Send notification in background (don't wait for response)
+                            if (response.guardId) {
+                                $.ajax({
+                                    url: `{{ route('leaves.sendNotification') }}/${response.guardId}/${response.status}`,
+                                    type: 'GET',
+                                });
+                            }
+                            
+                            location.reload();
                         } else {
                             swal({
                                 title: "Error!",
@@ -366,8 +371,17 @@
                             });
                         }
                     },
+                    error: function() {
+                        swal({
+                            title: "Error!",
+                            text: "There was an issue updating the status. Please try again.",
+                            type: "error",
+                            showConfirmButton: true
+                        });
+                    }
                 });
             }
+
         });
     </script>
 @endsection
