@@ -11,8 +11,8 @@
                         <h4 class="mb-sm-0 font-size-18">Clients</h4>
 
                         <div class="page-title-right">
-                            @if(Auth::user()->can('create client'))
-                            <a href="{{ route('clients.create') }}" class="btn btn-primary">Add New Client</a>
+                            @if (Auth::user()->can('create client'))
+                                <a href="{{ route('clients.create') }}" class="btn btn-primary">Add New Client</a>
                             @endif
                         </div>
                     </div>
@@ -29,14 +29,14 @@
                         <div class="card-body">
                             <table id="datatable" class="client-list table table-bordered dt-responsive  nowrap w-100">
                                 <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Client Code</th>
-                                    <th>Client Name</th>
-                                    @canany(['edit client', 'delete client'])
-                                    <th>Action</th>
-                                    @endcanany
-                                </tr>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Client Code</th>
+                                        <th>Client Name</th>
+                                        @canany(['edit client', 'delete client'])
+                                            <th>Action</th>
+                                        @endcanany
+                                    </tr>
                                 </thead>
 
                                 <tbody>
@@ -62,14 +62,16 @@
                     render: function(data, type, row) {
                         var actions = '<div class="action-buttons">';
 
-                    @can('edit client')
-                            actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/clients') }}/${row.id}/edit">`;
+                        @can('edit client')
+                            actions +=
+                                `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/clients') }}/${row.id}/edit?page=${clientTable.page() + 1}">`;
                             actions += '<i class="fas fa-pencil-alt"></i>';
                             actions += '</a>';
                         @endcan
 
                         @can('delete client')
-                            actions += `<a class="btn btn-danger waves-effect waves-light btn-sm client-delete-btn" href="#" data-source="Client" data-id="${row.id}">`;
+                            actions +=
+                                `<a class="btn btn-danger waves-effect waves-light btn-sm client-delete-btn" href="#" data-source="Client" data-id="${row.id}">`;
                             actions += '<i class="fas fa-trash-alt"></i>';
                             actions += '</a>';
                         @endcan
@@ -83,6 +85,7 @@
             let clientTable = $('.client-list').DataTable({
                 processing: true,
                 serverSide: true,
+                stateSave: true,
                 ajax: {
                     url: "{{ route('get-client-list') }}",
                     type: "POST",
@@ -94,21 +97,26 @@
                         return json.data || [];
                     }
                 },
-                columns: [
-                    { 
-                        data: null, 
+                columns: [{
+                        data: null,
                         render: function(data, type, row, meta) {
                             return meta.row + 1 + meta.settings._iDisplayStart;
                         }
                     },
-                    { data: 'client_code' },
-                    { data: 'client_name' },
+                    {
+                        data: 'client_code'
+                    },
+                    {
+                        data: 'client_name'
+                    },
                     ...actionColumn
                 ],
                 paging: true,
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100],
-                order: [[0, 'asc']]
+                order: [
+                    [0, 'asc']
+                ]
             });
 
             // Handle Delete button click
@@ -132,13 +140,13 @@
                                 '_token': '{{ csrf_token() }}'
                             },
                             success: function(response) {
-                                if(response.success){
+                                if (response.success) {
                                     swal({
                                         title: "Success!",
                                         text: response.message,
                                         type: "success",
                                         showConfirmButton: false
-                                    }) 
+                                    })
 
                                     setTimeout(() => {
                                         location.reload();
