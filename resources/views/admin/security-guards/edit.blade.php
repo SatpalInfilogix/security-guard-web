@@ -11,7 +11,17 @@
                         <h4 class="mb-sm-0 font-size-18">Edit Security Guard</h4>
 
                         <div class="page-title-right">
-                            <a href="{{ route('security-guards.index') }}" class="btn btn-primary"><i class="bx bx-arrow-back"></i> Back to Security Guard</a>
+                            <a href="{{ route('security-guards.index', [
+                                'page' => request('page', 1),
+                                'search_name' => request('search_name'),
+                                'search_email' => request('search_email'),
+                                'search_phone' => request('search_phone'),
+                                'search_emp_code' => request('search_emp_code'),
+                                'status' => request('status'),
+                            ]) }}"
+                                class="btn btn-primary">
+                                <i class="bx bx-arrow-back"></i> Back to Security Guard
+                            </a>
                         </div>
 
                     </div>
@@ -26,12 +36,13 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <form action="{{ route('security-guards.update', $user->id) }}" method="post" enctype="multipart/form-data">
+                            <form action="{{ route('security-guards.update', $user->id) }}" method="post"
+                                enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
                                 @include('admin.security-guards.form')
-                            </form>    
-                        </div>    
+                            </form>
+                        </div>
                     </div>
                 </div> <!-- end col -->
             </div> <!-- end row -->
