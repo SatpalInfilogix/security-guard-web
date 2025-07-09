@@ -11,20 +11,24 @@
                         <h4 class="mb-sm-0 font-size-18">Client Sites</h4>
 
                         <div class="page-title-right">
-                            <a href="{{ route('export.client') }}" class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Client/Manager Ids</a>
+                            <a href="{{ route('export.client') }}" class="btn btn-primary primary-btn btn-md me-1"><i
+                                    class="bx bx-download"></i> Client/Manager Ids</a>
                             <a href="{{ url('download-client-site-sample') }}"
-                            class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Client Sample File</a>
+                                class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Client Sample
+                                File</a>
                             <div class="d-inline-block ">
-                                <form id="importForm" action="{{ route('import.client-site') }}" method="POST" enctype="multipart/form-data">
+                                <form id="importForm" action="{{ route('import.client-site') }}" method="POST"
+                                    enctype="multipart/form-data">
                                     @csrf
                                     <label for="fileInput" class="btn btn-primary primary-btn btn-md mb-0">
                                         <i class="bx bx-cloud-download"></i> Import Client Site
-                                        <input type="file" id="fileInput" name="file" accept=".csv, .xlsx" style="display:none;">
+                                        <input type="file" id="fileInput" name="file" accept=".csv, .xlsx"
+                                            style="display:none;">
                                     </label>
                                 </form>
                             </div>
-                            @if(Auth::user()->can('create client site'))
-                            <a href="{{ route('client-sites.create') }}" class="btn btn-primary">Add New Client Site</a>
+                            @if (Auth::user()->can('create client site'))
+                                <a href="{{ route('client-sites.create') }}" class="btn btn-primary">Add New Client Site</a>
                             @endif
                         </div>
                     </div>
@@ -37,26 +41,26 @@
                     <x-error-message :message="$errors->first('message')" />
                     <x-success-message :message="session('success')" />
                     @if (session('downloadUrl'))
-                    <script>
-                        window.onload = function() {
-                            window.location.href = "{{ session('downloadUrl') }}";
-                        };
-                    </script>
-                @endif
+                        <script>
+                            window.onload = function() {
+                                window.location.href = "{{ session('downloadUrl') }}";
+                            };
+                        </script>
+                    @endif
                     <div class="card">
                         <div class="card-body">
                             <table id="client-site-list" class="table table-bordered dt-responsive  nowrap w-100">
                                 <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Client Code</th>
-                                    <th>Client Name</th>
-                                    <th>Location Code</th>
-                                    <th>Location</th>
-                                    @canany(['edit client site', 'delete client site'])
-                                    <th>Action</th>
-                                    @endcanany
-                                </tr>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Client Code</th>
+                                        <th>Client Name</th>
+                                        <th>Location Code</th>
+                                        <th>Location</th>
+                                        @canany(['edit client site', 'delete client site'])
+                                            <th>Action</th>
+                                        @endcanany
+                                    </tr>
                                 </thead>
 
                                 <tbody>
@@ -72,7 +76,7 @@
     </div>
     <x-include-plugins :plugins="['dataTable', 'import']"></x-include-plugins>
     <script>
-         $(document).ready(function() {
+        $(document).ready(function() {
             let actionColumn = [];
             @canany(['edit client site', 'client site'])
                 actionColumn = [{
@@ -80,17 +84,19 @@
                     render: function(data, type, row) {
                         var actions = '<div class="action-buttons">';
 
-                            @can('edit client site')
-                                actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/client-sites') }}/${row.id}/edit">`;
-                                actions += '<i class="fas fa-pencil-alt"></i>';
-                                actions += '</a>';
-                            @endcan
+                        @can('edit client site')
+                            actions +=
+                                `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/client-sites') }}/${row.id}/edit?page=${clientTable.page() + 1}">`;
+                            actions += '<i class="fas fa-pencil-alt"></i>';
+                            actions += '</a>';
+                        @endcan
 
-                            @can('delete client site')
-                                actions += `<a class="btn btn-danger waves-effect waves-light btn-sm clientSite-delete-btn" href="#" data-source="Client site" data-id="${row.id}">`;
-                                actions += '<i class="fas fa-trash-alt"></i>';
-                                actions += '</a>';
-                            @endcan
+                        @can('delete client site')
+                            actions +=
+                                `<a class="btn btn-danger waves-effect waves-light btn-sm clientSite-delete-btn" href="#" data-source="Client site" data-id="${row.id}">`;
+                            actions += '<i class="fas fa-trash-alt"></i>';
+                            actions += '</a>';
+                        @endcan
 
                         actions += '</div>';
                         return actions;
@@ -101,6 +107,7 @@
             let clientTable = $('#client-site-list').DataTable({
                 processing: true,
                 serverSide: true,
+                stateSave: true,
                 ajax: {
                     url: "{{ route('get-client-site-list') }}",
                     type: "POST",
@@ -112,23 +119,32 @@
                         return json.data || [];
                     }
                 },
-                columns: [
-                    { 
-                        data: null, 
+                columns: [{
+                        data: null,
                         render: function(data, type, row, meta) {
                             return meta.row + 1 + meta.settings._iDisplayStart;
                         }
                     },
-                    { data: 'client.client_code' },
-                    { data: 'client.client_name' },
-                    { data: 'location_code' },
-                    { data: 'location' }, 
+                    {
+                        data: 'client.client_code'
+                    },
+                    {
+                        data: 'client.client_name'
+                    },
+                    {
+                        data: 'location_code'
+                    },
+                    {
+                        data: 'location'
+                    },
                     ...actionColumn
                 ],
                 paging: true,
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100],
-                order: [[0, 'asc']]
+                order: [
+                    [0, 'asc']
+                ]
             });
 
             // Handle Delete button click
@@ -152,13 +168,13 @@
                                 '_token': '{{ csrf_token() }}'
                             },
                             success: function(response) {
-                                if(response.success){
+                                if (response.success) {
                                     swal({
                                         title: "Success!",
                                         text: response.message,
                                         type: "success",
                                         showConfirmButton: false
-                                    }) 
+                                    })
 
                                     setTimeout(() => {
                                         location.reload();
@@ -169,6 +185,6 @@
                     }
                 });
             })
-        });  
+        });
     </script>
 @endsection
