@@ -18,20 +18,23 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\EmployeePayrollExport;
+
 class EmployeePayrollController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if (!Gate::allows('view employee payroll')) {
             abort(403);
         }
-
+        $year = $request->input('year', now()->year);
+        $month = $request->input('month', now()->month);
+        $page = $request->input('page', 1);
         $today = Carbon::now()->startOfDay();
         $twentyTwoDays = TwentyTwoDayInterval::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
         $previousEndDate = Carbon::parse($twentyTwoDays->start_date)->subDay();
         $previousStartDate = Carbon::parse($previousEndDate)->startOfMonth();
 
-        return view('admin.employee-payroll.index', compact('twentyTwoDays', 'previousEndDate', 'previousStartDate'));
+        return view('admin.employee-payroll.index', compact('year', 'month', 'page','twentyTwoDays', 'previousEndDate', 'previousStartDate'));
     }
 
     public function getEmployeePayroll(Request $request)

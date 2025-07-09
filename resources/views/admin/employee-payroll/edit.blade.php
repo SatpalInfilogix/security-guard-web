@@ -13,7 +13,11 @@
                             <button class="btn btn-primary" onclick="downloadInvoicePdf({{ $employeePayroll->id }})">
                                 Payslip <i class="fas fa-file-pdf"></i>
                             </button>
-                            <a href="{{ route('employee-payroll.index', ['year' => request('year'), 'month' => request('month')]) }}"
+                            <a href="{{ route('employee-payroll.index', [
+                                'year' => request('year'),
+                                'month' => request('month'),
+                                'page' => request('page', 1),
+                            ]) }}"
                                 class="btn btn-primary">
                                 <i class="bx bx-arrow-back"></i> Back to Employee Payroll
                             </a>
