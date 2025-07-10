@@ -155,6 +155,7 @@
             var table = $('#leaves-list').DataTable({
                 processing: true,
                 serverSide: true,
+                stateSave: true, // Add this line to enable state saving
                 ajax: {
                     url: "{{ route('get-leaves-list') }}",
                     type: "POST",
@@ -246,6 +247,9 @@
             let leaveId = $(this).data('id');
             let createDate = $(this).data('date');
             var deleteApiEndpoint = "{{ route('leaves.destroy', '') }}/" + leaveId + "/" + createDate;
+            
+            // Get current page before deletion
+            var currentPage = table.page();
 
             swal({
                 title: "Are you sure?",
@@ -270,15 +274,14 @@
                                     showConfirmButton: false
                                 })
 
-                                setTimeout(() => {
-                                    location.reload();
-                                }, 2000);
+                                // Redraw table and stay on the same page
+                                table.draw(false).page(currentPage).draw('page');
                             }
                         }
                     })
                 }
             });
-        })
+        });
 
         $(document).ready(function() {
             let leaveId = null;
@@ -335,6 +338,9 @@
                 });
             });
             function updateLeaveStatus(leaveId, newStatus, rejectionReason = null, createdDate = null) {
+                // Get the current page before making the update
+                var currentPage = table.page();
+                
                 $.ajax({
                     url: `/leaves/${leaveId}/update-status`,
                     method: 'POST',
@@ -361,7 +367,8 @@
                                 });
                             }
                             
-                            location.reload();
+                            // Instead of reloading the page, redraw the table and return to the same page
+                            table.draw(false).page(currentPage).draw('page');
                         } else {
                             swal({
                                 title: "Error!",
