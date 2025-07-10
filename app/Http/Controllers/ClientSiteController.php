@@ -19,14 +19,15 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ClientSiteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if(!Gate::allows('view client site')) {
             abort(403);
         }
+        $page = $request->input('page', 1);
         $clientSites = ClientSite::with('client')->latest()->get();
 
-        return view('admin.client-sites.index', compact('clientSites'));
+        return view('admin.client-sites.index', compact('clientSites','page'));
     }
 
     public function getClientSite(Request $request)

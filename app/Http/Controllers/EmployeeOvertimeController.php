@@ -9,6 +9,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use App\Models\PublicHoliday;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class EmployeeOvertimeController extends Controller
 {
@@ -17,6 +18,9 @@ class EmployeeOvertimeController extends Controller
      */
     public function index()
     {
+        if (!Gate::allows('view employee overtime')) {
+            abort(403);
+        }
         $displayOvertimes = EmployeeOvertimeMain::with(['detail','employee'])->get();
         $displayOvertimes->map(function ($item) {
             $item->total_hours = $item->detail->sum('hours');
@@ -51,6 +55,9 @@ class EmployeeOvertimeController extends Controller
      */
     public function create()
     {
+        if (!Gate::allows('create employee overtime')) {
+            abort(403);
+        }
         $employees = User::role('employee')
             ->leftJoin('employee_rate_masters', 'users.id', '=', 'employee_rate_masters.employee_id')
             ->select('users.id', 'users.first_name', 'users.surname', 'employee_rate_masters.hourly_income')
@@ -63,6 +70,9 @@ class EmployeeOvertimeController extends Controller
      */
     public function store(Request $request)
     {
+        if (!Gate::allows('create employee overtime')) {
+            abort(403);
+        }
         $request->validate([
             'employee_id.*' => 'required|exists:users,id',
             'work_date.*'   => 'required|date',
@@ -126,7 +136,9 @@ class EmployeeOvertimeController extends Controller
      */
     public function edit($employee_id, $id)
     {
-        
+        if (!Gate::allows('edit employee overtime')) {
+            abort(403);
+        }
         $employees = User::role('employee')->get();
         $overtimes = EmployeeOvertimeMain::with(['detail','employee'])->where('employee_id',$employee_id)->where('id',$id)->first();
         /*$overtimes = EmployeeOvertime::where('employee_id', $employee_id)
@@ -143,6 +155,9 @@ class EmployeeOvertimeController extends Controller
      */
     public function update(Request $request, $employee_id, $id)
     {
+        if (!Gate::allows('edit employee overtime')) {
+            abort(403);
+        }
         $mainId = $id;
         $request->validate([
             'employee_id.*' => 'required|exists:users,id',
@@ -215,6 +230,9 @@ class EmployeeOvertimeController extends Controller
      */
     public function destroy($employee_id, $id)
     {
+        if (!Gate::allows('delete employee overtime')) {
+            abort(403);
+        }
         try {
             // Delete the main record and all associated overtime records
             EmployeeOvertimeMain::where('id', $id)

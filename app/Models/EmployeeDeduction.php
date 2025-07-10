@@ -18,4 +18,9 @@ class EmployeeDeduction extends Model
     {
         return $this->belongsTo(EmployeeDeductionDetail::class, 'id');
     }
+
+    public function deductionDetails()
+    {
+        return $this->hasMany(EmployeeDeductionDetail::class, 'deduction_id');
+    }
 }

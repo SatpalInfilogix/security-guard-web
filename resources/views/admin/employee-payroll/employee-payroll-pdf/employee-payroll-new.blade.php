@@ -120,36 +120,41 @@
                 <td style="text-align: right;">{{ $employeePayroll->pending_leave_balance }}</td>
                 <td style="text-align: right;">{{ formatAmount($employeePayroll->pending_leave_amount) }}</td>
             @else
-                <td colspan="3">{!! '&nbsp;' !!}</td>
-                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                {{-- <td colspan="3">{!! '&nbsp;' !!}</td> --}}
+                <td>{!! '&nbsp;' !!}</td>
+                <td>{!! '&nbsp;' !!}</td>
+                <td>{!! '&nbsp;' !!}</td>
             @endif
 
             <td>NHT</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->nht) }}</td>
             <td>{!! '&nbsp;' !!}</td>
         </tr>
-        <tr>
-            <td>Employee Overtime</td>
-            <td style="text-align: right;">{{ $overtimeHours }}</td>
-            <td style="text-align: right;">{{ formatAmount($employeePayroll->overtime_income_total) }}</td>
-            {{-- <td></td> --}}
-            {{-- <td>Heart</td> --}}
-            <td></td>
-            <td></td>
-            <td></td>
-            {{-- <td>{{$employeePayroll->heart}}</td> --}}
-        </tr>
-        {{-- @if ($employeePayroll->staff_loan > 0 || $employeePayroll->pending_staff_loan > 0) --}}
-        <tr>
-            <td>Pay in Lieu of Employee</td>
-            <td style="text-align: right;">{{ $encashLeaveDays ?? 0 }}</td>
-            <td style="text-align: right;">{{ formatAmount($encashLeaveAmount ?? 0) }}</td>
-            <td>Staff Loan</td>
-            <td style="text-align: right;">{{ formatAmount($employeePayroll->staff_loan) }}</td>
-            <td style="text-align: right;">{{ number_format($employeePayroll->pending_staff_loan) }}</td>
-            {{-- <td></td> --}}
-        </tr>
-        {{-- @endif --}}
+        @if ($overtimeHours > 0 || $employeePayroll->overtime_income_total > 0)
+            <tr>
+                <td>Employee Overtime</td>
+                <td style="text-align: right;">{{ $overtimeHours }}</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->overtime_income_total) }}</td>
+                {{-- <td></td> --}}
+                {{-- <td>Heart</td> --}}
+                <td></td>
+                <td></td>
+                <td></td>
+                {{-- <td>{{$employeePayroll->heart}}</td> --}}
+            </tr>
+        @endif
+        @if (
+            $employeePayroll->encashLeaveDays > 0 ||$employeePayroll->encashLeaveAmount > 0 ||$employeePayroll->staff_loan > 0 ||$employeePayroll->pending_staff_loan > 0)
+            <tr>
+                <td>Pay in Lieu of Employee</td>
+                <td style="text-align: right;">{{ $encashLeaveDays ?? 0 }}</td>
+                <td style="text-align: right;">{{ formatAmount($encashLeaveAmount ?? 0) }}</td>
+                <td>Staff Loan</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->staff_loan) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_staff_loan) }}</td>
+                {{-- <td></td> --}}
+            </tr>
+        @endif
 
         @if ($employeePayroll->medical_insurance > 0 || $employeePayroll->pending_medical_insurance > 0)
             <tr>
@@ -158,6 +163,17 @@
                 <td>Medical Ins</td>
                 <td style="text-align: right;">{{ formatAmount($employeePayroll->medical_insurance) }}</td>
                 <td style="text-align: right;">{{ number_format($employeePayroll->pending_medical_insurance) }}</td>
+                {{-- <td></td> --}}
+            </tr>
+        @endif
+
+        @if ($employeePayroll->salary_advance > 0 || $employeePayroll->pending_salary_advance > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                <td>Salary Advance</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->salary_advance) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_salary_advance) }}</td>
                 {{-- <td></td> --}}
             </tr>
         @endif
@@ -227,7 +243,88 @@
                 {{-- <td></td> --}}
             </tr>
         @endif
-
+        @if($employeePayroll->ncb_loan > 0 || $employeePayroll->pending_ncb_loan > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                {{-- <td>{!! '&nbsp;' !!}</td> --}}
+                <td>NCB Loan</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->ncb_loan) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_ncb_loan) }}</td>
+                {{-- <td></td> --}}
+            </tr>
+        @endif
+        @if($employeePayroll->cwj_credit_union_loan > 0 || $employeePayroll->pending_cwj_credit_union_loan > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                <td>C&amp;WJ Credit Union Loan</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->cwj_credit_union_loan) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_cwj_credit_union_loan) }}</td>
+            </tr>
+        @endif
+        @if($employeePayroll->edu_com_coop_loan > 0 || $employeePayroll->pending_edu_com_coop_loan > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                <td>Edu Com Co-op Loan</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->edu_com_coop_loan) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_edu_com_coop_loan) }}</td>
+            </tr>
+        @endif
+        @if($employeePayroll->nht_mortgage_loan > 0 || $employeePayroll->pending_nht_mortgage_loan > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                <td>NHT Mortgage Loan</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->nht_mortgage_loan) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_nht_mortgage_loan) }}</td>
+            </tr>
+        @endif
+        @if($employeePayroll->jn_bank_loan > 0 || $employeePayroll->pending_jn_bank_loan > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                <td>Jamaica National Bank Loan</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->jn_bank_loan) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_jn_bank_loan) }}</td>
+            </tr>
+        @endif
+        @if($employeePayroll->sagicor_bank_loan > 0 || $employeePayroll->pending_sagicor_bank_loan > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                <td>Sagicor Bank Loan</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->sagicor_bank_loan) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_sagicor_bank_loan) }}</td>
+            </tr>
+        @endif
+        @if($employeePayroll->health_insurance > 0 || $employeePayroll->pending_health_insurance > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                <td>Health Insurance</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->health_insurance) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_health_insurance) }}</td>
+            </tr>
+        @endif
+        @if($employeePayroll->life_insurance > 0 || $employeePayroll->pending_life_insurance > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                <td>Life Insurance</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->life_insurance) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_life_insurance) }}</td>
+            </tr>
+        @endif
+        @if($employeePayroll->overpayment > 0 || $employeePayroll->pending_overpayment > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                <td>Overpayment</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->overpayment) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_overpayment) }}</td>
+            </tr>
+        @endif
+        @if($employeePayroll->training > 0 || $employeePayroll->pending_training > 0)
+            <tr>
+                <td colspan="3">{!! '&nbsp;' !!}</td>
+                <td>Training</td>
+                <td style="text-align: right;">{{ formatAmount($employeePayroll->training) }}</td>
+                <td style="text-align: right;">{{ number_format($employeePayroll->pending_training) }}</td>
+            </tr>
+        @endif
         @php
             $total = ($employeePayroll->gross_salary ?? 0) + ($employeeAllowance ?? 0);
             $totalAmount =
@@ -250,7 +347,7 @@
             {{-- <td></td> --}}
             <td></td>
             <td style="text-align: right;">{{ formatAmount($total) }}</td>
-            <td></td>
+            <th>Total (Deduction)</th>
             <td style="text-align: right;">{{ formatAmount($totalAmount) }}</td>
             <td></td>
             {{-- <td></td> --}}
@@ -294,7 +391,7 @@
         </tr>
         <tr>
             {{-- <td></td> --}}
-            <td style="text-align: right;">{{ formatAmount($employeePayroll->gross_total) }}</td>
+            <td style="text-align: right;">{{ formatAmount($employeePayroll->gross_total + $employeeAllowance ?? 0) }}</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->nis_total) }}</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->paye_tax_total) }}</td>
             <td style="text-align: right;">{{ formatAmount($employeePayroll->education_tax_total) }}</td>

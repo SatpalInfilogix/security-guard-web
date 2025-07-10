@@ -10,15 +10,15 @@ use Illuminate\Support\Facades\Gate;
 
 class ClientController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        if(!Gate::allows('view client')) {
+        if (!Gate::allows('view client')) {
             abort(403);
         }
-
+        $page = $request->input('page', 1);
         $clients = Client::latest()->get();
 
-        return view('admin.clients.index', compact('clients'));
+        return view('admin.clients.index', compact('clients','page'));
     }
 
     public function getClient(Request $request)
@@ -27,7 +27,7 @@ class ClientController extends Controller
 
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
-            $clients->where(function($query) use ($searchValue) {
+            $clients->where(function ($query) use ($searchValue) {
                 $query->where('client_code', 'like', '%' . $searchValue . '%')
                     ->orWhere('client_name', 'like', '%' . $searchValue . '%')
                     ->orWhere('nis', 'like', '%' . $searchValue . '%');
@@ -56,7 +56,7 @@ class ClientController extends Controller
 
     public function create()
     {
-        if(!Gate::allows('create client')) {
+        if (!Gate::allows('create client')) {
             abort(403);
         }
         $rateMasters = RateMaster::all();
@@ -66,7 +66,7 @@ class ClientController extends Controller
 
     public function store(Request $request)
     {
-        if(!Gate::allows('create client')) {
+        if (!Gate::allows('create client')) {
             abort(403);
         }
 
@@ -84,7 +84,7 @@ class ClientController extends Controller
             'sector_id'   => $request->sector_id,
         ]);
 
-        if($client && $request->has('guard_type')){
+        if ($client && $request->has('guard_type')) {
             foreach ($request->guard_type as $index => $rateMasterData) {
                 ClientRateMaster::create([
                     'client_id' => $client->id,
@@ -110,12 +110,12 @@ class ClientController extends Controller
 
     public function edit(Client $client)
     {
-        if(!Gate::allows('edit client')) {
+        if (!Gate::allows('edit client')) {
             abort(403);
         }
 
         $rateMasters = ClientRateMaster::where('client_id', $client->id)->get();
-        if($rateMasters->isEmpty()) {
+        if ($rateMasters->isEmpty()) {
             $rateMasters = RateMaster::all();
         }
 
@@ -124,7 +124,7 @@ class ClientController extends Controller
 
     public function update(Request $request, Client $client)
     {
-        if(!Gate::allows('edit client')) {
+        if (!Gate::allows('edit client')) {
             abort(403);
         }
 
@@ -142,10 +142,10 @@ class ClientController extends Controller
             'sector_id'   => $request->sector_id,
         ]);
 
-        if($client) {
+        if ($client) {
             foreach ($request->guard_type as $index => $rateMasterData) {
                 $rateMaster = ClientRateMaster::where('client_id', $client->id)->where('guard_type', $rateMasterData)->first();
-                if ($rateMaster) { 
+                if ($rateMaster) {
                     $rateMaster->update([
                         'regular_rate' => $request->regular_rate[$index],
                         'laundry_allowance' => $request->laundry_allowance[$index],
@@ -176,7 +176,7 @@ class ClientController extends Controller
 
     public function destroy(Client $client)
     {
-        if(!Gate::allows('delete client')) {
+        if (!Gate::allows('delete client')) {
             abort(403);
         }
 
@@ -199,17 +199,17 @@ class ClientController extends Controller
         if ($clientCode) {
             $existingClient = Client::where('client_code', $clientCode)->where('id', '!=', $clientId)->first();
         } else {
-            $existingClient = Client::where('client_name', $clientName)->orderBy('created_at', 'desc') ->first();
+            $existingClient = Client::where('client_name', $clientName)->orderBy('created_at', 'desc')->first();
         }
 
         if ($existingClient) {
             $lastNumericPart = (int) substr($existingClient->client_code, -3);
             $counter = $lastNumericPart + 1; // Increment by 1
-    
+
             while (Client::where('client_code', "{$baseCode}" . str_pad($counter, 3, '0', STR_PAD_LEFT))->exists()) {
                 $counter++;
             }
-    
+
             $clientCode = $baseCode . str_pad($counter, 3, '0', STR_PAD_LEFT);
         }
 
@@ -232,5 +232,4 @@ class ClientController extends Controller
     {
         return preg_replace('/[^A-Za-z\s]/', '', $clientName);
     }
-
 }

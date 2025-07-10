@@ -3,13 +3,11 @@
 @section('content')
     <div class="page-content">
         <div class="container-fluid">
-
             <!-- start page title -->
             <div class="row">
                 <div class="col-12">
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                         <h4 class="mb-sm-0 font-size-18">Employee Leaves</h4>
-
                         <div class="page-title-right">
                             @if (Auth::user()->can('create employee leaves'))
                                 <a href="{{ route('employee-leaves.create') }}" class="btn btn-primary">Add New Employee
@@ -23,19 +21,40 @@
                 <div class="col-md-12">
                     <form id="filterForm" method="GET">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <?php
-                                $reasons = ['Approve', 'Pending', 'Reject'];
+                                $reasons = ['Approved', 'Pending', 'Rejected'];
                                 ?>
                                 <select name="leave_status" id="leave_status" class="form-control">
                                     <option value="" selected>Select status</option>
                                     @foreach ($reasons as $reason)
-                                        <option value="{{ $reason }}" {{ old('reason') }}>{{ $reason }}</option>
+                                        <option value="{{ $reason }}"
+                                            {{ old('reason') == $reason ? 'selected' : '' }}>{{ $reason }}</option>
                                     @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="month" id="month" class="form-control">
+                                    <option value="">All Months</option>
+                                    @for ($i = 1; $i <= 12; $i++)
+                                        <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
+                                            {{ date('F', mktime(0, 0, 0, $i, 1)) }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="year" id="year" class="form-control">
+                                    <option value="">All Years</option>
+                                    @for ($i = date('Y'); $i >= date('Y') - 1; $i--)
+                                        <option value="{{ $i }}" {{ request('year') == $i ? 'selected' : '' }}>
+                                            {{ $i }}</option>
+                                    @endfor
                                 </select>
                             </div>
                             <div class="col-md-3">
                                 <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
+                                <button type="button" id="resetBtn" class="btn btn-secondary">Reset</button>
                             </div>
                         </div>
                     </form>
@@ -54,15 +73,15 @@
                     <x-success-message :message="session('success')" />
                     <div class="card">
                         <div class="card-body">
-                            <table id="leaves-list" class="table table-bordered dt-responsive  nowrap w-100">
+                            <table id="employee-leaves-list" class="table table-bordered dt-responsive nowrap w-100">
                                 <thead>
                                     <tr>
                                         <th>#</th>
                                         <th>Employee Name</th>
-                                        <th>Date</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
                                         <th>Actual Start Date</th>
                                         <th>Actual End Date</th>
-                                        <th>Type</th>
                                         <th>Reason</th>
                                         <th>Status</th>
                                         @can('delete employee leaves')
@@ -70,17 +89,16 @@
                                         @endcan
                                     </tr>
                                 </thead>
-                                <tbody>
-
-                                </tbody>
+                                <tbody></tbody>
                             </table>
                         </div>
                     </div>
-                </div> <!-- end col -->
-            </div> <!-- end row -->
-        </div> <!-- container-fluid -->
+                </div>
+            </div>
+        </div>
     </div>
 
+    <!-- Reject Modal -->
     <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -103,25 +121,34 @@
     <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
     <script>
         $(document).ready(function() {
+            // Set default month and year to current
+            // const currentDate = new Date();
+            // $('#month').val(currentDate.getMonth() + 1);
+            // $('#year').val(currentDate.getFullYear());
+
             let actionColumn = [];
             @can('delete employee leaves')
                 actionColumn = [{
                     data: null,
                     render: function(data, type, row) {
+                        var editUrlTemplate =
+                            "{{ route('employee-leaves.modify', ['id' => '__ID__', 'date' => '__DATE__']) }}";
+                        var editRoute = editUrlTemplate.replace('__ID__', data.employee_id).replace(
+                            '__DATE__', data.created_date);
                         var actions = '<div class="action-buttons">';
                         actions +=
-                            `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${row.id}">`;
+                            `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${data.employee_id}" data-date="${data.created_date}">`;
                         actions += '<i class="fas fa-trash-alt"></i>';
                         actions += '</a>';
+                        actions +=
+                            `<a class="btn btn-primary waves-effect waves-light btn-sm leave-edit-btn" href="${editRoute}"><i class="fas fa-edit"></i></a>`;
                         actions += '</div>';
                         return actions;
                     }
                 }];
             @endcan
 
-            console.log('actionColumn', actionColumn)
-
-            var table = $('#leaves-list').DataTable({
+            var table = $('#employee-leaves-list').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: {
@@ -130,6 +157,8 @@
                     data: function(d) {
                         d._token = "{{ csrf_token() }}";
                         d.leave_status = $('#leave_status').val();
+                        d.month = $('#month').val();
+                        d.year = $('#year').val();
                         return d;
                     },
                     dataSrc: function(response) {
@@ -143,32 +172,29 @@
                         }
                     },
                     {
-                        data: null,
-                        name: 'user.full_name',
+                        data: 'user.first_name',
                         render: function(data, type, row) {
-                            const firstName = row.user?.first_name ?? '';
-                            const surname = row.user?.surname ?? '';
-                            return `${firstName} ${surname}`.trim();
+                            return row.user ? `${row.user.first_name} ${row.user.surname ?? ''}` :
+                                'N/A';
                         }
                     },
                     {
-                        data: 'date'
+                        data: 'start_date'
+                    },
+                    {
+                        data: 'end_date'
                     },
                     {
                         data: 'actual_start_date',
-                        render: function(data, type, row) {
+                        render: function(data) {
                             return data ? data : 'N/A';
                         }
                     },
                     {
                         data: 'actual_end_date',
-                        render: function(data, type, row) {
+                        render: function(data) {
                             return data ? data : 'N/A';
                         }
-                    },
-
-                    {
-                        data: 'type'
                     },
                     {
                         data: 'reason'
@@ -179,12 +205,16 @@
                         render: function(data, type, row) {
                             return `
                                 <div class="dropdown">
-                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="statusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" 
+                                        id="statusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                                         ${row.status}
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="statusDropdown">
-                                        <li><a class="dropdown-item leave-status" href="javascript:void(0);" data-status="Approved" data-id="${row.id}">Approve</a></li>
-                                        ${row.status !== 'Cancelled' ? `<li><a class="dropdown-item leave-status" href="javascript:void(0);" data-status="Rejected" data-id="${row.id}">Reject</a></li>` : ''}
+                                        <li><a class="dropdown-item change-status" href="javascript:void(0);" 
+                                            data-status="Approved" data-id="${data.employee_id}" data-date="${data.created_date}">Approve</a></li>
+                                        ${row.status !== 'Cancelled' ? `
+                                                            <li><a class="dropdown-item change-status" href="javascript:void(0);" 
+                                                                data-status="Rejected" data-id="${data.employee_id}" data-date="${data.created_date}">Reject</a></li>` : ''}
                                     </ul>
                                 </div>
                             `;
@@ -197,55 +227,67 @@
             $('#searchBtn').click(function() {
                 table.draw();
             });
-        });
 
-        $(document).on('click', '.leave-delete-btn', function() {
-            let source = $(this).data('source');
-            let leaveId = $(this).data('id');
-            var deleteApiEndpoint = "{{ route('employee-leaves.destroy', '') }}/" + leaveId;
-
-            swal({
-                title: "Are you sure?",
-                text: `You really want to remove this ${source}?`,
-                type: "warning",
-                showCancelButton: true,
-                closeOnConfirm: false,
-            }, function(isConfirm) {
-                if (isConfirm) {
-                    $.ajax({
-                        url: deleteApiEndpoint,
-                        method: 'DELETE',
-                        data: {
-                            '_token': '{{ csrf_token() }}'
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                swal({
-                                    title: "Success!",
-                                    text: response.message,
-                                    type: "success",
-                                    showConfirmButton: false
-                                })
-
-                                setTimeout(() => {
-                                    location.reload();
-                                }, 2000);
-                            }
-                        }
-                    })
-                }
+            $('#resetBtn').click(function() {
+                $('#leave_status, #month, #year').val('');
+                table.draw();
             });
-        })
 
-        $(document).ready(function() {
-            let leaveId = null;
-            $(document).on('click', '.leave-status', function() {
+            // $('#resetBtn').click(function() {
+            //     $('#leave_status').val('');
+            //     $('#month').val(currentDate.getMonth() + 1);
+            //     $('#year').val(currentDate.getFullYear());
+            //     table.draw();
+            // });
+
+            $(document).on('click', '.leave-delete-btn', function() {
+                let source = $(this).data('source');
+                let leaveId = $(this).data('id');
+                let createDate = $(this).data('date');
+                var deleteApiEndpoint = "{{ route('employee-leaves.destroy', '') }}/" + leaveId + "/" +
+                    createDate;
+
+                swal({
+                    title: "Are you sure?",
+                    text: `You really want to remove this ${source}?`,
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                }, function(isConfirm) {
+                    if (isConfirm) {
+                        $.ajax({
+                            url: deleteApiEndpoint,
+                            method: 'DELETE',
+                            data: {
+                                '_token': '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    swal({
+                                        title: "Success!",
+                                        text: response.message,
+                                        type: "success",
+                                        showConfirmButton: false
+                                    });
+                                    setTimeout(() => {
+                                        location.reload();
+                                    }, 2000);
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+
+            $(document).on('click', '.change-status', function() {
                 const newStatus = $(this).data('status');
                 const leaveId = $(this).data('id');
+                const createdDate = $(this).data('date');
                 const statusButton = $(this).closest('tr').find('.dropdown-toggle');
 
                 if (newStatus === 'Rejected') {
                     $('#leaveId').val(leaveId);
+                    $('#confirmReject').attr('data-date', createdDate);
                     $('#rejectModal').modal('show');
                 } else {
                     swal({
@@ -257,7 +299,7 @@
                     }, function(isConfirm) {
                         if (isConfirm) {
                             statusButton.text(newStatus);
-                            updateLeaveStatus(leaveId, newStatus);
+                            updateLeaveStatus(leaveId, newStatus, '', createdDate);
                         }
                     });
                 }
@@ -266,6 +308,8 @@
             $('#confirmReject').on('click', function() {
                 const rejectionReason = $('#rejectionReason').val();
                 const leaveId = $('#leaveId').val();
+                const createdDate = $(this).data('date');
+
                 if (!rejectionReason) {
                     swal({
                         title: "Error!",
@@ -275,6 +319,7 @@
                     });
                     return;
                 }
+
                 $('#rejectModal').modal('hide');
                 swal({
                     title: "Are you sure?",
@@ -284,17 +329,18 @@
                     closeOnConfirm: false,
                 }, function(isConfirm) {
                     if (isConfirm) {
-                        updateLeaveStatus(leaveId, 'Rejected', rejectionReason);
+                        updateLeaveStatus(leaveId, 'Rejected', rejectionReason, createdDate);
                     }
                 });
             });
 
-            function updateLeaveStatus(leaveId, newStatus, rejectionReason = null) {
+            function updateLeaveStatus(leaveId, newStatus, rejectionReason = null, createdDate = null) {
                 $.ajax({
                     url: `/employee-leaves/${leaveId}/update-status`,
                     method: 'POST',
                     data: {
                         status: newStatus,
+                        created_date: createdDate,
                         rejection_reason: rejectionReason,
                         _token: '{{ csrf_token() }}'
                     },
@@ -306,7 +352,6 @@
                                 type: "success",
                                 showConfirmButton: false
                             });
-
                             setTimeout(() => {
                                 location.reload();
                             }, 2000);
@@ -319,6 +364,14 @@
                             });
                         }
                     },
+                    error: function(xhr) {
+                        swal({
+                            title: "Error!",
+                            text: xhr.responseJSON?.message || "An error occurred",
+                            type: "error",
+                            showConfirmButton: true
+                        });
+                    }
                 });
             }
         });

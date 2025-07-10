@@ -14,7 +14,10 @@ use App\Models\PublicHoliday;
 use Spatie\Permission\Models\Role;
 use Illuminate\Console\Command;
 use Carbon\Carbon;
+use App\Models\EmployeeTaxThreshold;
 use App\Models\TwentyTwoDayInterval;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class PublishEmployeePayroll extends Command
 {
@@ -179,8 +182,8 @@ class PublishEmployeePayroll extends Command
             $query->where('role_id', $userRole->id);
         })->with('guardAdditionalInformation')->latest()->get();
 
-        $today = Carbon::now()->startOfDay();
-        // $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
+        // $today = Carbon::now()->startOfDay();
+        $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
 
         $processingDate = $this->getProcessingDate($today);
 
@@ -287,6 +290,7 @@ class PublishEmployeePayroll extends Command
                                         $previousStartDate,
                                         $endDate
                                     );
+                                    // dd($totalDeductions);
                                     //===== End Employee Payroll Non Statutory Calculation =====
 
                                     $payrollData = array_merge($payrollStatutoryData, [
@@ -311,6 +315,7 @@ class PublishEmployeePayroll extends Command
                                         'pending_salary_advance' => $pendingAmounts['Salary Advance'],
                                         'pending_psra' => $pendingAmounts['PSRA'],
                                         'pending_bank_loan' => $pendingAmounts['Bank Loan'],
+                                        'approved_pension_scheme' => $totalDeductions['Approved Pension'],
                                         'pending_approved_pension' => $pendingAmounts['Approved Pension'],
                                         'garnishment' => $totalDeductions['Garnishment'],
                                         'missing_goods' => $totalDeductions['Missing Goods'],
@@ -318,6 +323,28 @@ class PublishEmployeePayroll extends Command
                                         'pending_garnishment' => $pendingAmounts['Garnishment'],
                                         'pending_missing_goods' => $pendingAmounts['Missing Goods'],
                                         'pending_damaged_goods' => $pendingAmounts['Damaged Goods'],
+                                        // New deduction fields
+                                        'ncb_loan' => $totalDeductions['NCB Loan'],
+                                        'cwj_credit_union_loan' => $totalDeductions['C&WJ Credit Union Loan'],
+                                        'edu_com_coop_loan' => $totalDeductions['Edu Com Co-op Loan'],
+                                        'nht_mortgage_loan' => $totalDeductions['National Housing Trust Mortgage Loan'],
+                                        'jn_bank_loan' => $totalDeductions['Jamaica National Bank Loan'],
+                                        'sagicor_bank_loan' => $totalDeductions['Sagicor Bank Loan'],
+                                        'health_insurance' => $totalDeductions['Health Insurance'],
+                                        'life_insurance' => $totalDeductions['Life Insurance'],
+                                        'overpayment' => $totalDeductions['Overpayment'],
+                                        'training' => $totalDeductions['Training'],
+                                        // Pending amounts for new deductions
+                                        'pending_ncb_loan' => $pendingAmounts['NCB Loan'],
+                                        'pending_cwj_credit_union_loan' => $pendingAmounts['C&WJ Credit Union Loan'],
+                                        'pending_edu_com_coop_loan' => $pendingAmounts['Edu Com Co-op Loan'],
+                                        'pending_nht_mortgage_loan' => $pendingAmounts['National Housing Trust Mortgage Loan'],
+                                        'pending_jn_bank_loan' => $pendingAmounts['Jamaica National Bank Loan'],
+                                        'pending_sagicor_bank_loan' => $pendingAmounts['Sagicor Bank Loan'],
+                                        'pending_health_insurance' => $pendingAmounts['Health Insurance'],
+                                        'pending_life_insurance' => $pendingAmounts['Life Insurance'],
+                                        'pending_overpayment' => $pendingAmounts['Overpayment'],
+                                        'pending_training' => $pendingAmounts['Training'],
                                         'is_publish' => 0,
                                     ]);
 
@@ -509,25 +536,6 @@ class PublishEmployeePayroll extends Command
             //         $employerContributionNis = $daySalary * 0.03;
             //     }
             // }
-
-            $statutoryIncome  = $grossSalary -  $nis - $approvedPensionScheme;
-
-            if ($age >= 65) {
-                $threshold = 162507.33; // (1,700,088 + 250,000) / 12
-            } else {
-                $threshold = 141674.00;
-            }
-
-            if ($statutoryIncome < $threshold) {
-                $payeIncome = 0;
-            } elseif ($statutoryIncome > $threshold && $statutoryIncome <= 500000.00) {
-                $payeData = $statutoryIncome - $threshold;
-                $payeIncome = $payeData * 0.25;
-            } elseif ($statutoryIncome > 500000.00) {
-                $payeData = ($statutoryIncome - 500000.00) * 0.30;
-                $payeeThreshold = (500000.00 - $threshold) * 0.25;
-                $payeIncome = $payeData + $payeeThreshold;
-            }
             /*if ($statutoryIncome < 141674) {
                 $payeIncome = 0;
             } elseif ($statutoryIncome > 141674 && $statutoryIncome <= 500000.00) {
@@ -539,12 +547,68 @@ class PublishEmployeePayroll extends Command
                 $payeIncome = $payeData + $payeeThreshold;
             }*/
 
+            /* $statutoryIncome  = $grossSalary -  $nis - $approvedPensionScheme;
+            if ($age >= 65) {
+                $threshold = 162507.33; // (1,700,088 + 250,000) / 12
+            } else {
+                $threshold = 141674.00;
+            }
+            if ($statutoryIncome < $threshold) {
+                $payeIncome = 0;
+            } elseif ($statutoryIncome > $threshold && $statutoryIncome <= 500000.00) {
+                $payeData = $statutoryIncome - $threshold;
+                $payeIncome = $payeData * 0.25;
+            } elseif ($statutoryIncome > 500000.00) {
+                $payeData = ($statutoryIncome - 500000.00) * 0.30;
+                $payeeThreshold = (500000.00 - $threshold) * 0.25;
+                $payeIncome = $payeData + $payeeThreshold;
+            }*/
+
+            $statutoryIncome = $grossSalary - $nis - $approvedPensionScheme;
+
+            // Get applicable threshold based on current date
+            $currentDate = Carbon::now();
+            $latestThreshold = EmployeeTaxThreshold::whereDate('effective_date', '<=', $currentDate)
+                ->orderBy('effective_date', 'desc')
+                ->first();
+
+            // Optional fallback
+            if (!$latestThreshold) {
+                $latestThreshold = EmployeeTaxThreshold::orderBy('effective_date', 'asc')->first();
+            }
+            // Fallback again if still null (just to be safe)
+            if (!$latestThreshold) {
+                throw new \Exception('No tax threshold data found.');
+            }
+            $seniorCitizenBonus = 250000;
+            // Calculate threshold based on age
+            if ($age >= 65) {
+                $threshold = ($latestThreshold->annual + $seniorCitizenBonus) / 12;
+            } else {
+                $threshold = $latestThreshold->monthly;
+            }
+
+            // Define next slab monthly (e.g., 6M annual → 500k monthly)
+            // Ideally, fetch this from DB or config if dynamic
+            $nextSlabMonthly = 500000.00;
+
+            // PAYE logic
+            if ($statutoryIncome < $threshold) {
+                $payeIncome = 0;
+            } elseif ($statutoryIncome <= $nextSlabMonthly) {
+                $payeIncome = ($statutoryIncome - $threshold) * 0.25;
+            } else {
+                $payeData = ($statutoryIncome - $nextSlabMonthly) * 0.30;
+                $payeeThreshold = ($nextSlabMonthly - $threshold) * 0.25;
+                $payeIncome = $payeData + $payeeThreshold;
+            }
+
             if ($age >= 65) {
                 $eduction_tax = 0;
             } else {
                 $eduction_tax = $statutoryIncome * 0.0225;
             }
-            
+
             $employer_contribution = $statutoryIncome * 0.035;
 
             if ($age >= 65) {
@@ -585,65 +649,78 @@ class PublishEmployeePayroll extends Command
             'Garnishment' => 'pending_garnishment',
             'Missing Goods' => 'pending_missing_goods',
             'Damaged Goods' => 'pending_damaged_goods',
+            'NCB Loan' => 'pending_ncb_loan',
+            'C&WJ Credit Union Loan' => 'pending_cwj_credit_union_loan',
+            'Edu Com Co-op Loan' => 'pending_edu_com_coop_loan',
+            'National Housing Trust Mortgage Loan' => 'pending_nht_mortgage_loan',
+            'Jamaica National Bank Loan' => 'pending_jamaica_national_bank_loan',
+            'Sagicor Bank Loan' => 'pending_sagicor_bank_loan',
+            'Health Insurance' => 'pending_health_insurance',
+            'Life Insurance' => 'pending_life_insurance',
+            'Overpayment' => 'pending_overpayment',
+            'Training' => 'pending_training'
         ];
 
         $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
-        $pendingAmounts = array_fill_keys(array_keys($deductionTypes), 0);
 
         foreach ($deductionTypes as $deductionType => $pendingField) {
             $deductionRecords = EmployeeDeduction::where('employee_id', $employee->id)
                 ->where('type', $deductionType)
-                ->where(function ($query) use ($previousStartDate, $endDate) {
-                    $query->where(function ($q) use ($previousStartDate, $endDate) {
-                        $q->whereDate('start_date', '<=', $endDate)
-                            ->whereDate('end_date', '>=', $previousStartDate);
-                    })
-                        ->orWhere(function ($q) use ($endDate) {
-                            $q->whereNull('end_date')->whereDate('start_date', '<=', $endDate);
-                        });
-                })
+                ->whereDate('start_date', '<=', $endDate)
                 ->get();
+            echo "End Date : " . $endDate->format('Y-m-d') . " Deduction Type : " . $deductionType . "\n";
+            // dd($deductionRecords);
 
             foreach ($deductionRecords as $deduction) {
-                if ($deduction->end_date !== null) {
-                    if (
-                        $deduction->start_date <= $endDate &&
-                        $deduction->end_date >= $previousStartDate &&
-                        $deduction->pending_balance > 0
-                    ) {
-                        $deductAmount = min($deduction->one_installment, $deduction->pending_balance);
-                        $pendingBalance = $deduction->pending_balance - $deductAmount;
+                if (!is_null($deduction->end_date) && $deduction->start_date <= $endDate && $deduction->end_date >= $previousStartDate) {
+                    $deductionAmount = min($deduction->one_installment, $deduction->pending_balance);
+                    $newBalance = $deduction->pending_balance - $deductionAmount;
 
-                        $totalDeductions[$deductionType] = $deductAmount;
-                        $pendingAmounts[$deductionType] = $pendingBalance;
+                    $totalDeductions[$deductionType] += $deductionAmount;
 
-                        $deduction->update(['pending_balance' => $pendingBalance]);
-
-                        EmployeeDeductionDetail::create([
-                            'employee_id' => $employee->id,
-                            'deduction_id' => $deduction->id,
-                            'deduction_date' => Carbon::now(),
-                            'amount_deducted' => $deductAmount,
-                            'balance' => $pendingBalance
-                        ]);
-                    }
-                } else {
-                    $deductAmount = $deduction->one_installment;
-
-                    $totalDeductions[$deductionType] = $deductAmount;
-                    $pendingAmounts[$deductionType] = $deduction->pending_balance;
+                    // ✅ Only update if end_date is present
+                    $deduction->update(['pending_balance' => $newBalance]);
 
                     EmployeeDeductionDetail::create([
                         'employee_id' => $employee->id,
                         'deduction_id' => $deduction->id,
                         'deduction_date' => Carbon::now(),
-                        'amount_deducted' => $deductAmount,
-                        'balance' => $deduction->pending_balance
+                        'amount_deducted' => $deductionAmount,
+                        'balance' => $newBalance
                     ]);
+                } elseif (is_null($deduction->end_date) && is_null($deduction->no_of_payroll)) {
+                    if ($deduction->pending_balance > 0) {
+                        $deductionAmount = min($deduction->one_installment, $deduction->pending_balance);
+                        $newBalance = $deduction->pending_balance - $deductionAmount;
+
+                        $totalDeductions[$deductionType] += $deductionAmount;
+                        // ✅ Do not update pending_balance if end_date is not present
+                        // $deduction->update(['pending_balance' => $newBalance]);
+                        EmployeeDeductionDetail::create([
+                            'employee_id' => $employee->id,
+                            'deduction_id' => $deduction->id,
+                            'deduction_date' => Carbon::now(),
+                            'amount_deducted' => $deductionAmount,
+                            'balance' => 0 //$deduction->pending_balance // Show current balance without change
+                        ]);
+                    }
                 }
             }
+
+            $deductionIds = EmployeeDeduction::where('employee_id', $employee->id)
+                ->where('type', $deductionType)
+                ->pluck('id');
+
+            $pendingAmounts[$deductionType] = EmployeeDeductionDetail::whereIn('deduction_id', $deductionIds)
+                ->select('deduction_id', DB::raw('MAX(id) as latest_id'))
+                ->groupBy('deduction_id')
+                ->pluck('latest_id')
+                ->pipe(function ($latestIds) {
+                    return EmployeeDeductionDetail::whereIn('id', $latestIds)->sum('balance');
+                });
         }
 
+        // dd($totalDeductions, $pendingAmounts);
         return [$totalDeductions, $pendingAmounts];
     }
 

@@ -22,19 +22,40 @@
                 <div class="col-md-12">
                     <form id="filterForm" method="GET">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <?php
-                                $reasons = ['Approve', 'Pending', 'Reject'];
+                                $reasons = ['Approved', 'Pending', 'Rejected'];
                                 ?>
                                 <select name="leave_status" id="leave_status" class="form-control">
                                     <option value="" selected disabled>Select status</option>
                                     @foreach ($reasons as $reason)
-                                        <option value="{{ $reason }}" {{ old('reason') }}>{{ $reason }}</option>
+                                        <option value="{{ $reason }}"
+                                            {{ old('reason') == $reason ? 'selected' : '' }}>{{ $reason }}</option>
                                     @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="month" id="month" class="form-control">
+                                    <option value="">All Months</option>
+                                    @for ($i = 1; $i <= 12; $i++)
+                                        <option value="{{ $i }}" {{ request('month') == $i ? 'selected' : '' }}>
+                                            {{ date('F', mktime(0, 0, 0, $i, 1)) }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select name="year" id="year" class="form-control">
+                                    <option value="">All Years</option>
+                                    @for ($i = date('Y'); $i >= date('Y') - 1; $i--)
+                                        <option value="{{ $i }}" {{ request('year') == $i ? 'selected' : '' }}>
+                                            {{ $i }}</option>
+                                    @endfor
                                 </select>
                             </div>
                             <div class="col-md-3">
                                 <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
+                                <button type="button" id="resetBtn" class="btn btn-secondary">Reset</button>
                             </div>
                         </div>
                     </form>
@@ -58,7 +79,8 @@
                                     <tr>
                                         <th>#</th>
                                         <th>Guard Name</th>
-                                        <th>Date</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
                                         <th>Actual Start Date</th>
                                         <th>Actual End Date</th>
                                         <th>Reason</th>
@@ -101,17 +123,28 @@
     <x-include-plugins :plugins="['dataTable']"></x-include-plugins>
     <script>
         $(document).ready(function() {
+            // const currentDate = new Date();
+            // $('#month').val(currentDate.getMonth() + 1);
+            // $('#year').val(currentDate.getFullYear());
+
             let actionColumn = [];
             @can('delete leaves')
                 actionColumn = [{
                     data: null,
                     render: function(data, type, row) {
+                        var editUrlTemplate =
+                            "{{ route('leaves.modify', ['id' => '__ID__', 'date' => '__DATE__']) }}";
+                        var editRoute = editUrlTemplate.replace('__ID__', data.guard_id).replace(
+                            '__DATE__', data.created_date);
                         var actions = '<div class="action-buttons">';
                         actions +=
-                            `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${row.id}">`;
+                            `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${data.guard_id}" data-date="${data.created_date}">`;
                         actions += '<i class="fas fa-trash-alt"></i>';
                         actions += '</a>';
+                        actions +=
+                            `<a class="btn btn-primary waves-effect waves-light btn-sm leave-edit-btn" href="${editRoute}" ><i class="fas fa-edit"></i></a>`;
                         actions += '</div>';
+
                         return actions;
                     }
                 }];
@@ -128,6 +161,8 @@
                     data: function(d) {
                         d._token = "{{ csrf_token() }}";
                         d.leave_status = $('#leave_status').val();
+                        d.month = $('#month').val();
+                        d.year = $('#year').val();
                         return d;
                     },
                     dataSrc: function(response) {
@@ -141,10 +176,17 @@
                         }
                     },
                     {
-                        data: 'user.first_name'
+                        data: 'user.first_name',
+                        render: function(data, type, row) {
+                            return row.user ? `${row.user.first_name} ${row.user.surname ?? ''}` :
+                                'N/A';
+                        }
                     },
                     {
-                        data: 'date'
+                        data: 'start_date'
+                    },
+                    {
+                        data: 'end_date'
                     },
                     {
                         data: 'actual_start_date',
@@ -171,8 +213,8 @@
                                         ${row.status}
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="statusDropdown">
-                                        <li><a class="dropdown-item" href="javascript:void(0);" data-status="Approved" data-id="${row.id}">Approve</a></li>
-                                        ${row.status !== 'Cancelled' ? `<li><a class="dropdown-item" href="javascript:void(0);" data-status="Rejected" data-id="${row.id}">Reject</a></li>` : ''}
+                                        <li><a class="dropdown-item" href="javascript:void(0);" data-status="Approved" data-id="${data.guard_id}" data-date="${data.created_date}">Approve</a></li>
+                                        ${row.status !== 'Cancelled' ? `<li><a class="dropdown-item" href="javascript:void(0);" data-status="Rejected" data-id="${data.guard_id}" data-date="${data.created_date}">Reject</a></li>` : ''}
                                     </ul>
                                 </div>
                             `;
@@ -185,12 +227,25 @@
             $('#searchBtn').click(function() {
                 table.draw();
             });
+
+            $('#resetBtn').click(function() {
+                $('#leave_status, #month, #year').val('');
+                table.draw();
+            });
+
+            // $('#resetBtn').click(function() {
+            //     $('#leave_status').val('');
+            //     $('#month').val(currentDate.getMonth() + 1);
+            //     $('#year').val(currentDate.getFullYear());
+            //     table.draw();
+            // });
         });
 
         $(document).on('click', '.leave-delete-btn', function() {
             let source = $(this).data('source');
             let leaveId = $(this).data('id');
-            var deleteApiEndpoint = "{{ route('leaves.destroy', '') }}/" + leaveId;
+            let createDate = $(this).data('date');
+            var deleteApiEndpoint = "{{ route('leaves.destroy', '') }}/" + leaveId + "/" + createDate;
 
             swal({
                 title: "Are you sure?",
@@ -230,10 +285,12 @@
             $(document).on('click', '.dropdown-item', function() {
                 const newStatus = $(this).data('status');
                 const leaveId = $(this).data('id');
+                const createdDate = $(this).data('date');
                 const statusButton = $(this).closest('tr').find('.dropdown-toggle');
 
                 if (newStatus === 'Rejected') {
                     $('#leaveId').val(leaveId);
+                    $('#confirmReject').attr('data-date', createdDate);
                     $('#rejectModal').modal('show');
                 } else {
                     swal({
@@ -245,7 +302,7 @@
                     }, function(isConfirm) {
                         if (isConfirm) {
                             statusButton.text(newStatus);
-                            updateLeaveStatus(leaveId, newStatus);
+                            updateLeaveStatus(leaveId, newStatus, '', createdDate);
                         }
                     });
                 }
@@ -254,6 +311,7 @@
             $('#confirmReject').on('click', function() {
                 const rejectionReason = $('#rejectionReason').val();
                 const leaveId = $('#leaveId').val();
+                const createdDate = $(this).data('date');
                 if (!rejectionReason) {
                     swal({
                         title: "Error!",
@@ -272,17 +330,17 @@
                     closeOnConfirm: false,
                 }, function(isConfirm) {
                     if (isConfirm) {
-                        updateLeaveStatus(leaveId, 'Rejected', rejectionReason);
+                        updateLeaveStatus(leaveId, 'Rejected', rejectionReason, createdDate);
                     }
                 });
             });
-
-            function updateLeaveStatus(leaveId, newStatus, rejectionReason = null) {
+            function updateLeaveStatus(leaveId, newStatus, rejectionReason = null, createdDate = null) {
                 $.ajax({
                     url: `/leaves/${leaveId}/update-status`,
                     method: 'POST',
                     data: {
                         status: newStatus,
+                        created_date: createdDate,
                         rejection_reason: rejectionReason,
                         _token: '{{ csrf_token() }}'
                     },
@@ -294,10 +352,16 @@
                                 type: "success",
                                 showConfirmButton: false
                             });
-
-                            setTimeout(() => {
-                                location.reload();
-                            }, 2000);
+                            
+                            // Send notification in background (don't wait for response)
+                            if (response.guardId) {
+                                $.ajax({
+                                    url: `{{ route('leaves.sendNotification') }}/${response.guardId}/${response.status}`,
+                                    type: 'GET',
+                                });
+                            }
+                            
+                            location.reload();
                         } else {
                             swal({
                                 title: "Error!",
@@ -307,8 +371,17 @@
                             });
                         }
                     },
+                    error: function() {
+                        swal({
+                            title: "Error!",
+                            text: "There was an issue updating the status. Please try again.",
+                            type: "error",
+                            showConfirmButton: true
+                        });
+                    }
                 });
             }
+
         });
     </script>
 @endsection

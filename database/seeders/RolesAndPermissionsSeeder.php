@@ -41,6 +41,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'view employee payroll', 'create employee payroll', 'edit employee payroll', 'delete employee payroll',
             'view employee deduction','create employee deduction','edit employee deduction','delete employee deduction',
             'view employee encashment','create employee encashment','edit employee encashment','delete employee encashment',
+            'view employee overtime','create employee overtime','edit employee overtime','delete employee overtime',
             'view guard encashment','create guard encashment','edit guard encashment','delete guard encashment',
         ];
 

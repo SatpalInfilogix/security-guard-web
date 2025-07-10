@@ -32,7 +32,12 @@ class SecurityGuardController extends Controller
         if (!Gate::allows('view security guards')) {
             abort(403);
         }
-
+        $searchName = $request->input('search_name');
+        $searchEmail = $request->input('search_email');
+        $searchPhone = $request->input('search_phone');
+        $searchEmpCode = $request->input('search_emp_code');
+        $status = $request->input('status');
+        $page = $request->input('page', 1);
         $userRole = Role::where('id', 3)->first();
 
         $query = User::whereHas('roles', function ($query) use ($userRole) {
@@ -41,7 +46,15 @@ class SecurityGuardController extends Controller
 
         $securityGuards = $query->with('userDocuments')->latest()->get();
 
-        return view('admin.security-guards.index', compact('securityGuards'));
+        return view('admin.security-guards.index', compact(
+            'securityGuards',
+            'searchName',
+            'searchEmail',
+            'searchPhone',
+            'searchEmpCode',
+            'status',
+            'page'
+        ));
     }
 
     public function getSecurityGuard(Request $request)

@@ -115,8 +115,7 @@
                         var actions = '<div class="action-buttons">';
 
                         @can('edit employee payroll')
-                            actions +=
-                                `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/employee-payroll') }}/${row.id}/edit?year=${$('#year').val()}&month=${$('#month').val()}">`;
+                            actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/employee-payroll') }}/${row.id}/edit?year=${$('#year').val()}&month=${$('#month').val()}&page=${payrollTable.page() + 1}">`;
                             actions += '<i class="fas fa-pencil-alt"></i>';
                             actions += '</a>';
                         @endcan
@@ -143,6 +142,7 @@
             let payrollTable = $('#payroll-list').DataTable({
                 processing: true,
                 serverSide: true,
+                stateSave: true,
                 ajax: {
                     url: "{{ route('get-employee-payroll-list') }}",
                     type: "POST",

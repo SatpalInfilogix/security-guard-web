@@ -30,7 +30,7 @@
                  </div>
                  <div class="col-md-2">
                      <label class="form-label">Hours<span class="text-danger">*</span></label>
-                     <input type="number" class="form-control" name="hours[]" value="{{ $overtimeItem->hours }}">
+                     <input type="number" class="form-control" name="hours[]" value="{{ $overtimeItem->hours }}" step="0.01">
                  </div>
                  <div class="col-md-2">
                      @if ($loop->first)
@@ -70,7 +70,7 @@
              <div class="col-md-2">
                  <label class="form-label">Hours<span class="text-danger">*</span></label>
                  <input type="number" class="form-control" name="hours[]" value="{{ old('hours') }}"
-                     placeholder="Hours">
+                     placeholder="Hours" step="0.01">
              </div>
              <div class="col-md-2">
                  <button type="button" class="btn btn-primary mt-2" id="addRow">Add More</button>
@@ -138,7 +138,7 @@
                 <input type="number" class="form-control" name="rate[]" value="${rate}" readonly>
             </div>
             <div class="col-md-2">
-                <input type="number" class="form-control" name="hours[]" value="${hours}">
+                <input type="number" class="form-control" name="hours[]" value="${hours}" step="0.01">
             </div>
             <div class="col-md-2">
                 <button type="button" class="btn btn-danger removeRow mt-2">Remove</button>

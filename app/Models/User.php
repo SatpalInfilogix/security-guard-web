@@ -16,7 +16,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasRoles,HasFactory, Notifiable,HasApiTokens;
+    use HasRoles, HasFactory, Notifiable, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -115,4 +115,8 @@ class User extends Authenticatable
         return $this->hasMany(GuardRoster::class, 'guard_id'); // Assuming 'guard_id' is the foreign key
     }
 
+    public function employeeDeductionDetails()
+    {
+        return $this->hasMany(EmployeeDeduction::class, 'employee_id');
+    }
 }

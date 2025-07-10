@@ -13,6 +13,7 @@
                         <div class="page-title-right">
                             <a href="{{ route('client-sites.index') }}" class="btn btn-primary"><i class="bx bx-arrow-back"></i> Back to Client Sites</a>
                         </div>
+                        
                     </div>
                 </div>
             </div>
