@@ -10,20 +10,25 @@
                         <h4 class="mb-sm-0 font-size-18">Employee</h4>
 
                         <div class="page-title-right">
-                            <button id="downloadPdfBtn" class="btn btn-primary"><i class="bx bx-download"></i> Download PDF</button>
-                            <a href="{{ route('export.employee') }}" class="btn btn-primary"><i class="bx bx-export"></i> Employee Bulk Export</a>
+                            <button id="downloadPdfBtn" class="btn btn-primary"><i class="bx bx-download"></i> Download
+                                PDF</button>
+                            <a href="{{ route('export.employee') }}" class="btn btn-primary"><i class="bx bx-export"></i>
+                                Employee Bulk Export</a>
                             <a href="{{ url('download-employee-sample') }}"
-                                class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Employee Sample File</a>
+                                class="btn btn-primary primary-btn btn-md me-1"><i class="bx bx-download"></i> Employee
+                                Sample File</a>
                             <div class="d-inline-block me-1">
-                                <form id="importForm" action="{{ route('import.employee') }}" method="POST" enctype="multipart/form-data">
+                                <form id="importForm" action="{{ route('import.employee') }}" method="POST"
+                                    enctype="multipart/form-data">
                                     @csrf
                                     <label for="fileInput" class="btn btn-primary primary-btn btn-md mb-0">
                                         <i class="bx bx-cloud-download"></i> Import Employee
-                                        <input type="file" id="fileInput" name="file" accept=".csv, .xlsx" style="display:none;">
+                                        <input type="file" id="fileInput" name="file" accept=".csv, .xlsx"
+                                            style="display:none;">
                                     </label>
                                 </form>
                             </div>
-                            @if(Auth::user()->can('create employee'))
+                            @if (Auth::user()->can('create employee'))
                                 <a href="{{ route('employees.create') }}" class="btn btn-primary">Add New Employee</a>
                             @endif
                         </div>
@@ -46,19 +51,24 @@
                                 </select>
                             </div>
                             <div class="col-md-2">
-                                <input type="text" name="search_name" class="form-control" placeholder="Search by Name" value="{{ request('search_name') }}" id="search_name">
+                                <input type="text" name="search_name" class="form-control" placeholder="Search by Name"
+                                    value="{{ request('search_name') }}" id="search_name">
                             </div>
                             <div class="col-md-2">
-                                <input type="text" name="search_email" class="form-control" placeholder="Search by Email" value="{{ request('search_email') }}" id="search_email">
+                                <input type="text" name="search_email" class="form-control" placeholder="Search by Email"
+                                    value="{{ request('search_email') }}" id="search_email">
                             </div>
                             <div class="col-md-2">
-                                <input type="text" name="search_phone" class="form-control" placeholder="Search by Phone" value="{{ request('search_phone') }}" id="search_phone">
+                                <input type="text" name="search_phone" class="form-control" placeholder="Search by Phone"
+                                    value="{{ request('search_phone') }}" id="search_phone">
                             </div>
                             <div class="col-md-2">
                                 <select name="status" class="form-control" id="is_status">
                                     <option value="">All Status</option>
-                                    <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
-                                    <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                    <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active
+                                    </option>
+                                    <option value="Inactive" {{ request('status') == 'Inactive' ? 'selected' : '' }}>
+                                        Inactive</option>
                                 </select>
                             </div>
                             <div class="col-md-2">
@@ -71,7 +81,7 @@
 
             <div class="row">
                 <div class="col-12">
-                    @if(session('error'))
+                    @if (session('error'))
                         <div class="alert alert-danger">
                             {{ session('error') }}
                         </div>
@@ -89,23 +99,23 @@
                         <div class="card-body">
                             <table id="employee-list" class="table table-bordered dt-responsive  nowrap w-100">
                                 <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Emp. Code</th>
-                                    <th>First Name</th>
-                                    <th>Middle Name</th>
-                                    <th>Surname</th>
-                                    <th>Phone number</th>
-                                    <th>Leave Balance</th>
-                                    <th>Status</th>
-                                    @canany(['edit employee', 'delete employee'])
-                                    <th>Action</th>
-                                    @endcanany
-                                </tr>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Emp. Code</th>
+                                        <th>First Name</th>
+                                        <th>Middle Name</th>
+                                        <th>Surname</th>
+                                        <th>Phone number</th>
+                                        <th>Leave Balance</th>
+                                        <th>Status</th>
+                                        @canany(['edit employee', 'delete employee'])
+                                            <th>Action</th>
+                                        @endcanany
+                                    </tr>
                                 </thead>
 
                                 <tbody>
-                                
+
                                 </tbody>
                             </table>
                         </div>
@@ -118,20 +128,22 @@
     <script>
         $(document).ready(function() {
             let actionColumn = [];
-    
+
             @canany(['edit employee', 'delete employee'])
                 actionColumn = [{
                     data: null,
                     render: function(data, type, row) {
                         var actions = '<div class="action-buttons">';
-                            @can('edit employee')
-                                actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/employees') }}/${row.id}/edit">`;
-                                actions += '<i class="fas fa-pencil-alt"></i>';
-                                actions += '</a>';
-                            @endcan
+                        @can('edit employee')
+                            actions +=
+                                `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/employees') }}/${row.id}/edit?page=${employeeTable.page() + 1}&search_emp_code=${encodeURIComponent($('#search_emp_code').val())}&search_name=${encodeURIComponent($('#search_name').val())}&search_email=${encodeURIComponent($('#search_email').val())}&search_phone=${encodeURIComponent($('#search_phone').val())}&status=${encodeURIComponent($('#is_status').val())}">`;
+                            actions += '<i class="fas fa-pencil-alt"></i>';
+                            actions += '</a>';
+                        @endcan
                         if (row.status !== 'Active' || @json(Auth::user()->hasRole('Admin'))) {
                             @can('delete employee')
-                                actions += `<a data-source="Employee" class="employee-delete btn btn-danger waves-effect waves-light btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
+                                actions +=
+                                    `<a data-source="Employee" class="employee-delete btn btn-danger waves-effect waves-light btn-sm" href="#" data-id="${row.id}"> <i class="fas fa-trash-alt"></i></a>`;
                             @endcan
                         }
 
@@ -143,12 +155,13 @@
             let employeeTable = $('#employee-list').DataTable({
                 processing: true,
                 serverSide: true,
+                stateSave: true,
                 ajax: {
                     url: "{{ route('get-employee') }}",
                     type: "POST",
                     data: function(d) {
                         d._token = "{{ csrf_token() }}";
-                        d.search_name = $('#search_name').val();  // Send filter values to the server
+                        d.search_name = $('#search_name').val(); // Send filter values to the server
                         d.search_email = $('#search_email').val();
                         d.search_phone = $('#search_phone').val();
                         d.search_emp_code = $('#search_emp_code').val();
@@ -159,46 +172,59 @@
                         return Object.values(json.data);
                     }
                 },
-                columns: [
-                    { 
-                        data: null, 
+                columns: [{
+                        data: null,
                         render: function(data, type, row, meta) {
                             return meta.row + 1 + meta.settings._iDisplayStart;
                         }
                     },
-                    { data: 'user_code'},
-                    { data: 'first_name' },
-                    { data: 'middle_name' },
-                    { data: 'surname' },
-                    { data: 'phone_number' },
-                    { data: 'pendingLeaveBalance' },
+                    {
+                        data: 'user_code'
+                    },
+                    {
+                        data: 'first_name'
+                    },
+                    {
+                        data: 'middle_name'
+                    },
+                    {
+                        data: 'surname'
+                    },
+                    {
+                        data: 'phone_number'
+                    },
+                    {
+                        data: 'pendingLeaveBalance'
+                    },
                     {
                         data: 'status',
                         render: function(data, type, row) {
                             let statusOptions = ['Active', 'Inactive', 'Hold'];
-                            let statusDropdown = ''; 
+                            let statusDropdown = '';
                             @can('edit employee')
-                            statusDropdown = `<select name="employee_status" class="form-control" data-user-id="${row.id}" `;
-                            if (data === 'Active' && !@json(Auth::user()->hasRole('Admin'))) {
-                                statusDropdown += 'disabled';
-                            }
+                                statusDropdown =
+                                    `<select name="employee_status" class="form-control" data-user-id="${row.id}" `;
+                                if (data === 'Active' && !@json(Auth::user()->hasRole('Admin'))) {
+                                    statusDropdown += 'disabled';
+                                }
 
-                            statusDropdown += '>';
-                            statusDropdown += '<option value="" selected disabled>Select Status</option>';
+                                statusDropdown += '>';
+                                statusDropdown +=
+                                    '<option value="" selected disabled>Select Status</option>';
 
-                            const userDocuments = row.userDocuments || {};
+                                const userDocuments = row.userDocuments || {};
 
-                            statusOptions.forEach(function(value) {
-                                let disabled = '';
+                                statusOptions.forEach(function(value) {
+                                    let disabled = '';
 
-                                statusDropdown += `<option value="${value}" 
+                                    statusDropdown += `<option value="${value}" 
                                     ${data === value ? 'selected' : ''} 
                                     ${disabled}>
                                     ${value}
                                 </option>`;
-                            });
+                                });
 
-                            statusDropdown += '</select>';
+                                statusDropdown += '</select>';
                             @endcan
                             return statusDropdown;
                         }
@@ -208,7 +234,9 @@
                 paging: true,
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100],
-                order: [[0, 'asc']]
+                order: [
+                    [0, 'asc']
+                ]
             });
 
             $('#searchBtn').on('click', function() {
@@ -235,13 +263,13 @@
                                 '_token': '{{ csrf_token() }}'
                             },
                             success: function(response) {
-                                if(response.success){
+                                if (response.success) {
                                     swal({
                                         title: "Success!",
                                         text: response.message,
                                         type: "success",
                                         showConfirmButton: false
-                                    }) 
+                                    })
 
                                     setTimeout(() => {
                                         location.reload();
@@ -266,13 +294,13 @@
                         _token: '{{ csrf_token() }}'
                     },
                     success: function(response) {
-                        if(response.success){
+                        if (response.success) {
                             swal({
                                 title: "Success!",
                                 text: response.message,
                                 type: "success",
                                 showConfirmButton: false
-                            }) 
+                            })
 
                             setTimeout(() => {
                                 location.reload();

@@ -25,11 +25,17 @@ use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if (!Gate::allows('view employee')) {
             abort(403);
         }
+        $page = $request->input('page', 1);
+        $searchEmpCode = $request->input('search_emp_code');
+        $searchName = $request->input('search_name');
+        $searchEmail = $request->input('search_email');
+        $searchPhone = $request->input('search_phone');
+        $status = $request->input('status');
 
         $userRole = Role::where('id', 9)->first();
 
@@ -39,7 +45,15 @@ class EmployeeController extends Controller
 
         $employees = $query->with('userDocuments')->latest()->get();
 
-        return view('admin.employees.index', compact('employees'));
+        return view('admin.employees.index', compact(
+            'employees',
+            'page',
+            'searchEmpCode',
+            'searchName',
+            'searchEmail',
+            'searchPhone',
+            'status'
+        ));
     }
 
     public function getEmployee(Request $request)
