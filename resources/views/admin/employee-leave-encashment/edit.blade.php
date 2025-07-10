@@ -10,8 +10,13 @@
                         <h4 class="mb-sm-0 font-size-18">Edit Employee Leave Encashment</h4>
 
                         <div class="page-title-right">
-                            <a href="{{ route('employee-leave-encashment.index') }}" class="btn btn-primary"><i
-                                    class="bx bx-arrow-back"></i> Back to leave encashment</a>
+                            <a href="{{ route('employee-leave-encashment.index', [
+                                'page' => request()->input('page', 1),
+                                'employee_id' => request()->input('employee_id'),
+                            ]) }}"
+                                class="btn btn-primary">
+                                <i class="bx bx-arrow-back"></i> Back to leave encashment
+                            </a>
                         </div>
 
                     </div>
