@@ -140,8 +140,10 @@
                             `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${data.employee_id}" data-date="${data.created_date}">`;
                         actions += '<i class="fas fa-trash-alt"></i>';
                         actions += '</a>';
-                        actions +=
-                            `<a class="btn btn-primary waves-effect waves-light btn-sm leave-edit-btn" href="${editRoute}"><i class="fas fa-edit"></i></a>`;
+                        actions += `<a class="btn btn-primary waves-effect waves-light btn-sm leave-edit-btn" 
+    href="${editRoute}?page=${table.page() + 1}&leave_status=${encodeURIComponent($('#leave_status').val())}&month=${encodeURIComponent($('#month').val())}&year=${encodeURIComponent($('#year').val())}">
+    <i class="fas fa-edit"></i>
+</a>`;
                         actions += '</div>';
                         return actions;
                     }
@@ -151,6 +153,7 @@
             var table = $('#employee-leaves-list').DataTable({
                 processing: true,
                 serverSide: true,
+                stateSave: true,
                 ajax: {
                     url: "{{ route('get-employee-leaves-list') }}",
                     type: "POST",
@@ -213,8 +216,8 @@
                                         <li><a class="dropdown-item change-status" href="javascript:void(0);" 
                                             data-status="Approved" data-id="${data.employee_id}" data-date="${data.created_date}">Approve</a></li>
                                         ${row.status !== 'Cancelled' ? `
-                                                            <li><a class="dropdown-item change-status" href="javascript:void(0);" 
-                                                                data-status="Rejected" data-id="${data.employee_id}" data-date="${data.created_date}">Reject</a></li>` : ''}
+                                                                    <li><a class="dropdown-item change-status" href="javascript:void(0);" 
+                                                                        data-status="Rejected" data-id="${data.employee_id}" data-date="${data.created_date}">Reject</a></li>` : ''}
                                     </ul>
                                 </div>
                             `;

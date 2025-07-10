@@ -11,8 +11,15 @@
                         <h4 class="mb-sm-0 font-size-18">Edit Leave</h4>
 
                         <div class="page-title-right">
-                            <a href="{{ route('employee-leaves.index') }}" class="btn btn-primary"><i
-                                    class="bx bx-arrow-back"></i> Back to Leave Listing</a>
+                            <a href="{{ route('employee-leaves.index', [
+                                'page' => request()->input('page', 1),
+                                'leave_status' => request()->input('leave_status'),
+                                'month' => request()->input('month'),
+                                'year' => request()->input('year'),
+                            ]) }}"
+                                class="btn btn-primary">
+                                <i class="bx bx-arrow-back"></i> Back to Leave Listing
+                            </a>
                         </div>
 
                     </div>
