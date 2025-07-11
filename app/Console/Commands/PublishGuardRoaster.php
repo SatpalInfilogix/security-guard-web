@@ -442,7 +442,7 @@ class PublishGuardRoaster extends Command
             } else {
                 $taxFreeThreshold = $applicableThreshold->fortnightly;
             }
-            
+
             // 6,000,000 annual => 6,000,000 / 26 ≈ 230769.23
             $nextSlabFortnightly = 230769.23;
             if ($statutoryIncome < $taxFreeThreshold) {
@@ -456,14 +456,16 @@ class PublishGuardRoaster extends Command
                 $payeIncome = $payeData + $payeeThreshold;
             }
 
-            $eduction_tax = $statutoryIncome * 0.0225;
-            $employer_contribution = $totalGrossSalaryEarned * 0.035;
             if ($age >= 65) {
+                $eduction_tax = 0;
+                $employer_contribution = 0;
                 $nhtDeduction = 0;
                 $employerContributionNht = 0;
             } else {
                 $nhtDeduction = $totalGrossSalaryEarned * 0.02;
                 $employerContributionNht =  $totalGrossSalaryEarned * 0.03;
+                $eduction_tax = $statutoryIncome * 0.0225;
+                $employer_contribution = $totalGrossSalaryEarned * 0.035;
             }
 
             $hearttax = $totalGrossSalaryEarned * 0.03;
