@@ -11,7 +11,13 @@
                         <h4 class="mb-sm-0 font-size-18">Edit Public Holidays</h4>
 
                         <div class="page-title-right">
-                            <a href="{{ route('public-holidays.index') }}" class="btn btn-primary"><i class="bx bx-arrow-back"></i> Back to Public Holiday</a>
+                            <a href="{{ route('public-holidays.index', [
+                                'page' => request()->input('page', 1),
+                                'year' => request()->input('year'),
+                            ]) }}"
+                                class="btn btn-primary">
+                                <i class="bx bx-arrow-back"></i> Back to Public Holiday
+                            </a>
                         </div>
 
                     </div>
@@ -26,12 +32,13 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <form action="{{ route('public-holidays.update', $publicHoliday->id) }}" method="post" enctype="multipart/form-data">
+                            <form action="{{ route('public-holidays.update', $publicHoliday->id) }}" method="post"
+                                enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
                                 @include('admin.public-holidays.form')
-                            </form>    
-                        </div>    
+                            </form>
+                        </div>
                     </div>
                 </div> <!-- end col -->
             </div> <!-- end row -->

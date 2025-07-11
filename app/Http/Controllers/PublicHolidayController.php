@@ -8,19 +8,23 @@ use Illuminate\Support\Facades\Gate;
 
 class PublicHolidayController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        if(!Gate::allows('view public holiday')) {
+        if (!Gate::allows('view public holiday')) {
             abort(403);
         }
         $publicHolidays = PublicHoliday::latest()->get();
 
-        return view('admin.public-holidays.index', compact('publicHolidays'));
+        return view('admin.public-holidays.index', [
+            'publicHolidays' => $publicHolidays,
+            'page' => $request->input('page', 1),
+            'year' => $request->input('year')
+        ]);
     }
 
     public function create()
     {
-        if(!Gate::allows('create public holiday')) {
+        if (!Gate::allows('create public holiday')) {
             abort(403);
         }
         return view('admin.public-holidays.create');
@@ -28,7 +32,7 @@ class PublicHolidayController extends Controller
 
     public function store(Request $request)
     {
-        if(!Gate::allows('create public holiday')) {
+        if (!Gate::allows('create public holiday')) {
             abort(403);
         }
         $request->validate([
@@ -51,7 +55,7 @@ class PublicHolidayController extends Controller
 
     public function edit($id)
     {
-        if(!Gate::allows('edit public holiday')) {
+        if (!Gate::allows('edit public holiday')) {
             abort(403);
         }
         $publicHoliday = PublicHoliday::where('id', $id)->first();
@@ -61,7 +65,7 @@ class PublicHolidayController extends Controller
 
     public function update(Request $request, $id)
     {
-        if(!Gate::allows('edit public holiday')) {
+        if (!Gate::allows('edit public holiday')) {
             abort(403);
         }
         $request->validate([
@@ -81,7 +85,7 @@ class PublicHolidayController extends Controller
 
     public function destroy(string $id)
     {
-        if(!Gate::allows('delete public holiday')) {
+        if (!Gate::allows('delete public holiday')) {
             abort(403);
         }
         $user = PublicHoliday::where('id', $id)->delete();
