@@ -50,6 +50,7 @@ class RolesAndPermissionsSeeder extends Seeder
         }
 
         $roles = [
+            'Super Admin'=> Permission::all(),
             'Admin' => Permission::all(),
             'General Manager'       => ['view guard roster', 'create guard roster', 'edit guard roster'],
             'Manager Operations'    => ['view guard roster', 'create guard roster', 'edit guard roster'],

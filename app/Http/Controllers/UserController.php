@@ -18,7 +18,7 @@ class UserController extends Controller
             abort(403);
         }
 
-        $excludedRoles = [3, 9];
+        $excludedRoles = [3, 9,14];
 
         $users = User::whereHas('roles', function ($query) use ($excludedRoles) {
             $query->whereNotIn('role_id', $excludedRoles);
