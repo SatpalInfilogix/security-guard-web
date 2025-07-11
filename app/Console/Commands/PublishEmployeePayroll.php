@@ -605,11 +605,11 @@ class PublishEmployeePayroll extends Command
 
             if ($age >= 65) {
                 $eduction_tax = 0;
+                $employer_contribution=0;
             } else {
                 $eduction_tax = $statutoryIncome * 0.0225;
+                $employer_contribution = $statutoryIncome * 0.035;
             }
-
-            $employer_contribution = $statutoryIncome * 0.035;
 
             if ($age >= 65) {
                 $nhtDeduction = 0;
