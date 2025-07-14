@@ -55,7 +55,9 @@
                         @can('view leaves')
                             <li><a href="{{ route('leaves.index') }}">Leaves</a></li>
                         @endcan
-                        <li><a href="{{ route('guard-leave-encashment.index') }}">Pay In Lieu of Guard</a></li>
+                        @can('view guard encashment')
+                            <li><a href="{{ route('guard-leave-encashment.index') }}">Pay In Lieu of Guard</a></li>
+                        @endcan
                         @can('view client')
                             <li><a href="{{ route('clients.index') }}">Client listing</a></li>
                         @endcan
@@ -98,9 +100,13 @@
                             @can('view employee payroll')
                                 <li><a href="{{ route('employee-payroll.index') }}">Employee Payroll</a></li>
                             @endcan
-                            <li><a href="{{ route('employee-overtime.index') }}">Employee Overtime</a></li>
-                            <li><a href="{{ route('employee-leave-encashment.index') }}">Pay In Lieu of Employee</a></li>
-                            <li><a href="{{ route('get-interval') }}">Twenty Two Days Interval</a></li>
+                            @can('view employee overtime')
+                                <li><a href="{{ route('employee-overtime.index') }}">Employee Overtime</a></li>
+                            @endcan
+                            @can('view employee encashment')
+                                <li><a href="{{ route('employee-leave-encashment.index') }}">Pay In Lieu of Employee</a></li>
+                            @endcan
+                                <li><a href="{{ route('get-interval') }}">Twenty Two Days Interval</a></li>
                         </ul>
                     </li>
                 @endcanany

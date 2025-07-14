@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\UsersDocuments;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Gate;
@@ -18,7 +19,7 @@ class UserController extends Controller
             abort(403);
         }
 
-        $excludedRoles = [3, 9,14];
+        $excludedRoles = [3, 9, 14];
 
         $users = User::whereHas('roles', function ($query) use ($excludedRoles) {
             $query->whereNotIn('role_id', $excludedRoles);
@@ -140,21 +141,43 @@ class UserController extends Controller
         if (!Gate::allows('edit user')) {
             abort(403);
         }
+
         $request->validate([
-            'first_name'    => 'required',
-            'last_name'     => 'required',
-            'phone_no'      => 'required|unique:users,phone_number,' . $id,
+            'first_name' => 'required',
+            'last_name'  => 'required',
+            'phone_no'   => 'required|unique:users,phone_number,' . $id,
         ]);
 
-        $user = User::where('id', $id)->update([
-            'first_name'    => $request->first_name,
-            'last_name'     => $request->last_name,
-            'phone_number'  => $request->phone_no,
-            'password'      => Hash::make($request->password)
-        ]);
+        $user = User::findOrFail($id);
+
+        $user->first_name   = $request->first_name;
+        $user->last_name    = $request->last_name;
+        $user->phone_number = $request->phone_no;
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        $user->save();
+
+        if (
+            Auth::user()->hasAnyRole(['Super Admin', 'Admin']) && 
+            Auth::id() != $user->id &&                             
+            $request->filled('role')
+        ) {
+            $role = Role::find($request->role);
+
+            if ($role && $role->name !== 'Super Admin') {
+                $user->syncRoles([$role->name]);
+            } else {
+                return redirect()->back()->with('error', 'Invalid role assignment.');
+            }
+        }
 
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }
+
+
 
     public function destroy(string $id)
     {
