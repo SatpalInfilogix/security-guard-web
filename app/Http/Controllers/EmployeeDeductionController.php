@@ -16,12 +16,23 @@ use Illuminate\Support\Facades\Storage;
 
 class EmployeeDeductionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if (!Gate::allows('view employee deduction')) {
             abort(403);
         }
-        return view('admin.employee-deductions.index');
+        $page = $request->input('page', 1);
+        $searchName = $request->input('search_name');
+        $searchType = $request->input('search_type');
+        $searchDocumentDate = $request->input('search_document_date');
+        $searchPeriodDate = $request->input('search_period_date');
+        return view('admin.employee-deductions.index', compact(
+            'page',
+            'searchName',
+            'searchType',
+            'searchDocumentDate',
+            'searchPeriodDate'
+        ));
     }
     public function getDeductionsData(Request $request)
     {

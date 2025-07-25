@@ -27,7 +27,7 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <table id="datatable" class="client-list table table-bordered dt-responsive  nowrap w-100">
+                            <table id="client-list" class="client-list table table-bordered dt-responsive nowrap w-100">
                                 <thead>
                                     <tr>
                                         <th>#</th>
@@ -82,7 +82,7 @@
                 }];
             @endcanany
 
-            let clientTable = $('.client-list').DataTable({
+            let clientTable = $('#client-list').DataTable({
                 processing: true,
                 serverSide: true,
                 stateSave: true,

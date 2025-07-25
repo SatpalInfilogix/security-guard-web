@@ -67,7 +67,7 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <table id="datatable" class="table table-bordered dt-responsive  nowrap w-100">
+                            <table id="employee-leave-encashment" class="table table-bordered dt-responsive  nowrap w-100">
                                 <thead>
                                     <tr>
                                         <th>#</th>
@@ -89,8 +89,10 @@
                                             <td>{{ $encashment->created_at->format('Y-m-d') }}</td>
                                             <td>
                                                 @can('edit employee encashment')
-                                                    <a href="{{ route('employee-leave-encashment.edit', $encashment->id) }}"
-                                                        class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></a>
+                                                    <a href="{{ route('employee-leave-encashment.edit', [$encashment->id, 'page' => request()->input('page', 1), 'employee_id' => request('employee_id')]) }}"
+                                                        class="btn btn-sm btn-primary">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
                                                 @endcan
                                                 @can('delete employee encashment')
                                                     <button type="button" data-source="Employee Overtime"
@@ -121,6 +123,12 @@
             $('.select2').select2({
                 placeholder: "Select Employee",
                 allowClear: true
+            });
+            var table = $('#employee-leave-encashment').DataTable({
+                stateSave: true, 
+                paging: true,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
             });
             $('#importBtn').on('click', function() {
                 $('#fileInput').click();

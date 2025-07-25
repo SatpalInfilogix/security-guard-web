@@ -26,13 +26,22 @@ class LeaveEncashmentController extends Controller
         if (!Gate::allows('view employee encashment')) {
             abort(403);
         }
+
         $employees = User::role('employee')->get();
         $query = LeaveEncashment::with('employee')->latest();
+
         if ($request->filled('employee_id')) {
             $query->where('employee_id', $request->employee_id);
         }
+
         $encashments = $query->get();
-        return view('admin.employee-leave-encashment.index', compact('encashments', 'employees'));
+
+        return view('admin.employee-leave-encashment.index', [
+            'encashments' => $encashments,
+            'employees' => $employees,
+            'employeeId' => $request->input('employee_id'),
+            'page' => $request->input('page', 1),
+        ]);
     }
 
     /**
@@ -168,7 +177,7 @@ class LeaveEncashmentController extends Controller
         return response()->json(['pending_leaves' => $pendingLeaves]);
     }
 
-   
+
     public function import(Request $request)
     {
         $request->validate([
@@ -189,7 +198,6 @@ class LeaveEncashmentController extends Controller
 
             $filename = 'leave_encashment_import_result_' . now()->format('Ymd_His') . '.xlsx';
             return Excel::download(new LeaveEncashmentImportResultExport($results), $filename);
-
         } catch (\Exception $e) {
             return redirect()->back()->with([
                 'message' => 'Import failed: ' . $e->getMessage(),
@@ -197,8 +205,8 @@ class LeaveEncashmentController extends Controller
             ]);
         }
     }
-public function downloadSample()
-{
-    return Excel::download(new LeaveEncashmentSampleExport, 'leave_encashment_sample.xlsx');
-}
+    public function downloadSample()
+    {
+        return Excel::download(new LeaveEncashmentSampleExport, 'leave_encashment_sample.xlsx');
+    }
 }

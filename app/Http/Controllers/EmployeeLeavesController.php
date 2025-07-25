@@ -13,12 +13,21 @@ use Carbon\Carbon;
 
 class EmployeeLeavesController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         if (!Gate::allows('view employee leaves')) {
             abort(403);
         }
-        return view('admin.employee-leaves.index');
+        $page = $request->input('page', 1);
+        $leaveStatus = $request->input('leave_status');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        return view('admin.employee-leaves.index', compact(
+            'page',
+            'leaveStatus',
+            'month',
+            'year'
+        ));
     }
 
     public function create()
