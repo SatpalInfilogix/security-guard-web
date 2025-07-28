@@ -182,8 +182,8 @@ class PublishEmployeePayroll extends Command
             $query->where('role_id', $userRole->id);
         })->with('guardAdditionalInformation')->latest()->get();
 
-        // $today = Carbon::now()->startOfDay();
-        $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
+        $today = Carbon::now()->startOfDay();
+        // $today = Carbon::parse('25-02-2025')->startOfDay(); // For Manuall testing 
 
         $processingDate = $this->getProcessingDate($today);
 
@@ -237,7 +237,7 @@ class PublishEmployeePayroll extends Command
                                         }
                                         $currentDate->addDay();
                                     }
-                                    $normalDays = $workingDays;
+                                    $normalDays = min($workingDays, 22);
                                 }
                             } else {
                                 $workingDays = 0;
@@ -248,7 +248,7 @@ class PublishEmployeePayroll extends Command
                                     }
                                     $currentDate->addDay();
                                 }
-                                $normalDays = $workingDays;
+                                $normalDays = min($workingDays, 22);
                             }
                         }
 
@@ -446,18 +446,21 @@ class PublishEmployeePayroll extends Command
 
                 if ($excessLeaves > 0) {
                     if ($leavesCount > $excessLeaves) {
-                        $leaveNotPaid = $excessLeaves;
+                        $leaveNotPaid = min($excessLeaves, 22);
                         $leavePaid = max(0, $leavesCount - $leaveNotPaid);
                     } else {
-                        $leaveNotPaid = $leavesCount;
+                        $leaveNotPaid = min($leavesCount, 22);
                         $leavePaid = 0;
                     }
                 } else {
                     $leaveNotPaid = 0;
-                    $leavePaid = $leavesCount;
+                    $leavePaid = min($leavesCount, 22);
                 }
 
-                $grossSalary = $grossSalary - ($excessLeaves * $daySalary);
+                $maxDeductibleAmount = $normalDays * $daySalary;
+                $deductionAmount = min($excessLeaves * $daySalary, $maxDeductibleAmount);
+                $grossSalary = max(0, $grossSalary - $deductionAmount);
+
             } else {
                 $leavePaid = $leavesCount;
                 $leaveNotPaid = 0;
@@ -605,7 +608,7 @@ class PublishEmployeePayroll extends Command
 
             if ($age >= 65) {
                 $eduction_tax = 0;
-                $employer_contribution=0;
+                $employer_contribution = 0;
             } else {
                 $eduction_tax = $statutoryIncome * 0.0225;
                 $employer_contribution = $statutoryIncome * 0.035;
