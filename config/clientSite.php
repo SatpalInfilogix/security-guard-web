@@ -24,16 +24,129 @@ return [
         20 => 'Health & Pharma',
     ],
 
-    'region_code' => [
-        1 => 'NR',
-        2 => 'SR',
-        3 =>'KGN'
+    'region' => [
+        'NR' => 'North',
+        'SR' => 'South',
+        'KGN' => 'Kingston',
     ],
 
-    'region' => [
-        1 => 'North',
-        2 => 'South',
-        3 =>'Kingston'
+    'region_code' => [
+        'North' => 'NR',
+        'South' => 'SR',
+        'Kingston' => 'KGN',
+    ],
+
+    'region_reverse' => [
+        'North' => 'NR',
+        'South' => 'SR',
+        'Kingston' => 'KGN',
+    ],
+
+    'areas' => [
+        'NR' => [
+            [
+                'area_code' => 'Area 1',
+                'area' => 'St Mary',
+                'branch_manager' => 'Nigel Neil',
+                'asst_manager' => 'Micheal Collins',
+            ],
+            [
+                'area_code' => 'Area 2',
+                'area' => 'Portland',
+                'branch_manager' => 'Nigel Neil',
+                'asst_manager' => 'Micheal Collins',
+            ],
+            [
+                'area_code' => 'Area 3',
+                'area' => 'St James',
+                'branch_manager' => 'Nigel Neil',
+                'asst_manager' => 'Barrett',
+            ],
+            [
+                'area_code' => 'Area 4',
+                'area' => 'Trelawny',
+                'branch_manager' => 'Nigel Neil',
+                'asst_manager' => 'Micheal Collins',
+            ],
+            [
+                'area_code' => 'Area 5',
+                'area' => 'St Ann',
+                'branch_manager' => 'Nigel Neil',
+                'asst_manager' => 'Micheal Collins',
+            ],
+        ],
+
+        'SR' => [
+            [
+                'area_code' => 'Area 6',
+                'area' => 'Westmoreland',
+                'branch_manager' => 'Nicholas Brown',
+                'asst_manager' => 'Keith Morales',
+            ],
+            [
+                'area_code' => 'Area 7',
+                'area' => 'St Elizabeth',
+                'branch_manager' => 'Nicholas Brown',
+                'asst_manager' => 'Keith Morales',
+            ],
+            [
+                'area_code' => 'Area 8',
+                'area' => 'Manchester',
+                'branch_manager' => 'Nicholas Brown',
+                'asst_manager' => 'Keith Morales',
+            ],
+            [
+                'area_code' => 'Area 9',
+                'area' => 'Clarendon',
+                'branch_manager' => 'Nicholas Brown',
+                'asst_manager' => 'Yannick Watt',
+            ],
+            [
+                'area_code' => 'Area 10',
+                'area' => 'Heart Zone 5',
+                'branch_manager' => 'Nicholas Brown',
+                'asst_manager' => 'Yannick Watt',
+            ],
+            [
+                'area_code' => 'Area 11',
+                'area' => 'St Catherine',
+                'branch_manager' => 'Nicholas Brown',
+                'asst_manager' => 'Vacant',
+            ],
+        ],
+
+        'KGN' => [
+            [
+                'area_code' => 'Area 12',
+                'area' => 'St Thomas',
+                'branch_manager' => 'Nicholas Brown',
+                'asst_manager' => 'Micheal Collins',
+            ],
+            [
+                'area_code' => 'Area 13',
+                'area' => 'Kingston',
+                'branch_manager' => 'Nicholas Brown',
+                'asst_manager' => 'Salmon',
+            ],
+            [
+                'area_code' => 'Area 14',
+                'area' => 'Kingston',
+                'branch_manager' => 'Nicholas Brown',
+                'asst_manager' => 'French',
+            ],
+            [
+                'area_code' => 'Area 15',
+                'area' => 'Kingston',
+                'branch_manager' => 'Nicholas Brown',
+                'asst_manager' => 'Alicia Mitchell',
+            ],
+            [
+                'area_code' => 'Area 16',
+                'area' => 'Portmore',
+                'branch_manager' => 'Nicholas Brown',
+                'asst_manager' => 'Alicia Mitchell',
+            ],
+        ],
     ],
 
     'frequency' => [
