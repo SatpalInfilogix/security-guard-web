@@ -177,6 +177,56 @@ class LeaveEncashmentController extends Controller
         return response()->json(['pending_leaves' => $pendingLeaves]);
     }
 
+    // public function getPendingLeaves(Request $request)
+    // {
+    //     $employeeId = $request->employee_id;
+
+    //     if (!$employeeId) {
+    //         return response()->json(['pending_leaves' => 0]);
+    //     }
+
+    //     $yearlyLeaves = (int) setting('yearly_leaves') ?: 10;
+    //     $now = now();
+
+    //     $currentYear = $now->year;
+    //     $previousYear = $currentYear - 1;
+
+    //     // Step 1: Leaves used in previous year
+    //     $usedLastYear = EmployeeLeave::where('employee_id', $employeeId)
+    //         ->where('status', 'approved')
+    //         ->whereYear('date', $previousYear)
+    //         ->get()
+    //         ->sum(function ($leave) {
+    //             return $leave->type === 'Half Day' ? 0.5 : 1;
+    //         });
+
+    //     // Step 2: Carry forward unused leaves (optional: cap at 10)
+    //     $carryForwardLimit = 10;
+    //     $carryForwardLeaves = min(max(0, $yearlyLeaves - $usedLastYear), $carryForwardLimit);
+
+    //     // Step 3: Total available this year
+    //     $totalAvailableLeaves = $yearlyLeaves + $carryForwardLeaves;
+
+    //     // Step 4: Used leaves in current year
+    //     $usedThisYear = EmployeeLeave::where('employee_id', $employeeId)
+    //         ->where('status', 'approved')
+    //         ->whereYear('date', $currentYear)
+    //         ->get()
+    //         ->sum(function ($leave) {
+    //             return $leave->type === 'Half Day' ? 0.5 : 1;
+    //         });
+
+    //     // Step 5: Encashments in current year
+    //     $encashedLeaves = DB::table('leave_encashments')
+    //         ->where('employee_id', $employeeId)
+    //         ->whereYear('created_at', $currentYear)
+    //         ->sum('encash_leaves');
+
+    //     // Step 6: Calculate pending leaves
+    //     $pendingLeaves = max(0, $totalAvailableLeaves - $usedThisYear - $encashedLeaves);
+
+    //     return response()->json(['pending_leaves' => $pendingLeaves]);
+    // }
 
     public function import(Request $request)
     {

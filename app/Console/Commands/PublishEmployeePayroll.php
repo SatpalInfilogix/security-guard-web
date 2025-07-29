@@ -394,9 +394,33 @@ class PublishEmployeePayroll extends Command
         $grossSalary = $normalDays * $daySalary;
 
         $paidLeaveBalance = 0;
-        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
-
+        $baseYearlyLimit = (int) setting('yearly_leaves') ?: 10;
         $year = Carbon::parse($previousStartDate)->year;
+        // Previous year
+        $previousYear = $year - 1;
+        // Get total leaves taken in previous year
+        $usedLeavesLastYear = EmployeeLeave::where('employee_id', $employee->id)
+            ->where('status', 'Approved')
+            ->whereYear('date', $previousYear)
+            ->get()
+            ->sum(function ($leave) {
+                $leaveDate = Carbon::parse($leave->date);
+                if (
+                    $leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)
+                ) {
+                    return 0;
+                }
+                return ($leave->type === 'Half Day') ? 0.5 : 1;
+            });
+
+        // Calculate unused balance
+        $carryForwardLeaves = max(0, $baseYearlyLimit - $usedLeavesLastYear);
+        // Optional cap on carry forward
+        $carryForwardLimit = 10;
+        $carryForwardLeaves = min($carryForwardLeaves, $carryForwardLimit);
+        // Final paid leave limit for this year
+        $paidLeaveBalanceLimit = $baseYearlyLimit + $carryForwardLeaves;
+
         $lastDayOfDecember = Carbon::createFromDate($year, 12, 13);
         $leavesQuery = EmployeeLeave::where('employee_id', $employee->id)->where('status', 'Approved');
         $leavesCountInDecember = $leavesQuery->whereYear('date', $lastDayOfDecember->year)->get()
@@ -460,7 +484,6 @@ class PublishEmployeePayroll extends Command
                 $maxDeductibleAmount = $normalDays * $daySalary;
                 $deductionAmount = min($excessLeaves * $daySalary, $maxDeductibleAmount);
                 $grossSalary = max(0, $grossSalary - $deductionAmount);
-
             } else {
                 $leavePaid = $leavesCount;
                 $leaveNotPaid = 0;

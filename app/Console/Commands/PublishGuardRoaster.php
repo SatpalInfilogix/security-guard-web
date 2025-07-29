@@ -639,8 +639,19 @@ class PublishGuardRoaster extends Command
         $leaveNotPaid = 0;
 
         $paidLeaveBalance = 0;
-        $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
+        $baseYearlyLimit = (int) setting('yearly_leaves') ?: 10;
         $year = Carbon::parse($previousStartDate)->year;
+        $previousYear = $year - 1;
+        // Calculate leaves taken last year
+        $usedLeavesLastYear = Leave::where('guard_id', $userId)
+            ->where('status', 'Approved')
+            ->whereYear('date', $previousYear)
+            ->count();
+        // Carry forward logic
+        $carryForwardLeaves = max(0, $baseYearlyLimit - $usedLeavesLastYear);
+        $carryForwardLimit = 10;
+        $carryForwardLeaves = min($carryForwardLeaves, $carryForwardLimit);
+        $paidLeaveBalanceLimit = $baseYearlyLimit + $carryForwardLeaves;
         $lastDayOfDecember = Carbon::createFromDate($year, 12, 31);
         $leavesQuery = Leave::where('guard_id', $userId)->where('status', 'Approved');
         $leavesCountInDecember = $leavesQuery->whereYear('date', $lastDayOfDecember->year)->count();
