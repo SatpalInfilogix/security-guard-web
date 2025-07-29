@@ -14,7 +14,8 @@ class FortnightSeeder extends Seeder
      */
     public function run(): void
     {
-        $startDate = Carbon::now();
+        // $startDate = Carbon::now();
+        $startDate = Carbon::createFromFormat('Y-m-d', '2024-12-23');
 
         $endDate = $startDate->copy()->addYear();
 
