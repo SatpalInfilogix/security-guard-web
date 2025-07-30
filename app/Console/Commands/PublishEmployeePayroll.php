@@ -506,6 +506,126 @@ class PublishEmployeePayroll extends Command
         return [$leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary, $pendingLeaveAmount, $normalDaysSalary];
     }
 
+    // protected function calculateLeaveDetails($normalDays, $employee, $previousStartDate, $endDate, $daySalary)
+    // {
+    //     $leavePaid = 0;
+    //     $leaveNotPaid = 0;
+    //     $grossSalary = $normalDays * $daySalary;
+
+    //     $paidLeaveBalance = 0;
+
+    //     $baseSickLeaveLimit = (int) setting('yearly_leaves') ?: 10;
+    //     $vacationLeaveLimit = (int) setting('vacation_leaves') ?: 10;
+    //     $maternityLeaveLimit = (int) setting('maternity_leaves') ?: 44;
+
+    //     $year = Carbon::parse($previousStartDate)->year;
+    //     $previousYear = $year - 1;
+
+    //     // Carry Forward Sick Leaves (from last year)
+    //     $usedSickLeavesLastYear = EmployeeLeave::where('employee_id', $employee->id)
+    //         ->where('status', 'Approved')
+    //         ->where('leave_type', 'Sick Leave')
+    //         ->whereYear('date', $previousYear)
+    //         ->get()
+    //         ->sum(function ($leave) {
+    //             $date = Carbon::parse($leave->date);
+    //             if ($date->isWeekend() || $this->isPublicHoliday($date)) return 0;
+    //             return ($leave->type == 'Half Day') ? 0.5 : 1;
+    //         });
+
+    //     $carryForwardLimit = 10;
+    //     $carryForwardSick = min(max(0, $baseSickLeaveLimit - $usedSickLeavesLastYear), $carryForwardLimit);
+    //     $sickLeaveBalance = $baseSickLeaveLimit + $carryForwardSick;
+    //     $vacationLeaveBalance = 0;
+    //     $maternityLeaveBalance = $maternityLeaveLimit;
+
+    //     // Add vacation leave on anniversary
+    //     $joiningDate = Carbon::parse($employee->joining_date);
+    //     $anniversary = $joiningDate->copy()->year($year);
+    //     if ($anniversary->lt($joiningDate)) $anniversary->addYear();
+    //     if ($anniversary->between($previousStartDate, $endDate)) {
+    //         $vacationLeaveBalance = $vacationLeaveLimit;
+    //     }
+
+    //     // Collect leaves taken in this period by type
+    //     $leavesInRange = EmployeeLeave::where('employee_id', $employee->id)
+    //         ->where('status', 'Approved')
+    //         ->whereBetween('date', [$previousStartDate, $endDate])
+    //         ->get();
+
+    //     $leaveCounts = [
+    //         'Sick Leave' => 0,
+    //         'Vacation Leave' => 0,
+    //         'Maternity Leave' => 0,
+    //     ];
+
+    //     foreach ($leavesInRange as $leave) {
+    //         $date = Carbon::parse($leave->date);
+    //         if ($date->isWeekend() || $this->isPublicHoliday($date)) continue;
+
+    //         $units = ($leave->type == 'Half Day') ? 0.5 : 1;
+    //         $leaveCounts[$leave->leave_type] += $units;
+    //     }
+
+    //     // Deduct from respective balances
+    //     $unpaidLeaves = 0;
+    //     foreach ($leaveCounts as $type => $count) {
+    //         switch ($type) {
+    //             case 'Sick Leave':
+    //                 if ($count > $sickLeaveBalance) {
+    //                     $unpaidLeaves += ($count - $sickLeaveBalance);
+    //                     $leavePaid += $sickLeaveBalance;
+    //                     $sickLeaveBalance = 0;
+    //                 } else {
+    //                     $leavePaid += $count;
+    //                     $sickLeaveBalance -= $count;
+    //                 }
+    //                 break;
+
+    //             case 'Vacation Leave':
+    //                 if ($count > $vacationLeaveBalance) {
+    //                     $unpaidLeaves += ($count - $vacationLeaveBalance);
+    //                     $leavePaid += $vacationLeaveBalance;
+    //                     $vacationLeaveBalance = 0;
+    //                 } else {
+    //                     $leavePaid += $count;
+    //                     $vacationLeaveBalance -= $count;
+    //                 }
+    //                 break;
+
+    //             case 'Maternity Leave':
+    //                 if ($count > $maternityLeaveBalance) {
+    //                     $unpaidLeaves += ($count - $maternityLeaveBalance);
+    //                     $leavePaid += $maternityLeaveBalance;
+    //                     $maternityLeaveBalance = 0;
+    //                 } else {
+    //                     $leavePaid += $count;
+    //                     $maternityLeaveBalance -= $count;
+    //                 }
+    //                 break;
+    //         }
+    //     }
+
+    //     $leaveNotPaid = min($unpaidLeaves, 22);
+    //     $deductionAmount = $leaveNotPaid * $daySalary;
+    //     $grossSalary = max(0, $grossSalary - $deductionAmount);
+
+    //     $paidLeaveBalance = $sickLeaveBalance + $vacationLeaveBalance + $maternityLeaveBalance;
+    //     $pendingLeaveAmount = $paidLeaveBalance * $daySalary;
+    //     $normalDaysSalary = $grossSalary;
+
+    //     $leaveEncashments = LeaveEncashment::where('employee_id', $employee->id)
+    //         ->whereDate('created_at', '<=', $endDate)
+    //         ->get();
+
+    //     $encashLeaveDays = $leaveEncashments->sum('encash_leaves');
+    //     $encashLeaveAmount = $encashLeaveDays * $daySalary;
+
+    //     $grossSalary += $encashLeaveAmount;
+
+    //     return [$leavePaid, $leaveNotPaid, $paidLeaveBalance, $grossSalary, $pendingLeaveAmount, $normalDaysSalary];
+    // }
+
     public function calculateEmployeePayrollStatutory($employee, $previousStartDate, $endDate, $grossSalary, $daySalary)
     {
         $approvedPensionScheme = 0;
