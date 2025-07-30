@@ -34,6 +34,16 @@
                                         <x-form-input type="number" name="yearly_leaves" value="{{ old('yearly_leaves', setting('yearly_leaves')) }}" label="Yearly Leaves" placeholder="Enter Leaves" min=0 step="any"/>
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <x-form-input type="number" name="vacation_leaves" value="{{ old('vacation_leaves', setting('vacation_leaves')) }}" label="Vacation Leaves" placeholder="Enter Leaves" min=0 step="any"/>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <x-form-input type="number" name="maternity_leaves" value="{{ old('maternity_leaves', setting('maternity_leaves')) }}" label="Maternity Leaves" placeholder="Enter Leaves" min=0 step="any"/>
+                                    </div>
+                                </div>
                             </div>
 
                             <div>
