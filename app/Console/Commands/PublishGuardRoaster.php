@@ -705,6 +705,125 @@ class PublishGuardRoaster extends Command
         return [$leavePaid, $leaveNotPaid, $paidLeaveBalance, $leaveEncashmentAmount];
     }
 
+    // protected function calculateLeaveDetails($userId, $previousStartDate, $previousEndDate)
+    // {
+    //     $leavePaid = 0;
+    //     $leaveNotPaid = 0;
+    //     $paidLeaveBalance = 0;
+
+    //     // Limits
+    //     $baseSickLeaveLimit = (int) setting('yearly_leaves') ?: 10;
+    //     $vacationLeaveLimit = (int) setting('vacation_leaves') ?: 10;
+    //     $maternityLeaveLimit = (int) setting('maternity_leaves') ?: 44;
+
+    //     $year = Carbon::parse($previousStartDate)->year;
+    //     $previousYear = $year - 1;
+
+    //     // Carry Forward Sick Leaves
+    //     $usedSickLeavesLastYear = Leave::where('guard_id', $userId)
+    //         ->where('status', 'Approved')
+    //         ->where('leave_type', 'Sick Leave')
+    //         ->whereYear('date', $previousYear)
+    //         ->count();
+
+    //     $carryForwardLimit = 10;
+    //     $carryForwardSick = min(max(0, $baseSickLeaveLimit - $usedSickLeavesLastYear), $carryForwardLimit);
+    //     $sickLeaveBalance = $baseSickLeaveLimit + $carryForwardSick;
+
+    //     $vacationLeaveBalance = 0;
+    //     $maternityLeaveBalance = $maternityLeaveLimit;
+
+    //     // Add Vacation Leave only on anniversary
+    //     $joiningDate = optional(User::find($userId)->guardAdditionalInformation)->joining_date;
+    //     if ($joiningDate) {
+    //         $joiningDate = Carbon::parse($joiningDate);
+    //         $anniversary = $joiningDate->copy()->year($year);
+    //         if ($anniversary->lt($joiningDate)) $anniversary->addYear();
+
+    //         if ($anniversary->between($previousStartDate, $previousEndDate)) {
+    //             $vacationLeaveBalance = $vacationLeaveLimit;
+    //         }
+    //     }
+
+    //     // Fetch approved leaves in this period
+    //     $leavesInRange = Leave::where('guard_id', $userId)
+    //         ->where('status', 'Approved')
+    //         ->whereBetween('date', [$previousStartDate, $previousEndDate])
+    //         ->get();
+
+    //     // Count by type
+    //     $leaveCounts = [
+    //         'Sick Leave' => 0,
+    //         'Vacation Leave' => 0,
+    //         'Maternity Leave' => 0,
+    //     ];
+
+    //     foreach ($leavesInRange as $leave) {
+    //         $units = ($leave->type === 'Half Day') ? 0.5 : 1;
+    //         if (isset($leaveCounts[$leave->leave_type])) {
+    //             $leaveCounts[$leave->leave_type] += $units;
+    //         }
+    //     }
+
+    //     $unpaidLeaves = 0;
+
+    //     foreach ($leaveCounts as $type => $count) {
+    //         switch ($type) {
+    //             case 'Sick Leave':
+    //                 if ($count > $sickLeaveBalance) {
+    //                     $unpaidLeaves += ($count - $sickLeaveBalance);
+    //                     $leavePaid += $sickLeaveBalance;
+    //                     $sickLeaveBalance = 0;
+    //                 } else {
+    //                     $leavePaid += $count;
+    //                     $sickLeaveBalance -= $count;
+    //                 }
+    //                 break;
+
+    //             case 'Vacation Leave':
+    //                 if ($count > $vacationLeaveBalance) {
+    //                     $unpaidLeaves += ($count - $vacationLeaveBalance);
+    //                     $leavePaid += $vacationLeaveBalance;
+    //                     $vacationLeaveBalance = 0;
+    //                 } else {
+    //                     $leavePaid += $count;
+    //                     $vacationLeaveBalance -= $count;
+    //                 }
+    //                 break;
+
+    //             case 'Maternity Leave':
+    //                 if ($count > $maternityLeaveBalance) {
+    //                     $unpaidLeaves += ($count - $maternityLeaveBalance);
+    //                     $leavePaid += $maternityLeaveBalance;
+    //                     $maternityLeaveBalance = 0;
+    //                 } else {
+    //                     $leavePaid += $count;
+    //                     $maternityLeaveBalance -= $count;
+    //                 }
+    //                 break;
+    //         }
+    //     }
+
+    //     $leaveNotPaid = min($unpaidLeaves, 22); // or your business logic
+    //     $paidLeaveBalance = $sickLeaveBalance + $vacationLeaveBalance + $maternityLeaveBalance;
+
+    //     // Leave Encashment Calculation
+    //     $leaveEncashmentAmount = 0;
+    //     $leaveEncashments = GuardLeaveEncashment::where('guard_id', $userId)
+    //         ->whereBetween('created_at', [$previousStartDate, $previousEndDate])
+    //         ->get();
+
+    //     if ($leaveEncashments->count()) {
+    //         $hourlyRate = optional(optional(User::with('guardAdditionalInformation.rateMaster')->find($userId))->guardAdditionalInformation->rateMaster)->gross_hourly_rate;
+
+    //         foreach ($leaveEncashments as $encashment) {
+    //             $leaveEncashmentAmount += ($encashment->encash_leaves * 8) * $hourlyRate;
+    //         }
+    //     }
+
+    //     return [$leavePaid, $leaveNotPaid, $paidLeaveBalance, $leaveEncashmentAmount];
+    // }
+
     private function generateInvoice($payrollDetails, $startDate, $endDate)
     {
         $aggregatedData = $payrollDetails->groupBy('client_site_id')->map(function ($clientGroup, $clientSiteId) {
