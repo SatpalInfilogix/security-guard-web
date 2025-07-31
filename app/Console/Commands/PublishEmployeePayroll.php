@@ -514,6 +514,7 @@ class PublishEmployeePayroll extends Command
     //         $normalDaysSalary
     //     ];
     // }
+    
 
     protected function calculateLeaveDetails($normalDays, $employee, $previousStartDate, $endDate, $daySalary)
     {
@@ -579,7 +580,7 @@ class PublishEmployeePayroll extends Command
             });
 
         // December logic to set remaining balance
-        $lastDayOfDecember = Carbon::createFromDate($year, 12, 31);
+        $lastDayOfDecember = Carbon::createFromDate($year, 12, 13);
         $leavesInDecember = $leavesQuery->whereYear('date', $year)
             ->get()
             ->sum(function ($leave) {
