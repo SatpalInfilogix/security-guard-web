@@ -5,10 +5,10 @@
         <div class="mb-3">
             <label for="guard_id">Guard <span class="text-danger">*</span></label>
             <select name="guard_id" id="guard_id" class="form-control{{ $errors->has('guard_id') ? ' is-invalid' : '' }}">
-                <option value="" disabled {{ old('guard_id', $leave->guard_id ?? '') == '' ? 'selected' : '' }}>Select Guard</option>
+                <option value="" disabled {{ old('guard_id', $leave->guard_id ?? '') == '' ? 'selected' : '' }}>
+                    Select Guard</option>
                 @foreach ($securityGuards as $securityGuard)
-                    <option value="{{ $securityGuard->id }}"
-                        @selected(old('guard_id', $leave->guard_id ?? '') == $securityGuard->id)>
+                    <option value="{{ $securityGuard->id }}" @selected(old('guard_id', $leave->guard_id ?? '') == $securityGuard->id)>
                         {{ $securityGuard->first_name . ' ' . $securityGuard->surname }}
                     </option>
                 @endforeach
@@ -22,14 +22,8 @@
     {{-- Start Date --}}
     <div class="col-md-4 mb-3">
         <div class="show-input">
-            <x-form-input
-                id="start_date"
-                name="start_date"
-                value="{{ old('start_date', $leave->start_date ?? '') }}"
-                label="Start Date"
-                placeholder="Enter Start Date"
-                class="datePicker-leave"
-                type="text"
+            <x-form-input id="start_date" name="start_date" value="{{ old('start_date', $leave->start_date ?? '') }}"
+                label="Start Date" placeholder="Enter Start Date" class="datePicker-leave" type="text"
                 required="true" />
         </div>
     </div>
@@ -37,14 +31,8 @@
     {{-- End Date --}}
     <div class="col-md-4 mb-3">
         <div class="show-input">
-            <x-form-input
-                id="end_date"
-                name="end_date"
-                value="{{ old('end_date', $leave->end_date ?? '') }}"
-                label="End Date"
-                placeholder="Enter End Date"
-                class="datePicker-leave"
-                type="text" />
+            <x-form-input id="end_date" name="end_date" value="{{ old('end_date', $leave->end_date ?? '') }}"
+                label="End Date" placeholder="Enter End Date" class="datePicker-leave" type="text" />
         </div>
     </div>
 
@@ -57,39 +45,52 @@
         <select name="reason" id="reason" class="form-control">
             <option value="" selected disabled>Select Reason</option>
             @foreach ($reasons as $reason)
-                <option value="{{ $reason }}"
-                    @selected(old('reason', $leave->reason ?? '') == $reason)>
+                <option value="{{ $reason }}" @selected(old('reason', $leave->reason ?? '') == $reason)>
                     {{ $reason }}
                 </option>
             @endforeach
         </select>
     </div>
 
+    {{-- Leave Type --}}
+    <div class="col-md-4 mb-3">
+        <label for="leave_type">Leave Type <span class="text-danger">*</span></label>
+        <select name="leave_type" id="leave_type"
+            class="form-control{{ $errors->has('leave_type') ? ' is-invalid' : '' }}" required>
+            <option value="" disabled
+                {{ old('leave_type', $leave->leave_type ?? null) == null ? 'selected' : '' }}>
+                Select Leave Type
+            </option>
+            <option value="Sick Leave" @selected(old('leave_type', $leave->leave_type ?? null) == 'Sick Leave')>
+                Sick Leave
+            </option>
+            <option value="Vacation Leave" @selected(old('leave_type', $leave->leave_type ?? null) == 'Vacation Leave')>
+                Vacation Leave
+            </option>
+            <option value="Maternity Leave" @selected(old('leave_type', $leave->leave_type ?? null) == 'Maternity Leave')>
+                Maternity Leave
+            </option>
+        </select>
+        @error('leave_type')
+            <span class="invalid-feedback">{{ $message }}</span>
+        @enderror
+    </div>
+
     {{-- Actual Start Date --}}
     <div class="col-md-4 mb-3">
         <div class="show-input">
-            <x-form-input
-                id="actual_start_date"
-                name="actual_start_date"
-                value="{{ old('actual_start_date', $leave->actual_start_date ?? '') }}"
-                label="Actual Start Date"
-                placeholder="Enter Actual Start Date"
-                class="datePicker-leave"
-                type="text" />
+            <x-form-input id="actual_start_date" name="actual_start_date"
+                value="{{ old('actual_start_date', $leave->actual_start_date ?? '') }}" label="Actual Start Date"
+                placeholder="Enter Actual Start Date" class="datePicker-leave" type="text" />
         </div>
     </div>
 
     {{-- Actual End Date --}}
     <div class="col-md-4 mb-3">
         <div class="show-input">
-            <x-form-input
-                id="actual_end_date"
-                name="actual_end_date"
-                value="{{ old('actual_end_date', $leave->actual_end_date ?? '') }}"
-                label="Actual End Date"
-                placeholder="Enter Actual End Date"
-                class="datePicker-leave"
-                type="text" />
+            <x-form-input id="actual_end_date" name="actual_end_date"
+                value="{{ old('actual_end_date', $leave->actual_end_date ?? '') }}" label="Actual End Date"
+                placeholder="Enter Actual End Date" class="datePicker-leave" type="text" />
         </div>
     </div>
 

@@ -202,6 +202,7 @@ class LeaveController extends Controller
             'guard_id'       => 'required',
             'start_date' => 'required|date',
             'end_date'   => 'nullable|date|after_or_equal:start_date',
+            'leave_type' => 'required|string|in:Sick Leave,Vacation Leave,Maternity Leave',
             'actual_start_date'  => 'nullable|date',
             'actual_end_date'    => 'nullable|date|after_or_equal:actual_start_date',
         ]);
@@ -227,6 +228,7 @@ class LeaveController extends Controller
                     'guard_id'    => $request->guard_id,
                     'date'        => $date,
                     'reason'      => $request->reason,
+                    'leave_type'  => $request->leave_type,
                     'description' => $request->description,
                     'actual_start_date' => $request->actual_start_date ? Carbon::parse($request->actual_start_date) : null,
                     'actual_end_date'   => $request->actual_end_date ? Carbon::parse($request->actual_end_date) : null,
@@ -251,6 +253,7 @@ class LeaveController extends Controller
             DB::raw('MAX(date) as end_date'),
             DB::raw('MIN(status) as status'),
             DB::raw('MIN(reason) as reason'),
+            DB::raw('MIN(leave_type) as leave_type'),
             DB::raw('MIN(actual_start_date) as actual_start_date'),
             DB::raw('MIN(actual_end_date) as actual_end_date'),
             DB::raw('MIN(description) as description'),
@@ -282,6 +285,7 @@ class LeaveController extends Controller
         $request->validate([
             'start_date' => 'required|date',
             'end_date'   => 'nullable|date|after_or_equal:start_date',
+            'leave_type' => 'required|string|in:Sick Leave,Vacation Leave,Maternity Leave',
             'actual_start_date'  => 'nullable|date',
             'actual_end_date'    => 'nullable|date|after_or_equal:actual_start_date',
             'reason' => 'required|string'
@@ -318,6 +322,7 @@ class LeaveController extends Controller
                 'guard_id'    => $guardId,
                 'date'        => $date,
                 'reason'      => $request->reason,
+                'leave_type'  => $request->leave_type,
                 'description' => $request->description,
                 'actual_start_date' => $request->actual_start_date ? Carbon::parse($request->actual_start_date) : null,
                 'actual_end_date'   => $request->actual_end_date ? Carbon::parse($request->actual_end_date) : null,

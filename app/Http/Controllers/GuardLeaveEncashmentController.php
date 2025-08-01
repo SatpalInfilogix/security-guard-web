@@ -22,7 +22,7 @@ class GuardLeaveEncashmentController extends Controller
 {
     public function index(Request $request)
     {
-        if(!Gate::allows('view guard encashment')) {
+        if (!Gate::allows('view guard encashment')) {
             abort(403);
         }
 
@@ -45,7 +45,7 @@ class GuardLeaveEncashmentController extends Controller
 
     public function create()
     {
-        if(!Gate::allows('create guard encashment')) {
+        if (!Gate::allows('create guard encashment')) {
             abort(403);
         }
 
@@ -61,7 +61,7 @@ class GuardLeaveEncashmentController extends Controller
 
     public function store(Request $request)
     {
-        if(!Gate::allows('create guard encashment')) {
+        if (!Gate::allows('create guard encashment')) {
             abort(403);
         }
 
@@ -88,7 +88,7 @@ class GuardLeaveEncashmentController extends Controller
 
     public function edit($id)
     {
-        if(!Gate::allows('edit guard encashment')) {
+        if (!Gate::allows('edit guard encashment')) {
             abort(403);
         }
 
@@ -106,7 +106,7 @@ class GuardLeaveEncashmentController extends Controller
 
     public function update(Request $request, $id)
     {
-        if(!Gate::allows('edit guard encashment')) {
+        if (!Gate::allows('edit guard encashment')) {
             abort(403);
         }
 
@@ -135,7 +135,7 @@ class GuardLeaveEncashmentController extends Controller
 
     public function destroy($id)
     {
-        if(!Gate::allows('delete guard encashment')) {
+        if (!Gate::allows('delete guard encashment')) {
             abort(403);
         }
 
@@ -181,8 +181,70 @@ class GuardLeaveEncashmentController extends Controller
         return response()->json(['pending_leaves' => $pendingLeaves]);
     }
 
+    // public function getPendingLeaves(Request $request)
+    // {
+    //     $guardId = $request->guard_id;
 
-       public function import(Request $request)
+    //     if (!$guardId) {
+    //         return response()->json(['pending_leaves' => 0]);
+    //     }
+
+    //     $userRole = Role::find(3);
+
+    //     $guard = User::where('id', $guardId)
+    //         ->where('status', 'Active')
+    //         ->whereHas('roles', function ($query) use ($userRole) {
+    //             $query->where('role_id', $userRole->id);
+    //         })->first();
+
+    //     if (!$guard) {
+    //         return response()->json(['pending_leaves' => 0]);
+    //     }
+
+    //     $yearlyLeaves = (int) setting('yearly_leaves') ?: 10;
+    //     $carryForwardLimit = 10; // You can adjust this if needed
+
+    //     $now = now();
+    //     $currentYear = $now->year;
+    //     $previousYear = $currentYear - 1;
+
+    //     // Step 1: Leaves used in previous year
+    //     $usedLastYear = Leave::where('guard_id', $guardId)
+    //         ->where('status', 'approved')
+    //         ->whereYear('date', $previousYear)
+    //         ->get()
+    //         ->sum(function ($leave) {
+    //             return $leave->type === 'Half Day' ? 0.5 : 1;
+    //         });
+
+    //     // Step 2: Carry Forward Leaves
+    //     $carryForward = min(max(0, $yearlyLeaves - $usedLastYear), $carryForwardLimit);
+
+    //     // Step 3: Total available leaves this year
+    //     $totalAvailable = $yearlyLeaves + $carryForward;
+
+    //     // Step 4: Leaves used this year
+    //     $usedThisYear = Leave::where('guard_id', $guardId)
+    //         ->where('status', 'approved')
+    //         ->whereYear('date', $currentYear)
+    //         ->get()
+    //         ->sum(function ($leave) {
+    //             return $leave->type === 'Half Day' ? 0.5 : 1;
+    //         });
+
+    //     // Step 5: Leaves encashed this year
+    //     $encashedLeaves = DB::table('guard_leave_encashments')
+    //         ->where('guard_id', $guardId)
+    //         ->whereYear('created_at', $currentYear)
+    //         ->sum('encash_leaves');
+
+    //     // Step 6: Final pending leaves
+    //     $pendingLeaves = max(0, $totalAvailable - $usedThisYear - $encashedLeaves);
+
+    //     return response()->json(['pending_leaves' => $pendingLeaves]);
+    // }
+
+    public function import(Request $request)
     {
         $request->validate([
             'import_file' => 'required|file|mimes:xlsx,csv',
@@ -203,7 +265,6 @@ class GuardLeaveEncashmentController extends Controller
 
             $filename = 'guard_leave_encashment_result_' . now()->format('Ymd_His') . '.xlsx';
             return Excel::download(new GuardLeaveEncashmentResultExport($results), $filename);
-
         } catch (\Exception $e) {
             return redirect()->back()->with([
                 'message' => 'Import failed: ' . $e->getMessage(),

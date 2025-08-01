@@ -55,8 +55,25 @@
     </div>
 
     <div class="col-md-3 mb-3">
-        <label for="description">Description</label>
-        <textarea name="description" id="description" class="form-control">{{ old('description', $leave->description ?? '') }}</textarea>
+        <label for="leave_type">Leave Type <span class="text-danger">*</span></label>
+        <select name="leave_type" id="leave_type" class="form-control" required>
+            <option value="" disabled
+                {{ old('leave_type', $leave->leave_type ?? null) == null ? 'selected' : '' }}>
+                Select Leave Type
+            </option>
+            <option value="Sick Leave" @selected(old('leave_type', $leave->leave_type ?? null) == 'Sick Leave')>
+                Sick Leave
+            </option>
+            <option value="Vacation Leave" @selected(old('leave_type', $leave->leave_type ?? null) == 'Vacation Leave')>
+                Vacation Leave
+            </option>
+            <option value="Maternity Leave" @selected(old('leave_type', $leave->leave_type ?? null) == 'Maternity Leave')>
+                Maternity Leave
+            </option>
+        </select>
+        @error('leave_type')
+            <span class="invalid-feedback">{{ $message }}</span>
+        @enderror
     </div>
 
     <div class="col-md-3 mb-3">
@@ -73,6 +90,11 @@
                 value="{{ old('actual_end_date', $leave->actual_end_date ?? '') }}" label="Actual End Date"
                 placeholder="Enter Actual End Date" class="datePicker-leave" type="text" />
         </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+        <label for="description">Description</label>
+        <textarea name="description" id="description" class="form-control">{{ old('description', $leave->description ?? '') }}</textarea>
     </div>
 </div>
 
