@@ -47,10 +47,12 @@
         <select name="reason" id="reason" class="form-control">
             <option value="" disabled>Select Reason</option>
             <option value="Sick Leave" @selected(old('reason', $leave->reason ?? '') == 'Sick Leave')>Sick Leave</option>
-            <option value="Marrage Leave" @selected(old('reason', $leave->reason ?? '') == 'Marrage Leave')>Marrage Leave</option>
+            <option value="Maternity Leave" @selected(old('reason', $leave->reason ?? '') == 'Maternity Leave')>Maternity Leave</option>
             <option value="Vacation Leave" @selected(old('reason', $leave->reason ?? '') == 'Vacation Leave')>Vacation Leave</option>
             <option value="Personal Leave" @selected(old('reason', $leave->reason ?? '') == 'Personal Leave')>Personal Leave</option>
             <option value="Other Leave" @selected(old('reason', $leave->reason ?? '') == 'Other Leave')>Other Leave</option>
+            <option value="Compassionate leave" @selected(old('reason', $leave->reason ?? '') == 'Compassionate leave')>Compassionate leave</option>
+            <option value="Jury leave" @selected(old('reason', $leave->reason ?? '') == 'Jury leave')>Jury leave</option>
         </select>
     </div>
 

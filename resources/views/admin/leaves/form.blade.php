@@ -4,7 +4,8 @@
     <div class="col-md-4">
         <div class="mb-3">
             <label for="guard_id">Guard <span class="text-danger">*</span></label>
-            <select name="guard_id" id="guard_id" class="form-control{{ $errors->has('guard_id') ? ' is-invalid' : '' }}">
+            <select name="guard_id" id="guard_id"
+                class="form-control select2{{ $errors->has('guard_id') ? ' is-invalid' : '' }}">
                 <option value="" disabled {{ old('guard_id', $leave->guard_id ?? '') == '' ? 'selected' : '' }}>
                     Select Guard</option>
                 @foreach ($securityGuards as $securityGuard)
@@ -111,3 +112,23 @@
 
 {{-- Include date picker plugin --}}
 <x-include-plugins :plugins="['datePicker']" />
+
+@push('scripts')
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2
+            $('#guard_id').select2({
+                placeholder: 'Select a guard',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#guard_id').parent()
+            });
+
+            // Maintain validation error display
+            $('#guard_id').on('change', function() {
+                $(this).removeClass('is-invalid');
+                $(this).next('.invalid-feedback').remove();
+            });
+        });
+    </script>
+@endpush
