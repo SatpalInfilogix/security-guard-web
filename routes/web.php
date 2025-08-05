@@ -81,9 +81,10 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
         Route::put('employee-leaves/{id}/{date?}', [EmployeeLeavesController::class, 'update'])->name('employee-leaves.update');
         Route::delete('employee-leaves/{id}/{date?}', [EmployeeLeavesController::class, 'destroy'])->name('employee-leaves.destroy');
 
-        Route::get('leaves/{id}/{date?}/edit', [LeaveController::class, 'edit'])->name('leaves.modify');
-        Route::put('/leaves/{guardId}/{createdDate}', [LeaveController::class, 'update'])->name('leaves.update');
-        Route::delete('/leaves/{id}/{date?}', [LeaveController::class, 'destroy'])->name('leaves.destroy');
+        Route::get('leaves/{guardId}/edit/{batchId}', [LeaveController::class, 'edit'])->name('leaves.modify');
+        //Route::get('leaves/{id}/{date?}/edit', [LeaveController::class, 'edit'])->name('leaves.modify');
+        Route::put('leaves/{guardId}/{batchId}', [LeaveController::class, 'update'])->name('leaves.update');
+        Route::delete('/leaves/{guardId}/{batchId?}', [LeaveController::class, 'destroy'])->name('leaves.destroy');
         Route::get('send-leave-notification/{id?}/{status?}', [LeaveController::class, 'sendNotificationAfterLeave'])->name('leaves.sendNotification');
 
         Route::get('/get-pending-leaves', [LeaveEncashmentController::class, 'getPendingLeaves'])->name('get-pending-leaves');

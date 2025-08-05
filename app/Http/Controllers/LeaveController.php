@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Services\PushNotificationService;
+use Illuminate\Support\Str;
 
 class LeaveController extends Controller
 {
@@ -57,21 +58,21 @@ class LeaveController extends Controller
     public function updateStatus($guardId, Request $request)
     {
         $request->validate([
-            'status' => 'required',
-            'created_date' => 'required|date',
+            'status' => 'required|string',
+            'batch_id' => 'required|uuid', // expect valid UUID
         ]);
 
-        $createdDate = $request->created_date;
+        $batchId = $request->batch_id;
 
-        // Fetch leaves for this guard and created date
+        // Fetch all leave records in the batch for this guard
         $leaves = Leave::where('guard_id', $guardId)
-            ->whereDate('created_at', $createdDate)
+            ->where('batch_id', $batchId)
             ->get();
 
         if ($leaves->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Leave records not found for this user and date.'
+                'message' => 'Leave records not found for this guard and batch ID.'
             ], 404);
         }
 
@@ -82,18 +83,15 @@ class LeaveController extends Controller
             ], 400);
         }
 
-        // Update all related leave entries
         foreach ($leaves as $leave) {
             $leave->status = $request->status;
+
             if ($request->status === 'Rejected') {
                 $leave->rejection_reason = $request->rejection_reason;
             }
+
             $leave->save();
         }
-
-        // $title = 'Leave Status Update';
-        // $body = "Your leave status has been updated: {$request->status}";
-        // $this->pushNotificationService->sendNotification($guardId, $title, $body);
 
         return response()->json([
             'success' => true,
@@ -128,17 +126,17 @@ class LeaveController extends Controller
     {
         $query = Leave::select(
             'guard_id',
-            DB::raw('DATE(created_at) as created_date'),
+            'batch_id',
             DB::raw('MIN(date) as start_date'),
             DB::raw('MAX(date) as end_date'),
             DB::raw('MIN(status) as status'),
             DB::raw('MIN(reason) as reason'),
             DB::raw('MIN(actual_start_date) as actual_start_date'),
             DB::raw('MIN(actual_end_date) as actual_end_date'),
-            DB::raw('MIN(description) as description'),
+            DB::raw('MIN(description) as description')
         )
-            ->groupBy('guard_id', DB::raw('DATE(created_at)'))
-            ->with('user');
+        ->groupBy('guard_id', 'batch_id')
+        ->with('user');
 
         if ($request->has('leave_status') && !empty($request->leave_status)) {
             $query->where('status', $request->leave_status);
@@ -179,6 +177,8 @@ class LeaveController extends Controller
     }
 
 
+
+
     public function create()
     {
         if (!Gate::allows('create leaves')) {
@@ -198,6 +198,7 @@ class LeaveController extends Controller
         if (!Gate::allows('create leaves')) {
             abort(403);
         }
+
         $request->validate([
             'guard_id'       => 'required',
             'start_date' => 'required|date',
@@ -218,6 +219,9 @@ class LeaveController extends Controller
         $conflictingDates = [];
         $createdDates = [];
 
+        // Generate a unique batch ID for this leave request
+        $batchId = Str::uuid();
+
         foreach ($dates as $date) {
             $existingLeave = Leave::where('guard_id', $request->guard_id)->whereDate('date', $date)->exists();
 
@@ -225,13 +229,14 @@ class LeaveController extends Controller
                 $conflictingDates[] = $date->toDateString();
             } else {
                 Leave::create([
-                    'guard_id'    => $request->guard_id,
-                    'date'        => $date,
-                    'reason'      => $request->reason,
-                    'leave_type'  => $request->leave_type,
-                    'description' => $request->description,
+                    'guard_id'          => $request->guard_id,
+                    'date'              => $date,
+                    'reason'            => $request->reason,
+                    'leave_type'        => $request->leave_type,
+                    'description'       => $request->description,
                     'actual_start_date' => $request->actual_start_date ? Carbon::parse($request->actual_start_date) : null,
                     'actual_end_date'   => $request->actual_end_date ? Carbon::parse($request->actual_end_date) : null,
+                    'batch_id'          => $batchId,
                 ]);
                 $createdDates[] = $date->toDateString();
             }
@@ -244,112 +249,147 @@ class LeaveController extends Controller
         return redirect()->route('leaves.index')->with('success', 'Leave created successfully for the following dates: ' . implode(', ', $createdDates));
     }
 
-    public function edit($guardId, $date)
+    public function edit($guardId, $batchId)
     {
-        $leave = Leave::select(
-            'guard_id',
-            DB::raw('DATE(created_at) as created_date'),
-            DB::raw('MIN(date) as start_date'),
-            DB::raw('MAX(date) as end_date'),
-            DB::raw('MIN(status) as status'),
-            DB::raw('MIN(reason) as reason'),
-            DB::raw('MIN(leave_type) as leave_type'),
-            DB::raw('MIN(actual_start_date) as actual_start_date'),
-            DB::raw('MIN(actual_end_date) as actual_end_date'),
-            DB::raw('MIN(description) as description'),
-        )
-            ->where('guard_id', $guardId)
-            ->whereDate('created_at', $date)
-            ->groupBy('guard_id', DB::raw('DATE(created_at)'))
+        // Fetch all leaves for the given guard and batch
+        $leaves = Leave::where('guard_id', $guardId)
+            ->where('batch_id', $batchId)
             ->with('user')
-            ->first();
+            ->orderBy('date')
+            ->get();
 
-        if (!$leave) {
-            abort(404, 'Leave record not found for given user and date.');
+        if ($leaves->isEmpty()) {
+            abort(404, 'Leave records not found for the specified guard and batch.');
         }
-        $userRole = Role::where('id', 3)->first();
 
-        $securityGuards = User::with('guardAdditionalInformation')->whereHas('roles', function ($query) use ($userRole) {
-            $query->where('role_id', $userRole->id);
-        })->where('status', 'Active')->latest()->get();
+        // Build a pseudo leave object similar to getLeave()
+        $leave = new \stdClass();
+        $leave->guard_id = $guardId;
+        $leave->batch_id = $batchId;
+        $leave->start_date = $leaves->min('date');
+        $leave->end_date = $leaves->max('date');
+        $leave->status = $leaves->min('status');
+        $leave->reason = $leaves->min('reason');
+        $leave->actual_start_date = $leaves->min('actual_start_date');
+        $leave->actual_end_date = $leaves->min('actual_end_date');
+        $leave->description = $leaves->min('description');
+        $leave->leave_type = $leaves->min('leave_type');
+        $leave->user = $leaves->first()->user; // Attach user for dropdowns etc.
 
-        return view('admin.leaves.edit', compact('leave', 'securityGuards'));
+        // Dates for the leave period (if needed for frontend logic)
+        $leaveDates = $leaves->pluck('date')->toArray();
+
+        // Get security guards for dropdown
+        $userRole = Role::find(3);
+        $securityGuards = User::with('guardAdditionalInformation')
+            ->whereHas('roles', function ($query) use ($userRole) {
+                $query->where('role_id', $userRole->id);
+            })
+            ->where('status', 'Active')
+            ->latest()
+            ->get();
+        // dd($leave);
+        return view('admin.leaves.edit', [
+            'leave' => $leave,
+            'leaveDates' => $leaveDates,
+            'securityGuards' => $securityGuards
+        ]);
     }
 
-    public function update(Request $request, $guardId, $createdDate)
+    public function update(Request $request, $guardId, $batchId)
     {
         if (!Gate::allows('edit leaves')) {
             abort(403);
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'start_date' => 'required|date',
-            'end_date'   => 'nullable|date|after_or_equal:start_date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
             'leave_type' => 'required|string|in:Sick Leave,Vacation Leave,Maternity Leave',
-            'actual_start_date'  => 'nullable|date',
-            'actual_end_date'    => 'nullable|date|after_or_equal:actual_start_date',
-            'reason' => 'required|string'
+            'actual_start_date' => 'nullable|date',
+            'actual_end_date' => 'nullable|date|after_or_equal:actual_start_date',
+            'reason' => 'required|string',
+            'description' => 'nullable|string'
         ]);
 
-        $start_date = Carbon::parse($request->start_date);
-        $end_date = $request->end_date ? Carbon::parse($request->end_date) : $start_date;
+        try {
+            DB::beginTransaction();
 
-        if ($end_date->lt($start_date)) {
-            return redirect()->route('leaves.index')->with('error', 'End date cannot be earlier than start date.');
+            $startDate = Carbon::parse($validated['start_date']);
+            $endDate = $validated['end_date'] ? Carbon::parse($validated['end_date']) : $startDate;
+
+            if ($endDate->lt($startDate)) {
+                return back()->with('error', 'End date cannot be earlier than start date.');
+            }
+
+            // Fetch the original leave group
+            $originalLeaves = Leave::where('guard_id', $guardId)
+                ->where('batch_id', $batchId)
+                ->get();
+
+            if ($originalLeaves->isEmpty()) {
+                return back()->with('error', 'Original leave records not found.');
+            }
+
+            $originalCreatedAt = $originalLeaves->first()->created_at;
+
+            // Delete existing records in this batch
+            Leave::where('guard_id', $guardId)
+                ->where('batch_id', $batchId)
+                ->delete();
+
+            // Recreate leave entries with the same batch ID
+            $period = Carbon::parse($startDate)->toPeriod($endDate);
+
+            foreach ($period as $date) {
+                Leave::create([
+                    'guard_id'          => $guardId,
+                    'date'              => $date->format('Y-m-d'),
+                    'reason'            => $validated['reason'],
+                    'leave_type'        => $validated['leave_type'],
+                    'description'       => $validated['description'],
+                    'actual_start_date' => $validated['actual_start_date'] ? Carbon::parse($validated['actual_start_date']) : null,
+                    'actual_end_date'   => $validated['actual_end_date'] ? Carbon::parse($validated['actual_end_date']) : null,
+                    'batch_id'          => $batchId,
+                    'created_at'        => $originalCreatedAt,
+                    'updated_at'        => now(),
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('leaves.index')
+                ->with('success', 'Leave updated successfully');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error updating leave: ' . $e->getMessage());
         }
-
-        // Step 1: Get original created_at timestamp
-        $originalCreatedAt = Leave::where('guard_id', $guardId)
-            ->whereDate('created_at', $createdDate)
-            ->orderBy('created_at')
-            ->value('created_at');
-
-        if (!$originalCreatedAt) {
-            return redirect()->route('leaves.index')->with('error', 'Original leave record not found.');
-        }
-
-        // Step 2: Delete existing leaves in this group
-        Leave::where('guard_id', $guardId)
-            ->whereDate('created_at', $createdDate)
-            ->delete();
-
-        // Step 3: Re-create leave records with the original created_at
-        $dates = Carbon::parse($start_date)->toPeriod($end_date, '1 day');
-        $createdDates = [];
-
-        foreach ($dates as $date) {
-            Leave::create([
-                'guard_id'    => $guardId,
-                'date'        => $date,
-                'reason'      => $request->reason,
-                'leave_type'  => $request->leave_type,
-                'description' => $request->description,
-                'actual_start_date' => $request->actual_start_date ? Carbon::parse($request->actual_start_date) : null,
-                'actual_end_date'   => $request->actual_end_date ? Carbon::parse($request->actual_end_date) : null,
-                'created_at'  => $originalCreatedAt,
-            ]);
-            $createdDates[] = $date->toDateString();
-        }
-
-        return redirect()->route('leaves.index')->with('success', 'Leave updated successfully');
     }
 
-
-    public function destroy($guardId, $date = null)
+    public function destroy($guardId, $batchId = null)
     {
         if (!Gate::allows('delete leaves')) {
             abort(403);
         }
 
-        if (!$date) {
+        if (!$batchId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Date is required for deletion.'
+                'message' => 'Batch ID is required for deletion.'
             ], 400);
         }
-        Leave::where('guard_id', $guardId)
-            ->whereDate('created_at', $date)
+
+        $deleted = Leave::where('guard_id', $guardId)
+            ->where('batch_id', $batchId)
             ->delete();
+
+        if ($deleted === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No leave records found for the provided batch ID.'
+            ], 404);
+        }
 
         return response()->json([
             'success' => true,
