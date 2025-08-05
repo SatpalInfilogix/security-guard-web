@@ -528,7 +528,7 @@ class PublishEmployeePayroll extends Command
         $leaveTypes = [
             'Sick Leave' => (int) setting('yearly_leaves') ?: 10,
             'Vacation Leave' => (int) setting('vacation_leaves') ?: 10,
-            'Maternity Leave' => (int) setting('maternity_leaves') ?: 44,
+            'Maternity Leave' => (int) setting('maternity_leaves') ?: 56,
         ];
 
         $year = Carbon::parse($previousStartDate)->year;
