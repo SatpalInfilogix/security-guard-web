@@ -132,19 +132,26 @@
                 actionColumn = [{
                     data: null,
                     render: function(data, type, row) {
-                        var editUrlTemplate =
-                            "{{ route('leaves.modify', ['id' => '__ID__', 'date' => '__DATE__']) }}";
-                        var editRoute = editUrlTemplate.replace('__ID__', data.guard_id).replace(
-                            '__DATE__', data.created_date);
-                        var actions = '<div class="action-buttons">';
-                        actions +=
-                            `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="javascript:void(0);" data-source="Leave" data-id="${data.guard_id}" data-date="${data.created_date}">`;
-                        actions += '<i class="fas fa-trash-alt"></i>';
-                        actions += '</a>';
-                        actions +=
-                            `<a class="btn btn-primary waves-effect waves-light btn-sm leave-edit-btn" href="${editRoute}" ><i class="fas fa-edit"></i></a>`;
-                        actions += '</div>';
+                        // Clean URL construction using template literals
+                        var editRoute = "{{ route('leaves.modify', ['guardId' => ':id', 'batchId' => ':batch']) }}"
+                            .replace(':id', data.guard_id)
+                            .replace(':batch', data.batch_id);
 
+                        var actions = `
+                            <div class="action-buttons">
+                                <a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" 
+                                href="javascript:void(0);" 
+                                data-source="Leave" 
+                                data-id="${data.guard_id}" 
+                                data-batch_id="${data.batch_id}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                                <a class="btn btn-primary waves-effect waves-light btn-sm leave-edit-btn" 
+                                href="${editRoute}">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        `;
                         return actions;
                     }
                 }];
@@ -155,7 +162,7 @@
             var table = $('#leaves-list').DataTable({
                 processing: true,
                 serverSide: true,
-                stateSave: true, // Add this line to enable state saving
+                stateSave: true,
                 ajax: {
                     url: "{{ route('get-leaves-list') }}",
                     type: "POST",
@@ -165,69 +172,46 @@
                         d.month = $('#month').val();
                         d.year = $('#year').val();
                         return d;
-                    },
-                    dataSrc: function(response) {
-                        return response.data;
                     }
                 },
-                columns: [{
-                        data: null,
-                        render: function(data, type, row, meta) {
-                            return meta.row + 1 + meta.settings._iDisplayStart;
-                        }
-                    },
-                    {
-                        data: 'user.first_name',
-                        render: function(data, type, row) {
-                            return row.user ? `${row.user.first_name} ${row.user.surname ?? ''}` :
-                                'N/A';
-                        }
-                    },
-                    {
-                        data: 'start_date'
-                    },
-                    {
-                        data: 'end_date'
-                    },
-                    {
-                        data: 'actual_start_date',
-                        render: function(data, type, row) {
-                            return data ? data : 'N/A';
-                        }
-                    },
-                    {
-                        data: 'actual_end_date',
-                        render: function(data, type, row) {
-                            return data ? data : 'N/A';
-                        }
-                    },
-                    {
-                        data: 'reason'
-                    },
-                    {
-                        data: null,
-                        name: 'status',
-                        render: function(data, type, row) {
-                            return `
-                                <div class="dropdown">
-                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="statusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                        ${row.status}
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="statusDropdown">
-                                        <li><a class="dropdown-item" href="javascript:void(0);" data-status="Approved" data-id="${data.guard_id}" data-date="${data.created_date}">Approve</a></li>
-                                        ${row.status !== 'Cancelled' ? `<li><a class="dropdown-item" href="javascript:void(0);" data-status="Rejected" data-id="${data.guard_id}" data-date="${data.created_date}">Reject</a></li>` : ''}
-                                    </ul>
-                                </div>
-                            `;
-                        }
-                    },
+                columns: [
+                    {data: null, render: function(data, type, row, meta) {
+                        return meta.row + 1 + meta.settings._iDisplayStart;
+                    }},
+                    {data: 'user.first_name', render: function(data, type, row) {
+                        return row.user ? `${row.user.first_name} ${row.user.surname ?? ''}` : 'N/A';
+                    }},
+                    {data: 'start_date'},
+                    {data: 'end_date'},
+                    {data: 'actual_start_date', render: function(data) {
+                        return data ? data : 'N/A';
+                    }},
+                    {data: 'actual_end_date', render: function(data) {
+                        return data ? data : 'N/A';
+                    }},
+                    {data: 'reason'},
+                    {data: null, name: 'status', render: function(data, type, row) {
+                        return `
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" 
+                                    id="statusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    ${row.status}
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="statusDropdown">
+                                    <li><a class="dropdown-item change-status" href="javascript:void(0);" 
+                                        data-status="Approved" data-id="${row.guard_id}" data-batch_id="${row.batch_id}">Approve</a></li>
+                                    ${row.status !== 'Cancelled' ? `
+                                        <li><a class="dropdown-item change-status" href="javascript:void(0);" 
+                                            data-status="Rejected" data-id="${row.guard_id}" data-batch_id="${row.batch_id}">Reject</a></li>` : ''}
+                                </ul>
+                            </div>
+                        `;
+                    }},
                     ...actionColumn
                 ]
             });
 
-            $('#searchBtn').click(function() {
-                table.draw();
-            });
+            $('#searchBtn').click(function() { table.draw(); });
 
             $('#resetBtn').click(function() {
                 $('#leave_status, #month, #year').val('');
@@ -244,9 +228,9 @@
 
         $(document).on('click', '.leave-delete-btn', function() {
             let source = $(this).data('source');
-            let leaveId = $(this).data('id');
-            let createDate = $(this).data('date');
-            var deleteApiEndpoint = "{{ route('leaves.destroy', '') }}/" + leaveId + "/" + createDate;
+            let guardId = $(this).data('id');
+            let batch_id = $(this).data('batch_id');
+            var deleteApiEndpoint = "{{ route('leaves.destroy', '') }}/" + guardId + "/" + batch_id;
 
             swal({
                 title: "Are you sure?",
@@ -259,9 +243,7 @@
                     $.ajax({
                         url: deleteApiEndpoint,
                         method: 'DELETE',
-                        data: {
-                            '_token': '{{ csrf_token() }}'
-                        },
+                        data: {'_token': '{{ csrf_token() }}'},
                         success: function(response) {
                             if (response.success) {
                                 swal({
@@ -271,9 +253,7 @@
                                     timer: 1500,
                                     showConfirmButton: false
                                 });
-
-                                $('#leaves-list').DataTable().ajax.reload(null,
-                                false); 
+                                table.draw(false);
                             }
                         }
                     });
@@ -281,17 +261,18 @@
             });
         });
 
+
         $(document).ready(function() {
             let leaveId = null;
-            $(document).on('click', '.dropdown-item', function() {
+            $(document).on('click', '.change-status', function() {
                 const newStatus = $(this).data('status');
-                const leaveId = $(this).data('id');
-                const createdDate = $(this).data('date');
+                const guardId = $(this).data('id');
+                const batch_id = $(this).data('batch_id');
                 const statusButton = $(this).closest('tr').find('.dropdown-toggle');
 
                 if (newStatus === 'Rejected') {
-                    $('#leaveId').val(leaveId);
-                    $('#confirmReject').attr('data-date', createdDate);
+                    $('#leaveId').val(guardId);
+                    $('#confirmReject').attr('data-batch_id', batch_id);
                     $('#rejectModal').modal('show');
                 } else {
                     swal({
@@ -302,8 +283,7 @@
                         closeOnConfirm: false,
                     }, function(isConfirm) {
                         if (isConfirm) {
-                            statusButton.text(newStatus);
-                            updateLeaveStatus(leaveId, newStatus, '', createdDate);
+                            updateLeaveStatus(guardId, newStatus, '', batch_id);
                         }
                     });
                 }
@@ -311,8 +291,9 @@
 
             $('#confirmReject').on('click', function() {
                 const rejectionReason = $('#rejectionReason').val();
-                const leaveId = $('#leaveId').val();
-                const createdDate = $(this).data('date');
+                const guardId = $('#leaveId').val();
+                const batch_id = $(this).data('batch_id');
+                
                 if (!rejectionReason) {
                     swal({
                         title: "Error!",
@@ -322,30 +303,18 @@
                     });
                     return;
                 }
+                
                 $('#rejectModal').modal('hide');
-                swal({
-                    title: "Are you sure?",
-                    text: `You are about to change the status to "Rejected". Do you want to proceed?`,
-                    type: "warning",
-                    showCancelButton: true,
-                    closeOnConfirm: false,
-                }, function(isConfirm) {
-                    if (isConfirm) {
-                        updateLeaveStatus(leaveId, 'Rejected', rejectionReason, createdDate);
-                    }
-                });
+                updateLeaveStatus(guardId, 'Rejected', rejectionReason, batch_id);
             });
 
-            function updateLeaveStatus(leaveId, newStatus, rejectionReason = null, createdDate = null) {
-                // Get the current page before making the update
-                var currentPage = table.page();
-
+            function updateLeaveStatus(guardId, newStatus, rejectionReason = null, batch_id = null) {
                 $.ajax({
-                    url: `/leaves/${leaveId}/update-status`,
+                    url: `/leaves/${guardId}/update-status`,
                     method: 'POST',
                     data: {
                         status: newStatus,
-                        created_date: createdDate,
+                        batch_id: batch_id,
                         rejection_reason: rejectionReason,
                         _token: '{{ csrf_token() }}'
                     },
@@ -355,35 +324,19 @@
                                 title: "Success!",
                                 text: "Status updated successfully.",
                                 type: "success",
+                                timer: 1500,
                                 showConfirmButton: false
                             });
-
-                            // Send notification in background (don't wait for response)
+                            table.ajax.reload(null, false);
+                            
+                            // Send notification if needed
                             if (response.guardId) {
                                 $.ajax({
                                     url: `{{ route('leaves.sendNotification') }}/${response.guardId}/${response.status}`,
-                                    type: 'GET',
+                                    type: 'GET'
                                 });
                             }
-
-                            // Instead of reloading the page, redraw the table and return to the same page
-                            table.draw(false).page(currentPage).draw('page');
-                        } else {
-                            swal({
-                                title: "Error!",
-                                text: "There was an issue updating the status. Please try again.",
-                                type: "error",
-                                showConfirmButton: true
-                            });
                         }
-                    },
-                    error: function() {
-                        swal({
-                            title: "Error!",
-                            text: "There was an issue updating the status. Please try again.",
-                            type: "error",
-                            showConfirmButton: true
-                        });
                     }
                 });
             }

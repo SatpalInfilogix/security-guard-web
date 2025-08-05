@@ -26,9 +26,10 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <form action="{{ route('leaves.update',[$leave->guard_id, $leave->created_date]) }}" method="post" enctype="multipart/form-data">
+                            <form action="{{ route('leaves.update', ['guardId' => $leave->guard_id, 'batchId' => $leave->batch_id]) }}" method="post" enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
+                                <input type="hidden" name="startDate" value="{{ $leave->start_date }}">
                                 @include('admin.leaves.form')
                             </form>    
                         </div>    
