@@ -138,7 +138,7 @@
                             '__DATE__', data.created_date);
                         var actions = '<div class="action-buttons">';
                         actions +=
-                            `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${data.guard_id}" data-date="${data.created_date}">`;
+                            `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="javascript:void(0);" data-source="Leave" data-id="${data.guard_id}" data-date="${data.created_date}">`;
                         actions += '<i class="fas fa-trash-alt"></i>';
                         actions += '</a>';
                         actions +=
@@ -247,9 +247,6 @@
             let leaveId = $(this).data('id');
             let createDate = $(this).data('date');
             var deleteApiEndpoint = "{{ route('leaves.destroy', '') }}/" + leaveId + "/" + createDate;
-            
-            // Get current page before deletion
-            var currentPage = table.page();
 
             swal({
                 title: "Are you sure?",
@@ -271,14 +268,15 @@
                                     title: "Success!",
                                     text: response.message,
                                     type: "success",
+                                    timer: 1500,
                                     showConfirmButton: false
-                                })
+                                });
 
-                                // Redraw table and stay on the same page
-                                table.draw(false).page(currentPage).draw('page');
+                                $('#leaves-list').DataTable().ajax.reload(null,
+                                false); 
                             }
                         }
-                    })
+                    });
                 }
             });
         });
@@ -337,10 +335,11 @@
                     }
                 });
             });
+
             function updateLeaveStatus(leaveId, newStatus, rejectionReason = null, createdDate = null) {
                 // Get the current page before making the update
                 var currentPage = table.page();
-                
+
                 $.ajax({
                     url: `/leaves/${leaveId}/update-status`,
                     method: 'POST',
@@ -358,7 +357,7 @@
                                 type: "success",
                                 showConfirmButton: false
                             });
-                            
+
                             // Send notification in background (don't wait for response)
                             if (response.guardId) {
                                 $.ajax({
@@ -366,7 +365,7 @@
                                     type: 'GET',
                                 });
                             }
-                            
+
                             // Instead of reloading the page, redraw the table and return to the same page
                             table.draw(false).page(currentPage).draw('page');
                         } else {
