@@ -176,9 +176,6 @@ class LeaveController extends Controller
         ]);
     }
 
-
-
-
     public function create()
     {
         if (!Gate::allows('create leaves')) {
