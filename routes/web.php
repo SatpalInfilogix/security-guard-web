@@ -77,9 +77,9 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
             'employee-tax-threshold'  => EmployeeTaxThresholdController::class,
             'guard-tax-threshold'   =>   GuardTaxThresholdController::class,
         ]);
-        Route::get('employee-leaves/{id}/{date?}/edit', [EmployeeLeavesController::class, 'edit'])->name('employee-leaves.modify');
-        Route::put('employee-leaves/{id}/{date?}', [EmployeeLeavesController::class, 'update'])->name('employee-leaves.update');
-        Route::delete('employee-leaves/{id}/{date?}', [EmployeeLeavesController::class, 'destroy'])->name('employee-leaves.destroy');
+        Route::get('employee-leaves/{id}/{batchId?}/edit', [EmployeeLeavesController::class, 'edit'])->name('employee-leaves.modify');
+        Route::put('employee-leaves/{id}/{batchId?}', [EmployeeLeavesController::class, 'update'])->name('employee-leaves.update');
+        Route::delete('employee-leaves/{id}/{batchId?}', [EmployeeLeavesController::class, 'destroy'])->name('employee-leaves.destroy');
 
         Route::get('leaves/{guardId}/edit/{batchId}', [LeaveController::class, 'edit'])->name('leaves.modify');
         //Route::get('leaves/{id}/{date?}/edit', [LeaveController::class, 'edit'])->name('leaves.modify');

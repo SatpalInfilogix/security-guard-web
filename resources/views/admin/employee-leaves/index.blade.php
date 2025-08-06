@@ -131,13 +131,13 @@
                 actionColumn = [{
                     data: null,
                     render: function(data, type, row) {
-                        var editUrlTemplate =
-                            "{{ route('employee-leaves.modify', ['id' => '__ID__', 'date' => '__DATE__']) }}";
-                        var editRoute = editUrlTemplate.replace('__ID__', data.employee_id).replace(
-                            '__DATE__', data.created_date);
+                        var editRoute = "{{ route('employee-leaves.modify', ['id' => ':id', 'batchId' => ':batch']) }}"
+                            .replace(':id', data.employee_id)
+                            .replace(':batch', data.batch_id);
+
                         var actions = '<div class="action-buttons">';
                         actions +=
-                            `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${data.employee_id}" data-date="${data.created_date}">`;
+                            `<a class="btn btn-danger waves-effect waves-light btn-sm leave-delete-btn" href="#" data-source="Leave" data-id="${data.employee_id}" data-batch_id="${data.batch_id}">`;
                         actions += '<i class="fas fa-trash-alt"></i>';
                         actions += '</a>';
                         actions += `<a class="btn btn-primary waves-effect waves-light btn-sm leave-edit-btn" 
@@ -214,10 +214,10 @@
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="statusDropdown">
                                         <li><a class="dropdown-item change-status" href="javascript:void(0);" 
-                                            data-status="Approved" data-id="${data.employee_id}" data-date="${data.created_date}">Approve</a></li>
+                                            data-status="Approved" data-id="${data.employee_id}" data-batch_id="${data.batch_id}">Approve</a></li>
                                         ${row.status !== 'Cancelled' ? `
                                                                     <li><a class="dropdown-item change-status" href="javascript:void(0);" 
-                                                                        data-status="Rejected" data-id="${data.employee_id}" data-date="${data.created_date}">Reject</a></li>` : ''}
+                                                                        data-status="Rejected" data-id="${data.employee_id}" data-batch_id="${data.batch_id}">Reject</a></li>` : ''}
                                     </ul>
                                 </div>
                             `;
@@ -246,9 +246,9 @@
             $(document).on('click', '.leave-delete-btn', function() {
                 let source = $(this).data('source');
                 let leaveId = $(this).data('id');
-                let createDate = $(this).data('date');
+                let batch_id = $(this).data('batch_id');
                 var deleteApiEndpoint = "{{ route('employee-leaves.destroy', '') }}/" + leaveId + "/" +
-                    createDate;
+                    batch_id;
 
                 swal({
                     title: "Are you sure?",
@@ -285,12 +285,12 @@
             $(document).on('click', '.change-status', function() {
                 const newStatus = $(this).data('status');
                 const leaveId = $(this).data('id');
-                const createdDate = $(this).data('date');
+                const batch_id = $(this).data('batch_id');
                 const statusButton = $(this).closest('tr').find('.dropdown-toggle');
 
                 if (newStatus === 'Rejected') {
                     $('#leaveId').val(leaveId);
-                    $('#confirmReject').attr('data-date', createdDate);
+                    $('#confirmReject').attr('data-batch_id', batch_id);
                     $('#rejectModal').modal('show');
                 } else {
                     swal({
@@ -302,7 +302,7 @@
                     }, function(isConfirm) {
                         if (isConfirm) {
                             statusButton.text(newStatus);
-                            updateLeaveStatus(leaveId, newStatus, '', createdDate);
+                            updateLeaveStatus(leaveId, newStatus, '', batch_id);
                         }
                     });
                 }
@@ -311,7 +311,7 @@
             $('#confirmReject').on('click', function() {
                 const rejectionReason = $('#rejectionReason').val();
                 const leaveId = $('#leaveId').val();
-                const createdDate = $(this).data('date');
+                const batch_id = $(this).data('batch_id');
 
                 if (!rejectionReason) {
                     swal({
@@ -332,18 +332,18 @@
                     closeOnConfirm: false,
                 }, function(isConfirm) {
                     if (isConfirm) {
-                        updateLeaveStatus(leaveId, 'Rejected', rejectionReason, createdDate);
+                        updateLeaveStatus(leaveId, 'Rejected', rejectionReason, batch_id);
                     }
                 });
             });
 
-            function updateLeaveStatus(leaveId, newStatus, rejectionReason = null, createdDate = null) {
+            function updateLeaveStatus(leaveId, newStatus, rejectionReason = null, batch_id = null) {
                 $.ajax({
                     url: `/employee-leaves/${leaveId}/update-status`,
                     method: 'POST',
                     data: {
                         status: newStatus,
-                        created_date: createdDate,
+                        batch_id: batch_id,
                         rejection_reason: rejectionReason,
                         _token: '{{ csrf_token() }}'
                     },
