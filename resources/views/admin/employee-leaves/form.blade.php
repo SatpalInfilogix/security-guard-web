@@ -3,7 +3,7 @@
         <div class="mb-3">
             <label for="employee_id">Employee <span class="text-danger">*</span></label>
             <select name="employee_id" id="employee_id"
-                class="form-control{{ $errors->has('employee_id') ? ' is-invalid' : '' }}">
+                class="form-control select2{{ $errors->has('employee_id') ? ' is-invalid' : '' }}">
                 <option value="" disabled
                     {{ old('employee_id', $leave->employee_id ?? '') == '' ? 'selected' : '' }}>Select Employee</option>
                 @foreach ($employees as $employee)
@@ -110,6 +110,18 @@
 
 <script>
     $(document).ready(function() {
+        
+        $('#employee_id').select2({
+            placeholder: 'Select an employee',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#employee_id').parent()
+        });
+
+        $('#employee_id').on('change', function() {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').remove();
+        });
 
         $('#type').change(function() {
             if ($(this).val() === 'Half Day') {
