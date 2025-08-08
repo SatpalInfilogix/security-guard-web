@@ -3,7 +3,7 @@
         <div class="mb-3">
             <label for="employee_id">Employee <span class="text-danger">*</span></label>
             <select name="employee_id" id="employee_id"
-                class="form-control{{ $errors->has('employee_id') ? ' is-invalid' : '' }}">
+                class="form-control select2{{ $errors->has('employee_id') ? ' is-invalid' : '' }}">
                 <option value="" disabled
                     {{ old('employee_id', $leave->employee_id ?? '') == '' ? 'selected' : '' }}>Select Employee</option>
                 @foreach ($employees as $employee)
@@ -47,10 +47,12 @@
         <select name="reason" id="reason" class="form-control">
             <option value="" disabled>Select Reason</option>
             <option value="Sick Leave" @selected(old('reason', $leave->reason ?? '') == 'Sick Leave')>Sick Leave</option>
-            <option value="Marrage Leave" @selected(old('reason', $leave->reason ?? '') == 'Marrage Leave')>Marrage Leave</option>
+            <option value="Maternity Leave" @selected(old('reason', $leave->reason ?? '') == 'Maternity Leave')>Maternity Leave</option>
             <option value="Vacation Leave" @selected(old('reason', $leave->reason ?? '') == 'Vacation Leave')>Vacation Leave</option>
             <option value="Personal Leave" @selected(old('reason', $leave->reason ?? '') == 'Personal Leave')>Personal Leave</option>
             <option value="Other Leave" @selected(old('reason', $leave->reason ?? '') == 'Other Leave')>Other Leave</option>
+            <option value="Compassionate leave" @selected(old('reason', $leave->reason ?? '') == 'Compassionate leave')>Compassionate leave</option>
+            <option value="Jury leave" @selected(old('reason', $leave->reason ?? '') == 'Jury leave')>Jury leave</option>
         </select>
     </div>
 
@@ -108,6 +110,18 @@
 
 <script>
     $(document).ready(function() {
+        
+        $('#employee_id').select2({
+            placeholder: 'Select an employee',
+            allowClear: true,
+            width: '100%',
+            dropdownParent: $('#employee_id').parent()
+        });
+
+        $('#employee_id').on('change', function() {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').remove();
+        });
 
         $('#type').change(function() {
             if ($(this).val() === 'Half Day') {

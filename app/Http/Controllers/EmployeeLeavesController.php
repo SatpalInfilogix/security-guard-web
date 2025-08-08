@@ -90,9 +90,15 @@ class EmployeeLeavesController extends Controller
             });
         }
 
+        // Get total records count before pagination
+        $totalRecords = EmployeeLeave::select('employee_id', 'batch_id')
+        ->groupBy('employee_id', 'batch_id')
+        ->get()
+        ->count();
+
         // ✅ Pagination
         $countQuery = (clone $query);
-        $totalRecords = $countQuery->count();
+        // $totalRecords = $countQuery->count();
 
         $length = $request->input('length', 10);
         $start = $request->input('start', 0);
