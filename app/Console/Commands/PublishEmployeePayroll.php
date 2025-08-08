@@ -182,8 +182,8 @@ class PublishEmployeePayroll extends Command
             $query->where('role_id', $userRole->id);
         })->with('guardAdditionalInformation')->latest()->get();
 
-        // $today = Carbon::now()->startOfDay();
-        $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
+        $today = Carbon::now()->startOfDay();
+        // $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
 
         $processingDate = $this->getProcessingDate($today);
 
@@ -387,8 +387,138 @@ class PublishEmployeePayroll extends Command
         return $processingDate;
     }
 
+    // protected function calculateLeaveDetails($normalDays, $employee, $previousStartDate, $endDate, $daySalary)
+    // {
+    //     $leavePaid = 0;
+    //     $leaveNotPaid = 0;
+    //     $grossSalary = $normalDays * $daySalary;
+
+    //     $paidLeaveBalance = 0;
+    //     $baseYearlyLimit = (int) setting('yearly_leaves') ?: 10;
+
+    //     $year = Carbon::parse($previousStartDate)->year;
+    //     $previousYear = $year - 1;
+
+    //     $hasPreviousYearLeaves = EmployeeLeave::where('employee_id', $employee->id)
+    //         ->where('status', 'Approved')
+    //         ->whereYear('date', $previousYear)
+    //         ->exists();
+
+    //     $usedLeavesLastYear = 0;
+    //     $carryForwardLeaves = 0;
+
+    //     if ($hasPreviousYearLeaves) {
+    //         $usedLeavesLastYear = EmployeeLeave::where('employee_id', $employee->id)
+    //             ->where('status', 'Approved')
+    //             ->whereYear('date', $previousYear)
+    //             ->get()
+    //             ->sum(function ($leave) {
+    //                 $leaveDate = Carbon::parse($leave->date);
+    //                 if ($leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)) {
+    //                     return 0;
+    //                 }
+    //                 return ($leave->type === 'Half Day') ? 0.5 : 1;
+    //             });
+
+    //         $carryForwardLeaves = max(0, $baseYearlyLimit - $usedLeavesLastYear);
+    //         $carryForwardLimit = 10;
+    //         $carryForwardLeaves = min($carryForwardLeaves, $carryForwardLimit);
+    //     }
+
+    //     $paidLeaveBalanceLimit = $baseYearlyLimit + $carryForwardLeaves;
+
+    //     $lastDayOfDecember = Carbon::createFromDate($year, 12, 13);
+    //     $leavesQuery = EmployeeLeave::where('employee_id', $employee->id)
+    //         ->where('status', 'Approved');
+
+    //     $leavesCountInDecember = $leavesQuery->whereYear('date', $lastDayOfDecember->year)->get()
+    //         ->sum(function ($leave) {
+    //             $leaveDate = Carbon::parse($leave->date);
+    //             if ($leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)) {
+    //                 return 0;
+    //             }
+    //             return ($leave->type == 'Half Day') ? 0.5 : 1;
+    //         });
+
+    //     if ($lastDayOfDecember->between($previousStartDate, $endDate)) {
+    //         $paidLeaveBalance = max(0, $paidLeaveBalanceLimit - $leavesCountInDecember);
+    //     }
+
+    //     $leavesCount = $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])->get()
+    //         ->sum(function ($leave) {
+    //             $leaveDate = Carbon::parse($leave->date);
+    //             if ($leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)) {
+    //                 return 0;
+    //             }
+    //             return ($leave->type == 'Half Day') ? 0.5 : 1;
+    //         });
+
+    //     $totalApprovedLeaves = $leavesCount;
+    //     if ($leavesCount > 0) {
+    //         $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)
+    //             ->where('status', 'Approved')
+    //             ->whereDate('date', '<', $previousStartDate)
+    //             ->get()
+    //             ->sum(function ($leave) {
+    //                 $leaveDate = Carbon::parse($leave->date);
+    //                 if ($leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)) {
+    //                     return 0;
+    //                 }
+    //                 return ($leave->type == 'Half Day') ? 0.5 : 1;
+    //             });
+
+    //         $totalApprovedLeaves = $leavesCount + $approvedLeaves;
+
+    //         if ($totalApprovedLeaves > $paidLeaveBalanceLimit) {
+    //             $excessLeaves = max(0, $totalApprovedLeaves - $paidLeaveBalanceLimit);
+
+    //             if ($excessLeaves > 0) {
+    //                 if ($leavesCount > $excessLeaves) {
+    //                     $leaveNotPaid = min($excessLeaves, 22);
+    //                     $leavePaid = max(0, $leavesCount - $leaveNotPaid);
+    //                 } else {
+    //                     $leaveNotPaid = min($leavesCount, 22);
+    //                     $leavePaid = 0;
+    //                 }
+    //             } else {
+    //                 $leaveNotPaid = 0;
+    //                 $leavePaid = min($leavesCount, 22);
+    //             }
+
+    //             $maxDeductibleAmount = $normalDays * $daySalary;
+    //             $deductionAmount = min($excessLeaves * $daySalary, $maxDeductibleAmount);
+    //             $grossSalary = max(0, $grossSalary - $deductionAmount);
+    //         } else {
+    //             $leavePaid = $leavesCount;
+    //             $leaveNotPaid = 0;
+    //         }
+    //     }
+
+    //     $remainingPaidLeaves = max(0, $paidLeaveBalanceLimit - $totalApprovedLeaves);
+    //     $pendingLeaveAmount = $remainingPaidLeaves * $daySalary;
+    //     $normalDaysSalary = $grossSalary;
+
+    //     $leaveEncashments = LeaveEncashment::where('employee_id', $employee->id)
+    //         ->whereDate('created_at', '<=', $endDate)
+    //         ->get();
+
+    //     $encashLeaveDays = $leaveEncashments->sum('encash_leaves');
+    //     $encashLeaveAmount = $encashLeaveDays * $daySalary;
+
+    //     $grossSalary += $encashLeaveAmount;
+
+    //     return [
+    //         $leavePaid,
+    //         $leaveNotPaid,
+    //         $paidLeaveBalance,
+    //         $grossSalary,
+    //         $pendingLeaveAmount,
+    //         $normalDaysSalary
+    //     ];
+    // }
+
     protected function calculateLeaveDetails($normalDays, $employee, $previousStartDate, $endDate, $daySalary)
-    {
+    { 
         $leavePaid = 0;
         $leaveNotPaid = 0;
         $grossSalary = $normalDays * $daySalary;
@@ -399,6 +529,29 @@ class PublishEmployeePayroll extends Command
         $year = Carbon::parse($previousStartDate)->year;
         $previousYear = $year - 1;
 
+        // Get employee's anniversary date  
+        $anniversaryDate = Carbon::parse($employee->joining_date)->year($year);
+        $isAfterAnniversary = $previousStartDate <= $anniversaryDate && $anniversaryDate <= $endDate;
+
+        // Define leave type allocations
+        $leaveTypeAllocations = [
+            'Sick' => [
+                'yearly_limit' => (int) setting('yearly_leaves') ?: 10,
+                'carry_forward' => false,
+            ],
+            'Vacation' => [
+                'yearly_limit' => (int) setting('vacation_leaves') ?: 10,
+                'carry_forward' => true,
+                'carry_forward_limit' => 10,
+                'credited_on_anniversary' => true,
+            ],
+            'Maternity' => [
+                 'yearly_limit' => (int) setting('maternity_leaves') ?: 56,
+                'carry_forward' => false,
+            ]
+        ];
+
+        // Original logic for total leaves (maintains backward compatibility)
         $hasPreviousYearLeaves = EmployeeLeave::where('employee_id', $employee->id)
             ->where('status', 'Approved')
             ->whereYear('date', $previousYear)
@@ -427,6 +580,51 @@ class PublishEmployeePayroll extends Command
 
         $paidLeaveBalanceLimit = $baseYearlyLimit + $carryForwardLeaves;
 
+        // Calculate leave balances for each type
+        $leaveBalances = [];
+        foreach ($leaveTypeAllocations as $type => $config) {
+            $balance = [
+                'used_previous_year' => 0,
+                'carry_forward' => 0,
+                'available' => 0,
+                'used_current_year' => 0,
+            ];
+
+            // Calculate carry forward for eligible types
+            if ($config['carry_forward']) {
+                $usedPreviousYear = EmployeeLeave::where('employee_id', $employee->id)
+                    ->where('status', 'Approved')
+                    ->where('leave_type', $type)
+                    ->whereYear('date', $previousYear)
+                    ->get()
+                    ->sum(function ($leave) {
+                        $leaveDate = Carbon::parse($leave->date);
+                        if ($leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)) {
+                            return 0;
+                        }
+                        return ($leave->type === 'Half Day') ? 0.5 : 1;
+                    });
+
+                $carryForward = max(0, $config['yearly_limit'] - $usedPreviousYear);
+                if (isset($config['carry_forward_limit'])) {
+                    $carryForward = min($carryForward, $config['carry_forward_limit']);
+                }
+
+                $balance['used_previous_year'] = $usedPreviousYear;
+                $balance['carry_forward'] = $carryForward;
+            }
+
+            // Calculate available leaves
+            $baseLimit = $config['yearly_limit'];
+            if (isset($config['credited_on_anniversary']) && $config['credited_on_anniversary'] && !$isAfterAnniversary) {
+                $baseLimit = 0; // Vacation leaves not credited yet
+            }
+
+            $balance['available'] = $baseLimit + $balance['carry_forward'];
+            $leaveBalances[$type] = $balance;
+        }
+
+        // Original December leaves calculation (maintains backward compatibility)
         $lastDayOfDecember = Carbon::createFromDate($year, 12, 13);
         $leavesQuery = EmployeeLeave::where('employee_id', $employee->id)
             ->where('status', 'Approved');
@@ -444,6 +642,7 @@ class PublishEmployeePayroll extends Command
             $paidLeaveBalance = max(0, $paidLeaveBalanceLimit - $leavesCountInDecember);
         }
 
+        // Calculate used leaves in current period by type
         $leavesCount = $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])->get()
             ->sum(function ($leave) {
                 $leaveDate = Carbon::parse($leave->date);
@@ -453,6 +652,26 @@ class PublishEmployeePayroll extends Command
                 return ($leave->type == 'Half Day') ? 0.5 : 1;
             });
 
+        // Group leaves by type for new functionality
+        $leavesByType = $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])
+            ->get()
+            ->groupBy('leave_type');
+
+        foreach ($leavesByType as $type => $leaves) {
+            if (!isset($leaveTypeAllocations[$type])) continue;
+
+            $usedDays = $leaves->sum(function ($leave) {
+                $leaveDate = Carbon::parse($leave->date);
+                if ($leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)) {
+                    return 0;
+                }
+                return ($leave->type == 'Half Day') ? 0.5 : 1;
+            });
+
+            $leaveBalances[$type]['used_current_year'] = $usedDays;
+        }
+
+        // Original approved leaves calculation (maintains backward compatibility)
         $totalApprovedLeaves = $leavesCount;
         if ($leavesCount > 0) {
             $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)
@@ -494,10 +713,12 @@ class PublishEmployeePayroll extends Command
             }
         }
 
+        // Calculate remaining leaves (original logic)
         $remainingPaidLeaves = max(0, $paidLeaveBalanceLimit - $totalApprovedLeaves);
         $pendingLeaveAmount = $remainingPaidLeaves * $daySalary;
         $normalDaysSalary = $grossSalary;
 
+        // Leave encashment (original logic)
         $leaveEncashments = LeaveEncashment::where('employee_id', $employee->id)
             ->whereDate('created_at', '<=', $endDate)
             ->get();
@@ -507,158 +728,18 @@ class PublishEmployeePayroll extends Command
 
         $grossSalary += $encashLeaveAmount;
 
+        // Return original values (maintaining backward compatibility)
+        // Note: You might want to return additional leave type information if needed
         return [
             $leavePaid,
             $leaveNotPaid,
             $paidLeaveBalance,
             $grossSalary,
             $pendingLeaveAmount,
-            $normalDaysSalary
+            $normalDaysSalary,
+            // Optional: You could add $leaveBalances as a 7th return value if needed
         ];
     }
-
-    // protected function calculateLeaveDetails($normalDays, $employee, $previousStartDate, $endDate, $daySalary)
-    // {
-    //     $leavePaid = 0;
-    //     $leaveNotPaid = 0;
-    //     $grossSalary = $normalDays * $daySalary;
-    //     $normalDaysSalary = $grossSalary;
-
-    //     // Set up leave type limits
-    //     $leaveTypes = [
-    //         'Sick Leave' => (int) setting('yearly_leaves') ?: 10,
-    //         'Vacation Leave' => (int) setting('vacation_leaves') ?: 10,
-    //         'Maternity Leave' => (int) setting('maternity_leaves') ?: 56,
-    //     ];
-
-    //     $year = Carbon::parse($previousStartDate)->year;
-    //     $previousYear = $year - 1;
-    //     $carryForwardLimit = 10;
-
-    //     // Determine leave type used during this period
-    //     $leaveTypeUsed = EmployeeLeave::where('employee_id', $employee->id)
-    //         ->where('status', 'Approved')
-    //         ->whereBetween('date', [$previousStartDate, $endDate])
-    //         ->pluck('leave_type')
-    //         ->unique()
-    //         ->first();
-
-    //     // Fallback if leave type is not set or invalid
-    //     if (!$leaveTypeUsed || !array_key_exists($leaveTypeUsed, $leaveTypes)) {
-    //         return [$leavePaid, $leaveNotPaid, 0, $grossSalary, 0, $normalDaysSalary];
-    //     }
-
-    //     $baseYearlyLimit = $leaveTypes[$leaveTypeUsed];
-
-    //     // Check if carry forward applies for the given type
-    //     $hasPreviousYearLeaves = EmployeeLeave::where('employee_id', $employee->id)
-    //         ->where('status', 'Approved')
-    //         ->where('leave_type', $leaveTypeUsed)
-    //         ->whereYear('date', $previousYear)
-    //         ->exists();
-
-    //     $usedLeavesLastYear = 0;
-    //     $carryForwardLeaves = 0;
-
-    //     if ($hasPreviousYearLeaves) {
-    //         $usedLeavesLastYear = EmployeeLeave::where('employee_id', $employee->id)
-    //             ->where('status', 'Approved')
-    //             ->where('leave_type', $leaveTypeUsed)
-    //             ->whereYear('date', $previousYear)
-    //             ->get()
-    //             ->sum(function ($leave) {
-    //                 $leaveDate = Carbon::parse($leave->date);
-    //                 return ($leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)) ? 0 : ($leave->type === 'Half Day' ? 0.5 : 1);
-    //             });
-
-    //         $carryForwardLeaves = max(0, $baseYearlyLimit - $usedLeavesLastYear);
-    //         $carryForwardLeaves = min($carryForwardLeaves, $carryForwardLimit);
-    //     }
-
-    //     $paidLeaveBalanceLimit = $baseYearlyLimit + $carryForwardLeaves;
-
-    //     // December check to finalize leave balance
-    //     $lastDayOfDecember = Carbon::createFromDate($year, 12, 13);
-    //     $leavesQuery = EmployeeLeave::where('employee_id', $employee->id)
-    //         ->where('status', 'Approved')
-    //         ->where('leave_type', $leaveTypeUsed);
-
-    //     $leavesCountInDecember = $leavesQuery->whereYear('date', $lastDayOfDecember->year)->get()
-    //         ->sum(function ($leave) {
-    //             $leaveDate = Carbon::parse($leave->date);
-    //             return ($leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)) ? 0 : ($leave->type === 'Half Day' ? 0.5 : 1);
-    //         });
-
-    //     if ($lastDayOfDecember->between($previousStartDate, $endDate)) {
-    //         $paidLeaveBalance = max(0, $paidLeaveBalanceLimit - $leavesCountInDecember);
-    //     } else {
-    //         $paidLeaveBalance = max(0, $paidLeaveBalanceLimit);
-    //     }
-
-    //     // Count current period approved leaves (excluding weekends/public holidays)
-    //     $leavesCount = $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])->get()
-    //         ->sum(function ($leave) {
-    //             $leaveDate = Carbon::parse($leave->date);
-    //             return ($leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)) ? 0 : ($leave->type === 'Half Day' ? 0.5 : 1);
-    //         });
-
-    //     if ($leavesCount > 0) {
-    //         $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)
-    //             ->where('status', 'Approved')
-    //             ->where('leave_type', $leaveTypeUsed)
-    //             ->whereDate('date', '<', $previousStartDate)
-    //             ->get()
-    //             ->sum(function ($leave) {
-    //                 $leaveDate = Carbon::parse($leave->date);
-    //                 return ($leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)) ? 0 : ($leave->type === 'Half Day' ? 0.5 : 1);
-    //             });
-
-    //         $totalApprovedLeaves = $leavesCount + $approvedLeaves;
-
-    //         if ($totalApprovedLeaves > $paidLeaveBalanceLimit) {
-    //             $excessLeaves = max(0, $totalApprovedLeaves - $paidLeaveBalanceLimit);
-
-    //             if ($leavesCount > $excessLeaves) {
-    //                 $leaveNotPaid = min($excessLeaves, 22);
-    //                 $leavePaid = max(0, $leavesCount - $leaveNotPaid);
-    //             } else {
-    //                 $leaveNotPaid = min($leavesCount, 22);
-    //                 $leavePaid = 0;
-    //             }
-
-    //             $maxDeductibleAmount = $normalDays * $daySalary;
-    //             $deductionAmount = min($excessLeaves * $daySalary, $maxDeductibleAmount);
-    //             $grossSalary = max(0, $grossSalary - $deductionAmount);
-    //         } else {
-    //             $leavePaid = $leavesCount;
-    //             $leaveNotPaid = 0;
-    //         }
-    //     }
-
-    //     $remainingPaidLeaves = max(0, $paidLeaveBalance - $leavePaid);
-    //     $pendingLeaveAmount = $remainingPaidLeaves * $daySalary;
-
-    //     // Store gross salary before adding encashment (true base salary)
-    //     $normalDaysSalary = $grossSalary;
-
-    //     $leaveEncashments = LeaveEncashment::where('employee_id', $employee->id)
-    //         ->whereDate('created_at', '<=', $endDate)
-    //         ->get();
-
-    //     $encashLeaveDays = $leaveEncashments->sum('encash_leaves');
-    //     $encashLeaveAmount = $encashLeaveDays * $daySalary;
-
-    //     $grossSalary += $encashLeaveAmount;
-
-    //     return [
-    //         $leavePaid,
-    //         $leaveNotPaid,
-    //         $paidLeaveBalance,
-    //         $grossSalary,
-    //         $pendingLeaveAmount,
-    //         $normalDaysSalary
-    //     ];
-    // }
 
     public function calculateEmployeePayrollStatutory($employee, $previousStartDate, $endDate, $grossSalary, $daySalary)
     {
