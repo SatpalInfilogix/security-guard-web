@@ -283,12 +283,20 @@ class PublishEmployeePayroll extends Command
                                         $daySalary
                                     );
                                     // ========End Payroll Statutory Calculation ========
-
+                                    $statutoryDeductions = (
+                                        $payrollStatutoryData['paye'] +
+                                        $payrollStatutoryData['nis'] +
+                                        $payrollStatutoryData['nht'] +
+                                        $payrollStatutoryData['education_tax']+
+                                        $payrollStatutoryData['heart']
+                                    );
                                     //===== Employee Payroll Non Statutory Calculation =====
                                     list($totalDeductions, $pendingAmounts) = $this->calculateNonStatutoryDeductions(
                                         $employee,
                                         $previousStartDate,
-                                        $endDate
+                                        $endDate,
+                                        $grossSalary,           // pass gross earnings
+                                        $statutoryDeductions
                                     );
                                     // dd($totalDeductions);
                                     //===== End Employee Payroll Non Statutory Calculation =====
@@ -518,7 +526,7 @@ class PublishEmployeePayroll extends Command
     // }
 
     protected function calculateLeaveDetails($normalDays, $employee, $previousStartDate, $endDate, $daySalary)
-    { 
+    {
         $leavePaid = 0;
         $leaveNotPaid = 0;
         $grossSalary = $normalDays * $daySalary;
@@ -546,7 +554,7 @@ class PublishEmployeePayroll extends Command
                 'credited_on_anniversary' => true,
             ],
             'Maternity' => [
-                 'yearly_limit' => (int) setting('maternity_leaves') ?: 56,
+                'yearly_limit' => (int) setting('maternity_leaves') ?: 56,
                 'carry_forward' => false,
             ]
         ];
@@ -898,7 +906,7 @@ class PublishEmployeePayroll extends Command
         ];
     }
 
-    private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)
+    private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate,$grossSalary,$statutoryDeductions)
     {
         $deductionTypes = [
             'Staff Loan' => 'pending_staff_loan',
@@ -923,6 +931,27 @@ class PublishEmployeePayroll extends Command
         ];
 
         $totalDeductions = array_fill_keys(array_keys($deductionTypes), 0);
+        $pendingAmounts = [];
+
+        // === New: Scenario 1 & 2 Checks ===
+        if ($grossSalary <= 0 || ($grossSalary - $statutoryDeductions) <= 0) {
+            foreach (array_keys($deductionTypes) as $deductionType) {
+                // Extend end_date by one pay period (e.g., +1 month or +pay cycle)
+                EmployeeDeduction::where('employee_id', $employee->id)
+                    ->where('type', $deductionType)
+                    ->update([
+                        'end_date' => DB::raw("DATE_ADD(end_date, INTERVAL 1 MONTH)")
+                    ]);
+
+                $totalDeductions[$deductionType] = 0;
+                $pendingAmounts[$deductionType] = EmployeeDeduction::where('employee_id', $employee->id)
+                    ->where('type', $deductionType)
+                    ->sum('pending_balance');
+            }
+
+            // Return without processing any deductions
+            return [$totalDeductions, $pendingAmounts];
+        }
 
         foreach ($deductionTypes as $deductionType => $pendingField) {
             $deductionRecords = EmployeeDeduction::where('employee_id', $employee->id)
