@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\EmployeeNSTDeductionExport;
 use App\Models\EmployeeLeave;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -18,6 +19,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\EmployeePayrollExport;
+use App\Models\EmployeeDeductionDetail;
 
 class EmployeePayrollController extends Controller
 {
@@ -34,7 +36,7 @@ class EmployeePayrollController extends Controller
         $previousEndDate = Carbon::parse($twentyTwoDays->start_date)->subDay();
         $previousStartDate = Carbon::parse($previousEndDate)->startOfMonth();
 
-        return view('admin.employee-payroll.index', compact('year', 'month', 'page','twentyTwoDays', 'previousEndDate', 'previousStartDate'));
+        return view('admin.employee-payroll.index', compact('year', 'month', 'page', 'twentyTwoDays', 'previousEndDate', 'previousStartDate'));
     }
 
     public function getEmployeePayroll(Request $request)
@@ -496,5 +498,12 @@ class EmployeePayrollController extends Controller
         $fileName = "employee-payroll-{$month}-{$year}.xlsx";
 
         return Excel::download(new EmployeePayrollExport($year, $month), $fileName);
+    }
+
+    public function exportNSTDeductions()
+    {
+        $deductionDetails = EmployeeDeductionDetail::with(['deduction.user'])->get();
+
+        return Excel::download(new EmployeeNSTDeductionExport($deductionDetails), 'employee_nst_deductions.xlsx');
     }
 }

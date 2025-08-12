@@ -20,6 +20,11 @@
                                 class="btn btn-primary primary-btn btn-md me-1">
                                 <i class="bx bx-file"></i> Export Payroll Summary
                             </a>
+                            {{-- NEW BUTTON FOR NST EXPORT --}}
+                            <a href="{{ route('employee-payroll.export-nst-deductions') }}"
+                                class="btn btn-primary primary-btn btn-md me-1">
+                                <i class="bx bx-file"></i> Export NST Deductions
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -115,7 +120,8 @@
                         var actions = '<div class="action-buttons">';
 
                         @can('edit employee payroll')
-                            actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/employee-payroll') }}/${row.id}/edit?year=${$('#year').val()}&month=${$('#month').val()}&page=${payrollTable.page() + 1}">`;
+                            actions +=
+                                `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/employee-payroll') }}/${row.id}/edit?year=${$('#year').val()}&month=${$('#month').val()}&page=${payrollTable.page() + 1}">`;
                             actions += '<i class="fas fa-pencil-alt"></i>';
                             actions += '</a>';
                         @endcan
