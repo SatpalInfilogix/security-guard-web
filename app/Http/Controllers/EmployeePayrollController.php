@@ -500,10 +500,23 @@ class EmployeePayrollController extends Controller
         return Excel::download(new EmployeePayrollExport($year, $month), $fileName);
     }
 
-    public function exportNSTDeductions()
+    public function exportNSTDeductions(Request $request)
     {
-        $deductionDetails = EmployeeDeductionDetail::with(['deduction.user'])->get();
+        $year  = $request->input('year');
+        $month = $request->input('month');
 
-        return Excel::download(new EmployeeNSTDeductionExport($deductionDetails), 'employee_nst_deductions.xlsx');
+        $deductionDetails = EmployeeDeductionDetail::with(['deduction.user'])
+            ->when($year, function ($query) use ($year) {
+                $query->whereYear('deduction_date', $year);
+            })
+            ->when($month, function ($query) use ($month) {
+                $query->whereMonth('deduction_date', $month);
+            })
+            ->get();
+
+        return Excel::download(
+            new EmployeeNSTDeductionExport($deductionDetails),
+            'employee_nst_deductions.xlsx'
+        );
     }
 }

@@ -38,7 +38,7 @@ class EmployeeNSTDeductionExport implements FromCollection, WithHeadings, WithMa
     {
         return [
             $deductionDetails->deduction->user->user_code ?? '',
-            $deductionDetails->deduction->user->first_name . ' ' . $deductionDetails->deduction->user->last_name,
+            $deductionDetails->deduction->user->first_name . ' ' . $deductionDetails->deduction->user->surname,
             $deductionDetails->deduction->type ?? '',
             $deductionDetails->deduction_date
                 ? Carbon::parse($deductionDetails->deduction_date)->format('d-m-Y')

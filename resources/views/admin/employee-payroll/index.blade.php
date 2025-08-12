@@ -21,7 +21,7 @@
                                 <i class="bx bx-file"></i> Export Payroll Summary
                             </a>
                             {{-- NEW BUTTON FOR NST EXPORT --}}
-                            <a href="{{ route('employee-payroll.export-nst-deductions') }}"
+                            <a href="javascript:void(0);" id="exportNstDeductionsBtn"
                                 class="btn btn-primary primary-btn btn-md me-1">
                                 <i class="bx bx-file"></i> Export NST Deductions
                             </a>
@@ -278,6 +278,20 @@
                 }
 
                 const exportUrl = `{{ route('employee-payroll.export') }}?year=${year}&month=${month}`;
+                window.location.href = exportUrl;
+            });
+
+            $('#exportNstDeductionsBtn').on('click', function() {
+                const year = $('#year').val();
+                const month = $('#month').val();
+
+                if (!year || !month) {
+                    alert('Please select both year and month before exporting.');
+                    return;
+                }
+
+                const exportUrl =
+                    `{{ route('employee-payroll.export-nst-deductions') }}?year=${year}&month=${month}`;
                 window.location.href = exportUrl;
             });
 
