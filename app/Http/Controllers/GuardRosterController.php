@@ -449,7 +449,7 @@ class GuardRosterController extends Controller
         $sheet->setTitle('Client-Sites');
 
         $headers = [
-            'ID', 'Client Id', 'Client Name', 'Client Location', 'Parish', 'Billing Address', 'Vanguard Manager', 'Contact Operation', 
+            'ID', 'Client Id', 'Client Name', 'Client Location','Location Name', 'Parish', 'Billing Address', 'Vanguard Manager', 'Contact Operation', 
             'Telephone Number', 'Email', 'Invoice Recipient Main', 'Invoice Recipient Copy', 'Account Payable Contact Name', 
             'Account Payable Contact Email', 'Telephone Number', 'Latitude', 'Longitude', 'Radius', 'Status'
         ];
@@ -463,6 +463,7 @@ class GuardRosterController extends Controller
                 $clientSite->client_id,
                 $clientSite->client->client_name ?? '',
                 $clientSite->location_code ?? '',
+                $clientSite->location ?? '',
                 $clientSite->parish ?? '',
                 $clientSite->billing_address ?? '',
                 $clientSite->vanguard_manager ?? '',
