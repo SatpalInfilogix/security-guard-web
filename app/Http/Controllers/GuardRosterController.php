@@ -27,12 +27,12 @@ class GuardRosterController extends Controller
 {
     public function index()
     {
-        if(!Gate::allows('view guard roster')) {
+        if (!Gate::allows('view guard roster')) {
             abort(403);
         }
 
         $today = Carbon::now();
-        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first(); 
+        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
         if (!$fortnight) {
             $fortnight = null;
         }
@@ -49,7 +49,7 @@ class GuardRosterController extends Controller
             $userId = Auth::id();
             $query->where('manager_id', $userId);
         }
-        
+
         $clientSites = $query->get();
 
         return view('admin.guard-roster.index', compact('fortnight', 'securityGuards', 'clients', 'clientSites'));
@@ -58,10 +58,10 @@ class GuardRosterController extends Controller
     public function getGuardRosterList(Request $request)
     {
         $guardRoasterData = GuardRoster::with('user', 'client', 'clientSite', 'guardType');
-        
+
         $userId = Auth::id();
         if (Auth::user()->hasRole('Manager Operations')) {
-            $guardRoasterData->whereHas('clientSite', function($query) use ($userId) {
+            $guardRoasterData->whereHas('clientSite', function ($query) use ($userId) {
                 $query->where('manager_id', $userId);
             });
         }
@@ -78,23 +78,34 @@ class GuardRosterController extends Controller
             $guardRoasterData->where('client_site_id', $request->client_site_id);
         }
 
-        if ($request->has('date') && !empty($request->date))
-        {
-            $guardRoasterData->where('date', Carbon::parse($request->date));
+        if ($request->has('date') && !empty($request->date)) {
+            // Check if the date parameter contains " to " for range
+            if (strpos($request->date, ' to ') !== false) {
+                $dates = explode(' to ', $request->date);
+
+                if (count($dates) === 2) {
+                    $startDate = Carbon::parse(trim($dates[0]))->startOfDay();
+                    $endDate = Carbon::parse(trim($dates[1]))->endOfDay();
+
+                    $guardRoasterData->whereBetween('date', [$startDate, $endDate]);
+                }
+            } else {
+                $guardRoasterData->where('date', Carbon::parse($request->date));
+            }
         }
 
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
-        
-            $guardRoasterData->where(function($query) use ($searchValue) {
-                $query->whereHas('user', function($q) use ($searchValue) {
+
+            $guardRoasterData->where(function ($query) use ($searchValue) {
+                $query->whereHas('user', function ($q) use ($searchValue) {
                     $q->where('first_name', 'like', '%' . $searchValue . '%')
-                    ->orWhere('surname', 'like', '%' . $searchValue . '%');
+                        ->orWhere('surname', 'like', '%' . $searchValue . '%');
                 })
-                ->orWhereHas('client', function($q) use ($searchValue) {
-                    $q->where('client_name', 'like', '%' . $searchValue . '%');
-                })
-                ->orWhere('date', 'like', '%' . $searchValue . '%');
+                    ->orWhereHas('client', function ($q) use ($searchValue) {
+                        $q->where('client_name', 'like', '%' . $searchValue . '%');
+                    })
+                    ->orWhere('date', 'like', '%' . $searchValue . '%');
             });
         }
 
@@ -110,7 +121,7 @@ class GuardRosterController extends Controller
             'draw' => $request->input('draw'),
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
-            'data' => $guardRoasters->map(function($guardRoster) {
+            'data' => $guardRoasters->map(function ($guardRoster) {
                 return [
                     'id' => $guardRoster->id,
                     'user' => $guardRoster->user,
@@ -123,13 +134,13 @@ class GuardRosterController extends Controller
                 ];
             }),
         ];
-    
+
         return response()->json($data);
     }
 
     public function create()
     {
-        if(!Gate::allows('create guard roster')) {
+        if (!Gate::allows('create guard roster')) {
             abort(403);
         }
 
@@ -147,7 +158,7 @@ class GuardRosterController extends Controller
 
     public function store(Request $request)
     {
-        if(!Gate::allows('create guard roster')) {
+        if (!Gate::allows('create guard roster')) {
             abort(403);
         }
 
@@ -171,27 +182,27 @@ class GuardRosterController extends Controller
         $end_date = Carbon::parse($request->end_date);
 
         $existingRoster = GuardRoster::where('guard_id', $request->guard_id)
-                    ->where(function($query) use ($start_time, $end_time, $start_date, $end_date) {
-                        if ($start_date == $end_date) {
-                            $query->where('date', '=', $start_date)
-                                ->where(function($query) use ($start_time, $end_time) {
-                                    $query->where(function($query) use ($start_time, $end_time) {
-                                        $query->where('start_time', '<', $end_time)
-                                            ->where('end_time', '>', $start_time);
-                                    });
-                                });
-                        } else {
-                            $query->where(function($query) use ($start_time, $end_time, $start_date, $end_date) {
-                                $query->where('date', '=', $start_date)
-                                    ->where('end_date', '=', $end_date)
-                                    ->where(function($query) use ($start_time, $end_time) {
-                                        $query->where('start_time', '>', $end_time)
-                                            ->where('end_time', '<', $start_time);
-                                    });
+            ->where(function ($query) use ($start_time, $end_time, $start_date, $end_date) {
+                if ($start_date == $end_date) {
+                    $query->where('date', '=', $start_date)
+                        ->where(function ($query) use ($start_time, $end_time) {
+                            $query->where(function ($query) use ($start_time, $end_time) {
+                                $query->where('start_time', '<', $end_time)
+                                    ->where('end_time', '>', $start_time);
                             });
-                        }
-                    })
-                    ->first();
+                        });
+                } else {
+                    $query->where(function ($query) use ($start_time, $end_time, $start_date, $end_date) {
+                        $query->where('date', '=', $start_date)
+                            ->where('end_date', '=', $end_date)
+                            ->where(function ($query) use ($start_time, $end_time) {
+                                $query->where('start_time', '>', $end_time)
+                                    ->where('end_time', '<', $start_time);
+                            });
+                    });
+                }
+            })
+            ->first();
 
         if ($existingRoster) {
             return back()->with('error', 'There is already an overlapping guard roster for this client site at this time.');
@@ -211,13 +222,14 @@ class GuardRosterController extends Controller
         return redirect()->route('guard-rosters.index')->with('success', 'Guard Roster created successfully.');
     }
 
-    public function show($id) {
+    public function show($id)
+    {
         //
     }
 
-    public function edit($id) 
+    public function edit($id)
     {
-        if(!Gate::allows('edit guard roster')) {
+        if (!Gate::allows('edit guard roster')) {
             abort(403);
         }
         $guardRoaster = GuardRoster::where('id', $id)->first();
@@ -232,7 +244,7 @@ class GuardRosterController extends Controller
             $userId = Auth::id();
             $query->where('manager_id', $userId);
         }
-        
+
         $clientSites = $query->get();
 
         $start_time = Carbon::createFromFormat('H:i:s', $guardRoaster->start_time)->format('h:iA');
@@ -247,7 +259,7 @@ class GuardRosterController extends Controller
 
     public function update(Request $request, $id)
     {
-        if(!Gate::allows('edit guard roster')) {
+        if (!Gate::allows('edit guard roster')) {
             abort(403);
         }
         $request->validate([
@@ -262,7 +274,7 @@ class GuardRosterController extends Controller
         $guardRoaster = GuardRoster::where('id', $id)->first();
 
         $existingGuardRoaster = GuardRoster::where('guard_id', $request->guard_id)->where('date', $request->date)
-                                            ->where('id', '!=', $guardRoaster->id)->first();
+            ->where('id', '!=', $guardRoaster->id)->first();
 
         if ($existingGuardRoaster) {
             return redirect()->back()->withErrors(['date' => 'Date already assigned to this guard.'])->withInput();
@@ -270,7 +282,7 @@ class GuardRosterController extends Controller
 
         $start_time = trim($request->start_time);
         $end_time = trim($request->end_time);
-        
+
         $start_time = Carbon::createFromFormat('h:iA', $start_time)->format('H:i');
         $end_time = Carbon::createFromFormat('h:iA', $end_time)->format('H:i');
 
@@ -291,12 +303,12 @@ class GuardRosterController extends Controller
     public function getClientSites($clientId)
     {
         $query = ClientSite::where('client_id', $clientId)->where('status', 'Active');
-    
+
         if (Auth::check() && Auth::user()->hasRole('Manager Operations')) {
             $userId = Auth::id();
             $query->where('manager_id', $userId);
         }
-        
+
         $clientSites = $query->get();
 
         return response()->json($clientSites);
@@ -321,7 +333,7 @@ class GuardRosterController extends Controller
 
     public function destroy($id)
     {
-        if(!Gate::allows('delete guard roster')) {
+        if (!Gate::allows('delete guard roster')) {
             abort(403);
         }
         GuardRoster::where('id', $id)->delete();
@@ -342,8 +354,8 @@ class GuardRosterController extends Controller
         }
 
         $guardRoaster = GuardRoster::where('guard_id', $guardId)
-                                    ->where('date', $date)
-                                    ->first();
+            ->where('date', $date)
+            ->first();
 
         if (!$guardRoaster) {
             return response()->json(['error' => 'No roster found for this guard and date'], 404);
@@ -370,12 +382,12 @@ class GuardRosterController extends Controller
         session()->flash('success', 'Guard roster imported successfully.');
         $downloadUrl = route('guard-rosters.download');
 
-        return redirect()->route('guard-rosters.index')->with('downloadUrl', $downloadUrl); 
+        return redirect()->route('guard-rosters.index')->with('downloadUrl', $downloadUrl);
     }
 
     public function download()
     {
-        $import = session('importData'); 
+        $import = session('importData');
         $export = new GuardRoasterExport($import);
         return Excel::download($export, 'guard_import_results.csv');
     }
@@ -413,7 +425,7 @@ class GuardRosterController extends Controller
 
         foreach ($users as $key => $user) {
             $sheet->fromArray(
-                [$user->id, $user->first_name, $user->last_name, $user->email, $user->phone_number, $user->guardAdditionalInformation->trn, $user->guardAdditionalInformation->nis, $user->guardAdditionalInformation->psra, $user->guardAdditionalInformation->date_of_joining, $user->guardAdditionalInformation->date_of_birth, $user->guardAdditionalInformation->employer_company_name, $user->guardAdditionalInformation->guards_Current_rate, $user->guardAdditionalInformation->location_code, $user->guardAdditionalInformation->location_name, $user->guardAdditionalInformation->client_code, $user->guardAdditionalInformation->client_name, $user->guardAdditionalInformation->guard_type_id, $user->guardAdditionalInformation->employed_as, $user->guardAdditionalInformation->date_of_seperation, $user->usersBankDetail->bank_name, $user->usersBankDetail->bank_branch_address, $user->usersBankDetail->account_no, $user->usersBankDetail->account_type, $user->usersBankDetail->routing_number, $user->usersKinDetail->surname, $user->usersKinDetail->first_name, $user->usersKinDetail->middle_name, $user->usersKinDetail->apartment_no, $user->usersKinDetail->building_name, $user->usersKinDetail->street_name, $user->usersKinDetail->parish, $user->usersKinDetail->city, $user->usersKinDetail->postal_code, $user->usersKinDetail->email, $user->usersKinDetail->phone_number,  $user->userDocuments->trn ? url($user->userDocuments->trn) : '', $user->userDocuments->nis ? url($user->userDocuments->nis) : '', $user->userDocuments->psra ? url($user->userDocuments->psra) : '', $user->userDocuments->birth_certificate ? url($user->userDocuments->birth_certificate) : '', $user->contactDetail->apartment_no, $user->contactDetail->building_name, $user->contactDetail->street_name, $user->contactDetail->parish, $user->contactDetail->city, $user->contactDetail->postal_code],
+                [$user->id, $user->first_name, $user->surname, $user->email, $user->phone_number, $user->guardAdditionalInformation->trn, $user->guardAdditionalInformation->nis, $user->guardAdditionalInformation->psra, $user->guardAdditionalInformation->date_of_joining, $user->guardAdditionalInformation->date_of_birth, $user->guardAdditionalInformation->employer_company_name, $user->guardAdditionalInformation->guards_Current_rate, $user->guardAdditionalInformation->location_code, $user->guardAdditionalInformation->location_name, $user->guardAdditionalInformation->client_code, $user->guardAdditionalInformation->client_name, $user->guardAdditionalInformation->guard_type_id, $user->guardAdditionalInformation->employed_as, $user->guardAdditionalInformation->date_of_seperation, $user->usersBankDetail->bank_name, $user->usersBankDetail->bank_branch_address, $user->usersBankDetail->account_no, $user->usersBankDetail->account_type, $user->usersBankDetail->routing_number, $user->usersKinDetail->surname, $user->usersKinDetail->first_name, $user->usersKinDetail->middle_name, $user->usersKinDetail->apartment_no, $user->usersKinDetail->building_name, $user->usersKinDetail->street_name, $user->usersKinDetail->parish, $user->usersKinDetail->city, $user->usersKinDetail->postal_code, $user->usersKinDetail->email, $user->usersKinDetail->phone_number,  $user->userDocuments->trn ? url($user->userDocuments->trn) : '', $user->userDocuments->nis ? url($user->userDocuments->nis) : '', $user->userDocuments->psra ? url($user->userDocuments->psra) : '', $user->userDocuments->birth_certificate ? url($user->userDocuments->birth_certificate) : '', $user->contactDetail->apartment_no, $user->contactDetail->building_name, $user->contactDetail->street_name, $user->contactDetail->parish, $user->contactDetail->city, $user->contactDetail->postal_code],
                 NULL,
                 'A' . ($key + 2)
             );
@@ -449,9 +461,26 @@ class GuardRosterController extends Controller
         $sheet->setTitle('Client-Sites');
 
         $headers = [
-            'ID', 'Client Id', 'Client Name', 'Client Location', 'Parish', 'Billing Address', 'Vanguard Manager', 'Contact Operation', 
-            'Telephone Number', 'Email', 'Invoice Recipient Main', 'Invoice Recipient Copy', 'Account Payable Contact Name', 
-            'Account Payable Contact Email', 'Telephone Number', 'Latitude', 'Longitude', 'Radius', 'Status'
+            'ID',
+            'Client Id',
+            'Client Name',
+            'Client Location',
+            'Location Name',
+            'Parish',
+            'Billing Address',
+            'Vanguard Manager',
+            'Contact Operation',
+            'Telephone Number',
+            'Email',
+            'Invoice Recipient Main',
+            'Invoice Recipient Copy',
+            'Account Payable Contact Name',
+            'Account Payable Contact Email',
+            'Telephone Number',
+            'Latitude',
+            'Longitude',
+            'Radius',
+            'Status'
         ];
         $sheet->fromArray($headers, NULL, 'A1');
 
@@ -463,6 +492,7 @@ class GuardRosterController extends Controller
                 $clientSite->client_id,
                 $clientSite->client->client_name ?? '',
                 $clientSite->location_code ?? '',
+                $clientSite->location ?? '',
                 $clientSite->parish ?? '',
                 $clientSite->billing_address ?? '',
                 $clientSite->vanguard_manager ?? '',
@@ -516,16 +546,16 @@ class GuardRosterController extends Controller
 
         if ($request->has('search') && !empty($request->search['value'])) {
             $searchValue = $request->search['value'];
-            $query->where(function($query) use ($searchValue) {
-                $query->whereHas('user', function($query) use ($searchValue) {
+            $query->where(function ($query) use ($searchValue) {
+                $query->whereHas('user', function ($query) use ($searchValue) {
                     $query->where('first_name', 'like', '%' . $searchValue . '%');
                 })
-                ->orWhereHas('client', function($query) use ($searchValue) {
-                    $query->where('client_name', 'like', '%' . $searchValue . '%');
-                })
-                ->orWhereHas('clientSite', function($query) use ($searchValue) {
-                    $query->where('location_Code', 'like', '%' . $searchValue . '%');
-                });
+                    ->orWhereHas('client', function ($query) use ($searchValue) {
+                        $query->where('client_name', 'like', '%' . $searchValue . '%');
+                    })
+                    ->orWhereHas('clientSite', function ($query) use ($searchValue) {
+                        $query->where('location_Code', 'like', '%' . $searchValue . '%');
+                    });
             });
         }
 
@@ -544,7 +574,7 @@ class GuardRosterController extends Controller
                 'location_code' => $item->clientSite->location_code,
                 'time_in' => \Carbon\Carbon::parse($item->start_time)->format('h:iA'),
                 'time_out' => \Carbon\Carbon::parse($item->end_time)->format('h:iA'),
-                'guard_types' => $guardTypes, 
+                'guard_types' => $guardTypes,
             ];
         }
 
@@ -578,14 +608,13 @@ class GuardRosterController extends Controller
     public function getGuardTypeByGuardId($guardId)
     {
         $guardInfo = User::with('guardAdditionalInformation')->where('id', $guardId)->first();
-    
+
         if ($guardInfo && $guardInfo->guardAdditionalInformation) {
             return response()->json([
                 'guard_type_id' => $guardInfo->guardAdditionalInformation->guard_type_id ?? null,
             ]);
         }
-    
+
         return response()->json(['guard_type_id' => null]);
     }
-    
 }

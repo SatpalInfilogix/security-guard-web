@@ -5,15 +5,16 @@
                 <div class="col-md-2">
                     <select name="guard_id" id="guard_id" class="form-control">
                         <option value="" disabled selected>Select Guard</option>
-                        @foreach($securityGuards as $securityGuard)
-                            <option value="{{ $securityGuard->id }}">{{ $securityGuard->first_name .' '.$securityGuard->sure_name }}</option>
+                        @foreach ($securityGuards as $securityGuard)
+                            <option value="{{ $securityGuard->id }}">
+                                {{ $securityGuard->first_name . ' ' . $securityGuard->surname }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-3">
                     <select name="client_id" id="client_id" class="form-control">
                         <option value="" disabled selected>Select Client</option>
-                        @foreach($clients as $client)
+                        @foreach ($clients as $client)
                             <option value="{{ $client->id }}">{{ $client->client_name }}</option>
                         @endforeach
                     </select>
@@ -21,13 +22,14 @@
                 <div class="col-md-2">
                     <select name="client_site_id" id="client_site_id" class="form-control">
                         <option value="" disabled selected>Select Client Site</option>
-                        @foreach($clientSites as $clientSite)
+                        @foreach ($clientSites as $clientSite)
                             <option value="{{ $clientSite->id }}">{{ $clientSite->location_code }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <input type="text" id="date" name="date" class="form-control datePicker" value="" placeholder="Select Date" autocomplete="off">
+                    <input type="text" id="date-range" name="date" class="form-control" value="{{ request('date') }}"
+                        placeholder="Select Date Range" autocomplete="off">
                 </div>
                 <div class="col-md-2">
                     <button type="button" id="searchBtn" class="btn btn-primary">Search</button>
@@ -49,7 +51,7 @@
                     <th>Start Time</th>
                     <th>End Time</th>
                     @canany(['edit guard roster', 'delete guard roster'])
-                    <th>Action</th>
+                        <th>Action</th>
                     @endcanany
                 </tr>
             </thead>
@@ -59,10 +61,10 @@
     </div>
 </div>
 
-<x-include-plugins :plugins="['datePicker', 'sweetAlert', 'chosen']"></x-include-plugins>
+<x-include-plugins :plugins="['dateRange', 'sweetAlert', 'chosen']"></x-include-plugins>
 
 <script>
-     $(function(){
+    $(function() {
         $('#guard_id').chosen({
             width: '100%',
             placeholder_text_multiple: 'Select Guard'
@@ -75,6 +77,13 @@
             width: '100%',
             placeholder_text_multiple: 'Select Client Site'
         });
+        // Initialize date range picker
+        $('#date-range').flatpickr({
+            mode: 'range',
+            dateFormat: "Y-m-d",
+            showMonths: 2,
+            monthSelectorType: "static"
+        });
     });
     $(document).ready(function() {
         let actionColumn = [];
@@ -85,14 +94,16 @@
                 render: function(data, type, row) {
                     var actions = '<div class="action-buttons">';
 
-                   @can('edit guard roster')
-                        actions += `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/guard-rosters') }}/${row.id}/edit">`;
+                    @can('edit guard roster')
+                        actions +=
+                            `<a class="btn btn-primary waves-effect waves-light btn-sm edit" href="{{ url('admin/guard-rosters') }}/${row.id}/edit">`;
                         actions += '<i class="fas fa-pencil-alt"></i>';
                         actions += '</a>';
                     @endcan
 
                     @can('delete guard roster')
-                        actions += `<a data-source="Guard Roster" class="guard-delete-btn btn btn-danger waves-effect waves-light btn-sm" href="#" data-id="${row.id}">`;
+                        actions +=
+                            `<a data-source="Guard Roster" class="guard-delete-btn btn btn-danger waves-effect waves-light btn-sm" href="#" data-id="${row.id}">`;
                         actions += '<i class="fas fa-trash-alt"></i>';
                         actions += '</a>';
                     @endcan
@@ -121,17 +132,27 @@
                     return Object.values(json.data);
                 }
             },
-            columns: [
-                { 
-                    data: null, 
+            columns: [{
+                    data: null,
                     render: function(data, type, row, meta) {
                         return meta.row + 1 + meta.settings._iDisplayStart;
                     }
                 },
-                { data: 'user.first_name' },
-                { data: 'client.client_name' },
-                { data: 'guardType', render: function(data) { return data ? data : 'N/A'; } },
-                { data: 'date' },
+                {
+                    data: 'user.first_name'
+                },
+                {
+                    data: 'client.client_name'
+                },
+                {
+                    data: 'guardType',
+                    render: function(data) {
+                        return data ? data : 'N/A';
+                    }
+                },
+                {
+                    data: 'date'
+                },
                 {
                     data: 'start_time',
                     render: function(data) {
@@ -155,7 +176,9 @@
             paging: true,
             pageLength: 10,
             lengthMenu: [10, 25, 50, 100],
-            order: [[0, 'asc']]
+            order: [
+                [0, 'asc']
+            ]
         });
         $('#searchBtn').on('click', function() {
             guardRoasterTable.ajax.reload();
@@ -184,13 +207,13 @@
                             '_token': '{{ csrf_token() }}'
                         },
                         success: function(response) {
-                            if(response.success){
+                            if (response.success) {
                                 swal({
                                     title: "Success!",
                                     text: response.message,
                                     type: "success",
                                     showConfirmButton: false
-                                }) 
+                                })
 
                                 setTimeout(() => {
                                     location.reload();

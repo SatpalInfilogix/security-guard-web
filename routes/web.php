@@ -208,6 +208,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::get('employee-payroll/bulk-download', [EmployeePayrollController::class, 'bulkDownloadPdf'])->name('employee-payroll.bulk-download-pdf');
     Route::get('employee-payroll/{id}/download-pdf', [EmployeePayrollController::class, 'downloadPdf'])->name('employee-payroll.download-pdf');
     Route::get('/employee-payroll-export/csv', [EmployeePayrollController::class, 'employeePayrollExport'])->name('employee-payroll-export.csv');
+    Route::get('/payroll/export-nst-deductions', [EmployeePayrollController::class, 'exportNSTDeductions'])->name('employee-payroll.export-nst-deductions');
 
     Route::get('/get-employee-end-date', [EmployeeDeductionController::class, 'getEndDate'])->name('get-employee-end-date');
     Route::post('get-employee-deductions-list', [EmployeeDeductionController::class, 'getDeductionsData'])->name('get-employee-deductions-list');
