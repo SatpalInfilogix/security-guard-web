@@ -29,7 +29,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
     public function model(array $row)
     {
         if ($this->rowNumber == 1) {
-            if (empty($row['guard_id']) ||  empty($row['guard_type_id']) || empty($row['client_site_id'])) {
+            if (empty($row['guard_id']) || empty($row['guard_type_id']) || empty($row['client_site_id'])) {
                 return null;
             }
         }
@@ -44,7 +44,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                 $this->addImportResult('Guard type id is required.');
                 return null;
             }
-            
+
             if (empty($row['client_site_id'])) {
                 $this->addImportResult('Client Site id is required.');
                 return null;
@@ -70,7 +70,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                 $userId = Auth::id();
                 $query->where('manager_id', $userId);
             }
-            
+
             $clientSite = $query->first();
 
             if (!$clientSite) {
@@ -79,7 +79,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
             }
 
             $guardTypeId = RateMaster::where('id', $row['guard_type_id'])->first();
-            if(!$guardTypeId) {
+            if (!$guardTypeId) {
                 $this->addImportResult('Guard Type ID ' . $row['guard_type_id'] . ' does not exist.');
                 return null;
             }
@@ -119,6 +119,14 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                     ];
                     continue;
                 }
+                // Normalize time format for both time_in and time_out
+                $time_in = trim($time_in);
+                $time_in = preg_replace('/:\s+/', ':', $time_in);
+                $time_in = preg_replace('/([0-9])([AP]M)/i', '$1 $2', $time_in);
+
+                $time_out = trim($time_out);
+                $time_out = preg_replace('/:\s+/', ':', $time_out);
+                $time_out = preg_replace('/([0-9])([AP]M)/i', '$1 $2', $time_out);
 
                 if (!is_numeric($time_in)) {
                     $start_time = Carbon::createFromFormat('Y-m-d h:i A', $formattedDate . ' ' . $time_in);
@@ -126,10 +134,10 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                 }
 
                 if (!is_numeric($time_out)) {
-                    $end_time =  Carbon::createFromFormat('Y-m-d h:i A', $formattedDate . ' ' . $time_out);
-                    $time_out = Carbon::createFromFormat('h:iA',$time_out)->format('H:i');
+                    $end_time = Carbon::createFromFormat('Y-m-d h:i A', $formattedDate . ' ' . $time_out);
+                    $time_out = Carbon::createFromFormat('h:iA', $time_out)->format('H:i');
                 }
-                
+
                 $end_date = $end_time;
                 if ($end_time->lessThan($start_time)) {
                     $end_date = $end_time->addDay();
@@ -144,7 +152,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                         'Status' => 'Failed',
                         'Failure Reason' => 'Guard ' . $row['guard_id'] . ' id is already assigned for this date (' . $formattedDate . ') and time (' . $time_in . ' to ' . $time_out . ')',
                     ];
-                } else if($leave) {
+                } else if ($leave) {
                     $this->importResults[] = [
                         'Row' => $this->rowNumber,
                         'Status' => 'Failed',
@@ -152,28 +160,29 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                     ];
                 } else {
                     $existingRoster = GuardRoster::where('guard_id', $row['guard_id'])
-                    ->where(function($query) use ($time_in, $time_out, $formattedDate, $end_date) {
-                        if ($formattedDate == $end_date) {
-                            echo"<pre>"; print_r('sdsd');
-                            $query->where('date', '=', $formattedDate)
-                                ->where(function($query) use ($time_in, $time_out) {
-                                    $query->where(function($query) use ($time_in, $time_out) {
-                                        $query->where('start_time', '<', $time_out)
-                                            ->where('end_time', '>', $time_in);
-                                    });
-                                });
-                        } else {
-                            $query->where(function($query) use ($time_in, $time_out, $formattedDate, $end_date) {
+                        ->where(function ($query) use ($time_in, $time_out, $formattedDate, $end_date) {
+                            if ($formattedDate == $end_date) {
+                                echo "<pre>";
+                                print_r('sdsd');
                                 $query->where('date', '=', $formattedDate)
-                                    ->whereDate('end_date', '=', $end_date)
-                                    ->where(function($query) use ($time_in, $time_out) {
-                                        $query->where('start_time', '>', $time_out)
-                                            ->where('end_time', '<', $time_in);
+                                    ->where(function ($query) use ($time_in, $time_out) {
+                                        $query->where(function ($query) use ($time_in, $time_out) {
+                                            $query->where('start_time', '<', $time_out)
+                                                ->where('end_time', '>', $time_in);
+                                        });
                                     });
-                            });
-                        }
-                    })
-                    ->first();
+                            } else {
+                                $query->where(function ($query) use ($time_in, $time_out, $formattedDate, $end_date) {
+                                    $query->where('date', '=', $formattedDate)
+                                        ->whereDate('end_date', '=', $end_date)
+                                        ->where(function ($query) use ($time_in, $time_out) {
+                                            $query->where('start_time', '>', $time_out)
+                                                ->where('end_time', '<', $time_in);
+                                        });
+                                });
+                            }
+                        })
+                        ->first();
 
                     // $existingRoster = GuardRoster::where('guard_id', $row['guard_id'])
                     //                         ->where('date', $formattedDate)
@@ -187,15 +196,15 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                     //                         })
                     //                         ->first();
                     if ($existingRoster) {
-                    //     $existingRoster->update([
-                    //         'guard_type_id'  => $row['guard_type_id'],
-                    //         'client_id'      => $clientSite->client_id ?? Null,
-                    //         'client_site_id' => $row['client_site_id'],
-                    //         'start_time'     => $time_in ?? '',
-                    //         'end_time'       => $time_out ?? '',
-                    //         'end_date'       => $end_date,
-                    //     ]);
-                
+                        //     $existingRoster->update([
+                        //         'guard_type_id'  => $row['guard_type_id'],
+                        //         'client_id'      => $clientSite->client_id ?? Null,
+                        //         'client_site_id' => $row['client_site_id'],
+                        //         'start_time'     => $time_in ?? '',
+                        //         'end_time'       => $time_out ?? '',
+                        //         'end_date'       => $end_date,
+                        //     ]);
+
                         $this->importResults[] = [
                             'Row' => $this->rowNumber,
                             'Status' => 'Failed',
@@ -203,20 +212,20 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                         ];
                     } else {
                         GuardRoster::create([
-                            'guard_id'       => $row['guard_id'],
-                            'guard_type_id'  => $row['guard_type_id'],
-                            'client_id'      => $clientSite->client_id ?? Null,
+                            'guard_id' => $row['guard_id'],
+                            'guard_type_id' => $row['guard_type_id'],
+                            'client_id' => $clientSite->client_id ?? Null,
                             'client_site_id' => $row['client_site_id'],
-                            'date'           => $formattedDate,
-                            'start_time'     => $time_in ?? '',
-                            'end_time'       => $time_out ?? '',
-                            'end_date'       => $end_date
+                            'date' => $formattedDate,
+                            'start_time' => $time_in ?? '',
+                            'end_time' => $time_out ?? '',
+                            'end_date' => $end_date
                         ]);
 
                         $this->importResults[] = [
                             'Row' => $this->rowNumber,
                             'Status' => 'Success',
-                            'Failure Reason' => 'Created sucessfully for date'. $formattedDate,
+                            'Failure Reason' => 'Created sucessfully for date' . $formattedDate,
                         ];
                     }
                 }
