@@ -21,6 +21,52 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
     protected $rowNumber = 1;
 
     /**
+     * Find guard_id from user_code
+     *
+     * @param string $userCode
+     * @return int|null
+     */
+    private function findGuardIdFromUserCode($userCode)
+    {
+        // Trim whitespace and tab characters from user code
+        $userCode = trim($userCode);
+
+        $userRole = Role::where('id', 3)->first();
+
+        $guard = User::whereHas('roles', function ($query) use ($userRole) {
+            $query->where('role_id', $userRole->id);
+        })
+            ->where('status', 'Active')
+            ->where('user_code', $userCode)
+            ->first();
+
+        return $guard ? $guard->id : null;
+    }
+
+    /**
+     * Find client_site_id from location_code
+     *
+     * @param string $locationCode
+     * @return int|null
+     */
+    private function findClientSiteIdFromLocationCode($locationCode)
+    {
+        // Trim whitespace and tab characters from location code
+        $locationCode = trim($locationCode);
+
+        $query = ClientSite::where('location_code', $locationCode)->where('status', 'Active');
+
+        if (Auth::check() && Auth::user()->hasRole('Manager Operations')) {
+            $userId = Auth::id();
+            $query->where('manager_id', $userId);
+        }
+
+        $clientSite = $query->first();
+
+        return $clientSite ? $clientSite->id : null;
+    }
+
+    /**
      * Handle the import of a single row.
      *
      * @param array $row
@@ -34,8 +80,46 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
             }
         }
 
+        // Convert user_code to guard_id if needed
+        $guardId = $row['guard_id'];
+        if (!is_numeric($guardId)) {
+            $guardId = $this->findGuardIdFromUserCode($guardId);
+            if (!$guardId) {
+                // Try to find the user without role restriction to provide better error message
+                $userCode = trim($row['guard_id']);
+                $user = User::where('user_code', $userCode)->first();
+
+                if (!$user) {
+                    $this->addImportResult('Guard with user code "' . $userCode . '" does not exist.');
+                } elseif ($user->status !== 'Active') {
+                    $this->addImportResult('Guard with user code "' . $userCode . '" exists but is not active (status: ' . $user->status . ').');
+                } else {
+                    $this->addImportResult('Guard with user code "' . $userCode . '" exists and is active but does not have Security Guard role assigned.');
+                }
+                return null;
+            }
+        }
+
+        // Convert location_code to client_site_id if needed
+        $clientSiteId = $row['client_site_id'];
+        if (!is_numeric($clientSiteId)) {
+            $clientSiteId = $this->findClientSiteIdFromLocationCode($clientSiteId);
+            if (!$clientSiteId) {
+                // Try to find the client site without status restriction to provide better error message
+                $locationCode = trim($row['client_site_id']);
+                $clientSite = ClientSite::where('location_code', $locationCode)->first();
+
+                if (!$clientSite) {
+                    $this->addImportResult('Client site with location code "' . $locationCode . '" does not exist.');
+                } else {
+                    $this->addImportResult('Client site with location code "' . $locationCode . '" exists but is not active (status: ' . $clientSite->status . ').');
+                }
+                return null;
+            }
+        }
+
         foreach ($row as $column => $value) {
-            if (empty($row['guard_id'])) {
+            if (empty($guardId)) {
                 $this->addImportResult('Guard id is required.');
                 return null;
             }
@@ -45,7 +129,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                 return null;
             }
 
-            if (empty($row['client_site_id'])) {
+            if (empty($clientSiteId)) {
                 $this->addImportResult('Client Site id is required.');
                 return null;
             }
@@ -58,14 +142,14 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
 
             $guard = User::whereHas('roles', function ($query) use ($userRole) {
                 $query->where('role_id', $userRole->id);
-            })->where('status', 'Active')->find($row['guard_id']);
+            })->where('status', 'Active')->find($guardId);
 
             if (!$guard) {
-                $this->addImportResult('Guard ID ' . $row['guard_id'] . ' does not exist.');
+                $this->addImportResult('Guard ID ' . $guardId . ' does not exist.');
                 return null;
             }
 
-            $query = ClientSite::where('id', $row['client_site_id'])->where('status', 'Active');
+            $query = ClientSite::where('id', $clientSiteId)->where('status', 'Active');
             if (Auth::check() && Auth::user()->hasRole('Manager Operations')) {
                 $userId = Auth::id();
                 $query->where('manager_id', $userId);
@@ -74,7 +158,7 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
             $clientSite = $query->first();
 
             if (!$clientSite) {
-                $this->addImportResult('Client site ID ' . $row['client_site_id'] . ' does not exist.');
+                $this->addImportResult('Client site ID ' . $clientSiteId . ' does not exist.');
                 return null;
             }
 
@@ -143,23 +227,23 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                     $end_date = $end_time->addDay();
                 }
 
-                $leave = Leave::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->where('status', 'Approved')->first();
-                $existingAssignment = GuardRoster::where('guard_id', $row['guard_id'])->whereDate('date', $formattedDate)->where('is_publish', 1)->first();
+                $leave = Leave::where('guard_id', $guardId)->whereDate('date', $formattedDate)->where('status', 'Approved')->first();
+                $existingAssignment = GuardRoster::where('guard_id', $guardId)->whereDate('date', $formattedDate)->where('is_publish', 1)->first();
 
                 if ($existingAssignment) {
                     $this->importResults[] = [
                         'Row' => $this->rowNumber,
                         'Status' => 'Failed',
-                        'Failure Reason' => 'Guard ' . $row['guard_id'] . ' id is already assigned for this date (' . $formattedDate . ') and time (' . $time_in . ' to ' . $time_out . ')',
+                        'Failure Reason' => 'Guard ' . $guardId . ' id is already assigned for this date (' . $formattedDate . ') and time (' . $time_in . ' to ' . $time_out . ')',
                     ];
                 } else if ($leave) {
                     $this->importResults[] = [
                         'Row' => $this->rowNumber,
                         'Status' => 'Failed',
-                        'Failure Reason' => 'Guard ' . $row['guard_id'] . ' id is in leave for this date (' . $formattedDate . ')',
+                        'Failure Reason' => 'Guard ' . $guardId . ' id is in leave for this date (' . $formattedDate . ')',
                     ];
                 } else {
-                    $existingRoster = GuardRoster::where('guard_id', $row['guard_id'])
+                    $existingRoster = GuardRoster::where('guard_id', $guardId)
                         ->where(function ($query) use ($time_in, $time_out, $formattedDate, $end_date) {
                             if ($formattedDate == $end_date) {
                                 echo "<pre>";
@@ -212,10 +296,10 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                         ];
                     } else {
                         GuardRoster::create([
-                            'guard_id' => $row['guard_id'],
+                            'guard_id' => $guardId,
                             'guard_type_id' => $row['guard_type_id'],
                             'client_id' => $clientSite->client_id ?? Null,
-                            'client_site_id' => $row['client_site_id'],
+                            'client_site_id' => $clientSiteId,
                             'date' => $formattedDate,
                             'start_time' => $time_in ?? '',
                             'end_time' => $time_out ?? '',
