@@ -5,7 +5,7 @@ namespace App\Imports;
 use App\Models\GuardRoster;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Models\Client;
 use App\Models\User;
@@ -22,15 +22,10 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
 
     /**
      * Find guard_id from user_code
-     *
-     * @param string $userCode
-     * @return int|null
      */
     private function findGuardIdFromUserCode($userCode)
     {
-        // Trim whitespace and tab characters from user code
         $userCode = trim($userCode);
-
         $userRole = Role::where('id', 3)->first();
 
         $guard = User::whereHas('roles', function ($query) use ($userRole) {
@@ -45,15 +40,10 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
 
     /**
      * Find client_site_id from location_code
-     *
-     * @param string $locationCode
-     * @return int|null
      */
     private function findClientSiteIdFromLocationCode($locationCode)
     {
-        // Trim whitespace and tab characters from location code
         $locationCode = trim($locationCode);
-
         $query = ClientSite::where('location_code', $locationCode)->where('status', 'Active');
 
         if (Auth::check() && Auth::user()->hasRole('Manager Operations')) {
@@ -62,15 +52,11 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
         }
 
         $clientSite = $query->first();
-
         return $clientSite ? $clientSite->id : null;
     }
 
     /**
      * Handle the import of a single row.
-     *
-     * @param array $row
-     * @return GuardRoaster|null
      */
     public function model(array $row)
     {
@@ -85,7 +71,6 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
         if (!is_numeric($guardId)) {
             $guardId = $this->findGuardIdFromUserCode($guardId);
             if (!$guardId) {
-                // Try to find the user without role restriction to provide better error message
                 $userCode = trim($row['guard_id']);
                 $user = User::where('user_code', $userCode)->first();
 
@@ -105,7 +90,6 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
         if (!is_numeric($clientSiteId)) {
             $clientSiteId = $this->findClientSiteIdFromLocationCode($clientSiteId);
             if (!$clientSiteId) {
-                // Try to find the client site without status restriction to provide better error message
                 $locationCode = trim($row['client_site_id']);
                 $clientSite = ClientSite::where('location_code', $locationCode)->first();
 
@@ -139,7 +123,6 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
             }
 
             $userRole = Role::where('id', 3)->first();
-
             $guard = User::whereHas('roles', function ($query) use ($userRole) {
                 $query->where('role_id', $userRole->id);
             })->where('status', 'Active')->find($guardId);
@@ -154,7 +137,6 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                 $userId = Auth::id();
                 $query->where('manager_id', $userId);
             }
-
             $clientSite = $query->first();
 
             if (!$clientSite) {
@@ -203,7 +185,8 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                     ];
                     continue;
                 }
-                // Normalize time format for both time_in and time_out
+
+                // Normalize
                 $time_in = trim($time_in);
                 $time_in = preg_replace('/:\s+/', ':', $time_in);
                 $time_in = preg_replace('/([0-9])([AP]M)/i', '$1 $2', $time_in);
@@ -243,74 +226,91 @@ class GuardRoasterImport implements ToModel, WithHeadingRow
                         'Failure Reason' => 'Guard ' . $guardId . ' id is in leave for this date (' . $formattedDate . ')',
                     ];
                 } else {
-                    $existingRoster = GuardRoster::where('guard_id', $guardId)
-                        ->where(function ($query) use ($time_in, $time_out, $formattedDate, $end_date) {
-                            if ($formattedDate == $end_date) {
-                                echo "<pre>";
-                                print_r('sdsd');
-                                $query->where('date', '=', $formattedDate)
-                                    ->where(function ($query) use ($time_in, $time_out) {
-                                        $query->where(function ($query) use ($time_in, $time_out) {
-                                            $query->where('start_time', '<', $time_out)
-                                                ->where('end_time', '>', $time_in);
-                                        });
-                                    });
-                            } else {
-                                $query->where(function ($query) use ($time_in, $time_out, $formattedDate, $end_date) {
-                                    $query->where('date', '=', $formattedDate)
-                                        ->whereDate('end_date', '=', $end_date)
-                                        ->where(function ($query) use ($time_in, $time_out) {
-                                            $query->where('start_time', '>', $time_out)
-                                                ->where('end_time', '<', $time_in);
-                                        });
-                                });
-                            }
-                        })
+                    // ✅ New check: Prevent exact duplicates
+                    $duplicateRoster = GuardRoster::where('guard_id', $guardId)
+                        ->where('client_site_id', $clientSiteId)
+                        ->where('guard_type_id', $row['guard_type_id'])
+                        ->whereDate('date', $formattedDate)
+                        ->where('start_time', $time_in)
+                        ->where('end_time', $time_out)
                         ->first();
 
-                    // $existingRoster = GuardRoster::where('guard_id', $row['guard_id'])
-                    //                         ->where('date', $formattedDate)
-                    //                         ->where(function($query) use ($time_in, $time_out) {
-                    //                             $query->whereBetween('start_time', [$time_in, $time_out])
-                    //                                 ->orWhereBetween('end_time', [$time_in, $time_out])
-                    //                                 ->orWhere(function($query) use ($time_in, $time_out) {
-                    //                                     $query->where('start_time', '<=', $time_in)
-                    //                                         ->where('end_time', '>=', $time_out);
-                    //                                 });
-                    //                         })
-                    //                         ->first();
-                    if ($existingRoster) {
-                        //     $existingRoster->update([
-                        //         'guard_type_id'  => $row['guard_type_id'],
-                        //         'client_id'      => $clientSite->client_id ?? Null,
-                        //         'client_site_id' => $row['client_site_id'],
-                        //         'start_time'     => $time_in ?? '',
-                        //         'end_time'       => $time_out ?? '',
-                        //         'end_date'       => $end_date,
-                        //     ]);
-
+                    if ($duplicateRoster) {
                         $this->importResults[] = [
                             'Row' => $this->rowNumber,
                             'Status' => 'Failed',
-                            'Failure Reason' => 'There is already an overlapping guard roster for this client site at this time.',
+                            'Failure Reason' => 'Duplicate roster already exists for Guard ' . $guardId . ' on ' . $formattedDate . ' (' . $time_in . ' to ' . $time_out . ')',
                         ];
                     } else {
-                        GuardRoster::create([
-                            'guard_id' => $guardId,
-                            'guard_type_id' => $row['guard_type_id'],
-                            'client_id' => $clientSite->client_id ?? Null,
-                            'client_site_id' => $clientSiteId,
-                            'date' => $formattedDate,
-                            'start_time' => $time_in ?? '',
-                            'end_time' => $time_out ?? '',
-                            'end_date' => $end_date
-                        ]);
+                        // Overlap check
+                        $existingRoster = GuardRoster::where('guard_id', $guardId)
+                            ->where(function ($query) use ($time_in, $time_out, $formattedDate, $end_date) {
+                                if ($formattedDate == $end_date) {
+                                    echo "<pre>";
+                                    print_r('sdsd');
+                                    $query->where('date', '=', $formattedDate)
+                                        ->where(function ($query) use ($time_in, $time_out) {
+                                            $query->where(function ($query) use ($time_in, $time_out) {
+                                                $query->where('start_time', '<', $time_out)
+                                                    ->where('end_time', '>', $time_in);
+                                            });
+                                        });
+                                } else {
+                                    $query->where(function ($query) use ($time_in, $time_out, $formattedDate, $end_date) {
+                                        $query->where('date', '=', $formattedDate)
+                                            ->whereDate('end_date', '=', $end_date)
+                                            ->where(function ($query) use ($time_in, $time_out) {
+                                                $query->where('start_time', '>', $time_out)
+                                                    ->where('end_time', '<', $time_in);
+                                            });
+                                    });
+                                }
+                            })
+                            ->first();
 
-                        $this->importResults[] = [
-                            'Row' => $this->rowNumber,
-                            'Status' => 'Success',
-                            'Failure Reason' => 'Created sucessfully for date' . $formattedDate,
-                        ];
+                        // $existingRoster = GuardRoster::where('guard_id', $row['guard_id'])
+                        //                         ->where('date', $formattedDate)
+                        //                         ->where(function($query) use ($time_in, $time_out) {
+                        //                             $query->whereBetween('start_time', [$time_in, $time_out])
+                        //                                 ->orWhereBetween('end_time', [$time_in, $time_out])
+                        //                                 ->orWhere(function($query) use ($time_in, $time_out) {
+                        //                                     $query->where('start_time', '<=', $time_in)
+                        //                                         ->where('end_time', '>=', $time_out);
+                        //                                 });
+                        //                         })
+                        //                         ->first();
+                        if ($existingRoster) {
+                            //     $existingRoster->update([
+                            //         'guard_type_id'  => $row['guard_type_id'],
+                            //         'client_id'      => $clientSite->client_id ?? Null,
+                            //         'client_site_id' => $row['client_site_id'],
+                            //         'start_time'     => $time_in ?? '',
+                            //         'end_time'       => $time_out ?? '',
+                            //         'end_date'       => $end_date,
+                            //     ]);
+                            $this->importResults[] = [
+                                'Row' => $this->rowNumber,
+                                'Status' => 'Failed',
+                                'Failure Reason' => 'There is already an overlapping guard roster for this client site at this time.',
+                            ];
+                        } else {
+                            GuardRoster::create([
+                                'guard_id' => $guardId,
+                                'guard_type_id' => $row['guard_type_id'],
+                                'client_id' => $clientSite->client_id ?? null,
+                                'client_site_id' => $clientSiteId,
+                                'date' => $formattedDate,
+                                'start_time' => $time_in ?? '',
+                                'end_time' => $time_out ?? '',
+                                'end_date' => $end_date
+                            ]);
+
+                            $this->importResults[] = [
+                                'Row' => $this->rowNumber,
+                                'Status' => 'Success',
+                                'Failure Reason' => 'Created sucessfully for date' . $formattedDate,
+                            ];
+                        }
                     }
                 }
             }
