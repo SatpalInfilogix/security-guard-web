@@ -171,7 +171,7 @@ class EmployeePayrollController extends Controller
         $daySalary = $employeeRate?->daily_income ?? 0;
 
 
-        $employeePayroll['gross_total'] = $fullYearPayroll->sum('gross_salary_earned');
+        $employeePayroll['gross_total'] = $fullYearPayroll->sum('gross_salary');
         $employeePayroll['nis_total'] = $fullYearPayroll->sum('nis');
         $employeePayroll['paye_tax_total'] = $fullYearPayroll->sum('paye');
         $employeePayroll['education_tax_total'] = $fullYearPayroll->sum('education_tax');
