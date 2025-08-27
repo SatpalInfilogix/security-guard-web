@@ -324,7 +324,7 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td>{{ formatAmount($employeePayroll->gross_salary + $employeeAllowance ?? 0) }}
+                                            <td>{{ formatAmount($employeePayroll->gross_total + $employeeAllowance ?? 0) }}
                                             </td>
                                             <td>{{ formatAmount($employeePayroll->nis_total) }}</td>
                                             <td id="payeTax">{{ formatAmount($employeePayroll->paye_tax_total) }}</td>
