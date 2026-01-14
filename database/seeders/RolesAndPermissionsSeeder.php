@@ -43,6 +43,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'view employee encashment','create employee encashment','edit employee encashment','delete employee encashment',
             'view employee overtime','create employee overtime','edit employee overtime','delete employee overtime',
             'view guard encashment','create guard encashment','edit guard encashment','delete guard encashment',
+            'view user activity',
+            'view employee tax threshold','create employee tax threshold','edit employee tax threshold','delete employee tax threshold',
+            'view guard tax threshold','create guard tax threshold','edit guard tax threshold','delete guard tax threshold',
         ];
 
         foreach ($permissions as $permission) {

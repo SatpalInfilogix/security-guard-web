@@ -63,7 +63,8 @@ class RoleAndPermissionController extends Controller
             return redirect()->to(route('roles-and-permissions.create'))->with('message', 'Role already exist');
         }else{    
             Role::create([
-                'name' => $request->role
+                'name' => $request->role,
+                'is_manager_level' => $request->has('is_manager_level'),
             ]);
             return redirect()->to(route('roles-and-permissions.role-list'))->with('success', 'Role created successfully');
         }
@@ -99,7 +100,8 @@ class RoleAndPermissionController extends Controller
     public function update(Request $request, string $id)
     {
         Role::where('id',$id)->update([
-            'name' => $request->role
+            'name' => $request->role,
+            'is_manager_level' => $request->has('is_manager_level'),
         ]);
         return redirect()->to(route('roles-and-permissions.role-list'))->with('success', 'Role updated successfully');
 

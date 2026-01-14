@@ -30,6 +30,7 @@ class EmployeesExport implements FromArray
             $kin       = $employee->usersKinDetail;
 
             return [
+                "Emp Code"               => $employee->user_code,
                 "First Name"             => $employee->first_name,
                 "Middle Name"            => $employee->middle_name,
                 "Surname"                => $employee->surname,

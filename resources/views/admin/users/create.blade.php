@@ -76,6 +76,32 @@
                                         </div>
                                     </div>
                                 </div>
+                                 <!-- Promotion Fields -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="promotion_date">Promotion Date</label>
+                                            <input type="date" name="promotion_date" id="promotion_date"
+                                                class="form-control{{ $errors->has('promotion_date') ? ' is-invalid' : '' }}"
+                                                value="{{ old('promotion_date') }}" placeholder="Select promotion date">
+                                            @error('promotion_date')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                            <small class="form-text text-muted">Fill this if this is a promotion</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="promotion_remarks">Promotion Remarks</label>
+                                            <textarea name="promotion_remarks" id="promotion_remarks"
+                                                class="form-control{{ $errors->has('promotion_remarks') ? ' is-invalid' : '' }}" rows="2"
+                                                placeholder="Reason for promotion or role change">{{ old('promotion_remarks') }}</textarea>
+                                            @error('promotion_remarks')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
                                 <div>
                                     <button type="submit" class="btn btn-primary w-md">Submit</button>
                                 </div>

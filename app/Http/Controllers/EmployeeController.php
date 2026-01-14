@@ -21,6 +21,7 @@ use App\Imports\EmployeeImport;
 use App\Exports\EmployeeImportExport;
 use App\Exports\EmployeesExport;
 use App\Models\EmployeeLeave;
+use App\Models\PublicHoliday;
 use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller
@@ -104,10 +105,7 @@ class EmployeeController extends Controller
         $length = $request->input('length', 10);
         $start = $request->input('start', 0);
 
-        $securityGuards = $securityGuards->orderBy('id', 'desc')
-            ->skip($start)
-            ->take($length)
-            ->get();
+        $securityGuards = $securityGuards->orderBy('id', 'desc')->skip($start)->take($length)->get();
 
         $paidLeaveBalanceLimit = (int) setting('yearly_leaves') ?: 10;
         $currentYear = now()->year;
@@ -117,6 +115,41 @@ class EmployeeController extends Controller
                     return ($leave->type == 'Half Day') ? 0.5 : 1;
                 });
             $employee['pendingLeaveBalance'] =  max(0, $paidLeaveBalanceLimit - $approvedLeaves);
+
+            // $VacationpaidLeaveBalanceLimit = (int) setting('vacation_leaves') ?: 10;
+            // $approvedVacationLeaves = EmployeeLeave::where('employee_id', $employee->id)
+            //     ->where('status', 'Approved')
+            //     ->where('leave_type', 'Vacation Leave')
+            //     ->whereYear('date', $currentYear)
+            //     ->get()
+            //     ->sum(function ($leave) {
+            //         return ($leave->type == 'Half Day') ? 0.5 : 1;
+            //     });
+
+            // $employee['vacationLeaveBalance'] = max(0, $VacationpaidLeaveBalanceLimit - $approvedVacationLeaves);
+
+            $yearlyVacationLimit = $this->getYearlyVacationLimitForListing($employee, $currentYear);
+            $proratedVacationLeave = $this->calculateProratedVacationLeaveForListing($employee, $currentYear);
+            $totalVacationLimit = $yearlyVacationLimit + $proratedVacationLeave;
+
+            $usedVacationLeaves = EmployeeLeave::where('employee_id', $employee->id)
+                ->where('status', 'Approved')
+                ->where('leave_type', 'Vacation Leave')
+                ->whereYear('date', $currentYear)
+                ->get()
+                ->sum(function ($leave) {
+                    $leaveDate = Carbon::parse($leave->date);
+                    if ($leaveDate->isWeekend() || $this->isPublicHoliday($leaveDate)) {
+                        return 0;
+                    }
+                    return ($leave->type == 'Half Day') ? 0.5 : 1;
+                });
+
+            $employee['vacationLeaveBalance'] = max(0, $totalVacationLimit - $usedVacationLeaves);
+            $employee['yearlyVacationLimit'] = $yearlyVacationLimit;
+            $employee['proratedLeave'] = $proratedVacationLeave;
+            $employee['totalVacationLimit'] = $totalVacationLimit;
+            $employee['usedVacationLeaves'] = $usedVacationLeaves;
         }
 
         $data = [
@@ -130,6 +163,90 @@ class EmployeeController extends Controller
 
         return response()->json($data);
     }
+
+    protected function getYearlyVacationLimitForListing($employee, $year)
+    {
+        $isManagerOrAbove = $this->isManagerOrAboveForListing($employee, $year);
+
+        if (!$isManagerOrAbove) {
+            return 10;
+        }
+
+        $joiningDate = Carbon::parse($employee->guardAdditionalInformation->date_of_joining);
+        $yearsOfService = $joiningDate->diffInYears(Carbon::create($year, 12, 31));
+
+        if ($yearsOfService <= 10) {
+            return 15;
+        } else {
+            return 20;
+        }
+    }
+
+    protected function isManagerOrAboveForListing($employee, $year)
+    {
+        $managerRoles = Role::where('is_manager_level', 1)->pluck('id');
+
+        $hasManagerRole = $employee->roles()->whereIn('id', $managerRoles)->exists();
+
+        if ($hasManagerRole) {
+            return true;
+        }
+
+        if ($employee->current_role_id) {
+            $currentRole = Role::find($employee->current_role_id);
+            if ($currentRole && $currentRole->is_manager_level == 1) {
+                return true;
+            }
+        }
+
+        $checkDate = Carbon::create($year, 12, 31);
+
+        if ($employee->promotion_date && $employee->promotion_date <= $checkDate) {
+            if ($employee->current_role_id) {
+                $currentRole = Role::find($employee->current_role_id);
+                return $currentRole && $currentRole->is_manager_level == 1;
+            }
+        }
+
+        return false;
+    }
+
+    protected function calculateProratedVacationLeaveForListing($employee, $year)
+    {
+        if (!$employee->promotion_date || $employee->promotion_date->year != $year) {
+            return 0;
+        }
+
+        $promotionDate = Carbon::parse($employee->promotion_date);
+        $joiningDate = Carbon::parse($employee->guardAdditionalInformation->date_of_joining);
+
+        $isManagerAfter = $this->isManagerOrAboveForListing($employee, $year);
+
+        if ($isManagerAfter) {
+            $startOfYear = Carbon::create($year, 1, 1);
+            $endOfYear = Carbon::create($year, 12, 31);
+
+            $nonManagerDays = $startOfYear->diffInDays($promotionDate->copy()->subDay());
+            $nonManagerLeave = (10 / 365) * $nonManagerDays;
+
+            $managerDays = $promotionDate->diffInDays($endOfYear) + 1;
+            $yearsAtPromotion = $joiningDate->diffInYears($promotionDate);
+            $managerYearlyLimit = $yearsAtPromotion <= 10 ? 15 : 20;
+            $managerLeave = ($managerYearlyLimit / 365) * $managerDays;
+
+            $totalProratedLeave = $nonManagerLeave + $managerLeave;
+
+            return $totalProratedLeave;
+        }
+
+        return 0;
+    }
+
+    protected function isPublicHoliday($date)
+    {
+        return PublicHoliday::whereDate('date', $date)->exists();
+    }
+    
 
     public function create()
     {

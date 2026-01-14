@@ -24,13 +24,27 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <form action="{{ route('roles-and-permissions.update',$role->id) }}" method="POST">
+                            <form action="{{ route('roles-and-permissions.update', $role->id) }}" method="POST">
                                 @csrf
                                 @method('PUT')
                                 <div class="row mb-2">
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <x-form-input name="role" value="{{ $role->name }}" label="Role Name" placeholder="Enter role name"  required="true" />
+                                            <x-form-input name="role" value="{{ $role->name }}" label="Role Name"
+                                                placeholder="Enter role name" required="true" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" name="is_manager_level"
+                                                id="is_manager_level" value="1"
+                                                {{ $role->is_manager_level ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="is_manager_level">
+                                                This role is <strong>Manager-level (eligible for 15 vacation
+                                                    leaves)</strong>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>

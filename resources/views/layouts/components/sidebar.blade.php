@@ -106,7 +106,7 @@
                             @can('view employee encashment')
                                 <li><a href="{{ route('employee-leave-encashment.index') }}">Pay In Lieu of Employee</a></li>
                             @endcan
-                                <li><a href="{{ route('get-interval') }}">Twenty Two Days Interval</a></li>
+                            <li><a href="{{ route('get-interval') }}">Twenty Two Days Interval</a></li>
                         </ul>
                     </li>
                 @endcanany
@@ -137,7 +137,15 @@
                         </ul>
                     </li>
                 @endcanany
-                @canany(['view site setting', 'view gerenal setting', 'view payment setting'])
+                @canany([
+                    'view site setting',
+                    'view gerenal setting',
+                    'view payment setting',
+                    'view employee tax
+                    threshold',
+                    'view gurad tax threshold',
+                    'view user activity',
+                    ])
                     <li @class([
                         'active' => Request::is(
                             'settings',
@@ -160,15 +168,22 @@
                                 <li><a href="{{ route('settings.payment-settings') }}" key="t-tui-calendar">Payment
                                         Settings</a></li>
                             @endcan
-                            <li><a href="{{ route('employee-tax-threshold.index') }}" key="t-tui-calendar">Employee
-                                    Tax Threshold</a></li>
-                            <li><a href="{{ route('guard-tax-threshold.index') }}" key="t-tui-calendar">Guard
-                                    Tax Threshold</a></li>
+                            @can('view employee tax threshold')
+                                <li><a href="{{ route('employee-tax-threshold.index') }}" key="t-tui-calendar">Employee
+                                        Tax Threshold</a></li>
+                            @endcan
+                            @can('view gurad tax threshold')
+                                <li><a href="{{ route('guard-tax-threshold.index') }}" key="t-tui-calendar">Guard
+                                        Tax Threshold</a></li>
+                            @endcan
+                            {{-- @can('view user activity')
+                                <li><a href="{{ route('activities.index') }}" key="t-tui-calendar">User Activity</a></li>
+                            @endcan --}}
                         </ul>
                     </li>
                 @endcanany
 
-                @canany(['view roles & permissions', 'view user'])
+                @canany(['view roles & permissions', 'view user','view user activity'])
                     <li @class([
                         'active' => Request::is(
                             'roles-and-permissions',
@@ -195,7 +210,14 @@
                             @endcan
                         </ul>
                     </li>
+                    @can('view user activity')
+                        <li><a href="{{ route('activities.index') }}" key="t-tui-calendar"><i class="bx bx-home-alt"></i>User
+                                Activity</a></li>
+                    @endcan
                 @endcanany
+
+
+
 
                 {{-- <li>
                     <a href="javascript: void(0);" class="waves-effect has-arrow">

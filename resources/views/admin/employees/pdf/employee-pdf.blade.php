@@ -83,7 +83,7 @@
                     <th>Firstname</th>
                     <th>Middlename</th>
                     <th>Email</th>
-                    <th>Phone Number</th>
+                    <th>Phone</th>
                 </tr>
             </thead>
             <tbody>

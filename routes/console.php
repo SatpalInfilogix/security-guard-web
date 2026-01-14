@@ -10,3 +10,4 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('publish:guard-roaster')->daily();
 Schedule::command('publish:employee-payroll')->daily();
+Schedule::command('send-sms:send-sms-in-group')->everyFiveMinutes();

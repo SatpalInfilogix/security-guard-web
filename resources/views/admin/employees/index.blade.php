@@ -105,8 +105,9 @@
                                         <th>First Name</th>
                                         <th>Middle Name</th>
                                         <th>Surname</th>
-                                        <th>Phone number</th>
-                                        <th>Leave Balance</th>
+                                        <th>Phone</th>
+                                        <th>SL</th>
+                                        <th>VL</th>
                                         <th>Status</th>
                                         @canany(['edit employee', 'delete employee'])
                                             <th>Action</th>
@@ -195,6 +196,9 @@
                     },
                     {
                         data: 'pendingLeaveBalance'
+                    },
+                    {
+                        data: 'vacationLeaveBalance'
                     },
                     {
                         data: 'status',

@@ -163,7 +163,7 @@
         </tr>
     </table>
     <br>
-    <table>
+    {{-- <table>
         <tr>
             <th>Bank Name</th>
             <th>Account No.</th>
@@ -174,7 +174,7 @@
             <td></td>
             <td>{{ $payroll->gross_salary_earned - $totalAmount }}</td>
         </tr>
-    </table>
+    </table> --}}
     <br>
     <table>
         <tr>
@@ -184,7 +184,7 @@
             <th>Tax</th>
             <th>Ed Tax</th>
             <th>NHT</th>
-            <th>Annual Leave</th>
+            <th>Vacation Leave</th>
             <th>Sick Leave</th>
         </tr>
         <tr>
@@ -194,8 +194,8 @@
             <td>{{ $payroll->paye_tax_total }}</td>
             <td>{{ $payroll->education_tax_total }}</td>
             <td>{{ $payroll->nht_total }}</td>
-            <td>{{ $payroll->pendingLeaveBalance }}</td>
-            <td>{{ setting('yearly_leaves') ?: 10 }} </td>
+            <td>{{ $payroll->pendingVacationLeaveBalance }}</td>
+            <td>{{ $payroll->pendingLeaveBalance }} </td>
         </tr>
     </table>
 </body>

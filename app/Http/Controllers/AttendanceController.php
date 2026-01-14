@@ -16,11 +16,11 @@ class AttendanceController extends Controller
 {
     public function index(Request $request)
     {
-        if(!Gate::allows('view attendance')) {
+        if (!Gate::allows('view attendance')) {
             abort(403);
         }
         $today = Carbon::now();
-        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first(); 
+        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
         if (!$fortnight) {
             $fortnight = null;
         }
@@ -39,8 +39,7 @@ class AttendanceController extends Controller
         }
 
         $attendances = $attendances->get();
-        foreach($attendances as $key => $attendance)
-        {
+        foreach ($attendances as $key => $attendance) {
             $inTime = Carbon::parse($attendance->in_time);
             $outTime = Carbon::parse($attendance->out_time);
             if ($inTime < $outTime) {
@@ -51,19 +50,20 @@ class AttendanceController extends Controller
                 $workedHours = $diff->h; // Hours part
                 $workedMinutes = $diff->i; // Minutes part
 
-                $loggedHours = $workedHours .'.'. $workedMinutes;
+                $loggedHours = $workedHours . '.' . $workedMinutes;
             } else {
                 $loggedHours = 'N/A';  // If no valid out time or invalid time order
             }
             $attendance['total_hours'] = $loggedHours;
         }
+        logActivity('View Attendance', 'Viewed Attendance details');
 
         return view('admin.attendance.index', compact('attendances', 'fortnight'));
     }
     private function parseDate($date)
     {
         if (empty($date)) {
-            return null; 
+            return null;
         }
 
         try {
@@ -75,7 +75,7 @@ class AttendanceController extends Controller
 
     public function edit($id)
     {
-        if(!Gate::allows('edit attendance')) {
+        if (!Gate::allows('edit attendance')) {
             abort(403);
         }
         $attendance = Punch::with('user')->where('id', $id)->first();
@@ -89,7 +89,7 @@ class AttendanceController extends Controller
 
     public function update(Request $request, $id)
     {
-        if(!Gate::allows('edit attendance')) {
+        if (!Gate::allows('edit attendance')) {
             abort(403);
         }
         $request->validate([
@@ -98,17 +98,27 @@ class AttendanceController extends Controller
         ]);
 
         $attendance = Punch::where('id', $id)->first();
+        $oldValues = $attendance->toArray();
+
         $attendance->update([
             'in_time'   => $this->parseDate($request->punch_in),
             'out_time'  => $this->parseDate($request->punch_out)
         ]);
+        $newValues = $attendance->toArray();
+
+        // 🔹 Log update activity
+        logActivity(
+            'Update Attendance',
+            'Updated Attendance ID: ' . $attendance->id .
+                ' | Changes: ' . json_encode(array_diff_assoc($newValues, $oldValues))
+        );
 
         return redirect()->route('attendance.index')->with('success', 'Attendance updated successfully.');
     }
 
     public function destroy(string $id)
     {
-        if(!Gate::allows('delete attendance')) {
+        if (!Gate::allows('delete attendance')) {
             abort(403);
         }
         $attendance = Punch::where('id', $id)->first();
@@ -117,14 +127,19 @@ class AttendanceController extends Controller
             public_path($attendance->in_image),
             public_path($attendance->out_image)
         ];
-    
+
         foreach ($images as $image) {
             if (File::exists($image)) {
                 File::delete($image);
             }
         }
-    
+
         $attendance->delete();
+        // 🔹 Log delete activity
+        logActivity(
+            'Delete Attendance',
+            'Deleted Attendance ID: ' . $id
+        );
 
         return response()->json([
             'success' => true,
@@ -135,7 +150,7 @@ class AttendanceController extends Controller
     public function exportAttendance(Request $request)
     {
         $today = Carbon::now();
-        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first(); 
+        $fortnight = FortnightDates::whereDate('start_date', '<=', $today)->whereDate('end_date', '>=', $today)->first();
         if (!$fortnight) {
             $fortnight = null;
         }
@@ -144,7 +159,7 @@ class AttendanceController extends Controller
 
         if ($dateRange) {
             $dateParts = explode(' to ', $dateRange);
-            if (count($dateParts) === 2) { 
+            if (count($dateParts) === 2) {
                 list($startDate, $endDate) = $dateParts;
                 $startDate = Carbon::parse($startDate)->startOfDay();
                 $endDate = Carbon::parse($endDate)->endOfDay();
@@ -156,7 +171,7 @@ class AttendanceController extends Controller
 
         $publicHolidays = PublicHoliday::whereBetween('date', [$startDate, $endDate])->pluck('date')->toArray();
 
-
+        logActivity('File Export', 'Exported Attendance CSV');
         return Excel::download(new AttendanceExport($startDate, $endDate, $publicHolidays), 'attendance-list.xlsx');
     }
 }

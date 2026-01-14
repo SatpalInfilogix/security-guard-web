@@ -117,5 +117,17 @@ class ModuleSeeder extends Seeder
             'name' => 'Employee Overtime',
             'slug' => 'employee overtime',
         ]);
+        Module::create([
+            'name' => 'Employee Tax Threshold',
+            'slug' => 'employee tax threshold',
+        ]);
+        Module::create([
+            'name' => 'Guard Tax Threshold',
+            'slug' => 'guard tax threshold',
+        ]);
+        Module::create([
+            'name' => 'User Activity',
+            'slug' => 'user activity',
+        ]);
     }
 }

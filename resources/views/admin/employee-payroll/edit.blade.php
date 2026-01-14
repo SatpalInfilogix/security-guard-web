@@ -137,7 +137,7 @@
                                             <td>Staff Loan</td>
                                             <td> <input type="text" class="form-control editable" id="staff_loan"
                                                     value="{{ formatAmount($employeePayroll->staff_loan) }}" readonly></td>
-                                            <td id="balance">{{ number_format($employeePayroll->pending_staff_loan) }}
+                                            <td id="balance">{{ $employeePayroll->pending_staff_loan == 0 ? '' : number_format($employeePayroll->pending_staff_loan) }}
                                             </td>
                                         </tr>
                                         <tr>
@@ -147,63 +147,64 @@
                                             <td><input type="text" class="form-control editable" id="medical_insurance"
                                                     value="{{ formatAmount($employeePayroll->medical_insurance) }}"
                                                     readonly>
-                                            <td>{{ number_format($employeePayroll->pending_medical_insurance) }}</td>
+                                            <td>{{ $employeePayroll->pending_medical_insurance == 0 ? '' : number_format($employeePayroll->pending_medical_insurance) }}
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Salary Advance</td>
                                             <td>{{ formatAmount($employeePayroll->salary_advance) }}</td>
-                                            <td>{{ number_format($employeePayroll->pending_salary_advance) }}</td>
+                                            <td>{{ $employeePayroll->pending_salary_advance == 0 ? '' : number_format($employeePayroll->pending_salary_advance) }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Approved Pension</td>
                                             <td>{{ formatAmount($employeePayroll->approved_pension_scheme) }}</td>
-                                            <td>{{ number_format($employeePayroll->pending_approved_pension) }}</td>
+                                            <td>{{ $employeePayroll->pending_approved_pension == 0 ? '' : number_format($employeePayroll->pending_approved_pension) }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>PSRA</td>
                                             <td>{{ formatAmount($employeePayroll->psra) }}</td>
-                                            <td>{{ number_format($employeePayroll->pending_psra) }}</td>
+                                            <td>{{ $employeePayroll->pending_psra == 0 ? '' : number_format($employeePayroll->pending_psra) }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Bank Loan</td>
                                             <td>{{ formatAmount($employeePayroll->bank_loan) }}</td>
-                                            <td>{{ number_format($employeePayroll->pending_bank_loan) }}</td>
+                                            <td>{{ $employeePayroll->pending_bank_loan == 0 ? '' : number_format($employeePayroll->pending_bank_loan) }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Garnishment</td>
                                             <td>{{ formatAmount($employeePayroll->garnishment) }}</td>
-                                            <td>{{ number_format($employeePayroll->pending_garnishment) }}</td>
+                                            <td>{{ $employeePayroll->pending_garnishment == 0 ? '' : number_format($employeePayroll->pending_garnishment) }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Damaged Goods</td>
                                             <td>{{ formatAmount($employeePayroll->damaged_goods) }}</td>
-                                            <td>{{ number_format($employeePayroll->pending_damaged_goods) }}</td>
+                                            <td>{{ $employeePayroll->pending_damaged_goods == 0 ? '' : number_format($employeePayroll->pending_damaged_goods) }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>Missing Goods</td>
                                             <td>{{ formatAmount($employeePayroll->missing_goods) }}</td>
-                                            <td>{{ number_format($employeePayroll->pending_missing_goods) }}</td>
+                                            <td>{{ $employeePayroll->pending_missing_goods == 0 ? '' : number_format($employeePayroll->pending_missing_goods) }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>
                                             <td></td>
                                             <td>NCB Loan</td>
                                             <td>{{ formatAmount($employeePayroll->ncb_loan) }}</td>
-                                            <td>{{ number_format($employeePayroll->pending_ncb_loan) }}</td>
+                                            <td>{{ $employeePayroll->pending_ncb_loan == 0 ? '' : number_format($employeePayroll->pending_ncb_loan) }}</td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"></td>

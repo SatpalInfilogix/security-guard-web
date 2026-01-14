@@ -46,7 +46,7 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <x-form-input type="number" name="phone_no" label="Phone Number"
+                                            <x-form-input type="number" name="phone_no" label="Phone"
                                                 value="{{ $user->phone_number }}" placeholder="Enter your Phone Number" />
                                         </div>
                                     </div>

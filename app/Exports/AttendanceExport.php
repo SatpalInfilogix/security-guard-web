@@ -160,8 +160,8 @@ class AttendanceExport implements  WithCustomCsvSettings, WithStyles
                         $inTime = Carbon::parse($attendance->in_time);
                         $outTime = Carbon::parse($attendance->out_time);
     
-                        $timeInList[] = $inTime->format('h:i A');
-                        $timeOutList[] = $outTime->format('h:i A');
+                        $timeInList[] = $inTime->format('m/d/Y h:i A');
+                        $timeOutList[] = $outTime->format('m/d/Y h:i A');
                         
                         $workedMinutes = $inTime->diffInMinutes($outTime);
                         $workedHours = floor($workedMinutes / 60);

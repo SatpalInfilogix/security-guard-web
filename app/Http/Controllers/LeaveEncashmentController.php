@@ -163,6 +163,7 @@ class LeaveEncashmentController extends Controller
         $leaves = EmployeeLeave::where('employee_id', $employeeId)
             ->where('status', 'approved')
             ->where('date', '>=', now()->subYear())
+            ->where('leave_type', 'Vacation Leave')
             ->get();
 
         $usedLeaves = $leaves->sum(function ($leave) {

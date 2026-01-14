@@ -31,6 +31,7 @@ use App\Http\Controllers\EmployeeTaxThresholdController;
 use App\Http\Controllers\GuardLeaveEncashmentController;
 use App\Http\Controllers\GuardTaxThresholdController;
 use App\Http\Controllers\LeaveEncashmentController;
+use App\Http\Controllers\UserActivityController;
 use Illuminate\Support\Facades\Response;
 
 Route::get('/', function () {
@@ -214,3 +215,7 @@ Route::middleware(['auth', 'auth.session'])->group(function () {
     Route::post('get-employee-deductions-list', [EmployeeDeductionController::class, 'getDeductionsData'])->name('get-employee-deductions-list');
     Route::get('export-employee-deduction', [EmployeeDeductionController::class, 'exportEmployeeDeduction'])->name('export.employee-deductions');
 });
+
+Route::get('activities', [UserActivityController::class, 'index'])
+    ->name('activities.index')
+    ->middleware('auth');

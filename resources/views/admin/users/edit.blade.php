@@ -82,6 +82,63 @@
                                         </div>
                                     </div>
                                 </div>
+                                <!-- Promotion Fields - Only show if user has permission to change role -->
+                                @if (auth()->user()->hasAnyRole(['Super Admin', 'Admin']) && auth()->id() != $user->id)
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="promotion_date" class="form-label">Promotion Date</label>
+                                                <input type="date" name="promotion_date" id="promotion_date"
+                                                    class="form-control{{ $errors->has('promotion_date') ? ' is-invalid' : '' }}"
+                                                    value="{{ old('promotion_date', $user->promotion_date ? \Carbon\Carbon::parse($user->promotion_date)->format('Y-m-d') : '') }}"
+                                                    placeholder="Select promotion date">
+                                                @error('promotion_date')
+                                                    <span class="invalid-feedback">{{ $message }}</span>
+                                                @enderror
+                                                <small class="form-text text-muted">Fill this if changing role
+                                                    (promotion/demotion)</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="promotion_remarks" class="form-label">Promotion Remarks</label>
+                                                <textarea name="promotion_remarks" id="promotion_remarks"
+                                                    class="form-control{{ $errors->has('promotion_remarks') ? ' is-invalid' : '' }}" rows="2"
+                                                    placeholder="Reason for role change">{{ old('promotion_remarks', $user->promotion_remarks) }}</textarea>
+                                                @error('promotion_remarks')
+                                                    <span class="invalid-feedback">{{ $message }}</span>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <!-- Display current promotion info if exists -->
+                                @if ($user->promotion_date)
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="alert alert-info">
+                                                <h6 class="alert-heading">Current Promotion Information</h6>
+                                                <hr>
+                                                <p class="mb-1"><strong>Previous Role:</strong>
+                                                    {{ $user->previousRole->name ?? 'N/A' }}</p>
+                                                <p class="mb-1"><strong>Current Role:</strong>
+                                                    {{ $user->currentRole->name ?? 'N/A' }}</p>
+                                                <p class="mb-1"><strong>Promotion Date:</strong>
+                                                    @if (is_string($user->promotion_date))
+                                                        {{ \Carbon\Carbon::parse($user->promotion_date)->format('M d, Y') }}
+                                                    @else
+                                                        {{ $user->promotion_date->format('M d, Y') }}
+                                                    @endif
+                                                </p>
+                                                @if ($user->promotion_remarks)
+                                                    <p class="mb-0"><strong>Remarks:</strong>
+                                                        {{ $user->promotion_remarks }}</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
                                 <div>
                                     <button type="submit" class="btn btn-primary w-md">Submit</button>
                                 </div>

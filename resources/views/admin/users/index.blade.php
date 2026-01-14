@@ -35,7 +35,7 @@
                                     <th>Firstname</th>
                                     <th>Lastname</th>
                                     <th>Email</th>
-                                    <th>Phone number</th>
+                                    <th>Phone</th>
                                     @canany(['edit user', 'delete user'])
                                     <th>Action</th>
                                     @endcanany

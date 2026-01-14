@@ -276,6 +276,16 @@ class PayrollController extends Controller
         $approvedLeaves = Leave::where('guard_id', $payroll->guard_id)->where('status', 'Approved')->whereDate('date', '<=', $month)->whereYear('date', $currentYear)->count();
         $payroll['pendingLeaveBalance'] =  max(0, $paidLeaveBalanceLimit - $approvedLeaves);
 
+        $VacationpaidLeaveBalanceLimit = (int) setting('vacation_leaves') ?: 10;
+        $approvedVacationLeaves = Leave::where('guard_id', $payroll->guard_id)
+            ->where('status', 'Approved')
+            ->where('leave_type', 'Vacation Leave')
+            ->whereDate('date', '<=', $month)
+            ->whereYear('date', $currentYear)
+            ->count();
+
+        $payroll['pendingVacationLeaveBalance'] = max(0, $VacationpaidLeaveBalanceLimit - $approvedVacationLeaves);
+
         $fortnightDayCount = FortnightDates::where('start_date', $payroll->start_date)->where('end_date', $payroll->end_date)->first();
         $pdfOptions = new Options();
         $pdfOptions->set('isHtml5ParserEnabled', true);

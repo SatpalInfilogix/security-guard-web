@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use App\Models\EmployeeTaxThreshold;
 use App\Models\TwentyTwoDayInterval;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class PublishEmployeePayroll extends Command
@@ -180,7 +181,7 @@ class PublishEmployeePayroll extends Command
         $userRole = Role::where('id', 9)->first();
         $employees = User::whereHas('roles', function ($query) use ($userRole) {
             $query->where('role_id', $userRole->id);
-        })->with('guardAdditionalInformation')->latest()->get();
+        })->with('guardAdditionalInformation', 'roles')->latest()->get();
 
         $today = Carbon::now()->startOfDay();
         // $today = Carbon::parse('24-01-2025')->startOfDay(); // For Manuall testing 
@@ -287,7 +288,7 @@ class PublishEmployeePayroll extends Command
                                         $payrollStatutoryData['paye'] +
                                         $payrollStatutoryData['nis'] +
                                         $payrollStatutoryData['nht'] +
-                                        $payrollStatutoryData['education_tax']+
+                                        $payrollStatutoryData['education_tax'] +
                                         $payrollStatutoryData['heart']
                                     );
                                     //===== Employee Payroll Non Statutory Calculation =====
@@ -527,12 +528,26 @@ class PublishEmployeePayroll extends Command
 
     protected function calculateLeaveDetails($normalDays, $employee, $previousStartDate, $endDate, $daySalary)
     {
+        // Debug logging
+        $year = Carbon::parse($previousStartDate)->year;
+        $isManager = $this->isManagerOrAbove($employee, $year);
+        $vacationLimit = $this->getYearlyVacationLimit($employee, $year);
+        $proratedLeave = $this->calculateProratedVacationLeave($employee, $year);
+
+        Log::info("Leave calculation for employee {$employee->id}", [
+            'year' => $year,
+            'is_manager' => $isManager,
+            'vacation_limit' => $vacationLimit,
+            'prorated_leave' => $proratedLeave,
+            'employee_roles' => $employee->roles->pluck('name'),
+            'current_role_id' => $employee->current_role_id,
+            'promotion_date' => $employee->promotion_date
+        ]);
+
         $leavePaid = 0;
         $leaveNotPaid = 0;
         $grossSalary = $normalDays * $daySalary;
-
         $paidLeaveBalance = 0;
-        $baseYearlyLimit = (int) setting('yearly_leaves') ?: 10;
 
         $year = Carbon::parse($previousStartDate)->year;
         $previousYear = $year - 1;
@@ -541,16 +556,20 @@ class PublishEmployeePayroll extends Command
         $anniversaryDate = Carbon::parse($employee->joining_date)->year($year);
         $isAfterAnniversary = $previousStartDate <= $anniversaryDate && $anniversaryDate <= $endDate;
 
-        // Define leave type allocations
+        $vacationLimit = $this->getYearlyVacationLimit($employee, $year);
+
+        $proratedVacationLeave = $this->calculateProratedVacationLeave($employee, $year);
+
+        // Define leave type allocations with dynamic vacation limit
         $leaveTypeAllocations = [
             'Sick' => [
                 'yearly_limit' => (int) setting('yearly_leaves') ?: 10,
                 'carry_forward' => false,
             ],
             'Vacation' => [
-                'yearly_limit' => (int) setting('vacation_leaves') ?: 10,
+                'yearly_limit' => $vacationLimit + $proratedVacationLeave,
                 'carry_forward' => true,
-                'carry_forward_limit' => 10,
+                'carry_forward_limit' => $vacationLimit,
                 'credited_on_anniversary' => true,
             ],
             'Maternity' => [
@@ -581,12 +600,12 @@ class PublishEmployeePayroll extends Command
                     return ($leave->type === 'Half Day') ? 0.5 : 1;
                 });
 
-            $carryForwardLeaves = max(0, $baseYearlyLimit - $usedLeavesLastYear);
-            $carryForwardLimit = 10;
+            $carryForwardLeaves = max(0, $vacationLimit - $usedLeavesLastYear);
+            $carryForwardLimit = $vacationLimit;
             $carryForwardLeaves = min($carryForwardLeaves, $carryForwardLimit);
         }
 
-        $paidLeaveBalanceLimit = $baseYearlyLimit + $carryForwardLeaves;
+        $paidLeaveBalanceLimit = $vacationLimit + $carryForwardLeaves + $proratedVacationLeave;
 
         // Calculate leave balances for each type
         $leaveBalances = [];
@@ -650,7 +669,6 @@ class PublishEmployeePayroll extends Command
             $paidLeaveBalance = max(0, $paidLeaveBalanceLimit - $leavesCountInDecember);
         }
 
-        // Calculate used leaves in current period by type
         $leavesCount = $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])->get()
             ->sum(function ($leave) {
                 $leaveDate = Carbon::parse($leave->date);
@@ -660,7 +678,6 @@ class PublishEmployeePayroll extends Command
                 return ($leave->type == 'Half Day') ? 0.5 : 1;
             });
 
-        // Group leaves by type for new functionality
         $leavesByType = $leavesQuery->whereBetween('date', [$previousStartDate, $endDate])
             ->get()
             ->groupBy('leave_type');
@@ -679,7 +696,6 @@ class PublishEmployeePayroll extends Command
             $leaveBalances[$type]['used_current_year'] = $usedDays;
         }
 
-        // Original approved leaves calculation (maintains backward compatibility)
         $totalApprovedLeaves = $leavesCount;
         if ($leavesCount > 0) {
             $approvedLeaves = EmployeeLeave::where('employee_id', $employee->id)
@@ -721,12 +737,10 @@ class PublishEmployeePayroll extends Command
             }
         }
 
-        // Calculate remaining leaves (original logic)
         $remainingPaidLeaves = max(0, $paidLeaveBalanceLimit - $totalApprovedLeaves);
         $pendingLeaveAmount = $remainingPaidLeaves * $daySalary;
         $normalDaysSalary = $grossSalary;
 
-        // Leave encashment (original logic)
         $leaveEncashments = LeaveEncashment::where('employee_id', $employee->id)
             ->whereDate('created_at', '<=', $endDate)
             ->get();
@@ -736,8 +750,7 @@ class PublishEmployeePayroll extends Command
 
         $grossSalary += $encashLeaveAmount;
 
-        // Return original values (maintaining backward compatibility)
-        // Note: You might want to return additional leave type information if needed
+        // Return original values
         return [
             $leavePaid,
             $leaveNotPaid,
@@ -745,7 +758,6 @@ class PublishEmployeePayroll extends Command
             $grossSalary,
             $pendingLeaveAmount,
             $normalDaysSalary,
-            // Optional: You could add $leaveBalances as a 7th return value if needed
         ];
     }
 
@@ -906,7 +918,7 @@ class PublishEmployeePayroll extends Command
         ];
     }
 
-    private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate,$grossSalary,$statutoryDeductions)
+    private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate, $grossSalary, $statutoryDeductions)
     {
         $deductionTypes = [
             'Staff Loan' => 'pending_staff_loan',
@@ -1017,6 +1029,125 @@ class PublishEmployeePayroll extends Command
     protected function isPublicHoliday($date)
     {
         return PublicHoliday::whereDate('date', $date)->exists();
+    }
+
+    protected function getYearlyVacationLimit($employee, $year)
+    {
+        $isManagerOrAbove = $this->isManagerOrAbove($employee, $year);
+
+        if (!$isManagerOrAbove) {
+            return 10;
+        }
+
+        $joiningDate = Carbon::parse($employee->guardAdditionalInformation->date_of_joining);
+        $yearsOfService = $joiningDate->diffInYears(Carbon::create($year, 12, 31));
+
+        if ($yearsOfService <= 10) {
+            return 15;
+        } else {
+            return 20;
+        }
+    }
+
+    protected function isManagerOrAbove($employee, $year)
+    {
+        $managerRoles = Role::where('is_manager_level', 1)->pluck('id');
+
+        $hasManagerRole = $employee->roles()->whereIn('id', $managerRoles)->exists();
+
+        if ($hasManagerRole) {
+            return true;
+        }
+
+        if ($employee->current_role_id) {
+            $currentRole = Role::find($employee->current_role_id);
+            if ($currentRole && $currentRole->is_manager_level == 1) {
+                return true;
+            }
+        }
+
+        $checkDate = Carbon::create($year, 12, 31);
+
+        if ($employee->promotion_date && $employee->promotion_date <= $checkDate) {
+            if ($employee->current_role_id) {
+                $currentRole = Role::find($employee->current_role_id);
+                return $currentRole && $currentRole->is_manager_level == 1;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Calculate prorated vacation leave for promotion scenarios
+     */
+    protected function calculateProratedVacationLeave($employee, $year)
+    {
+        // If no promotion date or promotion happened in current year, no proration needed
+        if (!$employee->promotion_date || $employee->promotion_date->year != $year) {
+            return 0;
+        }
+
+        $promotionDate = Carbon::parse($employee->promotion_date);
+        $joiningDate = Carbon::parse($employee->guardAdditionalInformation->date_of_joining);
+
+        // Check current role status using Spatie roles
+        $isManagerAfter = $this->isManagerOrAbove($employee, $year);
+
+        // For proration, we assume if they were promoted and are now manager,
+        // they were non-manager before (since we track promotion)
+        if ($isManagerAfter) {
+            $startOfYear = Carbon::create($year, 1, 1);
+            $endOfYear = Carbon::create($year, 12, 31);
+
+            // Calculate days as non-manager (Jan 1 to day before promotion)
+            $nonManagerDays = $startOfYear->diffInDays($promotionDate->copy()->subDay());
+            $nonManagerLeave = (10 / 365) * $nonManagerDays;
+
+            // Calculate days as manager (promotion date to Dec 31)
+            $managerDays = $promotionDate->diffInDays($endOfYear) + 1;
+            $yearsAtPromotion = $joiningDate->diffInYears($promotionDate);
+            $managerYearlyLimit = $yearsAtPromotion <= 10 ? 15 : 20;
+            $managerLeave = ($managerYearlyLimit / 365) * $managerDays;
+
+            $totalProratedLeave = $nonManagerLeave + $managerLeave;
+
+            Log::info("Prorated leave calculation for employee {$employee->id}", [
+                'non_manager_days' => $nonManagerDays,
+                'non_manager_leave' => $nonManagerLeave,
+                'manager_days' => $managerDays,
+                'manager_leave' => $managerLeave,
+                'total_prorated' => $totalProratedLeave,
+                'years_at_promotion' => $yearsAtPromotion,
+                'manager_limit' => $managerYearlyLimit
+            ]);
+
+            return $totalProratedLeave;
+        }
+
+        return 0;
+    }
+
+    protected function wasManagerBeforePromotion($employee)
+    {
+        if ($employee->previous_role_id) {
+            return $this->isManagerRole($employee->previous_role_id);
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if a specific role ID is manager level
+     */
+    protected function isManagerRole($roleId)
+    {
+        if (!$roleId) {
+            return false;
+        }
+
+        $role = Role::find($roleId);
+        return $role && $role->is_manager_level == 1;
     }
 
     // private function calculateNonStatutoryDeductions($employee, $previousStartDate, $endDate)

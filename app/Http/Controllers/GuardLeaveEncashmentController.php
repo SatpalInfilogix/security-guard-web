@@ -170,6 +170,7 @@ class GuardLeaveEncashmentController extends Controller
         $usedLeaves = Leave::where('guard_id', $guard->id)
             ->where('status', 'approved')
             ->where('date', '>=', now()->subYear())
+            ->where('leave_type', 'Vacation Leave')
             ->count();
 
         $encashedLeaves = DB::table('guard_leave_encashments')

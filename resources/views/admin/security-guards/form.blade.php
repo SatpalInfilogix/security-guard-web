@@ -38,7 +38,7 @@
         $statusOptions = ['Active', 'Inactive', 'Hold'];
         ?>
         <label for="status">Status</label>
-        <select name="user_status" id="user_status" class="form-control" {{ isset($user) && $user->status == 'Active' && Auth::user()->getRoleNames()->first() != 'Admin' ? 'disabled' : '' }}>
+        <select name="user_status" id="user_status" class="form-control" {{ isset($user) && $user->status == 'Active' && Auth::user()->getRoleNames()->first() != 'Super Admin' ? 'disabled' : '' }}>
             <option value="" selected disabled>Select Status</option>
             @foreach ($statusOptions as $value)
                 <option value="{{ $value }}"

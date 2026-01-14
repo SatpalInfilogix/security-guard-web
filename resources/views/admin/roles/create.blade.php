@@ -10,7 +10,7 @@
                     <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                         <h4 class="mb-sm-0 font-size-18">Roles List</h4>
                         <div class="page-title-right">
-                            <a href="{{ route('roles-and-permissions.create') }}" class="btn btn-primary">Add New Role</a>
+                            <a href="{{ route('roles-and-permissions.role-list') }}" class="btn btn-primary">Back to roles</a>
                         </div>
                     </div>
                 </div>
@@ -29,7 +29,20 @@
                                 <div class="row mb-2">
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <x-form-input name="role" value="" label="Role Name" placeholder="Enter role name"  required="true" />
+                                            <x-form-input name="role" value="" label="Role Name"
+                                                placeholder="Enter role name" required="true" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-6">
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input" type="checkbox" name="is_manager_level"
+                                                id="is_manager_level" value="1">
+                                            <label class="form-check-label" for="is_manager_level">
+                                                This role is <strong>Manager-level (eligible for 15 vacation
+                                                    leaves)</strong>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
